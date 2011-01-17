@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>beam-globalbedo</artifactId>
+        <groupId>org.esa.beam.globalbedo</groupId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <packaging>jar</packaging>
+
+    <groupId>org.esa.beam.globalbedo</groupId>
+    <artifactId>beam-globalbedo-albedo-inversion</artifactId>
+    <name>Globalbedo Albedo Inversion</name>
+    <description>Calculates Albedo for MERIs, AATSR and SPOT-VGT</description>
+
+    <dependencies>
+		<dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+        </dependency>
+    </dependencies>
+
+</project>
