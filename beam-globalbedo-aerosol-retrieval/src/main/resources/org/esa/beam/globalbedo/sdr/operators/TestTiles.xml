@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+    Document   : TestTiles.xml
+    Created on : 03 August 2010, 19:23
+    Author     : akheckel
+    Description:
+        Purpose of the document follows.
+-->
+
+<root>
+    <tile name="h18v04">
+        <UpperLeft>
+            <lon> 0, 0, 0.01</lon>
+            <lat>50, 0, 0.00</lat>
+        </UpperLeft>
+        <LowerLeft>
+            <lon> 0, 0, 0.01</lon>
+            <lat>40, 0, 0.00</lat>
+        </LowerLeft>
+        <UpperRight>
+            <lon>15,33,26.06</lon>
+            <lat>50, 0, 0.00</lat>
+        </UpperRight>
+        <LowerRight>
+            <lon>13, 3,14.66</lon>
+            <lat>40, 0, 0.00</lat>
+        </LowerRight>
+    </tile>
+    <tile name="h19v08">
+        <UpperLeft>
+            <lon>10, 9, 15.36</lon>
+            <lat>10, 0,  0.00</lat>
+        </UpperLeft>
+        <LowerLeft>
+            <lon>10, 0, 0.00</lon>
+            <lat> 0, 0, 0.01</lat>
+        </LowerLeft>
+        <UpperRight>
+            <lon>20, 18, 30.72</lon>
+            <lat>10,  0,  0.00</lat>
+        </UpperRight>
+        <LowerRight>
+            <lon>20, 0, 0.00</lon>
+            <lat> 0, 0, 0.01</lat>
+        </LowerRight>
+    </tile>
+    <tile name="h22v02">
+        <UpperLeft>
+            <lon>116, 57, 7.83</lon>
+            <lat> 70,  0, 0.00</lat>
+        </UpperLeft>
+        <LowerLeft>
+            <lon>80, 0, 0.00</lon>
+            <lat>60, 0, 0.00</lat>
+        </LowerLeft>
+        <UpperRight>
+            <lon>146, 11, 24.79</lon>
+            <lat> 70,  0, 0.00</lat>
+        </UpperRight>
+        <LowerRight>
+            <lon>100, 0, 0.00</lon>
+            <lat> 60, 0, 0.00</lat>
+        </LowerRight>
+    </tile>
+    <tile name="h25v06">
+        <UpperLeft>
+            <lon>80, 49, 44.54</lon>
+            <lat>30,  0,  0.00</lat>
+        </UpperLeft>
+        <LowerLeft>
+            <lon>74, 29, 32.80</lon>
+            <lat>20,  0,  0.00</lat>
+        </LowerLeft>
+        <UpperRight>
+            <lon>92, 22, 33.76</lon>
+            <lat>30,  0,  0.00</lat>
+        </UpperRight>
+        <LowerRight>
+            <lon>85,  8,  3.20</lon>
+            <lat>20,  0,  0.00</lat>
+        </LowerRight>
+    </tile>
+</root>

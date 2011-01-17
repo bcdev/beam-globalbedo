@@ -1,0 +1,9 @@
+org.esa.beam.globalbedo.sdr.operators.AerosolOp2$Spi
+org.esa.beam.globalbedo.sdr.operators.GaMasterOp$Spi
+org.esa.beam.globalbedo.sdr.operators.UpSclOp$Spi
+org.esa.beam.globalbedo.sdr.operators.MerisPrepOp$Spi
+org.esa.beam.globalbedo.sdr.operators.AatsrPrepOp$Spi
+org.esa.beam.globalbedo.sdr.operators.VgtPrepOp$Spi
+org.esa.beam.globalbedo.sdr.operators.GapFillingOp$Spi
+org.esa.beam.globalbedo.sdr.operators.CreateElevationBandOp$Spi
+org.esa.beam.globalbedo.sdr.operators.SzaSubsetOp$Spi

@@ -1,0 +1,132 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-aerosol</symbolicName>
+    <name>BEAM GlobAlbedo Aerosol</name>
+    <version>1.2.1</version>
+
+    <!-- TODO - As needed, adapt metadata elements here -->
+    <description>BEAM GlobAlbedo Aerosol</description>
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2010 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+    <changelog>
+        <![CDATA[ ]]>
+    </changelog>
+
+    <categories>Processor,VISAT</categories>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-gpf</module>
+    </dependency>
+    <dependency>
+        <module>beam-envisat-reader</module>
+    </dependency>
+    <dependency>
+        <module>beam-spot-vgt-reader</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+    <dependency>
+        <module>beam-aatsr-recalibration</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-brr</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-l2auxdata</module>
+    </dependency>
+    <dependency>
+        <module>beam-meris-sdr</module>
+    </dependency>
+    <dependency>
+        <module>beam-idepix</module>
+    </dependency>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ActionGroup</class>
+            <parent>tools</parent>
+            <id>globalb</id>
+            <text>GlobAlbedo</text>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>MainAerosolOp</id>
+            <helpId>master</helpId>
+            <operatorName>ga.MasterOp</operatorName>
+            <text>AerosolMasterOp...</text>
+            <dialogTitle>AerosolMasterOp</dialogTitle>
+            <targetProductNameSuffix>_AerosolOp</targetProductNameSuffix>
+        </action>
+<!--
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>internalUpSclOp</id>
+            <helpId>upscl</helpId>
+            <operatorName>ga.UpSclOp</operatorName>
+            <text>UpSclOp...</text>
+            <dialogTitle>UpSclOp</dialogTitle>
+            <targetProductNameSuffix>_up</targetProductNameSuffix>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>internalGapFillingOp</id>
+            <helpId>gapfilling</helpId>
+            <operatorName>ga.GapFillingOp</operatorName>
+            <text>GapFillingOp...</text>
+            <dialogTitle>GapFillingOp</dialogTitle>
+            <targetProductNameSuffix>_fill</targetProductNameSuffix>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>SzaSubsetOp</id>
+            <helpId>szasubset</helpId>
+            <operatorName>ga.SzaSubsetOp</operatorName>
+            <text>szasubsetOp...</text>
+            <dialogTitle>SzaSubsetOp</dialogTitle>
+            <targetProductNameSuffix>_szasub</targetProductNameSuffix>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>internalAerosolOp2</id>
+            <helpId>aerosol</helpId>
+            <operatorName>ga.AerosolOp2</operatorName>
+            <text>AerosolOp...</text>
+            <dialogTitle>AerosolOp</dialogTitle>
+            <targetProductNameSuffix>_AerosolOp</targetProductNameSuffix>
+        </action>
+        <action>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <parent>globalb</parent>
+            <id>internalMerisPrepOp</id>
+            <helpId>merisprep</helpId>
+            <operatorName>ga.MerisPrepOp</operatorName>
+            <text>MerisPrepOp...</text>
+            <dialogTitle>MerisPrepOp</dialogTitle>
+            <targetProductNameSuffix>_reflec</targetProductNameSuffix>
+        </action>
+-->
+
+    </extension>
+
+
+    <extension point="beam-ui:helpSets">
+        <helpSet>
+            <parent>beam-help</parent>
+            <path>doc/help/__artifactId__.hs</path>
+        </helpSet>
+    </extension>
+
+</module>
