@@ -16,13 +16,13 @@
 
 package org.esa.beam.globalbedo.bbdr;
 
+import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.cos;
+import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
@@ -41,11 +41,13 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_GAS = 7;
     private static final int SRC_TOA_RFL = 8;
 
-    @SourceProduct
-    private Product source;
+    private static final int TRG_ERRORS = 0;
+
+    private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
+    private static final int n_kernel = 2; //(geo & vol)
 
     @SourceProduct
-    private Product sdrSource;
+    private Product source;
 
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
@@ -55,6 +57,13 @@ public class BbdrOp extends PixelOperator {
     private double[] gasArray;
     private double[][][] lut_gas;
     private double[][][][][] kx_lut_gas;
+    private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
+    private double[] nb_intcp_arr_all; // = fltarr(n_spc)
+    private double[] rmse_arr_all; // = fltarr(n_spc)
+    private double[][] nb_coef_arr_D; // = fltarr(n_spc, num_bd)
+    private double[] nb_intcp_arr_D; //= fltarr(n_spc)
+    private double kpp_vol;
+    private double kpp_geo;
 
 
     @Override
@@ -125,25 +134,27 @@ public class BbdrOp extends PixelOperator {
 
         if (sensor.getCwv_ozo_flag() == 1) {
             cwv = gas;
-        }else{
+        } else {
             ozo = gas;
         }
 
         double[][] f_int_all = interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
 
+        double[] rat_tdw = new double[sensor.getNumBands()];
+        double[] rat_tup = new double[sensor.getNumBands()];
         double[] rfl_pix = new double[sensor.getNumBands()];
-        for (int i = 0; i < f_int_all.length; i++) {
+        for (int i = 0; i < sensor.getNumBands(); i++) {
             double[] f_int = f_int_all[i];
 
-            double rpw     = f_int[0] * Math.PI / mus; // Path Radiance
-            double ttot    = f_int[1]/mus;    // Total TOA flux (Isc*Tup*Tdw)
-            double sab     = f_int[2];        // Spherical Albedo
-            double rat_tdw = 1.0 - f_int[3];  // tdif_dw / ttot_dw
-            double rat_tup = 1.0 - f_int[4];  // tup_dw / ttot_dw
+            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
+            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
+            double sab = f_int[2];        // Spherical Albedo
+            rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
+            rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
 
             toa_rfl[i] = toa_rfl[i] / tg[i];
 
-            double x_term  = (toa_rfl[i]  - rpw) / ttot;
+            double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab * x_term); //calculation of SDR
         }
 
@@ -153,36 +164,149 @@ public class BbdrOp extends PixelOperator {
         double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
 
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+
+        double[] err_rad = new double[sensor.getNumBands()];
+        double[] err_aod = new double[sensor.getNumBands()];
+        double[] err_cwv = new double[sensor.getNumBands()];
+        double[] err_ozo = new double[sensor.getNumBands()];
+        double[] err_coreg = new double[sensor.getNumBands()];
+
         for (int i = 0; i < sensor.getNumBands(); i++) {
             double[] f_int = f_int_all[i];
-            double err_rad = sensor.getRadiometricError() * toa_rfl[i];
+            err_rad[i] = sensor.getRadiometricError() * toa_rfl[i];
 
             double delta_cwv = sensor.getCwvError() * cwv;
             double delta_ozo = sensor.getOzoError() * ozo;
 
-            double err_aod = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
-            double err_cwv = abs((kx_tg[0][0][i] + kx_tg[1][0][i] * rfl_pix[i]) * delta_cwv);
-            double err_ozo = abs((kx_tg[0][1][i] + kx_tg[1][1][i] * rfl_pix[i]) * delta_ozo);
+            err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
+            err_cwv[i] = abs((kx_tg[0][0][i] + kx_tg[1][0][i] * rfl_pix[i]) * delta_cwv);
+            err_ozo[i] = abs((kx_tg[0][1][i] + kx_tg[1][1][i] * rfl_pix[i]) * delta_ozo);
 
-//            err_coreg = reform(err_coreg_land[ind_land, *])
+            // err_coreg = reform(err_coreg_land[ind_land, *])
+            err_coreg[i] = 0; // TODO
         }
 
+        Matrix err_aod_cov = matrixSquare(err_aod);
+        Matrix err_cwv_cov = matrixSquare(err_cwv);
+        Matrix err_ozo_cov = matrixSquare(err_ozo);
+        Matrix err_coreg_cov = matrixSquare(err_coreg);
+
+        Matrix err_rad_cov = new Matrix(sensor.getNumBands(), sensor.getNumBands());
+        for (int i = 0; i < sensor.getNumBands(); i++) {
+            err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
+        }
+
+        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(err_rad_cov).plusEquals(err_coreg_cov);
+
+
+        double ndviSum = sensor.getAndvi() + sensor.getBndvi();
+        double sig_ndvi_land = pow(
+                (pow(ndviSum * rfl_nir * sqrt(err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
+                        pow(ndviSum * rfl_red * sqrt(err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+                ), 0.5);
+
+        // BB conversion and error var-cov calculation
+
+        Matrix nb_coef_arr_all_m = new Matrix(nb_coef_arr_all);
+        Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
+        Matrix nb_intcp_arr_all_m = new Matrix(nb_intcp_arr_all, nb_intcp_arr_all.length);
+
+        Matrix bdr_mat_all = nb_coef_arr_all_m.times(rfl_pix_m).plus(nb_intcp_arr_all_m);
+        Matrix err2_mat_rfl = nb_coef_arr_all_m.times(err2_tot_cov).times(nb_coef_arr_all_m.transpose());
+        Matrix err2_n2b_all = new Matrix(n_spc, n_spc);
+        for (int i = 0; i < n_spc; i++) {
+            err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
+        }
+        Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
+        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
+        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+        for (int i = 0; i < relevantErrIndices.length; i++) {
+            double value = columnPackedCopy[relevantErrIndices[i]];
+            targetSamples[TRG_ERRORS + i].set(value);
+        }
+
+        // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
+
+        double[][] f_int_nsky = interpol_lut_Nsky(sza, vza, hsf, aot);
+
+        double vza_r = toRadians(vza);
+        double sza_r = toRadians(sza);
+        double phi_r = toRadians(phi);
+
+        double mu_phi = cos(phi_r);
+        double mu_ph_ang = mus * muv + sin(vza_r) * sin(sza_r) * mu_phi;
+        double ph_ang = acos(mu_ph_ang);
+
+        double kvol = ((PI/2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang))/(mus + muv) - PI/4.0;
+
+        double br = 1.0;
+        double hb = 2.0;
+
+        double tan_vp = tan(vza_r);
+        double tan_sp = tan(sza_r);
+        double sec_vp = 1./muv;
+        double sec_sp = 1./mus;
+
+        double D2 = tan_vp * tan_vp + tan_sp * tan_sp - 2 * tan_vp * tan_sp * mu_phi;
+
+        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)),2)),0.5)) / (sec_vp + sec_sp);
+        cost = min(cost, 1.0);
+        double t = acos(cost);
+
+        double ocap = (t - sin(t) * cost) * (sec_vp + sec_sp) / PI;
+
+        double kgeo = 0.5 * (1. + mu_ph_ang) * sec_sp * sec_vp + ocap - sec_vp - sec_sp;
+
+        // Nsky-weighted kernels
+        Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
+        for (int i_bb = 0; i_bb < n_spc; i_bb++) {
+//            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length);
+//            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length);
+//            nb_coef_arr_D_m.times(rat_tdw_m).plus(new Matrix())
+//            rat_tdw_bb = nb_coef_arr_D[i_bb, *] # rat_tdw + nb_intcp_arr_D[i_bb]
+
+            //TODO
+//    rat_tdw_bb = nb_coef_arr_D[i_bb, *] # rat_tdw + nb_intcp_arr_D[i_bb]
+//    rat_tup_bb = nb_coef_arr_D[i_bb, *] # rat_tup + nb_intcp_arr_D[i_bb]
+//    delta_bb_inv = (1.- bdr_mat_all * (nb_coef_arr_D[i_bb, *] # sab + nb_intcp_arr_D[i_bb]))^2 ; 1/(1-Delta_bb)=(1-rho*S)^2
+
+            double rat_tdw_bb = 0;
+            double rat_tup_bb = 0;
+            double delta_bb_inv = 0;
+
+            double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
+            double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
+            double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
+            double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
+            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[0][i_bb] + t2 * f_int_nsky[2][i_bb] + t3 * kpp_vol; // targetSample
+            double kernel_land_1= t0 * kgeo + t1 * f_int_nsky[1][i_bb] + t2 * f_int_nsky[3][i_bb] + t3 * kpp_geo; // targetSample
+
+        }
     }
 
     /**
      * 5-D linear interpolation:
-     *   returns spectral array [rpw, ttot, sab, rat_tdw, rat_tup, Kx_1, Kx_2]
-     *   as a function of [vza, sza, phi, hsf, aot] from the interpolation of the MOMO absorption-free LUTs
+     * returns spectral array [rpw, ttot, sab, rat_tdw, rat_tup, Kx_1, Kx_2]
+     * as a function of [vza, sza, phi, hsf, aot] from the interpolation of the MOMO absorption-free LUTs
      */
     private double[][] interpol_lut_MOMO_kx(double vza, double sza, double phi, double hsf, double aot) {
         return new double[1][1];
+    }
+
+    private double[][] interpol_lut_Nsky(double sza, double vza, double hsf, double aot) {
+        return new double[1][1];
+    }
+
+    private static Matrix matrixSquare(double[] doubles) {
+        Matrix matrix = new Matrix(doubles, doubles.length);
+        return matrix.times(matrix);
     }
 
     static int getIndexBefore(double value, double[] array) {
         for (int i = 0; i < array.length; i++) {
             if (value < array[i]) {
                 if (i != 0) {
-                    return i-1;
+                    return i - 1;
                 } else {
                     throw new IllegalArgumentException();
                 }
