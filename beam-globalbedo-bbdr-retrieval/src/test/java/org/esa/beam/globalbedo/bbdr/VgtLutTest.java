@@ -11,13 +11,13 @@ public class VgtLutTest extends TestCase {
 
     public void testLutAot() {
         LookupTable lut = BbdrUtils.getAotKxLookupTable("VGT");
-        assertNull(lut);
+        assertNotNull(lut);
         // TODO write tests
     }
 
     public void testAotKx() {
         LookupTable lut = BbdrUtils.getAotKxLookupTable("VGT");
-        assertNull(lut);
+        assertNotNull(lut);
         // TODO write tests
     }
 
@@ -29,7 +29,7 @@ public class VgtLutTest extends TestCase {
 
     public void testCwvOzoLutKx() {
         LookupTable lut = BbdrUtils.getCwvOzoKxLookupTable("VGT");
-        assertNull(lut);
+        assertNotNull(lut);
         // TODO write tests
     }
 

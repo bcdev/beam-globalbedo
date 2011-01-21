@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
-import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
 import org.esa.beam.globalbedo.sdr.operators.InstrumentConsts;
@@ -23,7 +22,11 @@ import java.nio.ByteOrder;
 public class BbdrUtils {
 
     public static final String aotLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_MOMO_ContinentalI_80_SDR_noG_v2.bin";
+    public static final String aotKxLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_MOMO_ContinentalI_80_SDR_noG_Kx-AOD_v2.bin";
     public static final String cwvLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_6S_Tg_CWV_OZO.bin";
+    public static final String cwvKxLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_6S_Kx-CWV_OZO.bin";
+    public static final String nskyLutDwPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_8O_Nsky_dw.bin";
+    public static final String nskyLutDUpPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_8O_Nsky_up.bin";
 
     /**
      * reads an AOT LUT (BBDR breadboard procedure GA_read_LUT_AOD)
@@ -89,12 +92,44 @@ public class BbdrUtils {
         float[] wvl = getInstrumentWavelengths(instrument);
         final int nWvl = wvl.length;
 
+
         float[] tgLut = new float[nParameters * nVza * nSza * nAzi * nHsf * nAot * nWvl];
         bb.asFloatBuffer().get(tgLut);
 
         // store in original sequence (see breadboard: loop over bd, jj, ii, k, j, i in GA_read_lut_AOD
         return new LookupTable(tgLut, wvl, aot, hsf, azi, sza, vza, parameters);
     }
+
+    public static LookupTable getAotKxLookupTable(String instrument) {
+        final String lutFileName = getAotKxLutName(instrument);
+
+        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+
+        // read LUT dimensions and values
+        float[] vza = readDimension(bb);
+        int nVza = vza.length;
+        float[] sza = readDimension(bb);
+        int nSza = sza.length;
+        float[] azi = readDimension(bb);
+        int nAzi = azi.length;
+        float[] hsf = readDimension(bb);
+        int nHsf = hsf.length;
+        float[] aot = readDimension(bb);
+        int nAot = aot.length;
+
+        float[] kx = new float[]{1.0f, 2.0f};
+        int nKx = kx.length;
+
+        float[] wvl = getInstrumentWavelengths(instrument);
+        final int nWvl = wvl.length;
+
+        float[] tgLut = new float[nKx * nVza * nSza * nAzi * nHsf * nAot * nWvl];
+        bb.asFloatBuffer().get(tgLut);
+
+        // store in original sequence
+        return new LookupTable(tgLut, wvl, aot, hsf, azi, sza, vza, kx);
+    }
+
 
     /**
      * reads a Water vapour / ozone LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
@@ -129,6 +164,36 @@ public class BbdrUtils {
         return new LookupTable(tgLut, ang, cwv, ozo, wvl);
     }
 
+    public static LookupTable getCwvOzoKxLookupTable(String instrument) {
+        final String lutFileName = getCwvKxLutName(instrument);
+
+        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+
+        // read LUT dimensions and values
+        int nAng = bb.getInt();
+        float[] ang = readDimension(bb, nAng);
+        int nCwv = bb.getInt();
+        float[] cwv = readDimension(bb, nCwv);
+        int nOzo = bb.getInt();
+        float[] ozo = readDimension(bb, nOzo);
+
+        float[] kx = new float[]{1.0f, 2.0f};
+        int nKx = kx.length;
+
+        float[] kxcase = new float[]{1.0f, 2.0f};
+        int nKxcase = kx.length;
+
+        float[] wvl = getInstrumentWavelengths(instrument);
+        final int nWvl = wvl.length;
+
+        float[] tgLut = new float[nKx * nKxcase * nWvl * nAng * nCwv * nOzo];
+        bb.asFloatBuffer().get(tgLut);
+
+        // store in original sequence
+        // todo: sequence of kx and kxcase is unclear. try to find out in breadboard...
+        return new LookupTable(tgLut, wvl, ozo, cwv, ang, kx, kxcase);
+    }
+
 
     /**
      * reads a Water vapour / ozone vector LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
@@ -150,7 +215,7 @@ public class BbdrUtils {
         int nAng = bb.getInt();
         int nCwv = bb.getInt();
         int nOzo = bb.getInt();
-        int nBd = ((Integer) BbdrConstants.instrumentNumWavelengths.get(instrument)).intValue();
+        int nBd = getInstrumentWavelengths(instrument).length;
 
         float[] ang = readDimension(bb, nAng);
         float[] cwv = readDimension(bb, nCwv);
@@ -177,16 +242,6 @@ public class BbdrUtils {
             geomAmf[i] = (float) (2.0 / Math.cos(Math.toRadians(ang[i])));
         }
         return geomAmf;
-    }
-
-    public static LookupTable getAotKxLookupTable(String instrument) {
-        // todo implement
-        return null;  //To change body of created methods use File | Settings | File Templates.
-    }
-
-    public static LookupTable getCwvOzoKxLookupTable(String instrument) {
-        // todo implement
-        return null;  //To change body of created methods use File | Settings | File Templates.
     }
 
     public static LookupTable getNskyLookupTableDw(String instrument) {
@@ -222,25 +277,34 @@ public class BbdrUtils {
         return aotLutPath.replace("%INSTRUMENT%", instrument);
     }
 
+    private static String getAotKxLutName(String instrument) {
+        final String aotLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + aotKxLutPattern;
+        return aotLutPath.replace("%INSTRUMENT%", instrument);
+    }
+
     private static String getCwvLutName(String instrument) {
         final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvLutPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
-    private static float[] getInstrumentWavelengths(String instrument) {
-        float[] wvl = null;
-        if (instrument.equalsIgnoreCase("MERIS")) {
-            wvl = new float[BbdrConstants.MERIS_WAVELENGHTS.length];
-            System.arraycopy(BbdrConstants.MERIS_WAVELENGHTS, 0, wvl, 0, wvl.length);
-        } else if (instrument.equalsIgnoreCase("AATSR")) {
-            wvl = new float[BbdrConstants.AATSR_WAVELENGHTS.length];
-            System.arraycopy(BbdrConstants.AATSR_WAVELENGHTS, 0, wvl, 0, wvl.length);
-        } else if (instrument.equalsIgnoreCase("VGT")) {
-            wvl = new float[BbdrConstants.VGT_WAVELENGHTS.length];
-            System.arraycopy(BbdrConstants.VGT_WAVELENGHTS, 0, wvl, 0, wvl.length);
-        }
+    private static String getCwvKxLutName(String instrument) {
+        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvKxLutPattern;
+        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+    }
 
-        return wvl;
+    private static String getNskyDwLutName(String instrument) {
+        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + nskyLutDwPattern;
+        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+    }
+
+    private static String getNskyUpLutName(String instrument) {
+        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + nskyLutDUpPattern;
+        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+    }
+
+
+    private static float[] getInstrumentWavelengths(String instrument) {
+        return (float[]) BbdrConstants.instrumentWavelengths.get(instrument);
     }
 
     private static ByteBuffer readLutFileToByteBuffer(String lutName) {

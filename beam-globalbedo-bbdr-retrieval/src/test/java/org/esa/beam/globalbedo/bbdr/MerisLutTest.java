@@ -121,8 +121,97 @@ public class MerisLutTest extends TestCase {
 
     public void testLutAotKx() {
         LookupTable lut = BbdrUtils.getAotKxLookupTable("MERIS");
-        assertNull(lut);
-        // todo write tests
+        assertNotNull(lut);
+
+        assertEquals(7, lut.getDimensionCount());
+
+        final double[] kxArray = lut.getDimension(6).getSequence();
+        final int nKx = kxArray.length;
+        assertEquals(2, nKx);     //  Parameters
+        assertEquals(1.0, kxArray[0], 1.E-4);
+        assertEquals(2.0, kxArray[1], 1.E-4);
+
+        final double[] vzaArray = lut.getDimension(5).getSequence();
+        final int nVza = vzaArray.length;
+        assertEquals(13, nVza);     //  VZA
+        assertEquals(12.76, vzaArray[3], 1.E-4);
+        assertEquals(24.24, vzaArray[5], 1.E-4);
+        assertEquals(35.68, vzaArray[7], 1.E-4);
+
+        final double[] szaArray = lut.getDimension(4).getSequence();
+        final int nSza = szaArray.length;
+        assertEquals(14, nSza);     //  SZA
+        assertEquals(6.97, szaArray[2], 1.E-4);
+        assertEquals(18.51, szaArray[4], 1.E-4);
+        assertEquals(29.96, szaArray[6], 1.E-4);
+
+        final double[] aziArray = lut.getDimension(3).getSequence();
+        final int nAzi = aziArray.length;
+        assertEquals(19, nAzi);     //  AZI
+        assertEquals(10.0, aziArray[1], 1.E-4);
+        assertEquals(130.0, aziArray[13], 1.E-4);
+        assertEquals(150.0, aziArray[15], 1.E-4);
+
+        final double[] hsfArray = lut.getDimension(2).getSequence();
+        final int nHsf = hsfArray.length;
+        assertEquals(4, nHsf);     //  HSF
+        assertEquals(1.0, hsfArray[1], 1.E-3);
+        assertEquals(2.5, hsfArray[2], 1.E-3);
+        assertEquals(7.998, hsfArray[3], 1.E-3);
+
+        final double[] aotArray = lut.getDimension(1).getSequence();
+        final int nAot = aotArray.length;
+        assertEquals(9, nAot);     //  AOT
+        assertEquals(0.1, aotArray[2], 1.E-3);
+        assertEquals(0.2, aotArray[3], 1.E-3);
+        assertEquals(1.5, aotArray[7], 1.E-3);
+
+        final double[] wvlArray = lut.getDimension(0).getSequence();
+        final int nWvl = wvlArray.length;
+        assertEquals(15, nWvl);     //  AOT
+        assertEquals(412.0, wvlArray[0], 1.E-3);
+        assertEquals(442.0, wvlArray[1], 1.E-3);
+        assertEquals(900.0, wvlArray[14], 1.E-3);
+
+        // first values in LUT
+        // iWvl=0, iAot0, iHsf0, iAzi=0, iSza=0, iVza=0..1, iKx=0..1:
+        double[] coord = new double[]{412.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
+        double value = lut.getValue(coord);
+        assertEquals(-0.06027, value, 1.E-4);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 0.0, 0.0, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(0.056184, value, 1.E-4);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 0.0, 2.56, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(-0.059273, value, 1.E-4);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 0.0, 2.56, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(0.055945, value, 1.E-4);
+
+        // values somewhere inside LUT:
+        coord = new double[]{wvlArray[7], aotArray[2], hsfArray[1], aziArray[6], szaArray[9], vzaArray[11], kxArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(-0.082877, value, 1.E-4);
+
+        coord = new double[]{wvlArray[4], aotArray[1], hsfArray[2], aziArray[14], szaArray[5], vzaArray[3], kxArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(-0.3205, value, 1.E-4);
+
+        coord = new double[]{wvlArray[8], aotArray[0], hsfArray[1], aziArray[16], szaArray[3], vzaArray[10], kxArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(-0.01571, value, 1.E-4);
+
+        // last values in LUT:
+        coord = new double[]{900.0, 2.0, 1013.25, 180.0, 69.989, 64.279, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(-0.197412, value, 1.E-4);
+
+        coord = new double[]{900.0, 2.0, 1013.25, 180.0, 69.989, 64.279, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(0.007395, value, 1.E-4);
     }
 
     public void testCwvOzoLut() {
@@ -202,8 +291,95 @@ public class MerisLutTest extends TestCase {
 
     public void testCwvOzoLutKx() {
         LookupTable lut = BbdrUtils.getCwvOzoKxLookupTable("MERIS");
-        assertNull(lut);
-        // todo write tests
+        assertNotNull(lut);
+
+        assertEquals(6, lut.getDimensionCount());
+
+        final double[] kxcaseArray = lut.getDimension(5).getSequence();
+        final int nKxcase = kxcaseArray.length;
+        assertEquals(2, nKxcase);     //  KXCASE
+        assertEquals(1.0, kxcaseArray[0], 1.E-4);
+        assertEquals(2.0, kxcaseArray[1], 1.E-4);
+
+        final double[] kxArray = lut.getDimension(4).getSequence();
+        final int nKx = kxArray.length;
+        assertEquals(2, nKx);     //  KX
+        assertEquals(1.0, kxArray[0], 1.E-4);
+        assertEquals(2.0, kxArray[1], 1.E-4);
+
+        final double[] angArray = lut.getDimension(3).getSequence();
+        final int nAng = angArray.length;
+        assertEquals(7, nAng);     //  ANG
+        assertEquals(0.0, angArray[0], 1.E-4);
+        assertEquals(50.0, angArray[3], 1.E-4);
+        assertEquals(70.0, angArray[6], 1.E-4);
+
+        final double[] cwvArray = lut.getDimension(2).getSequence();
+        final int nCwv = cwvArray.length;
+        assertEquals(4, nCwv);     //  CWV
+        assertEquals(0.0, cwvArray[0], 1.E-4);
+        assertEquals(3.0, cwvArray[2], 1.E-4);
+
+        final double[] ozoArray = lut.getDimension(1).getSequence();
+        final int nOzo = ozoArray.length;
+        assertEquals(4, nOzo);     //  OZO
+        assertEquals(0.3, ozoArray[1], 1.E-4);
+        assertEquals(0.6, ozoArray[3], 1.E-4);
+
+        final double[] wvlArray = lut.getDimension(0).getSequence();
+        final int nWvl = wvlArray.length;
+        assertEquals(15, nWvl);     //  WVL
+        assertEquals(560.0f, wvlArray[4], 1.E-4);
+        assertEquals(665.0f, wvlArray[6], 1.E-4);
+        assertEquals(753.0f, wvlArray[9], 1.E-4);
+
+        // first values in LUT
+        // iWvl=0, iOzo=0, iCwv=0, iAng=0..1, iKx=0..1, iKxcase=0..1 :
+        double[] coord = new double[]{412.0, 0.0, 0.0, 0.0, 1.0, 1.0};
+        double value = lut.getValue(coord);
+        assertEquals(-1.6943E-8, value, 1.E-11);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 1.0, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(5.0774E-8, value, 1.E-11);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 2.0, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(-1.2707E-7, value, 1.E-11);
+
+        coord = new double[]{412.0, 0.0, 0.0, 0.0, 2.0, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(3.808E-07, value, 1.E-11);
+
+        // values somewhere inside LUT:
+        coord = new double[]{wvlArray[10], ozoArray[2], cwvArray[1], angArray[3], kxArray[1], kxcaseArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(0.00075, value, 1.E-4);
+
+        coord = new double[]{wvlArray[12], ozoArray[1], cwvArray[1], angArray[5], kxArray[0], kxcaseArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(0.001252, value, 1.E-4);
+
+        coord = new double[]{wvlArray[3], ozoArray[1], cwvArray[0], angArray[2], kxArray[1], kxcaseArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(0.086543, value, 1.E-4);
+
+        // last values in LUT:
+        coord = new double[]{wvlArray[14], ozoArray[3], cwvArray[3], angArray[6], kxArray[0], kxcaseArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(0.00425, value, 1.E-5);
+
+        coord = new double[]{wvlArray[14], ozoArray[3], cwvArray[3], angArray[6], kxArray[1], kxcaseArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(-1.2831E-7, value, 1.E-11);
+
+        coord = new double[]{wvlArray[14], ozoArray[3], cwvArray[3], angArray[6], kxArray[0], kxcaseArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(0.110174, value, 1.E-5);
+
+        coord = new double[]{wvlArray[14], ozoArray[3], cwvArray[3], angArray[6], kxArray[1], kxcaseArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(6.2916E-7, value, 1.E-11);
     }
 
     public void testCwvOzoVectorLut() {
