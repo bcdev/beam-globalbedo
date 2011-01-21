@@ -239,7 +239,6 @@ public class LUTAotTest extends TestCase {
 
     public void testMerisCwvOzoVectorLut() {
         VectorLookupTable lut = BbdrUtils.getTransposedCwvOzoVectorLookupTable("MERIS");
-        LookupTable lut2 = BbdrUtils.getTransposedCwvOzoLookupTable("MERIS");
         assertNotNull(lut);
 
         assertEquals(3, lut.getDimensionCount());

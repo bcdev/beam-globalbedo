@@ -196,19 +196,13 @@ public class BbdrUtils {
         float[] wvl = null;
         if (instrument.equalsIgnoreCase("MERIS")) {
             wvl = new float[BbdrConstants.MERIS_WAVELENGHTS.length];
-            for (int i = 0; i < wvl.length; i++) {
-                wvl[i] = BbdrConstants.MERIS_WAVELENGHTS[i];
-            }
+            System.arraycopy(BbdrConstants.MERIS_WAVELENGHTS, 0, wvl, 0, wvl.length);
         } else if (instrument.equalsIgnoreCase("AATSR")) {
-            wvl = new float[BbdrConstants.MERIS_WAVELENGHTS.length];
-            for (int i = 0; i < wvl.length; i++) {
-                wvl[i] = BbdrConstants.MERIS_WAVELENGHTS[i];
-            }
+            wvl = new float[BbdrConstants.AATSR_WAVELENGHTS.length];
+            System.arraycopy(BbdrConstants.AATSR_WAVELENGHTS, 0, wvl, 0, wvl.length);
         } else if (instrument.equalsIgnoreCase("VGT")) {
-            wvl = new float[BbdrConstants.MERIS_WAVELENGHTS.length];
-            for (int i = 0; i < wvl.length; i++) {
-                wvl[i] = BbdrConstants.MERIS_WAVELENGHTS[i];
-            }
+            wvl = new float[BbdrConstants.VGT_WAVELENGHTS.length];
+            System.arraycopy(BbdrConstants.VGT_WAVELENGHTS, 0, wvl, 0, wvl.length);
         }
 
         return wvl;
