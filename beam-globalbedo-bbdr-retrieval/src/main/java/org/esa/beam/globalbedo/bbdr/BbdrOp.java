@@ -42,6 +42,7 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_TOA_RFL = 8;
 
     private static final int TRG_ERRORS = 0;
+    private static final int TRG_KERN = 6;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
     private static final int n_kernel = 2; //(geo & vol)
@@ -68,8 +69,16 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
-        // TODO
         //read auxdata, LUTs
+//        {"BB_VIS", "BB_NIR", "BB_SW", "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW", "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW", "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW", $
+//"AOD550", "NDVI", "sig_NDVI", "VZA", "SZA", "RAA", "DEM", "snow_mask", l1_flg_str};
+//        targetProduct.addBand();
+        // TODO
+        readAuxdata();
+    }
+    
+    void readAuxdata() {
+        
     }
 
     @Override
@@ -140,6 +149,7 @@ public class BbdrOp extends PixelOperator {
 
         double[][] f_int_all = interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
 
+        double[] sab = new double[sensor.getNumBands()];
         double[] rat_tdw = new double[sensor.getNumBands()];
         double[] rat_tup = new double[sensor.getNumBands()];
         double[] rfl_pix = new double[sensor.getNumBands()];
@@ -148,14 +158,14 @@ public class BbdrOp extends PixelOperator {
 
             double rpw = f_int[0] * Math.PI / mus; // Path Radiance
             double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
-            double sab = f_int[2];        // Spherical Albedo
+            sab[i] = f_int[2];        // Spherical Albedo
             rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
             rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
 
             toa_rfl[i] = toa_rfl[i] / tg[i];
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
-            rfl_pix[i] = x_term / (1. + sab * x_term); //calculation of SDR
+            rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
         }
 
         double rfl_red = rfl_pix[sensor.getIndexRed()];
@@ -259,20 +269,19 @@ public class BbdrOp extends PixelOperator {
 
         // Nsky-weighted kernels
         Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
+        Matrix rat_tup_m = new Matrix(rat_tup, rat_tup.length);
         for (int i_bb = 0; i_bb < n_spc; i_bb++) {
-//            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length);
-//            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length);
-//            nb_coef_arr_D_m.times(rat_tdw_m).plus(new Matrix())
-//            rat_tdw_bb = nb_coef_arr_D[i_bb, *] # rat_tdw + nb_intcp_arr_D[i_bb]
+            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length).transpose();
+            Matrix m1 = nb_coef_arr_D_m.times(rat_tdw_m);
+            double rat_tdw_bb = m1.get(0, 0) + nb_intcp_arr_D[i_bb];
 
-            //TODO
-//    rat_tdw_bb = nb_coef_arr_D[i_bb, *] # rat_tdw + nb_intcp_arr_D[i_bb]
-//    rat_tup_bb = nb_coef_arr_D[i_bb, *] # rat_tup + nb_intcp_arr_D[i_bb]
-//    delta_bb_inv = (1.- bdr_mat_all * (nb_coef_arr_D[i_bb, *] # sab + nb_intcp_arr_D[i_bb]))^2 ; 1/(1-Delta_bb)=(1-rho*S)^2
+            Matrix m2 = nb_coef_arr_D_m.times(rat_tup_m);
+            double rat_tup_bb = m2.get(0, 0) + nb_intcp_arr_D[i_bb];
 
-            double rat_tdw_bb = 0;
-            double rat_tup_bb = 0;
-            double delta_bb_inv = 0;
+            // 1/(1-Delta_bb)=(1-rho*S)^2
+            Matrix sab_m = new Matrix(sab, sab.length);
+            Matrix m3 = nb_coef_arr_D_m.times(sab_m);
+            double delta_bb_inv = (1.- bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb]));
 
             double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
             double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
@@ -280,7 +289,8 @@ public class BbdrOp extends PixelOperator {
             double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
             double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[0][i_bb] + t2 * f_int_nsky[2][i_bb] + t3 * kpp_vol; // targetSample
             double kernel_land_1= t0 * kgeo + t1 * f_int_nsky[1][i_bb] + t2 * f_int_nsky[3][i_bb] + t3 * kpp_geo; // targetSample
-
+            targetSamples[TRG_KERN + i_bb].set(kernel_land_0);
+            targetSamples[TRG_KERN + i_bb + 1].set(kernel_land_1);
         }
     }
 
