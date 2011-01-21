@@ -233,4 +233,19 @@ public class BbdrUtils {
         return bb;
     }
 
+    public static LookupTable getAotKxLookupTable(String instrument) {
+        return null;  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public static LookupTable getCwvOzoKxLookupTable(String instrument) {
+        return null;  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public static LookupTable getNskyLookupTableDw(String instrument) {
+        return null;  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public static LookupTable getNskyLookupTableUp(String instrument) {
+        return null;  //To change body of created methods use File | Settings | File Templates.
+    }
 }

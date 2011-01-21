@@ -20,11 +20,13 @@ public class BbdrConstants {
     };
 
     public final static float[] AATSR_WAVELENGHTS = {
-        // TODO
+         0.0f, 1.0f
+        // TODO fill
     };
 
     public final static float[] VGT_WAVELENGHTS = {
-        // TODO
+         0.0f, 1.0f
+        // TODO fill
     };
 
     static {

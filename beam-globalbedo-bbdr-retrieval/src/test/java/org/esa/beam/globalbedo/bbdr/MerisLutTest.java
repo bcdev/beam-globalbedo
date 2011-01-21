@@ -8,51 +8,9 @@ import org.esa.beam.util.math.VectorLookupTable;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class LUTAotTest extends TestCase {
+public class MerisLutTest extends TestCase {
 
-    // from aerosol-retrieval module - not used any more
-//    public void testMerisLutAot() {
-//        MomoLut lut = BbdrUtils.getAotLookupTable("MERIS");
-//        assertNotNull(lut);
-//
-//        assertEquals(15, lut.getnWvl());
-//
-//        assertEquals(5, lut.getnParameter());
-//        assertEquals(9, lut.getnAot());
-//        assertEquals(19, lut.getnAzi());
-//        assertEquals(4, lut.getnHsf());
-//        assertEquals(14, lut.getnSza());
-//        assertEquals(13, lut.getnVza());
-//
-//        assertEquals(412.0f, lut.getWvl()[0]);
-//        assertEquals(665.0f, lut.getWvl()[6]);
-//        assertEquals(900.0f, lut.getWvl()[14]);
-//
-//        assertEquals(0.1f, lut.getAot()[2], 1.E-3);
-//        assertEquals(0.2f, lut.getAot()[3], 1.E-3);
-//        assertEquals(1.5f, lut.getAot()[7], 1.E-3);
-//
-//        assertEquals(746.825f, lut.getHsf()[1], 1.E-3);
-//        assertEquals(898.746f, lut.getHsf()[2], 1.E-3);
-//        assertEquals(1013.25f, lut.getHsf()[3], 1.E-3);
-//
-//        assertEquals(10.0f, lut.getAzi()[1], 1.E-3);
-//        assertEquals(130.0f, lut.getAzi()[13], 1.E-3);
-//        assertEquals(150.0f, lut.getAzi()[15], 1.E-3);
-//
-//        assertEquals(6.97f, lut.getSza()[2], 1.E-3);
-//        assertEquals(18.51f, lut.getSza()[4], 1.E-3);
-//        assertEquals(29.96f, lut.getSza()[6], 1.E-3);
-//
-//        assertEquals(12.76f, lut.getVza()[3], 1.E-3);
-//        assertEquals(24.24f, lut.getVza()[5], 1.E-3);
-//        assertEquals(35.68f, lut.getVza()[7], 1.E-3);
-//
-//        final float[] values = lut.getValues();
-//        System.out.println();
-//    }
-
-    public void testMerisLutAot() {
+    public void testLutAot() {
         LookupTable lut = BbdrUtils.getAotLookupTable("MERIS");
         assertNotNull(lut);
 
@@ -161,7 +119,13 @@ public class LUTAotTest extends TestCase {
         assertEquals(0.998625, value, 1.E-4);
     }
 
-    public void testMerisCwvOzoLut() {
+    public void testLutAotKx() {
+        LookupTable lut = BbdrUtils.getAotKxLookupTable("MERIS");
+        assertNull(lut);
+        // todo write tests
+    }
+
+    public void testCwvOzoLut() {
         LookupTable lut = BbdrUtils.getTransposedCwvOzoLookupTable("MERIS");
         assertNotNull(lut);
 
@@ -236,8 +200,13 @@ public class LUTAotTest extends TestCase {
         assertEquals(0.42336, lut.getValue(coord), 1.E-4);
     }
 
+    public void testCwvOzoLutKx() {
+        LookupTable lut = BbdrUtils.getCwvOzoKxLookupTable("MERIS");
+        assertNull(lut);
+        // todo write tests
+    }
 
-    public void testMerisCwvOzoVectorLut() {
+    public void testCwvOzoVectorLut() {
         VectorLookupTable lut = BbdrUtils.getTransposedCwvOzoVectorLookupTable("MERIS");
         assertNotNull(lut);
 
@@ -305,6 +274,18 @@ public class LUTAotTest extends TestCase {
         assertEquals(0.42336, lut.getValues(coord)[nWvl - 1], 1.E-4);
     }
 
+
+    public void testNskyLutDw() {
+        LookupTable lut = BbdrUtils.getNskyLookupTableDw("MERIS");
+        assertNull(lut);
+        // todo write tests
+    }
+
+    public void testNskyLutUp() {
+        LookupTable lut = BbdrUtils.getNskyLookupTableUp("MERIS");
+        assertNull(lut);
+        // todo write tests
+    }
 
     public void testLutInterpolation1D() {
         final double[] dimension = new double[]{0, 1, 2, 3, 4};
