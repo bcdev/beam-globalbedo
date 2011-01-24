@@ -2,7 +2,6 @@ package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
 import org.esa.beam.util.math.LookupTable;
-import org.esa.beam.util.math.VectorLookupTable;
 
 /**
  * @author Olaf Danne
@@ -11,7 +10,9 @@ import org.esa.beam.util.math.VectorLookupTable;
 public class MerisLutTest extends TestCase {
 
     public void testLutAot() {
-        LookupTable lut = BbdrUtils.getAotLookupTable("MERIS");
+        AotLookupTable aotLut = BbdrUtils.getAotLookupTable("MERIS");
+        assertNotNull(aotLut);
+        LookupTable lut = aotLut.getLut();
         assertNotNull(lut);
 
         assertEquals(7, lut.getDimensionCount());
@@ -65,6 +66,13 @@ public class MerisLutTest extends TestCase {
         assertEquals(442.0, wvlArray[1], 1.E-3);
         assertEquals(900.0, wvlArray[14], 1.E-3);
 
+        // solar irradiances
+        assertNotNull(aotLut.getSolarIrradiance());
+        assertEquals(15, aotLut.getSolarIrradiance().length);
+        assertEquals(1879.69f, aotLut.getSolarIrradiance()[1]);
+        assertEquals(1803.06f, aotLut.getSolarIrradiance()[4]);
+        assertEquals(958.059f, aotLut.getSolarIrradiance()[12]);
+
         // first values in LUT
         // iWvl=0, iAot0, iHsf0, iAzi=0, iSza=0, iVza=0, iParameters=0..4:
         double[] coord = new double[]{412.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0};
@@ -93,15 +101,21 @@ public class MerisLutTest extends TestCase {
         assertEquals(0.84454, value, 1.E-4);
 
         // values somewhere inside LUT:
-        coord = new double[]{wvlArray[7], aotArray[2], hsfArray[1], aziArray[6], szaArray[9], vzaArray[11], parametersArray[3]};
+        coord = new double[]{
+                wvlArray[7], aotArray[2], hsfArray[1], aziArray[6], szaArray[9], vzaArray[11], parametersArray[3]
+        };
         value = lut.getValue(coord);
         assertEquals(0.930663, value, 1.E-4);
 
-        coord = new double[]{wvlArray[4], aotArray[1], hsfArray[2], aziArray[14], szaArray[5], vzaArray[3], parametersArray[2]};
+        coord = new double[]{
+                wvlArray[4], aotArray[1], hsfArray[2], aziArray[14], szaArray[5], vzaArray[3], parametersArray[2]
+        };
         value = lut.getValue(coord);
         assertEquals(0.060401, value, 1.E-4);
 
-        coord = new double[]{wvlArray[8], aotArray[0], hsfArray[1], aziArray[16], szaArray[3], vzaArray[10], parametersArray[1]};
+        coord = new double[]{
+                wvlArray[8], aotArray[0], hsfArray[1], aziArray[16], szaArray[3], vzaArray[10], parametersArray[1]
+        };
         value = lut.getValue(coord);
         assertEquals(0.944405, value, 1.E-4);
 
@@ -200,7 +214,9 @@ public class MerisLutTest extends TestCase {
         value = lut.getValue(coord);
         assertEquals(-0.3205, value, 1.E-4);
 
-        coord = new double[]{wvlArray[8], aotArray[0], hsfArray[1], aziArray[16], szaArray[3], vzaArray[10], kxArray[0]};
+        coord = new double[]{
+                wvlArray[8], aotArray[0], hsfArray[1], aziArray[16], szaArray[3], vzaArray[10], kxArray[0]
+        };
         value = lut.getValue(coord);
         assertEquals(-0.01571, value, 1.E-4);
 
@@ -382,85 +398,164 @@ public class MerisLutTest extends TestCase {
         assertEquals(6.2916E-7, value, 1.E-11);
     }
 
-    public void testCwvOzoVectorLut() {
-        VectorLookupTable lut = BbdrUtils.getTransposedCwvOzoVectorLookupTable("MERIS");
+    public void testNskyLutDw() {
+        NskyLookupTable nskyLut = BbdrUtils.getNskyLookupTableDw("MERIS");
+        assertNotNull(nskyLut);
+        LookupTable lut = nskyLut.getLut();
         assertNotNull(lut);
 
-        assertEquals(3, lut.getDimensionCount());
+        assertEquals(5, lut.getDimensionCount());
 
-        final double[] angArray = lut.getDimension(0).getSequence();
-        final int nAng = angArray.length;
-        assertEquals(7, nAng);     //  ANG
-        assertEquals(0.0, angArray[0], 1.E-4);
-        assertEquals(50.0, angArray[3], 1.E-4);
-        assertEquals(70.0, angArray[6], 1.E-4);
+        final double[] valueArray = lut.getDimension(4).getSequence();
+        final int nValues = valueArray.length;
+        assertEquals(2, nValues);     //  Parameters
+        assertEquals(1.0, valueArray[0], 1.E-4);
+        assertEquals(2.0, valueArray[1], 1.E-4);
 
-        final double[] cwvArray = lut.getDimension(1).getSequence();
-        final int nCwv = cwvArray.length;
-        assertEquals(4, nCwv);     //  CWV
-        assertEquals(0.0, cwvArray[0], 1.E-4);
-        assertEquals(3.0, cwvArray[2], 1.E-4);
-        final double[] ozoArray = lut.getDimension(2).getSequence();
-        final int nOzo = ozoArray.length;
-        assertEquals(4, nOzo);     //  OZO
-        assertEquals(0.3, ozoArray[1], 1.E-4);
-        assertEquals(0.6, ozoArray[3], 1.E-4);
+        final double[] szaArray = lut.getDimension(3).getSequence();
+        final int nSza = szaArray.length;
+        assertEquals(17, nSza);     //  SZA
+        assertEquals(6.97, szaArray[2], 1.E-4);
+        assertEquals(29.96, szaArray[6], 1.E-4);
+        assertEquals(75.71, szaArray[14], 1.E-4);
 
-        int index = 0;
-        // print whole LUT
-//        for (int i = 0; i < nAng; i++) {
-//            for (int j = 0; j < nCwv; j++) {
-//                for (int k = 0; k < nOzo; k++) {
-//                    double[] coordinate = new double[]{
-//                            angArray[i],
-//                            cwvArray[j],
-//                            ozoArray[k],
-//                    };
-//                    for (int l = 0; l < BbdrConstants.MERIS_WAVELENGHTS.length; l++) {
-//                        System.out.println("LUT: " + index + ", " + lut.getValues(coordinate)[l]);
-//                        index++;
-//                    }
-//                }
-//            }
-//        }
+        final double[] hsfArray = lut.getDimension(2).getSequence();
+        final int nHsf = hsfArray.length;
+        assertEquals(4, nHsf);     //  HSF
+        assertEquals(1.0, hsfArray[1], 1.E-3);
+        assertEquals(2.5, hsfArray[2], 1.E-3);
+        assertEquals(8.0, hsfArray[3], 1.E-3);
 
-        // iAng=0, iCwv=0, iOzo=0:
-        double[] coord = new double[]{0.0, 0.0, 0.1};
-        assertEquals(1.0, lut.getValues(coord)[0], 1.E-4);
+        final double[] aotArray = lut.getDimension(1).getSequence();
+        final int nAot = aotArray.length;
+        assertEquals(9, nAot);     //  AOT
+        assertEquals(0.1, aotArray[2], 1.E-3);
+        assertEquals(0.2, aotArray[3], 1.E-3);
+        assertEquals(1.5, aotArray[7], 1.E-3);
 
-        // index = iAng*(nCwv*nOzo*nWvl) + iCwv*(nOzo*nWvl) + iOzo*nWvl + iWvl
-        int nWvl = 15; // MERIS
+        final double[] specArray = lut.getDimension(0).getSequence();
+        final int nSpecs = specArray.length;
+        assertEquals(3, nSpecs);     //  Parameters
+        assertEquals(1.0, specArray[0], 1.E-4);
+        assertEquals(2.0, specArray[1], 1.E-4);
 
-        // iAng=2, iCwv=1, iOzo=2, iWvl=4:
-        index = 2 * (nCwv * nOzo * nWvl) + 1 * (nOzo * nWvl) + 2 * nWvl + 4;
-        assertEquals(574, index);
-        coord = new double[]{40.0, 1.5, 0.5};
-        assertEquals(0.879466, lut.getValues(coord)[4], 1.E-4);
+        // Kpp coeffs:
+        assertEquals(-1.289934, nskyLut.getKppGeo(), 1.E-4);
+        assertEquals(0.10046, nskyLut.getKppVol(), 1.E-4);
 
-        // iAng=4, iCwv=0, iOzo=3, iWvl=10:
-        index = 4 * (nCwv * nOzo * nWvl) + 3 * nWvl + 10;
-        assertEquals(1015, index);
-        coord = new double[]{60.0, 0.0, 0.6};
-        assertEquals(0.275625, lut.getValues(coord)[10], 1.E-4);
+        // first values in LUT
+        // iSpec=0, iAot0, iHsf0, iSza=0, iValues=0..2:
+        double[] coord = new double[]{0.0, 0.0, 0.0, 0.0, 1.0};
+        double value = lut.getValue(coord);
+        assertEquals(-0.02289, value, 1.E-4);
 
-        // iAng=nAng-1, iCwv=nCwv-1, iOzo=nOzo-1, iWvl=nWvl-1:
-        index = (nAng - 1) * (nCwv * nOzo * nWvl) + (nCwv - 1) * (nOzo * nWvl) + (nOzo - 1) * nWvl + nWvl - 1;
-        assertEquals(1679, index);
-        coord = new double[]{70.0, 4.5, 0.6};
-        assertEquals(0.42336, lut.getValues(coord)[nWvl - 1], 1.E-4);
-    }
+        coord = new double[]{0.0, 0.0, 0.0, 0.0, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(-1.1780, value, 1.E-4);
 
+        // iSpec=0, iAot0, iHsf0, iSza=1, iValues=0:
+        coord = new double[]{0.0, 0.0, 0.0, 2.56, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(-0.022719, value, 1.E-4);
 
-    public void testNskyLutDw() {
-        LookupTable lut = BbdrUtils.getNskyLookupTableDw("MERIS");
-        assertNull(lut);
-        // todo write tests
+        // values somewhere inside LUT:
+        coord = new double[]{specArray[1], aotArray[1], hsfArray[2], szaArray[5], valueArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(-1.49603, value, 1.E-4);
+
+        coord = new double[]{specArray[2], aotArray[4], hsfArray[1], szaArray[9], valueArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(0.038364, value, 1.E-4);
+
+        // last values in LUT:
+        // iSpec=0, iAot0, iHsf0, iSza=1, iValues=0:
+        coord = new double[]{3.0, 2.0, 8.0, 87.14, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(1.80323, value, 1.E-4);
+
+        coord = new double[]{3.0, 2.0, 8.0, 87.14, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(5.84008, value, 1.E-4);
     }
 
     public void testNskyLutUp() {
-        LookupTable lut = BbdrUtils.getNskyLookupTableUp("MERIS");
-        assertNull(lut);
-        // todo write tests
+        NskyLookupTable nskyLut = BbdrUtils.getNskyLookupTableUp("MERIS");
+        assertNotNull(nskyLut);
+        LookupTable lut = nskyLut.getLut();
+        assertNotNull(lut);
+
+        assertEquals(5, lut.getDimensionCount());
+
+        final double[] valueArray = lut.getDimension(4).getSequence();
+        final int nValues = valueArray.length;
+        assertEquals(2, nValues);     //  Parameters
+        assertEquals(1.0, valueArray[0], 1.E-4);
+        assertEquals(2.0, valueArray[1], 1.E-4);
+
+        final double[] szaArray = lut.getDimension(3).getSequence();
+        final int nSza = szaArray.length;
+        assertEquals(17, nSza);     //  SZA
+        assertEquals(6.97, szaArray[2], 1.E-4);
+        assertEquals(29.96, szaArray[6], 1.E-4);
+        assertEquals(75.71, szaArray[14], 1.E-4);
+
+        final double[] hsfArray = lut.getDimension(2).getSequence();
+        final int nHsf = hsfArray.length;
+        assertEquals(4, nHsf);     //  HSF
+        assertEquals(1.0, hsfArray[1], 1.E-3);
+        assertEquals(2.5, hsfArray[2], 1.E-3);
+        assertEquals(8.0, hsfArray[3], 1.E-3);
+
+        final double[] aotArray = lut.getDimension(1).getSequence();
+        final int nAot = aotArray.length;
+        assertEquals(9, nAot);     //  AOT
+        assertEquals(0.1, aotArray[2], 1.E-3);
+        assertEquals(0.2, aotArray[3], 1.E-3);
+        assertEquals(1.5, aotArray[7], 1.E-3);
+
+        final double[] specArray = lut.getDimension(0).getSequence();
+        final int nSpecs = specArray.length;
+        assertEquals(3, nSpecs);     //  Parameters
+        assertEquals(1.0, specArray[0], 1.E-4);
+        assertEquals(2.0, specArray[1], 1.E-4);
+
+        // Kpp coeffs:
+        assertEquals(-1.289934, nskyLut.getKppGeo(), 1.E-4);
+        assertEquals(0.10046, nskyLut.getKppVol(), 1.E-4);
+
+        // first values in LUT
+        // iSpec=0, iAot0, iHsf0, iSza=0, iValues=0..2:
+        double[] coord = new double[]{0.0, 0.0, 0.0, 0.0, 1.0};
+        double value = lut.getValue(coord);
+        assertEquals(-0.0256047, value, 1.E-4);
+
+        coord = new double[]{0.0, 0.0, 0.0, 0.0, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(-0.863457, value, 1.E-4);
+
+        // iSpec=0, iAot0, iHsf0, iSza=1, iValues=0:
+        coord = new double[]{0.0, 0.0, 0.0, 2.56, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(-0.025343, value, 1.E-4);
+
+        // values somewhere inside LUT:
+        coord = new double[]{specArray[1], aotArray[1], hsfArray[2], szaArray[5], valueArray[1]};
+        value = lut.getValue(coord);
+        assertEquals(-1.02195, value, 1.E-4);
+
+        coord = new double[]{specArray[2], aotArray[4], hsfArray[1], szaArray[9], valueArray[0]};
+        value = lut.getValue(coord);
+        assertEquals(0.0856803, value, 1.E-4);
+
+        // last values in LUT:
+        // iSpec=0, iAot0, iHsf0, iSza=1, iValues=0:
+        coord = new double[]{3.0, 2.0, 8.0, 87.14, 1.0};
+        value = lut.getValue(coord);
+        assertEquals(1.05181, value, 1.E-4);
+
+        coord = new double[]{3.0, 2.0, 8.0, 87.14, 2.0};
+        value = lut.getValue(coord);
+        assertEquals(-9.34972, value, 1.E-4);
     }
 
     public void testLutInterpolation1D() {

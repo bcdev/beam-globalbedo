@@ -10,7 +10,7 @@ import org.esa.beam.util.math.LookupTable;
 public class VgtLutTest extends TestCase {
 
     public void testLutAot() {
-        LookupTable lut = BbdrUtils.getAotKxLookupTable("VGT");
+        AotLookupTable lut = BbdrUtils.getAotLookupTable("VGT");
         assertNotNull(lut);
         // TODO write tests
     }
@@ -34,14 +34,14 @@ public class VgtLutTest extends TestCase {
     }
 
     public void testMerisNskyLutDw() {
-        LookupTable lut = BbdrUtils.getNskyLookupTableDw("VGT");
-        assertNull(lut);
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw("VGT");
+        assertNotNull(lut);
         // TODO write tests
     }
 
     public void testMerisNskyLutUp() {
-        LookupTable lut = BbdrUtils.getNskyLookupTableUp("VGT");
-        assertNull(lut);
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp("VGT");
+        assertNotNull(lut);
         // TODO write tests
     }
 
