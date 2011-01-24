@@ -18,9 +18,12 @@ package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
@@ -33,13 +36,15 @@ public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
     private static final int SRC_VZA = 1;
-    private static final int SRC_SZA = 2;
-    private static final int SRC_PHI = 3;
-    private static final int SRC_HSF = 4;
-    private static final int SRC_AOT = 5;
-    private static final int SRC_AOT_ERR = 6;
-    private static final int SRC_GAS = 7;
-    private static final int SRC_TOA_RFL = 8;
+    private static final int SRC_VAA = 2;
+    private static final int SRC_SZA = 3;
+    private static final int SRC_SAA = 4;
+    private static final int SRC_DEM = 5;
+    private static final int SRC_AOT = 6;
+    private static final int SRC_AOT_ERR = 7;
+    private static final int SRC_OZO = 8;
+    private static final int SRC_TOA_RFL = 9;
+    private static final int SRC_TOA_VAR = 9 + 15;
 
     private static final int TRG_ERRORS = 0;
     private static final int TRG_KERN = 6;
@@ -69,21 +74,59 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
-        //read auxdata, LUTs
-//        {"BB_VIS", "BB_NIR", "BB_SW", "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW", "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW", "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW", $
-//"AOD550", "NDVI", "sig_NDVI", "VZA", "SZA", "RAA", "DEM", "snow_mask", l1_flg_str};
-//        targetProduct.addBand();
-        // TODO
+
+        String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
+                "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
+                "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
+                "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
+                "AOD550",
+                "NDVI", "sig_NDVI",
+                "VZA", "SZA", "RAA", "DEM",
+                "snow_mask", "$l1_flg_str"};
+        for (String bandName : bandNames) {
+            targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+        }
         readAuxdata();
     }
-    
+
     void readAuxdata() {
-        
+
     }
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
-        // TODO
+        // TODO for now MERIS only --> handle SPOt and AATSR aswell
+
+        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("landexpr", source);
+        Product landMaskProduct = bandMathsOp.getTargetProduct();
+        configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+
+        configurator.defineSample(SRC_VZA, "view_zenith");
+        configurator.defineSample(SRC_VAA, "view_azimuth");
+        configurator.defineSample(SRC_SZA, "sun_zenith");
+        configurator.defineSample(SRC_SAA, "sun_azimuth");
+        configurator.defineSample(SRC_DEM, "elevation");
+        
+        configurator.defineSample(SRC_OZO, "ozone");
+
+        configurator.defineSample(SRC_AOT, "aot");
+        configurator.defineSample(SRC_AOT_ERR, "aot_err");
+        
+        String[] toaBandNames = {"reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
+                "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
+                "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"};
+        for (int i = 0; i < toaBandNames.length; i++) {
+            configurator.defineSample(SRC_TOA_RFL + i, toaBandNames[i], source);
+        }
+
+        ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
+        imageVarianceOp.setSourceProduct(source);
+        Product varianceProduct = imageVarianceOp.getTargetProduct();
+
+        for (int i = 0; i < toaBandNames.length; i++) {
+            configurator.defineSample(SRC_TOA_VAR + i, toaBandNames[i], varianceProduct);
+        }
+
     }
 
     @Override
@@ -99,16 +142,34 @@ public class BbdrOp extends PixelOperator {
             return;
         }
         double vza = sourceSamples[SRC_VZA].getDouble();
+        double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
-        double phi = sourceSamples[SRC_PHI].getDouble();
-        double hsf = sourceSamples[SRC_HSF].getDouble();
+        double saa = sourceSamples[SRC_SAA].getDouble();
+        double hsf = sourceSamples[SRC_DEM].getDouble();
         double aot = sourceSamples[SRC_AOT].getDouble();
-        double gas = sourceSamples[SRC_GAS].getDouble();
+        
+        double ozo = sourceSamples[SRC_OZO].getDouble();
+
+        // TODO MERIS only
+        ozo += 0.001;
+        double gas = ozo;
+        double gas2_val = 1.5;
+        double cwv = gas2_val;
 
         double[] toa_rfl = new double[sensor.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
             toa_rfl[i] = sourceSamples[SRC_TOA_RFL + i].getDouble();
         }
+
+        hsf *= 0.001;
+        hsf = max(hsf, -0.45); // elevation up to -450m ASL
+
+        double phi = abs(saa - vaa);
+        if (phi > 180) {
+            phi = 360.0 - phi;
+        }
+        phi = min(phi, 179);
+        phi = max(phi, 1);
 
         double muv = cos(toRadians(vza));
         double mus = cos(toRadians(sza));
@@ -138,8 +199,8 @@ public class BbdrOp extends PixelOperator {
                 }
             }
         }
-        double cwv = 0;//TODO
-        double ozo = 0;//TODO
+//        double cwv = 0;//TODO
+//        double ozo = 0;//TODO
 
         if (sensor.getCwv_ozo_flag() == 1) {
             cwv = gas;
@@ -192,8 +253,7 @@ public class BbdrOp extends PixelOperator {
             err_cwv[i] = abs((kx_tg[0][0][i] + kx_tg[1][0][i] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[0][1][i] + kx_tg[1][1][i] * rfl_pix[i]) * delta_ozo);
 
-            // err_coreg = reform(err_coreg_land[ind_land, *])
-            err_coreg[i] = 0; // TODO
+            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
         }
 
         Matrix err_aod_cov = matrixSquare(err_aod);
@@ -247,19 +307,19 @@ public class BbdrOp extends PixelOperator {
         double mu_ph_ang = mus * muv + sin(vza_r) * sin(sza_r) * mu_phi;
         double ph_ang = acos(mu_ph_ang);
 
-        double kvol = ((PI/2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang))/(mus + muv) - PI/4.0;
+        double kvol = ((PI / 2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang)) / (mus + muv) - PI / 4.0;
 
         double br = 1.0;
         double hb = 2.0;
 
         double tan_vp = tan(vza_r);
         double tan_sp = tan(sza_r);
-        double sec_vp = 1./muv;
-        double sec_sp = 1./mus;
+        double sec_vp = 1. / muv;
+        double sec_sp = 1. / mus;
 
         double D2 = tan_vp * tan_vp + tan_sp * tan_sp - 2 * tan_vp * tan_sp * mu_phi;
 
-        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)),2)),0.5)) / (sec_vp + sec_sp);
+        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)), 2)), 0.5)) / (sec_vp + sec_sp);
         cost = min(cost, 1.0);
         double t = acos(cost);
 
@@ -281,14 +341,14 @@ public class BbdrOp extends PixelOperator {
             // 1/(1-Delta_bb)=(1-rho*S)^2
             Matrix sab_m = new Matrix(sab, sab.length);
             Matrix m3 = nb_coef_arr_D_m.times(sab_m);
-            double delta_bb_inv = (1.- bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb]));
+            double delta_bb_inv = (1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb]));
 
             double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
             double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
             double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
             double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
             double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[0][i_bb] + t2 * f_int_nsky[2][i_bb] + t3 * kpp_vol; // targetSample
-            double kernel_land_1= t0 * kgeo + t1 * f_int_nsky[1][i_bb] + t2 * f_int_nsky[3][i_bb] + t3 * kpp_geo; // targetSample
+            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[1][i_bb] + t2 * f_int_nsky[3][i_bb] + t3 * kpp_geo; // targetSample
             targetSamples[TRG_KERN + i_bb].set(kernel_land_0);
             targetSamples[TRG_KERN + i_bb + 1].set(kernel_land_1);
         }
@@ -323,5 +383,12 @@ public class BbdrOp extends PixelOperator {
             }
         }
         throw new IllegalArgumentException();
+    }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(BbdrOp.class);
+        }
     }
 }
