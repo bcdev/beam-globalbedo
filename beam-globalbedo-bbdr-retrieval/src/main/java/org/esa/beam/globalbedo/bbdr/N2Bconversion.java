@@ -16,7 +16,6 @@
 
 package org.esa.beam.globalbedo.bbdr;
 
-import Jama.Matrix;
 import org.esa.beam.globalbedo.sdr.operators.InstrumentConsts;
 
 import java.io.BufferedReader;
@@ -35,11 +34,11 @@ public class N2Bconversion {
     private final int n_spc;
     private final int num_bd;
 
-    private final Matrix nb_coef_arr_all;
-    private final Matrix nb_intcp_arr_all;
+    private final double[][] nb_coef_arr_all;
+    private final double[] nb_intcp_arr_all;
     private final double[] rmse_arr_all;
 
-    private final Matrix nb_coef_arr_D;
+    private final double[][] nb_coef_arr_D;
     private final double[] nb_intcp_arr_D;
 
     public N2Bconversion(String instrument, int n_spc, int num_bd) {
@@ -47,11 +46,11 @@ public class N2Bconversion {
         this.n_spc = n_spc;
         this.num_bd = num_bd;
 
-        this.nb_coef_arr_all = new Matrix(n_spc, num_bd);
-        this.nb_intcp_arr_all = new Matrix(n_spc, 1);
+        this.nb_coef_arr_all = new double[n_spc][num_bd];
+        this.nb_intcp_arr_all = new double[n_spc];
         this.rmse_arr_all = new double[n_spc];
 
-        this.nb_coef_arr_D = new Matrix(n_spc, num_bd);
+        this.nb_coef_arr_D = new double[n_spc][num_bd];
         this.nb_intcp_arr_D = new double[n_spc];
     }
 
@@ -65,9 +64,9 @@ public class N2Bconversion {
                 String[] headerElems = headerLine.split(" ");
                 for (String headerElem : headerElems) {
                     int ind_wvl_arr = Integer.parseInt(headerElem.trim());
-                    nb_coef_arr_all.set(ind_spc, ind_wvl_arr, readDouble(reader));
+                    nb_coef_arr_all[ind_spc][ind_wvl_arr] = readDouble(reader);
                 }
-                nb_intcp_arr_all.set(ind_spc, 0, readDouble(reader));
+                nb_intcp_arr_all[ind_spc] = readDouble(reader);
                 rmse_arr_all[ind_spc] = readDouble(reader);
             }
         } finally {
@@ -83,7 +82,7 @@ public class N2Bconversion {
                 String[] headerElems = headerLine.split(" ");
                 for (String headerElem : headerElems) {
                     int ind_wvl_arr = Integer.parseInt(headerElem.trim());
-                    nb_coef_arr_D.set(ind_spc, ind_wvl_arr, readDouble(reader));
+                    nb_coef_arr_D[ind_spc][ind_wvl_arr] = readDouble(reader);
                 }
                 nb_intcp_arr_D[ind_spc] = readDouble(reader);
             }
