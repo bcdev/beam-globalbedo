@@ -17,6 +17,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -25,6 +26,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.LookupTable;
 
 import java.io.IOException;
@@ -62,6 +64,9 @@ public class BbdrOp extends PixelOperator {
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
+    @Parameter(defaultValue = "true")
+    private boolean sdrOnly;
+
     // auxdata
     private double[] amfArray;
     private double[] gasArray;
@@ -83,10 +88,22 @@ public class BbdrOp extends PixelOperator {
     private NskyLookupTable nskyUpLut;
     private GasLookupTable gasLookupTable;
 
-
     @Override
     protected void configureTargetProduct(Product targetProduct) {
-
+        if (sdrOnly) {
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                targetProduct.addBand("sdr_"+(i+1), ProductData.TYPE_FLOAT32);
+            }
+            targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
+            // copy flag coding and flag images
+            ProductUtils.copyFlagBands(source, targetProduct);
+            final Band[] bands = source.getBands();
+            for (Band band : bands) {
+                if (band.getFlagCoding() != null) {
+                    targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
+                }
+            }
+        } else {
         String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
                 "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
                 "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
@@ -97,6 +114,7 @@ public class BbdrOp extends PixelOperator {
                 "snow_mask" /*, "$l1_flg_str"*/};
         for (String bandName : bandNames) {
             targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+        }
         }
         readAuxdata();
     }
@@ -118,17 +136,6 @@ public class BbdrOp extends PixelOperator {
         kxAotLut = BbdrUtils.getAotKxLookupTable("MERIS");
         nskyDwLut = BbdrUtils.getNskyLookupTableDw("MERIS");
         nskyUpLut = BbdrUtils.getNskyLookupTableUp("MERIS");
-//        gasLut = BbdrUtils.getTransposedCwvOzoLookupTable("MERIS");
-//        kxGasLut = BbdrUtils.getCwvOzoKxLookupTable("MERIS");
-
-//        final double[] angArray = kxGasLut.getDimension(3).getSequence();
-//        amfArray = new double[angArray.length];
-//        for (int i = 0; i < amfArray.length; i++) {
-//            amfArray[i] = 2.0/cos(toRadians(angArray[i]));
-//
-//        }
-//
-//        gasArray = kxGasLut.getDimension(1).getSequence();
 
         gasLookupTable = new GasLookupTable(sensor);
         gasLookupTable.load();
@@ -148,12 +155,12 @@ public class BbdrOp extends PixelOperator {
         configurator.defineSample(SRC_SZA, "sun_zenith");
         configurator.defineSample(SRC_SAA, "sun_azimuth");
         configurator.defineSample(SRC_DEM, "elevation");
-        
+
         configurator.defineSample(SRC_OZO, "ozone");
 
         configurator.defineSample(SRC_AOT, "aot");
         configurator.defineSample(SRC_AOT_ERR, "aot_err");
-        
+
         String[] toaBandNames = {"reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
                 "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
                 "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"};
@@ -173,7 +180,14 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureTargetSamples(Configurator configurator) {
-        // TODO
+        if (sdrOnly) {
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                configurator.defineSample(i, "sdr_" + (i + 1));
+            }
+            configurator.defineSample(sensor.getNumBands(), "sdr_error");
+        } else {
+            // TODO
+        }
     }
 
     @Override
@@ -189,7 +203,7 @@ public class BbdrOp extends PixelOperator {
         double saa = sourceSamples[SRC_SAA].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
         double aot = sourceSamples[SRC_AOT].getDouble();
-        
+
         double ozo = sourceSamples[SRC_OZO].getDouble();
 
         // TODO MERIS only
@@ -248,6 +262,7 @@ public class BbdrOp extends PixelOperator {
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
+            targetSamples[i].set(rfl_pix[i]);
         }
 
         double rfl_red = rfl_pix[sensor.getIndexRed()];
@@ -271,8 +286,8 @@ public class BbdrOp extends PixelOperator {
             double delta_ozo = sensor.getOzoError() * ozo;
 
             err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
-            err_cwv[i] = abs((kx_tg[0][0][i] + kx_tg[1][0][i] * rfl_pix[i]) * delta_cwv);
-            err_ozo[i] = abs((kx_tg[0][1][i] + kx_tg[1][1][i] * rfl_pix[i]) * delta_ozo);
+            err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
+            err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
             err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
         }
@@ -289,6 +304,11 @@ public class BbdrOp extends PixelOperator {
 
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(err_rad_cov).plusEquals(err_coreg_cov);
 
+        if (sdrOnly) {
+            double sdrError = err2_tot_cov.trace();
+            targetSamples[sensor.getNumBands()].set(sdrError);
+            return;
+        }
         // end of implementation needed for landcover cci
 
         double ndviSum = sensor.getAndvi() + sensor.getBndvi();
@@ -405,7 +425,7 @@ public class BbdrOp extends PixelOperator {
 
     private static Matrix matrixSquare(double[] doubles) {
         Matrix matrix = new Matrix(doubles, doubles.length);
-        return matrix.times(matrix);
+        return matrix.times(matrix.transpose());
     }
 
     static int getIndexBefore(double value, double[] array) {

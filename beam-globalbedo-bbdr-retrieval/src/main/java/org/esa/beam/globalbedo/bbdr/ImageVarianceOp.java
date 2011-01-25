@@ -56,7 +56,9 @@ public class ImageVarianceOp extends Operator {
 
         Band[] bands = sourceProduct.getBands();
         for (Band band : bands) {
-            targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+            if (band.getName().startsWith("refl")) {
+                targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+            }
         }
 
         setTargetProduct(targetProduct);
@@ -68,9 +70,11 @@ public class ImageVarianceOp extends Operator {
         Rectangle rectangle = targetTile.getRectangle();
         rectangle.grow(1, 1);
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));
-        for (int y = targetTile.getMinY(); y < targetTile.getMaxY(); y++) {
-            for (int x = targetTile.getMinX(); x < targetTile.getMaxX(); x++) {
-                targetTile.setSample(x, y, variance(sourceTile, x, y));
+        for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
+            for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
+                final double variance = variance(sourceTile, x, y);
+//                System.out.println("variance = " + variance);
+                targetTile.setSample(x, y, variance);
             }
         }
     }
@@ -78,14 +82,16 @@ public class ImageVarianceOp extends Operator {
     double variance(Tile sourceTile, int x0, int y0) {
         double sum = 0;
         double sumSq = 0;
-        for (int y = y0-1; y < y0+1; y++) {
-            for (int x = x0-1; x < x0+1; x++) {
+        for (int y = y0-1; y <= y0+1; y++) {
+            for (int x = x0-1; x <= x0+1; x++) {
                 double v = sourceTile.getSampleDouble(x, y);
                 sum += v;
                 sumSq += v*v;
             }
         }
-        return (sumSq/3) - (sum*sum/9);
+        final double a = (sumSq / 9) - (sum * sum / 81);
+//        System.out.println("a = " + a);
+        return Math.sqrt(a);
     }
 
     public static class Spi extends OperatorSpi {
