@@ -58,6 +58,8 @@ public class ImageVarianceOp extends Operator {
         for (Band band : bands) {
             targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
         }
+
+        setTargetProduct(targetProduct);
     }
 
     @Override

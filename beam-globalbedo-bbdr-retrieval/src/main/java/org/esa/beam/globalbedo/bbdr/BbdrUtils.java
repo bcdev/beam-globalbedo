@@ -74,12 +74,14 @@ public class BbdrUtils {
         int nAzi = azi.length;
         float[] hsf = readDimension(bb);
         int nHsf = hsf.length;
-        // invert order to store stirctly increasing dimension in lut
-        // swapping the actual values in the lut is taken care off in readValues()
-        for (int i = 0; i < nHsf / 2; i++) {
-            float swap = hsf[nHsf - 1 - i];
-            hsf[nHsf - 1 - i] = hsf[i];
-            hsf[i] = swap;
+        // conversion from surf.pressure to elevation ASL
+        for (int i = 0; i < nHsf; i++) {
+            if (hsf[i] != -1) {
+                // 1.e-3 * (1.d - (xnodes[3, wh_nod] / 1013.25)^(1./5.25588)) / 2.25577e-5
+                final double a = hsf[i] / 1013.25;
+                final double b = 1. / 5.25588;
+                hsf[i] = (float) (0.001 * (1.0 - Math.pow(a, b)) / 2.25577E-5);
+            }
         }
         float[] aot = readDimension(bb);
         int nAot = aot.length;
@@ -91,9 +93,28 @@ public class BbdrUtils {
         final int nWvl = wvl.length;
 
         float[] tgLut = new float[nParameters * nVza * nSza * nAzi * nHsf * nAot * nWvl];
-        bb.asFloatBuffer().get(tgLut);
+        int index = 0;
+//        bb.asFloatBuffer().get(tgLut);
 
-        bb.position(bb.position() + 4 * tgLut.length);
+        for (int iWvl = 0; iWvl < nWvl; iWvl++) {
+            for (int iAot = 0; iAot < nAot; iAot++) {
+                for (int iHsf = 0; iHsf < nHsf; iHsf++) {
+                    for (int iAzi = 0; iAzi < nAzi; iAzi++) {
+                        for (int iSza = 0; iSza < nSza; iSza++) {
+                            for (int iVza = 0; iVza < nVza; iVza++) {
+                                for (int iParams = 0; iParams < nParameters; iParams++) {
+                                    int iAziTemp = nAzi - iAzi -1;
+                                    int i = iParams + nParameters * (iVza + nVza * ( iSza + nSza * (iAziTemp + nAzi * (iHsf + nHsf * (iAot + nAot * iWvl)))));
+                                    tgLut[i] = bb.getFloat();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+//        bb.position(bb.position() + 4 * tgLut.length);
         readDimension(bb, nWvl); // skip wavelengths
         float[] solarIrradiances = readDimension(bb, nWvl);
 
@@ -179,6 +200,108 @@ public class BbdrUtils {
         // store in transposed sequence (see breadboard)
         return new LookupTable(tgLut, ang, cwv, ozo, wvl);
     }
+
+    public static double[][][][] get4DArrayFromLut(LookupTable lut) {
+        final double[] dim1Array = lut.getDimension(0).getSequence();
+        final double[] dim2Array = lut.getDimension(1).getSequence();
+        final double[] dim3Array = lut.getDimension(2).getSequence();
+        final double[] dim4Array = lut.getDimension(3).getSequence();
+        double[][][][] array = new double[dim1Array.length][dim2Array.length][dim3Array.length][dim4Array.length];
+        for (int i = 0; i < dim1Array.length; i++) {
+            for (int j = 0; j < dim2Array.length; j++) {
+                for (int k = 0; k < dim3Array.length; k++) {
+                    for (int l = 0; l < dim4Array.length; l++) {
+                        final double[] coords = new double[]{dim1Array[i], dim2Array[j], dim3Array[k], dim4Array[l]};
+                        array[i][j][k][l] = lut.getValue(coords);
+                    }
+                }
+            }
+        }
+        return array;
+    }
+
+    public static float[][][][] getCwvOzoLookupTableArray(String instrument) {
+        // todo: test this method!
+        final String lutFileName = getCwvLutName(instrument);
+        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+        int nAng = bb.getInt();
+        int nCwv = bb.getInt();
+        int nOzo = bb.getInt();
+
+        readDimension(bb, nAng);
+        readDimension(bb, nCwv);
+        readDimension(bb, nOzo);
+
+        float[] wvl = getInstrumentWavelengths(instrument);
+        final int nWvl = wvl.length;
+        float[][][][] cwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng];
+        for (int i = 0; i < nWvl; i++) {
+            for (int j = 0; j < nOzo; j++) {
+                for (int k = 0; k < nCwv; k++) {
+                    for (int l = 0; l < nAng; l++) {
+                        cwvOzoLutArray[i][j][k][l] = bb.getFloat();
+                    }
+                }
+            }
+        }
+        return cwvOzoLutArray;
+    }
+
+    public static float[][][][][][] getCwvOzoKxLookupTableArray(String instrument) {
+        // todo: test this method!!
+        final String lutFileName = getCwvKxLutName(instrument);
+
+        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+
+        // read LUT dimensions and values
+        int nAng = bb.getInt();
+        readDimension(bb, nAng);
+        int nCwv = bb.getInt();
+        readDimension(bb, nCwv);
+        int nOzo = bb.getInt();
+        readDimension(bb, nOzo);
+
+        int nKx = 2;
+        int nKxcase = 2;
+
+        float[] wvl = getInstrumentWavelengths(instrument);
+        final int nWvl = wvl.length;
+
+        float[][][][][][] kxCwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng][nKxcase][nKx];
+        for (int i = 0; i < nWvl; i++) {
+            for (int j = 0; j < nOzo; j++) {
+                for (int k = 0; k < nCwv; k++) {
+                    for (int l = 0; l < nAng; l++) {
+                        for (int m = 0; m < nKxcase; m++) {
+                            for (int n = 0; n < nKx; n++) {
+                                kxCwvOzoLutArray[i][j][k][l][m][n] = bb.getFloat();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return kxCwvOzoLutArray;
+    }
+
+    public static float[][][] getCwvOzoLookupTableReformedArray(float[][][][] cwvOzoLutArray, int ozoneIndex) {
+        // todo: test this method!
+
+        // 'cuts' ozone dimension, as IDL 'reform' procedure
+        int nWvl = cwvOzoLutArray.length;
+        int nCwv = cwvOzoLutArray[0][0].length;
+        int nAng = cwvOzoLutArray[0][0][0].length;
+        float[][][] reformedArray = new float[nWvl][nCwv][nAng];
+        for (int i = 0; i < nWvl; i++) {
+            for (int k = 0; k < nCwv; k++) {
+                for (int l = 0; l < nAng; l++) {
+                    reformedArray[i][k][l] = cwvOzoLutArray[i][ozoneIndex][k][l];
+                }
+            }
+        }
+        return reformedArray;
+    }
+
 
     /**
      * reads a Water vapour / ozone Kx LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
@@ -344,7 +467,7 @@ public class BbdrUtils {
     }
 
 
-    private static float[] readDimension(ByteBuffer bb, int len) {
+    static float[] readDimension(ByteBuffer bb, int len) {
         float[] dim = new float[len];
         for (int i = 0; i < len; i++) {
             dim[i] = bb.getFloat();
@@ -362,12 +485,12 @@ public class BbdrUtils {
         return aotLutPath.replace("%INSTRUMENT%", instrument);
     }
 
-    private static String getCwvLutName(String instrument) {
+    static String getCwvLutName(String instrument) {
         final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvLutPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
-    private static String getCwvKxLutName(String instrument) {
+    static String getCwvKxLutName(String instrument) {
         final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvKxLutPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
@@ -383,11 +506,11 @@ public class BbdrUtils {
     }
 
 
-    private static float[] getInstrumentWavelengths(String instrument) {
+    static float[] getInstrumentWavelengths(String instrument) {
         return (float[]) BbdrConstants.instrumentWavelengths.get(instrument);
     }
 
-    private static ByteBuffer readLutFileToByteBuffer(String lutName) {
+    static ByteBuffer readLutFileToByteBuffer(String lutName) {
         ByteBuffer bb = null;
         File lutFile = new File(lutName);
         Guardian.assertTrue("lookup table file exists", lutFile.exists());
@@ -412,4 +535,16 @@ public class BbdrUtils {
         return bb;
     }
 
+    public static int getIndexBefore(float value, float[] array) {
+        for (int i = 0; i < array.length; i++) {
+            if (value < array[i]) {
+                if (i != 0) {
+                    return i - 1;
+                } else {
+                    throw new IllegalArgumentException();
+                }
+            }
+        }
+        throw new IllegalArgumentException();
+    }
 }

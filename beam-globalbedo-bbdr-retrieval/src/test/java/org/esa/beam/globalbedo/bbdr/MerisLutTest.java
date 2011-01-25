@@ -48,9 +48,13 @@ public class MerisLutTest extends TestCase {
         final double[] hsfArray = lut.getDimension(2).getSequence();
         final int nHsf = hsfArray.length;
         assertEquals(4, nHsf);     //  HSF
-        assertEquals(746.825, hsfArray[1], 1.E-3);
-        assertEquals(898.746, hsfArray[2], 1.E-3);
-        assertEquals(1013.25, hsfArray[3], 1.E-3);
+//        assertEquals(746.825, hsfArray[1], 1.E-3);
+//        assertEquals(898.746, hsfArray[2], 1.E-3);
+//        assertEquals(1013.25, hsfArray[3], 1.E-3);
+        assertEquals(0.0, hsfArray[0], 1.E-3);
+        assertEquals(1.0, hsfArray[1], 1.E-3);
+        assertEquals(2.5, hsfArray[2], 1.E-3);
+        assertEquals(8.0, hsfArray[3], 1.E-3);
 
         final double[] aotArray = lut.getDimension(1).getSequence();
         final int nAot = aotArray.length;
@@ -282,7 +286,6 @@ public class MerisLutTest extends TestCase {
         // iAng=0, iCwv=0, iOzo=0, iWvl=0:
         double[] coord = new double[]{0.0, 0.0, 0.1, 412.0};
         assertEquals(1.0, lut.getValue(coord), 1.E-4);
-
         // The index in 1D LUT array (lut_cwv_ozo as retrieved in IDL breadboard) computes like this:
         // index = iAng*(nCwv*nOzo*nWvl) + iCwv*(nOzo*nWvl) + iOzo*nWvl + iWvl
 
@@ -303,6 +306,22 @@ public class MerisLutTest extends TestCase {
         assertEquals(1679, index);
         coord = new double[]{70.0, 4.5, 0.6, 900.0};
         assertEquals(0.42336, lut.getValue(coord), 1.E-4);
+    }
+
+    public void testCwvOzoLutArray() {
+        float[][][][] lutArray = BbdrUtils.getCwvOzoLookupTableArray("MERIS");
+        assertNotNull(lutArray);
+        final int dimWvl = lutArray.length;
+        final int dimCwv = lutArray[0].length;
+        final int dimOzo = lutArray[0][0].length;
+        final int dimAng = lutArray[0][0][0].length;
+
+        assertEquals(15, dimWvl);
+        assertEquals(4, dimOzo);
+        assertEquals(4, dimCwv);
+        assertEquals(7, dimAng);
+
+        // todo: check sequence, values...
     }
 
     public void testCwvOzoLutKx() {

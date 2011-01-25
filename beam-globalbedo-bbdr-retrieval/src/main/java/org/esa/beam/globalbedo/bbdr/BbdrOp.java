@@ -19,11 +19,15 @@ package org.esa.beam.globalbedo.bbdr;
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.util.math.LookupTable;
+
+import java.io.IOException;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
@@ -71,6 +75,14 @@ public class BbdrOp extends PixelOperator {
     private double kpp_vol;
     private double kpp_geo;
 
+    private AotLookupTable aotLut;
+    private LookupTable kxAotLut;
+    private LookupTable gasLut;
+    private LookupTable kxGasLut;
+    private NskyLookupTable nskyDwLut;
+    private NskyLookupTable nskyUpLut;
+    private GasLookupTable gasLookupTable;
+
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
@@ -82,7 +94,7 @@ public class BbdrOp extends PixelOperator {
                 "AOD550",
                 "NDVI", "sig_NDVI",
                 "VZA", "SZA", "RAA", "DEM",
-                "snow_mask", "$l1_flg_str"};
+                "snow_mask" /*, "$l1_flg_str"*/};
         for (String bandName : bandNames) {
             targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
         }
@@ -90,14 +102,44 @@ public class BbdrOp extends PixelOperator {
     }
 
     void readAuxdata() {
+         N2Bconversion n2Bconversion = new N2Bconversion("MERIS", 3, BbdrConstants.MERIS_WAVELENGHTS.length);
+        try {
+            n2Bconversion.load();
+        } catch (IOException e) {
+            throw new OperatorException(e.getMessage());
+        }
+        rmse_arr_all = n2Bconversion.getRmse_arr_all();
+        nb_coef_arr_all = n2Bconversion.getNb_coef_arr_all();
+        nb_intcp_arr_all = n2Bconversion.getNb_intcp_arr_all();
+        nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
+        nb_intcp_arr_D = n2Bconversion.getNb_intcp_arr_D();
 
+        aotLut = BbdrUtils.getAotLookupTable("MERIS");
+        kxAotLut = BbdrUtils.getAotKxLookupTable("MERIS");
+        nskyDwLut = BbdrUtils.getNskyLookupTableDw("MERIS");
+        nskyUpLut = BbdrUtils.getNskyLookupTableUp("MERIS");
+//        gasLut = BbdrUtils.getTransposedCwvOzoLookupTable("MERIS");
+//        kxGasLut = BbdrUtils.getCwvOzoKxLookupTable("MERIS");
+
+//        final double[] angArray = kxGasLut.getDimension(3).getSequence();
+//        amfArray = new double[angArray.length];
+//        for (int i = 0; i < amfArray.length; i++) {
+//            amfArray[i] = 2.0/cos(toRadians(angArray[i]));
+//
+//        }
+//
+//        gasArray = kxGasLut.getDimension(1).getSequence();
+
+        gasLookupTable = new GasLookupTable(sensor);
+        gasLookupTable.load();
     }
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
         // TODO for now MERIS only --> handle SPOt and AATSR aswell
 
-        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("landexpr", source);
+        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("NOT l1_flags.INVALID", source);
+//        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("landexpr", source);
         Product landMaskProduct = bandMathsOp.getTargetProduct();
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
@@ -120,7 +162,7 @@ public class BbdrOp extends PixelOperator {
         }
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
-        imageVarianceOp.setSourceProduct(source);
+        imageVarianceOp.setSourceProduct("source", source);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
 
         for (int i = 0; i < toaBandNames.length; i++) {
@@ -151,7 +193,7 @@ public class BbdrOp extends PixelOperator {
         double ozo = sourceSamples[SRC_OZO].getDouble();
 
         // TODO MERIS only
-        ozo += 0.001;
+        ozo *= 0.001;
         double gas = ozo;
         double gas2_val = 1.5;
         double cwv = gas2_val;
@@ -175,30 +217,9 @@ public class BbdrOp extends PixelOperator {
         double mus = cos(toRadians(sza));
         double amf = 1.0 / muv + 1.0 / mus;
 
-        int ind_amf = getIndexBefore(amf, amfArray);
-        double amf_p = (amf - amfArray[ind_amf]) / (amfArray[ind_amf + 1] - amfArray[ind_amf]);
 
-        int ind_gas = getIndexBefore(gas, gasArray);
-        double gas_p = (gas - gasArray[ind_gas]) / (gasArray[ind_gas + 1] - gasArray[ind_gas]);
-
-        double[] tg = new double[sensor.getNumBands()];
-        for (int i = 0; i < tg.length; i++) {
-            tg[i] = (1.0 - amf_p) * (1.0 - gas_p) * lut_gas[ind_amf][ind_gas][i] +
-                    gas_p * (1 - amf_p) * lut_gas[ind_amf][ind_gas + 1][i] +
-                    (1. - gas_p) * amf_p * lut_gas[ind_amf + 1][ind_gas][i] +
-                    amf_p * gas_p * lut_gas[ind_amf + 1][ind_gas + 1][i];
-        }
-        double[][][] kx_tg = new double[1][1][1];
-        for (int a1 = 0; a1 < kx_tg.length; a1++) {
-            for (int a2 = 0; a2 < kx_tg[a1].length; a2++) {
-                for (int a3 = 0; a3 < kx_tg[a1][a2].length; a3++) {
-                    kx_tg[a1][a2][a3] = (1. - amf_p) * (1. - gas_p) * kx_lut_gas[a1][a2][ind_amf][ind_gas][a3] +
-                            gas_p * (1 - amf_p) * kx_lut_gas[a1][a2][ind_amf][ind_gas + 1][a3] +
-                            (1. - gas_p) * amf_p * kx_lut_gas[a1][a2][ind_amf + 1][ind_gas][a3] +
-                            amf_p * gas_p * kx_lut_gas[a1][a2][ind_amf + 1][ind_gas + 1][a3];
-                }
-            }
-        }
+        float[] tg = gasLookupTable.getTg((float) amf, (float) gas);
+        float[][][] kx_tg = gasLookupTable.getKxTg((float) amf, (float) gas);
 //        double cwv = 0;//TODO
 //        double ozo = 0;//TODO
 
@@ -268,6 +289,7 @@ public class BbdrOp extends PixelOperator {
 
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(err_rad_cov).plusEquals(err_coreg_cov);
 
+        // end of implementation needed for landcover cci
 
         double ndviSum = sensor.getAndvi() + sensor.getBndvi();
         double sig_ndvi_land = pow(
@@ -360,7 +382,21 @@ public class BbdrOp extends PixelOperator {
      * as a function of [vza, sza, phi, hsf, aot] from the interpolation of the MOMO absorption-free LUTs
      */
     private double[][] interpol_lut_MOMO_kx(double vza, double sza, double phi, double hsf, double aot) {
-        return new double[1][1];
+        final LookupTable lut = aotLut.getLut();
+        final float[] wvl = aotLut.getWvl();
+        final double[] params = aotLut.getLut().getDimension(6).getSequence();
+        final double[] kxParams = kxAotLut.getDimension(6).getSequence();
+        double[][] result = new double[sensor.getNumBands()][7];
+        for (int i = 0; i < result.length; i++) {
+            int index = 0;
+            for (double param : params) {
+                result[i][index++] = lut.getValue(wvl[i], aot, hsf, phi, sza, vza, param);
+            }
+            for (double kxParam : kxParams) {
+                result[i][index++] = kxAotLut.getValue(wvl[i], aot, hsf, phi, sza, vza, kxParam);
+            }
+        }
+        return result;
     }
 
     private double[][] interpol_lut_Nsky(double sza, double vza, double hsf, double aot) {

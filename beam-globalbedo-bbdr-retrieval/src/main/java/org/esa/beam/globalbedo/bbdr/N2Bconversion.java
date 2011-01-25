@@ -27,8 +27,8 @@ import java.io.IOException;
  * The narrow to broadband conversion.
  */
 public class N2Bconversion {
-    private static final String coeffPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%rmse_v2.txt";
-    private static final String coeffDPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%Ddw_Dup.txt";
+    private static final String coeffPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_rmse_v2.txt";
+    private static final String coeffDPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_Ddw_Dup.txt";
 
     private final String instrument;
     private final int n_spc;
@@ -63,7 +63,11 @@ public class N2Bconversion {
                 String headerLine = reader.readLine();
                 String[] headerElems = headerLine.split(" ");
                 for (String headerElem : headerElems) {
-                    int ind_wvl_arr = Integer.parseInt(headerElem.trim());
+                    final String trim = headerElem.trim();
+                    if (trim.isEmpty()) {
+                        continue;
+                    }
+                    int ind_wvl_arr = Integer.parseInt(trim);
                     nb_coef_arr_all[ind_spc][ind_wvl_arr] = readDouble(reader);
                 }
                 nb_intcp_arr_all[ind_spc] = readDouble(reader);
@@ -81,7 +85,11 @@ public class N2Bconversion {
                 String headerLine = reader.readLine();
                 String[] headerElems = headerLine.split(" ");
                 for (String headerElem : headerElems) {
-                    int ind_wvl_arr = Integer.parseInt(headerElem.trim());
+                    final String trim = headerElem.trim();
+                    if (trim.isEmpty()) {
+                        continue;
+                    }
+                    int ind_wvl_arr = Integer.parseInt(trim);
                     nb_coef_arr_D[ind_spc][ind_wvl_arr] = readDouble(reader);
                 }
                 nb_intcp_arr_D[ind_spc] = readDouble(reader);
@@ -98,5 +106,25 @@ public class N2Bconversion {
     private static String getFileName(String instrument, String pattern) {
         final String pathPattern = InstrumentConsts.getInstance().getLutPath() + File.separator + pattern;
         return pathPattern.replace("%INSTRUMENT%", instrument);
+    }
+
+    public double[][] getNb_coef_arr_all() {
+        return nb_coef_arr_all;
+    }
+
+    public double[] getNb_intcp_arr_all() {
+        return nb_intcp_arr_all;
+    }
+
+    public double[] getRmse_arr_all() {
+        return rmse_arr_all;
+    }
+
+    public double[][] getNb_coef_arr_D() {
+        return nb_coef_arr_D;
+    }
+
+    public double[] getNb_intcp_arr_D() {
+        return nb_intcp_arr_D;
     }
 }
