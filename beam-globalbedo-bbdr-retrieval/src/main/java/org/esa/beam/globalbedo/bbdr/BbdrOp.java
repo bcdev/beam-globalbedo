@@ -67,7 +67,7 @@ public class BbdrOp extends PixelOperator {
     @Parameter(defaultValue = "true")
     private boolean sdrOnly;
 
-    @Parameter(defaultValue = "NOT l1_flags.INVALID")
+    @Parameter(defaultValue = "NOT l1_flags.INVALID AND (cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW)")
     private String maskExpression;
 
     // Auxdata
@@ -89,9 +89,14 @@ public class BbdrOp extends PixelOperator {
     protected void configureTargetProduct(Product targetProduct) {
         if (sdrOnly) {
             for (int i = 0; i < sensor.getNumBands(); i++) {
-                targetProduct.addBand("sdr_"+(i+1), ProductData.TYPE_FLOAT32);
+                Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
             }
-            targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
+            Band sdrError = targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
+            sdrError.setNoDataValue(Float.NaN);
+            sdrError.setNoDataValueUsed(true);
+
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
             final Band[] bands = sourceProduct.getBands();
@@ -190,7 +195,9 @@ public class BbdrOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
             // only compute over land
-            // TODO set no-data-values
+            for (WritableSample targetSample : targetSamples) {
+                targetSample.set(Float.NaN);
+            }
             return;
         }
         double vza = sourceSamples[SRC_VZA].getDouble();

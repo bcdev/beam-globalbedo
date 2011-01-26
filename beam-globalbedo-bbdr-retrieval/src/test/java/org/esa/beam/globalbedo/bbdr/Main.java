@@ -18,7 +18,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException {
         JAI.enableDefaultTileCache();
-            JAI.getDefaultInstance().getTileCache().setMemoryCapacity(256*1024*1024);
+        JAI.getDefaultInstance().getTileCache().setMemoryCapacity(256*1024*1024);
         JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
         final String sourceProductFileName = args[0];
         final String targetProductFileName = args[1];
