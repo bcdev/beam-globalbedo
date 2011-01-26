@@ -16,6 +16,7 @@
 
 package org.esa.beam.globalbedo.bbdr;
 
+import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -25,13 +26,14 @@ import javax.media.jai.operator.ConstantDescriptor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 
 public class BbdrOpTest {
 
     private static final int W = 3;
     private static final int H = 3;
 
-    @Test
+//    @Test
     public void testMerisSdrPixel() {
         BbdrOp bbdrOp = new BbdrOp();
         bbdrOp.setSourceProduct(createSourceProduct());
@@ -39,7 +41,7 @@ public class BbdrOpTest {
         Product targetProduct = bbdrOp.getTargetProduct();
         assertNotNull(targetProduct);
         int numBands = targetProduct.getNumBands();
-        assertEquals(15+1, numBands);
+        assertEquals(15 + 1, numBands);
         assertEquals(0.04042f, getSample(targetProduct, "sdr_1"), 1E-4);
         assertEquals(0.05604f, getSample(targetProduct, "sdr_2"), 1E-4);
         assertEquals(0.08070f, getSample(targetProduct, "sdr_3"), 1E-4);
@@ -95,6 +97,27 @@ public class BbdrOpTest {
         Band band = new Band(name, ProductData.TYPE_FLOAT32, W, H);
         band.setSourceImage(ConstantDescriptor.create(1.0f * W, 1.0f * H, new Double[]{value}, null));
         return band;
+    }
+
+    @Test
+    public void testMatrixSquare() {
+        double[] in = {2, 4, 6};
+        Matrix squareMatrix = BbdrOp.matrixSquare(in);
+        assertNotNull(squareMatrix);
+        assertEquals(3, squareMatrix.getColumnDimension());
+        assertEquals(3, squareMatrix.getRowDimension());
+
+        assertEquals(4, squareMatrix.get(0,0), 1E-6);
+        assertEquals(8, squareMatrix.get(1,0), 1E-6);
+        assertEquals(12, squareMatrix.get(2,0), 1E-6);
+
+        assertEquals(8, squareMatrix.get(0,1), 1E-6);
+        assertEquals(16, squareMatrix.get(1,1), 1E-6);
+        assertEquals(24, squareMatrix.get(2,1), 1E-6);
+
+        assertEquals(12, squareMatrix.get(0,2), 1E-6);
+        assertEquals(24, squareMatrix.get(1,2), 1E-6);
+        assertEquals(36, squareMatrix.get(2,2), 1E-6);
     }
 
 }

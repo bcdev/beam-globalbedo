@@ -17,6 +17,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
+import com.sun.corba.se.impl.io.OptionalDataException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -27,6 +28,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.math.FracIndex;
 import org.esa.beam.util.math.LookupTable;
 
 import java.io.IOException;
@@ -410,13 +412,28 @@ public class BbdrOp extends PixelOperator {
         final double[] params = aotLut.getLut().getDimension(6).getSequence();
         final double[] kxParams = kxAotLut.getDimension(6).getSequence();
         double[][] result = new double[sensor.getNumBands()][7];
+
+        int lutDimensionCount = lut.getDimensionCount();
+        double[] coordinates = new double[lutDimensionCount];
+        FracIndex[] fracIndexes = FracIndex.createArray(coordinates.length);
+        double[] v = new double[1 << coordinates.length];
+
+        lut.computeFracIndex(lut.getDimension(1), aot, fracIndexes[1]);
+        lut.computeFracIndex(lut.getDimension(2), hsf, fracIndexes[2]);
+        lut.computeFracIndex(lut.getDimension(3), phi, fracIndexes[3]);
+        lut.computeFracIndex(lut.getDimension(4), sza, fracIndexes[4]);
+        lut.computeFracIndex(lut.getDimension(5), vza, fracIndexes[5]);
+
         for (int i = 0; i < result.length; i++) {
             int index = 0;
+            lut.computeFracIndex(lut.getDimension(0), wvl[i], fracIndexes[0]);
             for (double param : params) {
-                result[i][index++] = lut.getValue(wvl[i], aot, hsf, phi, sza, vza, param);
+                lut.computeFracIndex(lut.getDimension(6), param, fracIndexes[6]);
+                result[i][index++] = lut.getValue(fracIndexes, v);
             }
             for (double kxParam : kxParams) {
-                result[i][index++] = kxAotLut.getValue(wvl[i], aot, hsf, phi, sza, vza, kxParam);
+                lut.computeFracIndex(lut.getDimension(6), kxParam, fracIndexes[6]);
+                result[i][index++] = kxAotLut.getValue(fracIndexes, v);
             }
         }
         return result;
@@ -426,9 +443,17 @@ public class BbdrOp extends PixelOperator {
         return new double[1][1];
     }
 
-    private static Matrix matrixSquare(double[] doubles) {
-        Matrix matrix = new Matrix(doubles, doubles.length);
-        return matrix.times(matrix.transpose());
+    static Matrix matrixSquare(double[] doubles) {
+//        Matrix matrix = new Matrix(doubles, doubles.length);
+//        return matrix.times(matrix.transpose());
+
+        Matrix matrix = new Matrix(doubles.length, doubles.length);
+        for (int i = 0; i < doubles.length; i++) {
+           for (int j = 0; j < doubles.length; j++) {
+              matrix.set(i, j, doubles[i] * doubles[j]);
+           }
+        }
+        return matrix;
     }
 
     public static class Spi extends OperatorSpi {
