@@ -29,6 +29,30 @@ class GasLookupTable {
         loadCwvOzoKxLookupTableArray(sensor.toString());
     }
 
+    float getGas2val() {
+        return gas2val;
+    }
+
+    float[][][] getLutGas() {
+        return lutGas;
+    }
+
+    float[][][][][] getKxLutGas() {
+        return kxLutGas;
+    }
+
+    float[] getAmfArray() {
+        return amfArray;
+    }
+
+    float[] getCwvArray() {
+        return cwvArray;
+    }
+
+    float[] getGasArray() {
+        return gasArray;
+    }
+
     private void loadCwvOzoLookupTableArray(String instrument) {
         // todo: test this method!
         final String lutFileName = BbdrUtils.getCwvLutName(instrument);
@@ -54,10 +78,7 @@ class GasLookupTable {
             }
         }
         lutGas = new float[nWvl][nCwv][nAng];
-        amfArray = new float[angArr.length];
-        for (int i = 0; i < amfArray.length; i++) {
-            amfArray[i] = (float) (2.0 / cos(toRadians(angArr[i])));
-        }
+        amfArray = convertAngArrayToAmfArray(angArr);
 
         if (sensor.equals(Sensor.SPOT)) {
             //TODO
@@ -172,5 +193,21 @@ class GasLookupTable {
         }
         return kx_tg;
     }
+
+    /**
+     * converts ang values to geomAmf values (BBDR breadboard l.890)
+     *
+     * @param ang
+     *
+     * @return
+     */
+    static float[] convertAngArrayToAmfArray(float[] ang) {
+        float[] geomAmf = new float[ang.length];
+        for (int i = 0; i < geomAmf.length; i++) {
+            geomAmf[i] = (float) (2.0 / Math.cos(Math.toRadians(ang[i])));
+        }
+        return geomAmf;
+    }
+
 
 }

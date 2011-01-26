@@ -8,20 +8,20 @@ import static org.junit.Assert.*;
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
-public class SdrOpTest {
+public class BbdrUtilsTest {
 
     @Test
     public void testGetIndexBefore() {
-        double[] values = {1.8, 2.2, 4.5, 5.5};
+        float[] values = {1.8f, 2.2f, 4.5f, 5.5f};
         try {
-            SdrOp.getIndexBefore(1.2, values);
+            BbdrUtils.getIndexBefore(1.2f, values);
             fail();
         } catch (IllegalArgumentException e) {
         }
-        assertEquals(1, SdrOp.getIndexBefore(2.5, values));
-        assertEquals(2, SdrOp.getIndexBefore(4.6, values));
+        assertEquals(1, BbdrUtils.getIndexBefore(2.5f, values));
+        assertEquals(2, BbdrUtils.getIndexBefore(4.6f, values));
         try {
-            SdrOp.getIndexBefore(7.7, values);
+            BbdrUtils.getIndexBefore(7.7f, values);
             fail();
         } catch (IllegalArgumentException e) {
         }

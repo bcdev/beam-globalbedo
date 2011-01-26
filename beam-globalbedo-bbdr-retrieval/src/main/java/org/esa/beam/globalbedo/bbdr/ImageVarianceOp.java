@@ -60,7 +60,6 @@ public class ImageVarianceOp extends Operator {
                 targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
             }
         }
-
         setTargetProduct(targetProduct);
     }
 
@@ -72,9 +71,7 @@ public class ImageVarianceOp extends Operator {
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));
         for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
             for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                final double variance = variance(sourceTile, x, y);
-//                System.out.println("variance = " + variance);
-                targetTile.setSample(x, y, variance);
+                targetTile.setSample(x, y, variance(sourceTile, x, y));
             }
         }
     }
@@ -89,9 +86,7 @@ public class ImageVarianceOp extends Operator {
                 sumSq += v*v;
             }
         }
-        final double a = (sumSq / 9) - (sum * sum / 81);
-//        System.out.println("a = " + a);
-        return Math.sqrt(a);
+        return Math.sqrt((sumSq / 9) - (sum * sum / 81));
     }
 
     public static class Spi extends OperatorSpi {

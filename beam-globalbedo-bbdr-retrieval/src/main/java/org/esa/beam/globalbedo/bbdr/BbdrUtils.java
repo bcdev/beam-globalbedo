@@ -201,25 +201,6 @@ public class BbdrUtils {
         return new LookupTable(tgLut, ang, cwv, ozo, wvl);
     }
 
-    public static double[][][][] get4DArrayFromLut(LookupTable lut) {
-        final double[] dim1Array = lut.getDimension(0).getSequence();
-        final double[] dim2Array = lut.getDimension(1).getSequence();
-        final double[] dim3Array = lut.getDimension(2).getSequence();
-        final double[] dim4Array = lut.getDimension(3).getSequence();
-        double[][][][] array = new double[dim1Array.length][dim2Array.length][dim3Array.length][dim4Array.length];
-        for (int i = 0; i < dim1Array.length; i++) {
-            for (int j = 0; j < dim2Array.length; j++) {
-                for (int k = 0; k < dim3Array.length; k++) {
-                    for (int l = 0; l < dim4Array.length; l++) {
-                        final double[] coords = new double[]{dim1Array[i], dim2Array[j], dim3Array[k], dim4Array[l]};
-                        array[i][j][k][l] = lut.getValue(coords);
-                    }
-                }
-            }
-        }
-        return array;
-    }
-
     public static float[][][][] getCwvOzoLookupTableArray(String instrument) {
         // todo: test this method!
         final String lutFileName = getCwvLutName(instrument);
@@ -246,62 +227,6 @@ public class BbdrUtils {
         }
         return cwvOzoLutArray;
     }
-
-    public static float[][][][][][] getCwvOzoKxLookupTableArray(String instrument) {
-        // todo: test this method!!
-        final String lutFileName = getCwvKxLutName(instrument);
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
-
-        // read LUT dimensions and values
-        int nAng = bb.getInt();
-        readDimension(bb, nAng);
-        int nCwv = bb.getInt();
-        readDimension(bb, nCwv);
-        int nOzo = bb.getInt();
-        readDimension(bb, nOzo);
-
-        int nKx = 2;
-        int nKxcase = 2;
-
-        float[] wvl = getInstrumentWavelengths(instrument);
-        final int nWvl = wvl.length;
-
-        float[][][][][][] kxCwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng][nKxcase][nKx];
-        for (int i = 0; i < nWvl; i++) {
-            for (int j = 0; j < nOzo; j++) {
-                for (int k = 0; k < nCwv; k++) {
-                    for (int l = 0; l < nAng; l++) {
-                        for (int m = 0; m < nKxcase; m++) {
-                            for (int n = 0; n < nKx; n++) {
-                                kxCwvOzoLutArray[i][j][k][l][m][n] = bb.getFloat();
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        return kxCwvOzoLutArray;
-    }
-
-    public static float[][][] getCwvOzoLookupTableReformedArray(float[][][][] cwvOzoLutArray, int ozoneIndex) {
-        // todo: test this method!
-
-        // 'cuts' ozone dimension, as IDL 'reform' procedure
-        int nWvl = cwvOzoLutArray.length;
-        int nCwv = cwvOzoLutArray[0][0].length;
-        int nAng = cwvOzoLutArray[0][0][0].length;
-        float[][][] reformedArray = new float[nWvl][nCwv][nAng];
-        for (int i = 0; i < nWvl; i++) {
-            for (int k = 0; k < nCwv; k++) {
-                for (int l = 0; l < nAng; l++) {
-                    reformedArray[i][k][l] = cwvOzoLutArray[i][ozoneIndex][k][l];
-                }
-            }
-        }
-        return reformedArray;
-    }
-
 
     /**
      * reads a Water vapour / ozone Kx LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
@@ -344,20 +269,6 @@ public class BbdrUtils {
     }
 
 
-    /**
-     * converts ang values to geomAmf values (BBDR breadboard l.890)
-     *
-     * @param ang
-     *
-     * @return
-     */
-    public static float[] convertAngArrayToAmfArray(float[] ang) {
-        float[] geomAmf = new float[ang.length];
-        for (int i = 0; i < geomAmf.length; i++) {
-            geomAmf[i] = (float) (2.0 / Math.cos(Math.toRadians(ang[i])));
-        }
-        return geomAmf;
-    }
 
     /**
      * reads a NSky DW LUT (BBDR breadboard procedure GA_read_LUT_Nsky, first LUT)
