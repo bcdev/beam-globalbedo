@@ -40,7 +40,7 @@ import java.awt.Rectangle;
 public class ImageVarianceOp extends Operator {
 
     @SourceProduct
-    private Product source;
+    private Product sourceProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -65,7 +65,7 @@ public class ImageVarianceOp extends Operator {
 
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        RasterDataNode sourceRaster = source.getRasterDataNode(targetBand.getName());
+        RasterDataNode sourceRaster = sourceProduct.getRasterDataNode(targetBand.getName());
         Rectangle rectangle = targetTile.getRectangle();
         rectangle.grow(1, 1);
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));

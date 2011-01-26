@@ -59,7 +59,7 @@ public class BbdrOp extends PixelOperator {
     private static final int n_kernel = 2; //(geo & vol)
 
     @SourceProduct
-    private Product source;
+    private Product sourceProduct;
 
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
@@ -67,11 +67,10 @@ public class BbdrOp extends PixelOperator {
     @Parameter(defaultValue = "true")
     private boolean sdrOnly;
 
-    // auxdata
-    private double[] amfArray;
-    private double[] gasArray;
-    private double[][][] lut_gas;
-    private double[][][][][] kx_lut_gas;
+    @Parameter(defaultValue = "NOT l1_flags.INVALID")
+    private String maskExpression;
+
+    // Auxdata
     private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
     private double[] nb_intcp_arr_all; // = fltarr(n_spc)
     private double[] rmse_arr_all; // = fltarr(n_spc)
@@ -82,11 +81,9 @@ public class BbdrOp extends PixelOperator {
 
     private AotLookupTable aotLut;
     private LookupTable kxAotLut;
-    private LookupTable gasLut;
-    private LookupTable kxGasLut;
+    private GasLookupTable gasLookupTable;
     private NskyLookupTable nskyDwLut;
     private NskyLookupTable nskyUpLut;
-    private GasLookupTable gasLookupTable;
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
@@ -96,8 +93,8 @@ public class BbdrOp extends PixelOperator {
             }
             targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
             // copy flag coding and flag images
-            ProductUtils.copyFlagBands(source, targetProduct);
-            final Band[] bands = source.getBands();
+            ProductUtils.copyFlagBands(sourceProduct, targetProduct);
+            final Band[] bands = sourceProduct.getBands();
             for (Band band : bands) {
                 if (band.getFlagCoding() != null) {
                     targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
@@ -145,8 +142,7 @@ public class BbdrOp extends PixelOperator {
     protected void configureSourceSamples(Configurator configurator) {
         // TODO for now MERIS only --> handle SPOt and AATSR aswell
 
-        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("NOT l1_flags.INVALID", source);
-//        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand("landexpr", source);
+        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand(maskExpression, sourceProduct);
         Product landMaskProduct = bandMathsOp.getTargetProduct();
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
@@ -165,11 +161,11 @@ public class BbdrOp extends PixelOperator {
                 "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
                 "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"};
         for (int i = 0; i < toaBandNames.length; i++) {
-            configurator.defineSample(SRC_TOA_RFL + i, toaBandNames[i], source);
+            configurator.defineSample(SRC_TOA_RFL + i, toaBandNames[i], sourceProduct);
         }
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
-        imageVarianceOp.setSourceProduct("source", source);
+        imageVarianceOp.setSourceProduct(sourceProduct);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
 
         for (int i = 0; i < toaBandNames.length; i++) {
@@ -426,19 +422,6 @@ public class BbdrOp extends PixelOperator {
     private static Matrix matrixSquare(double[] doubles) {
         Matrix matrix = new Matrix(doubles, doubles.length);
         return matrix.times(matrix.transpose());
-    }
-
-    static int getIndexBefore(double value, double[] array) {
-        for (int i = 0; i < array.length; i++) {
-            if (value < array[i]) {
-                if (i != 0) {
-                    return i - 1;
-                } else {
-                    throw new IllegalArgumentException();
-                }
-            }
-        }
-        throw new IllegalArgumentException();
     }
 
     public static class Spi extends OperatorSpi {
