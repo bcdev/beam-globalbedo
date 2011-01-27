@@ -76,10 +76,10 @@ public class GaMasterOp  extends Operator {
         RenderingHints rhFill = new RenderingHints(GPF.KEY_TILE_SIZE, fillTS);
 
 
-        boolean isMerisProduct = sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME);
-        isMerisProduct = isMerisProduct || sourceProduct.getProductType().equals(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME);
-        final boolean isAatsrProduct = sourceProduct.getProductType().equals(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
-        final boolean isVgtProduct = sourceProduct.getProductType().startsWith("VGT PRODUCT FORMAT V1.");
+        String productType = sourceProduct.getProductType();
+        boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
+        final boolean isAatsrProduct = productType.equals(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+        final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
 
         Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isAatsrProduct ^ isVgtProduct));
 
