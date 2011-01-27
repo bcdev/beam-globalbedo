@@ -90,7 +90,7 @@ public class CreateElevationBandOp extends Operator {
 
         final ElevationModelRegistry elevationModelRegistry = ElevationModelRegistry.getInstance();
         final ElevationModelDescriptor demDescriptor = elevationModelRegistry.getDescriptor("GETASSE30");
-        if (!demDescriptor.isDemInstalled()) {
+        if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
             throw new OperatorException(demDescriptor.getName() + "not installed");
         }
         dem = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
