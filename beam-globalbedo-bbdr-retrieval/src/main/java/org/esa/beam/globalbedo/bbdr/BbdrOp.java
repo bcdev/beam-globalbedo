@@ -66,7 +66,7 @@ public class BbdrOp extends PixelOperator {
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
-    @Parameter(defaultValue = "true")
+    @Parameter(defaultValue = "false")
     private boolean sdrOnly;
 
     @Parameter(defaultValue = "NOT l1_flags.INVALID AND (cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW)")
@@ -140,6 +140,8 @@ public class BbdrOp extends PixelOperator {
         kxAotLut = BbdrUtils.getAotKxLookupTable("MERIS");
         nskyDwLut = BbdrUtils.getNskyLookupTableDw("MERIS");
         nskyUpLut = BbdrUtils.getNskyLookupTableUp("MERIS");
+        kpp_geo = nskyDwLut.getKppGeo();
+        kpp_vol = nskyDwLut.getKppVol();
 
         gasLookupTable = new GasLookupTable(sensor);
         gasLookupTable.load();
@@ -267,7 +269,9 @@ public class BbdrOp extends PixelOperator {
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
-            targetSamples[i].set(rfl_pix[i]);
+            if (sdrOnly) {
+                targetSamples[i].set(rfl_pix[i]);
+            }
         }
 
         double rfl_red = rfl_pix[sensor.getIndexRed()];
@@ -335,12 +339,20 @@ public class BbdrOp extends PixelOperator {
             err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
         }
         Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
-        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
-        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
-        for (int i = 0; i < relevantErrIndices.length; i++) {
-            double value = columnPackedCopy[relevantErrIndices[i]];
-            targetSamples[TRG_ERRORS + i].set(value);
+        Matrix err_mat_all = new Matrix(err_sum.getRowDimension(), err_sum.getColumnDimension());
+        for (int i = 0; i < err_mat_all.getRowDimension(); i++) {
+            for (int j = 0; j < err_mat_all.getColumnDimension(); j++) {
+                err_mat_all.set(i, j, sqrt(err_sum.get(i,j)));
+            }
         }
+
+        // TODO output computed data to targetSample
+//        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
+//        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+//        for (int i = 0; i < relevantErrIndices.length; i++) {
+//            double value = columnPackedCopy[relevantErrIndices[i]];
+//            targetSamples[TRG_ERRORS + i].set(value);
+//        }
 
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
 
@@ -388,16 +400,17 @@ public class BbdrOp extends PixelOperator {
             // 1/(1-Delta_bb)=(1-rho*S)^2
             Matrix sab_m = new Matrix(sab, sab.length);
             Matrix m3 = nb_coef_arr_D_m.times(sab_m);
-            double delta_bb_inv = (1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb]));
+            double delta_bb_inv = pow((1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb])), 2);
 
             double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
             double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
             double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
             double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
-            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[0][i_bb] + t2 * f_int_nsky[2][i_bb] + t3 * kpp_vol; // targetSample
-            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[1][i_bb] + t2 * f_int_nsky[3][i_bb] + t3 * kpp_geo; // targetSample
-            targetSamples[TRG_KERN + i_bb].set(kernel_land_0);
-            targetSamples[TRG_KERN + i_bb + 1].set(kernel_land_1);
+            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol; // targetSample
+            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1]+ t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo; // targetSample
+            // TODO output
+//            targetSamples[TRG_KERN + i_bb].set(kernel_land_0);
+//            targetSamples[TRG_KERN + i_bb + 1].set(kernel_land_1);
         }
     }
 
@@ -440,7 +453,39 @@ public class BbdrOp extends PixelOperator {
     }
 
     private double[][] interpol_lut_Nsky(double sza, double vza, double hsf, double aot) {
-        return new double[1][1];
+        final LookupTable lut_dw = nskyDwLut.getLut();
+        final LookupTable lut_up = nskyUpLut.getLut();
+        final double[] broadBandSpecs = lut_dw.getDimension(0).getSequence();
+        final double[] dw_params = lut_dw.getDimension(4).getSequence();
+        final double[] up_params = lut_up.getDimension(4).getSequence();
+
+        double[][] result = new double[broadBandSpecs.length][4];
+
+        int lutDimensionCount = lut_dw.getDimensionCount();
+        double[] coordinates = new double[lutDimensionCount];
+        FracIndex[] fracIndexes = FracIndex.createArray(coordinates.length);
+        double[] v = new double[1 << coordinates.length];
+
+        lut_dw.computeFracIndex(lut_dw.getDimension(1), aot, fracIndexes[1]);
+        lut_dw.computeFracIndex(lut_dw.getDimension(2), hsf, fracIndexes[2]);
+
+        for (int i = 0; i < result.length; i++) {
+            int index = 0;
+            lut_dw.computeFracIndex(lut_dw.getDimension(0), broadBandSpecs[i], fracIndexes[0]);
+
+            lut_dw.computeFracIndex(lut_dw.getDimension(3), sza, fracIndexes[3]);
+            for (double param : dw_params) {
+                lut_dw.computeFracIndex(lut_dw.getDimension(4), param, fracIndexes[4]);
+                result[i][index++] = lut_dw.getValue(fracIndexes, v);
+            }
+
+            lut_up.computeFracIndex(lut_up.getDimension(3), vza, fracIndexes[3]);
+            for (double param : up_params) {
+                lut_up.computeFracIndex(lut_up.getDimension(4), param, fracIndexes[4]);
+                result[i][index++] = lut_up.getValue(fracIndexes, v);
+            }
+        }
+        return result;
     }
 
     static Matrix matrixSquare(double[] doubles) {
