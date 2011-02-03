@@ -17,7 +17,6 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
-import com.sun.corba.se.impl.io.OptionalDataException;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -54,8 +53,10 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_TOA_RFL = 9;
     private static final int SRC_TOA_VAR = 9 + 15;
 
-    private static final int TRG_ERRORS = 0;
-    private static final int TRG_KERN = 6;
+    private static final int TRG_BBDR = 0;
+    private static final int TRG_ERRORS = 3;
+    private static final int TRG_KERN = 9;
+    private static final int TRG_NDVI = 15;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
     private static final int n_kernel = 2; //(geo & vol)
@@ -108,17 +109,25 @@ public class BbdrOp extends PixelOperator {
                 }
             }
         } else {
-        String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
-                "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
+            String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
+                "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW",
+                "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
                 "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
                 "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
                 "AOD550",
                 "NDVI", "sig_NDVI",
-                "VZA", "SZA", "RAA", "DEM",
-                "snow_mask" /*, "$l1_flg_str"*/};
-        for (String bandName : bandNames) {
-            targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
-        }
+//                "VZA", "SZA", "RAA", "DEM",
+//                "snow_mask" /*, "$l1_flg_str"*/
+            };
+            for (String bandName : bandNames) {
+                Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+            }
+            Band targetAOT = targetProduct.getBand("AOD550");
+            Band sourceAOT = sourceProduct.getBand("aot");
+            ProductUtils.copyRasterDataNodeProperties(sourceAOT, targetAOT);
+            targetAOT.setSourceImage(sourceAOT.getSourceImage());
         }
         readAuxdata();
     }
@@ -191,6 +200,27 @@ public class BbdrOp extends PixelOperator {
             }
             configurator.defineSample(sensor.getNumBands(), "sdr_error");
         } else {
+            configurator.defineSample(TRG_BBDR    , "BB_VIS");
+            configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
+            configurator.defineSample(TRG_BBDR + 2, "BB_SW");
+
+            configurator.defineSample(TRG_ERRORS    , "sig_BB_VIS_VIS");
+            configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
+            configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW");
+            configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR");
+            configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW");
+            configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW");
+
+            configurator.defineSample(TRG_KERN    , "Kvol_BRDF_VIS");
+            configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
+            configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
+            configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
+            configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
+            configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
+
+            configurator.defineSample(TRG_NDVI, "NDVI");
+            configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
+
             // TODO
         }
     }
@@ -278,6 +308,7 @@ public class BbdrOp extends PixelOperator {
         double rfl_nir = rfl_pix[sensor.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
+        targetSamples[TRG_NDVI].set(ndvi_land);
 
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
 
@@ -325,6 +356,7 @@ public class BbdrOp extends PixelOperator {
                 (pow(ndviSum * rfl_nir * sqrt(err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
                         pow(ndviSum * rfl_red * sqrt(err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
                 ), 0.5);
+        targetSamples[TRG_NDVI+1].set(sig_ndvi_land);
 
         // BB conversion and error var-cov calculation
 
@@ -333,26 +365,24 @@ public class BbdrOp extends PixelOperator {
         Matrix nb_intcp_arr_all_m = new Matrix(nb_intcp_arr_all, nb_intcp_arr_all.length);
 
         Matrix bdr_mat_all = nb_coef_arr_all_m.times(rfl_pix_m).plus(nb_intcp_arr_all_m);
+
+        double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
+        for (int i = 0; i < bbdrsData.length; i++) {
+            targetSamples[TRG_BBDR + i].set(bbdrsData[i]);
+        }
+
         Matrix err2_mat_rfl = nb_coef_arr_all_m.times(err2_tot_cov).times(nb_coef_arr_all_m.transpose());
         Matrix err2_n2b_all = new Matrix(n_spc, n_spc);
         for (int i = 0; i < n_spc; i++) {
             err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
         }
         Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
-        Matrix err_mat_all = new Matrix(err_sum.getRowDimension(), err_sum.getColumnDimension());
-        for (int i = 0; i < err_mat_all.getRowDimension(); i++) {
-            for (int j = 0; j < err_mat_all.getColumnDimension(); j++) {
-                err_mat_all.set(i, j, sqrt(err_sum.get(i,j)));
-            }
-        }
 
-        // TODO output computed data to targetSample
-//        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
-//        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
-//        for (int i = 0; i < relevantErrIndices.length; i++) {
-//            double value = columnPackedCopy[relevantErrIndices[i]];
-//            targetSamples[TRG_ERRORS + i].set(value);
-//        }
+        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
+        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+        for (int i = 0; i < relevantErrIndices.length; i++) {
+            targetSamples[TRG_ERRORS + i].set(sqrt(columnPackedCopy[relevantErrIndices[i]]));
+        }
 
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
 
@@ -406,11 +436,10 @@ public class BbdrOp extends PixelOperator {
             double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
             double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
             double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
-            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol; // targetSample
-            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1]+ t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo; // targetSample
-            // TODO output
-//            targetSamples[TRG_KERN + i_bb].set(kernel_land_0);
-//            targetSamples[TRG_KERN + i_bb + 1].set(kernel_land_1);
+            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol;
+            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1]+ t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
+            targetSamples[TRG_KERN + (i_bb*2)].set(kernel_land_0);
+            targetSamples[TRG_KERN + (i_bb*2) + 1].set(kernel_land_1);
         }
     }
 
