@@ -27,9 +27,11 @@ public class MerisLutTest extends TestCase {
         final double[] vzaArray = lut.getDimension(5).getSequence();
         final int nVza = vzaArray.length;
         assertEquals(13, nVza);     //  VZA
+        assertEquals(0.0,   vzaArray[0], 1.E-4);
         assertEquals(12.76, vzaArray[3], 1.E-4);
         assertEquals(24.24, vzaArray[5], 1.E-4);
         assertEquals(35.68, vzaArray[7], 1.E-4);
+        assertEquals(64.2799987, vzaArray[12], 1.E-4);
 
         final double[] szaArray = lut.getDimension(4).getSequence();
         final int nSza = szaArray.length;
