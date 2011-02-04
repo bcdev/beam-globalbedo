@@ -42,21 +42,27 @@ import static java.lang.StrictMath.toRadians;
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
-    private static final int SRC_VZA = 1;
-    private static final int SRC_VAA = 2;
-    private static final int SRC_SZA = 3;
-    private static final int SRC_SAA = 4;
-    private static final int SRC_DEM = 5;
-    private static final int SRC_AOT = 6;
-    private static final int SRC_AOT_ERR = 7;
-    private static final int SRC_OZO = 8;
-    private static final int SRC_TOA_RFL = 9;
-    private static final int SRC_TOA_VAR = 9 + 15;
+    private static final int SRC_SNOW_MASK = 1;
+    private static final int SRC_VZA = 2;
+    private static final int SRC_VAA = 3;
+    private static final int SRC_SZA = 4;
+    private static final int SRC_SAA = 5;
+    private static final int SRC_DEM = 6;
+    private static final int SRC_AOT = 7;
+    private static final int SRC_AOT_ERR = 8;
+    private static final int SRC_OZO = 9;
+    private static final int SRC_TOA_RFL = 10;
+    private static final int SRC_TOA_VAR = 10 + 15;
 
     private static final int TRG_BBDR = 0;
     private static final int TRG_ERRORS = 3;
     private static final int TRG_KERN = 9;
     private static final int TRG_NDVI = 15;
+    private static final int TRG_VZA = 17;
+    private static final int TRG_SZA = 18;
+    private static final int TRG_RAA = 19;
+    private static final int TRG_DEM = 20;
+    private static final int TRG_SNOW = 21;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
     private static final int n_kernel = 2; //(geo & vol)
@@ -71,7 +77,7 @@ public class BbdrOp extends PixelOperator {
     private boolean sdrOnly;
 
     @Parameter(defaultValue = "NOT l1_flags.INVALID AND (cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW)")
-    private String maskExpression;
+    private String landMaskExpression;
 
     // Auxdata
     private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
@@ -87,6 +93,15 @@ public class BbdrOp extends PixelOperator {
     private GasLookupTable gasLookupTable;
     private NskyLookupTable nskyDwLut;
     private NskyLookupTable nskyUpLut;
+
+    private double vzaMin;
+    private double vzaMax;
+    private double szaMin;
+    private double szaMax;
+    private double aotMin;
+    private double aotMax;
+    private double hsfMin;
+    private double hsfMax;
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
@@ -116,18 +131,27 @@ public class BbdrOp extends PixelOperator {
                 "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
                 "AOD550",
                 "NDVI", "sig_NDVI",
-//                "VZA", "SZA", "RAA", "DEM",
-//                "snow_mask" /*, "$l1_flg_str"*/
+                "VZA", "SZA", "RAA", "DEM",
             };
             for (String bandName : bandNames) {
                 Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
             }
+            targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
             Band targetAOT = targetProduct.getBand("AOD550");
             Band sourceAOT = sourceProduct.getBand("aot");
             ProductUtils.copyRasterDataNodeProperties(sourceAOT, targetAOT);
             targetAOT.setSourceImage(sourceAOT.getSourceImage());
+
+            // copy flag coding and flag images
+            ProductUtils.copyFlagBands(sourceProduct, targetProduct);
+            final Band[] bands = sourceProduct.getBands();
+            for (Band band : bands) {
+                if (band.getFlagCoding() != null) {
+                    targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
+                }
+            }
         }
         readAuxdata();
     }
@@ -154,15 +178,38 @@ public class BbdrOp extends PixelOperator {
 
         gasLookupTable = new GasLookupTable(sensor);
         gasLookupTable.load();
+
+        LookupTable aotLut = this.aotLut.getLut();
+
+        final double[] vzaArray = aotLut.getDimension(5).getSequence();
+        vzaMin = vzaArray[0];
+        vzaMax = vzaArray[vzaArray.length - 1];
+
+        final double[] szaArray = aotLut.getDimension(4).getSequence();
+        szaMin = szaArray[0];
+        szaMax = szaArray[szaArray.length - 1];
+
+        final double[] hsfArray = aotLut.getDimension(2).getSequence();
+        hsfMin = hsfArray[0];
+        hsfMax = hsfArray[hsfArray.length - 1];
+
+        final double[] aotArray = aotLut.getDimension(1).getSequence();
+        aotMin = aotArray[0];
+        aotMax = aotArray[aotArray.length - 1];
     }
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
         // TODO for now MERIS only --> handle SPOt and AATSR aswell
 
-        BandMathsOp bandMathsOp = BandMathsOp.createBooleanExpressionBand(maskExpression, sourceProduct);
-        Product landMaskProduct = bandMathsOp.getTargetProduct();
+        BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landMaskExpression, sourceProduct);
+        Product landMaskProduct = landOp.getTargetProduct();
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+
+        String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
+        BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
+        Product snowMaskProduct = snowOp.getTargetProduct();
+        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 
         configurator.defineSample(SRC_VZA, "view_zenith");
         configurator.defineSample(SRC_VAA, "view_azimuth");
@@ -221,7 +268,11 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(TRG_NDVI, "NDVI");
             configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
 
-            // TODO
+            configurator.defineSample(TRG_VZA, "VZA");
+            configurator.defineSample(TRG_SZA, "SZA");
+            configurator.defineSample(TRG_RAA, "RAA");
+            configurator.defineSample(TRG_DEM, "DEM");
+            configurator.defineSample(TRG_SNOW, "snow_mask");
         }
     }
 
@@ -229,17 +280,29 @@ public class BbdrOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
             // only compute over land
-            for (WritableSample targetSample : targetSamples) {
-                targetSample.set(Float.NaN);
-            }
+            fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        double hsf = sourceSamples[SRC_DEM].getDouble();
         double aot = sourceSamples[SRC_AOT].getDouble();
+        double hsf = sourceSamples[SRC_DEM].getDouble();
+        hsf *= 0.001;
+        hsf = max(hsf, -0.45); // elevation up to -450m ASL
+
+        if (vza < vzaMin || vza > vzaMax ||
+                sza < szaMin || sza > szaMax ||
+                aot < aotMin || aot > aotMax ||
+                hsf < hsfMin || hsf > hsfMax) {
+            fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
+        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+        targetSamples[TRG_VZA].set(vza);
+        targetSamples[TRG_SZA].set(sza);
+        targetSamples[TRG_DEM].set(hsf);
 
         double ozo = sourceSamples[SRC_OZO].getDouble();
 
@@ -254,18 +317,19 @@ public class BbdrOp extends PixelOperator {
             toa_rfl[i] = sourceSamples[SRC_TOA_RFL + i].getDouble();
         }
 
-        hsf *= 0.001;
-        hsf = max(hsf, -0.45); // elevation up to -450m ASL
 
         double phi = abs(saa - vaa);
-        if (phi > 180) {
+        if (phi > 180.0) {
             phi = 360.0 - phi;
         }
         phi = min(phi, 179);
         phi = max(phi, 1);
+        targetSamples[TRG_RAA].set(phi);
 
-        double muv = cos(toRadians(vza));
-        double mus = cos(toRadians(sza));
+        double vza_r = toRadians(vza);
+        double sza_r = toRadians(sza);
+        double muv = cos(vza_r);
+        double mus = cos(sza_r);
         double amf = 1.0 / muv + 1.0 / mus;
 
 
@@ -388,8 +452,6 @@ public class BbdrOp extends PixelOperator {
 
         double[][] f_int_nsky = interpol_lut_Nsky(sza, vza, hsf, aot);
 
-        double vza_r = toRadians(vza);
-        double sza_r = toRadians(sza);
         double phi_r = toRadians(phi);
 
         double mu_phi = cos(phi_r);
@@ -440,6 +502,12 @@ public class BbdrOp extends PixelOperator {
             double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1]+ t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
             targetSamples[TRG_KERN + (i_bb*2)].set(kernel_land_0);
             targetSamples[TRG_KERN + (i_bb*2) + 1].set(kernel_land_1);
+        }
+    }
+
+    private void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {
+        for (WritableSample targetSample : targetSamples) {
+            targetSample.set(Float.NaN);
         }
     }
 
