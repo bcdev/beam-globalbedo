@@ -28,42 +28,42 @@ public class Main {
         bbdrOp.setSourceProduct(sourceProduct);
         Product targetProduct = bbdrOp.getTargetProduct();
 
-        final ReprojectionOp repro = new ReprojectionOp();
-        repro.setParameter("easting", 7783653.6);
-        repro.setParameter("northing", 3335851.6);
-
-        repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                "GEOGCS[\"WGS 84\"," +
-                "  DATUM[\"WGS_1984\"," +
-                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                "PROJECTION[\"Sinusoidal\"]," +
-                "PARAMETER[\"false_easting\",0.0]," +
-                "PARAMETER[\"false_northing\",0.0]," +
-                "PARAMETER[\"central_meridian\",0.0]," +
-                "PARAMETER[\"semi_major\",6371007.181]," +
-                "PARAMETER[\"semi_minor\",6371007.181]," +
-                "UNIT[\"m\",1.0]," +
-                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
-
-        repro.setParameter("resampling", "Nearest");
-        repro.setParameter("includeTiePointGrids", true);
-        repro.setParameter("referencePixelX", 0.0);
-        repro.setParameter("referencePixelY", 0.0);
-        repro.setParameter("orientation", 0.0);
-        repro.setParameter("pixelSizeX", 926.6254330558);
-        repro.setParameter("pixelSizeY", 926.6254330558);
-        repro.setParameter("width", 1200);
-        repro.setParameter("height", 1200);
-        repro.setParameter("orthorectify", false);
-        repro.setParameter("noDataValue", -9999.0);
-        repro.setSourceProduct(targetProduct);
-
-        targetProduct = repro.getTargetProduct();
+//        final ReprojectionOp repro = new ReprojectionOp();
+//        repro.setParameter("easting", 7783653.6);
+//        repro.setParameter("northing", 3335851.6);
+//
+//        repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
+//                "GEOGCS[\"WGS 84\"," +
+//                "  DATUM[\"WGS_1984\"," +
+//                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+//                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+//                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+//                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+//                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+//                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+//                "PROJECTION[\"Sinusoidal\"]," +
+//                "PARAMETER[\"false_easting\",0.0]," +
+//                "PARAMETER[\"false_northing\",0.0]," +
+//                "PARAMETER[\"central_meridian\",0.0]," +
+//                "PARAMETER[\"semi_major\",6371007.181]," +
+//                "PARAMETER[\"semi_minor\",6371007.181]," +
+//                "UNIT[\"m\",1.0]," +
+//                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
+//
+//        repro.setParameter("resampling", "Nearest");
+//        repro.setParameter("includeTiePointGrids", true);
+//        repro.setParameter("referencePixelX", 0.0);
+//        repro.setParameter("referencePixelY", 0.0);
+//        repro.setParameter("orientation", 0.0);
+//        repro.setParameter("pixelSizeX", 926.6254330558);
+//        repro.setParameter("pixelSizeY", 926.6254330558);
+//        repro.setParameter("width", 1200);
+//        repro.setParameter("height", 1200);
+//        repro.setParameter("orthorectify", true);
+//        repro.setParameter("noDataValue", 0.0);
+//        repro.setSourceProduct(targetProduct);
+//
+//        targetProduct = repro.getTargetProduct();
 
         final WriteOp writeOp = new WriteOp(targetProduct, new File(targetProductFileName),
                                             ProductIO.DEFAULT_FORMAT_NAME);
