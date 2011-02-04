@@ -10,37 +10,25 @@ import org.esa.beam.util.math.LookupTable;
 public class AatsrLutTest extends TestCase {
 
     public void testLutAot() {
-        AotLookupTable lut = BbdrUtils.getAotLookupTable("AATSR");
+        AotLookupTable lut = BbdrUtils.getAotLookupTable(Sensor.AATSR);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testAotKx() {
-        LookupTable lut = BbdrUtils.getAotKxLookupTable("AATSR");
-        assertNotNull(lut);
-        // TODO write tests
-    }
-
-    public void testCwvOzoLut() {
-        LookupTable lut = BbdrUtils.getTransposedCwvOzoLookupTable("AATSR");
-        assertNotNull(lut);
-        // TODO write tests
-    }
-
-    public void testCwvOzoLutKx() {
-        LookupTable lut = BbdrUtils.getCwvOzoKxLookupTable("AATSR");
+        LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.AATSR);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testMerisNskyLutDw() {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw("AATSR");
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw(Sensor.AATSR);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testMerisNskyLutUp() {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp("AATSR");
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp(Sensor.AATSR);
         assertNotNull(lut);
         // TODO write tests
     }

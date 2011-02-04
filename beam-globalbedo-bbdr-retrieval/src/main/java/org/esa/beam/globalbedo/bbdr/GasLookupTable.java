@@ -2,8 +2,6 @@ package org.esa.beam.globalbedo.bbdr;
 
 import java.nio.ByteBuffer;
 
-import static java.lang.Math.*;
-
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -25,8 +23,8 @@ class GasLookupTable {
     }
 
     void load() {
-        loadCwvOzoLookupTableArray(sensor.toString());
-        loadCwvOzoKxLookupTableArray(sensor.toString());
+        loadCwvOzoLookupTableArray(sensor);
+        loadCwvOzoKxLookupTableArray(sensor);
     }
 
     float getGas2val() {
@@ -53,9 +51,9 @@ class GasLookupTable {
         return gasArray;
     }
 
-    private void loadCwvOzoLookupTableArray(String instrument) {
+    private void loadCwvOzoLookupTableArray(Sensor instrument) {
         // todo: test this method!
-        final String lutFileName = BbdrUtils.getCwvLutName(instrument);
+        final String lutFileName = BbdrUtils.getCwvLutName(instrument.getName());
         ByteBuffer bb = BbdrUtils.readLutFileToByteBuffer(lutFileName);
         int nAng = bb.getInt();
         int nCwv = bb.getInt();
@@ -65,7 +63,7 @@ class GasLookupTable {
         cwvArray = BbdrUtils.readDimension(bb, nCwv);
         final float[] ozoArr = BbdrUtils.readDimension(bb, nOzo);
 
-        float[] wvl = BbdrUtils.getInstrumentWavelengths(instrument);
+        float[] wvl = instrument.getWavelength();
         final int nWvl = wvl.length;
         float[][][][] cwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng];
         for (int iAng = 0; iAng < nAng; iAng++) {
@@ -80,7 +78,7 @@ class GasLookupTable {
         lutGas = new float[nWvl][nCwv][nAng];
         amfArray = convertAngArrayToAmfArray(angArr);
 
-        if (sensor.equals(Sensor.SPOT)) {
+        if (sensor.equals(Sensor.SPOT_VGT)) {
             //TODO
         } else {
             int iCwv = BbdrUtils.getIndexBefore(gas2val, cwvArray);
@@ -96,9 +94,9 @@ class GasLookupTable {
         }
     }
 
-    private void loadCwvOzoKxLookupTableArray(String instrument) {
+    private void loadCwvOzoKxLookupTableArray(Sensor instrument) {
         // todo: test this method!!
-        final String lutFileName = BbdrUtils.getCwvKxLutName(instrument);
+        final String lutFileName = BbdrUtils.getCwvKxLutName(instrument.getName());
 
         ByteBuffer bb = BbdrUtils.readLutFileToByteBuffer(lutFileName);
 
@@ -113,7 +111,7 @@ class GasLookupTable {
         int nKx = 2;
         int nKxcase = 2;
 
-        float[] wvl = BbdrUtils.getInstrumentWavelengths(instrument);
+        float[] wvl = instrument.getWavelength();
         final int nWvl = wvl.length;
 
         float[][][][][][] kxArray = new float[nWvl][nOzo][nCwv][nAng][nKxcase][nKx];
@@ -132,7 +130,7 @@ class GasLookupTable {
         }
 
         kxLutGas = new float[nWvl][nCwv][nAng][nKxcase][nKx];
-        if (sensor.equals(Sensor.SPOT)) {
+        if (sensor.equals(Sensor.SPOT_VGT)) {
             //TODO
         } else {
             int iCwv = BbdrUtils.getIndexBefore(gas2val, cwvArray);

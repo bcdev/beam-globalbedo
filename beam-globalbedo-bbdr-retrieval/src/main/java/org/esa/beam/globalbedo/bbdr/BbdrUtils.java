@@ -60,8 +60,8 @@ public class BbdrUtils {
      *
      * @return LookupTable
      */
-    public static AotLookupTable getAotLookupTable(String instrument) {
-        final String lutFileName = getAotLutName(instrument);
+    public static AotLookupTable getAotLookupTable(Sensor instrument) {
+        final String lutFileName = getAotLutName(instrument.getName());
 
         ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
 
@@ -89,7 +89,7 @@ public class BbdrUtils {
         float[] parameters = new float[]{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         int nParameters = parameters.length;
 
-        float[] wvl = getInstrumentWavelengths(instrument);
+        float[] wvl = instrument.getWavelength();
         final int nWvl = wvl.length;
 
         float[] tgLut = new float[nParameters * nVza * nSza * nAzi * nHsf * nAot * nWvl];
@@ -138,8 +138,8 @@ public class BbdrUtils {
      *
      * @return LookupTable
      */
-    public static LookupTable getAotKxLookupTable(String instrument) {
-        final String lutFileName = getAotKxLutName(instrument);
+    public static LookupTable getAotKxLookupTable(Sensor instrument) {
+        final String lutFileName = getAotKxLutName(instrument.getName());
 
         ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
 
@@ -158,7 +158,7 @@ public class BbdrUtils {
         float[] kx = new float[]{1.0f, 2.0f};
         int nKx = kx.length;
 
-        float[] wvl = getInstrumentWavelengths(instrument);
+        float[] wvl = instrument.getWavelength();
         final int nWvl = wvl.length;
 
         float[] tgLut = new float[nKx * nVza * nSza * nAzi * nHsf * nAot * nWvl];
@@ -167,107 +167,6 @@ public class BbdrUtils {
         // store in original sequence
         return new LookupTable(tgLut, wvl, aot, hsf, azi, sza, vza, kx);
     }
-
-
-    /**
-     * reads a Water vapour / ozone LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
-     * * This LUT is equivalent to the transposed IDL LUT:
-     * - lut_cvw_ozo = transpose(lut_cvw_ozo)
-     * --> lut_cvw_ozo[iAng,iCwv,iOzo,iBd] with wavelength (iBd) as most inner loop
-     * * A LUT value can be accessed with
-     * lut.getValue(new double[]{angValue, cwvValue, ozoValue, wvlValue});
-     *
-     * @param instrument
-     *
-     * @return LookupTable
-     */
-    public static LookupTable getTransposedCwvOzoLookupTable(String instrument) {
-        final String lutFileName = getCwvLutName(instrument);
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
-        int nAng = bb.getInt();
-        int nCwv = bb.getInt();
-        int nOzo = bb.getInt();
-
-        float[] ang = readDimension(bb, nAng);
-        float[] cwv = readDimension(bb, nCwv);
-        float[] ozo = readDimension(bb, nOzo);
-
-        float[] wvl = getInstrumentWavelengths(instrument);
-        final int nWvl = wvl.length;
-        float[] tgLut = new float[nAng * nCwv * nOzo * nWvl];
-        bb.asFloatBuffer().get(tgLut);
-
-        // store in transposed sequence (see breadboard)
-        return new LookupTable(tgLut, ang, cwv, ozo, wvl);
-    }
-
-    public static float[][][][] getCwvOzoLookupTableArray(String instrument) {
-        // todo: test this method!
-        final String lutFileName = getCwvLutName(instrument);
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
-        int nAng = bb.getInt();
-        int nCwv = bb.getInt();
-        int nOzo = bb.getInt();
-
-        readDimension(bb, nAng);
-        readDimension(bb, nCwv);
-        readDimension(bb, nOzo);
-
-        float[] wvl = getInstrumentWavelengths(instrument);
-        final int nWvl = wvl.length;
-        float[][][][] cwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng];
-        for (int i = 0; i < nWvl; i++) {
-            for (int j = 0; j < nOzo; j++) {
-                for (int k = 0; k < nCwv; k++) {
-                    for (int l = 0; l < nAng; l++) {
-                        cwvOzoLutArray[i][j][k][l] = bb.getFloat();
-                    }
-                }
-            }
-        }
-        return cwvOzoLutArray;
-    }
-
-    /**
-     * reads a Water vapour / ozone Kx LUT (BBDR breadboard procedure GA_read_LUT_WV_OZO)
-     * * This LUT is equivalent to the original (not transposed!) IDL LUT.
-     * * A LUT value can be accessed with
-     * lut.getValue(new double[]{wvlValue, ozoValue, cwvValue, angValue, kxValue, kxcaseValue});
-     *
-     * @param instrument
-     *
-     * @return LookupTable
-     */
-    public static LookupTable getCwvOzoKxLookupTable(String instrument) {
-        final String lutFileName = getCwvKxLutName(instrument);
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
-
-        // read LUT dimensions and values
-        int nAng = bb.getInt();
-        float[] ang = readDimension(bb, nAng);
-        int nCwv = bb.getInt();
-        float[] cwv = readDimension(bb, nCwv);
-        int nOzo = bb.getInt();
-        float[] ozo = readDimension(bb, nOzo);
-
-        float[] kx = new float[]{1.0f, 2.0f};
-        int nKx = kx.length;
-
-        float[] kxcase = new float[]{1.0f, 2.0f};
-        int nKxcase = kx.length;
-
-        float[] wvl = getInstrumentWavelengths(instrument);
-        final int nWvl = wvl.length;
-
-        float[] tgLut = new float[nKx * nKxcase * nWvl * nAng * nCwv * nOzo];
-        bb.asFloatBuffer().get(tgLut);
-
-        // store in original sequence
-        // todo: sequence of kx and kxcase is unclear. try to find out in breadboard...
-        return new LookupTable(tgLut, wvl, ozo, cwv, ang, kx, kxcase);
-    }
-
 
 
     /**
@@ -280,8 +179,8 @@ public class BbdrUtils {
      *
      * @return LookupTable
      */
-    public static NskyLookupTable getNskyLookupTableDw(String instrument) {
-        final String lutFileName = getNskyDwLutName(instrument);
+    public static NskyLookupTable getNskyLookupTableDw(Sensor instrument) {
+        final String lutFileName = getNskyDwLutName(instrument.getName());
 
         ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
 
@@ -329,8 +228,8 @@ public class BbdrUtils {
      *
      * @return LookupTable
      */
-    public static NskyLookupTable getNskyLookupTableUp(String instrument) {
-        final String lutFileName = getNskyUpLutName(instrument);
+    public static NskyLookupTable getNskyLookupTableUp(Sensor instrument) {
+        final String lutFileName = getNskyUpLutName(instrument.getName());
 
         ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
 
@@ -416,10 +315,6 @@ public class BbdrUtils {
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
-
-    static float[] getInstrumentWavelengths(String instrument) {
-        return (float[]) BbdrConstants.instrumentWavelengths.get(instrument);
-    }
 
     static ByteBuffer readLutFileToByteBuffer(String lutName) {
         ByteBuffer bb = null;

@@ -157,7 +157,7 @@ public class BbdrOp extends PixelOperator {
     }
 
     void readAuxdata() {
-         N2Bconversion n2Bconversion = new N2Bconversion("MERIS", 3, BbdrConstants.MERIS_WAVELENGHTS.length);
+         N2Bconversion n2Bconversion = new N2Bconversion(sensor, 3);
         try {
             n2Bconversion.load();
         } catch (IOException e) {
@@ -169,10 +169,10 @@ public class BbdrOp extends PixelOperator {
         nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
         nb_intcp_arr_D = n2Bconversion.getNb_intcp_arr_D();
 
-        aotLut = BbdrUtils.getAotLookupTable("MERIS");
-        kxAotLut = BbdrUtils.getAotKxLookupTable("MERIS");
-        nskyDwLut = BbdrUtils.getNskyLookupTableDw("MERIS");
-        nskyUpLut = BbdrUtils.getNskyLookupTableUp("MERIS");
+        aotLut = BbdrUtils.getAotLookupTable(sensor);
+        kxAotLut = BbdrUtils.getAotKxLookupTable(sensor);
+        nskyDwLut = BbdrUtils.getNskyLookupTableDw(sensor);
+        nskyUpLut = BbdrUtils.getNskyLookupTableUp(sensor);
         kpp_geo = nskyDwLut.getKppGeo();
         kpp_vol = nskyDwLut.getKppVol();
 
@@ -200,7 +200,7 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
-        // TODO for now MERIS only --> handle SPOt and AATSR aswell
+        // TODO for now MERIS only --> handle SPOT and AATSR aswell
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landMaskExpression, sourceProduct);
         Product landMaskProduct = landOp.getTargetProduct();

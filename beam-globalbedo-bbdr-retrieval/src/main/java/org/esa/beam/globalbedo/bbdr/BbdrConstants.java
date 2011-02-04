@@ -1,8 +1,6 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
-import java.util.HashMap;
-
 /**
  * Constants defined for BBDR retrieval
  *
@@ -10,8 +8,6 @@ import java.util.HashMap;
  */
 public class BbdrConstants {
 
-
-    public final static HashMap instrumentWavelengths = new HashMap<String, float[]>();
 
     public final static float[] MERIS_WAVELENGHTS = {
         412.0f, 442.0f, 490.0f, 510.0f, 560.0f,
@@ -42,12 +38,6 @@ public class BbdrConstants {
     // taken from LUT 'VGT_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
     public final static float[] VGT_SOLAR_IRRADIANCES = {
          1938.27f, 1582.68f, 1036.09f, 224.581f
-    };
-
-    static {
-         instrumentWavelengths.put("MERIS", MERIS_WAVELENGHTS);
-         instrumentWavelengths.put("AATSR", AATSR_WAVELENGHTS);
-         instrumentWavelengths.put("VGT", VGT_WAVELENGHTS);
     };
 
 }

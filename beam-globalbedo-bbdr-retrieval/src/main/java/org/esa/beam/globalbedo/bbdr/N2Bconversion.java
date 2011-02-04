@@ -30,7 +30,7 @@ public class N2Bconversion {
     private static final String coeffPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_rmse_v2.txt";
     private static final String coeffDPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_Ddw_Dup.txt";
 
-    private final String instrument;
+    private final Sensor instrument;
     private final int n_spc;
     private final int num_bd;
 
@@ -41,10 +41,10 @@ public class N2Bconversion {
     private final double[][] nb_coef_arr_D;
     private final double[] nb_intcp_arr_D;
 
-    public N2Bconversion(String instrument, int n_spc, int num_bd) {
+    public N2Bconversion(Sensor instrument, int n_spc) {
         this.instrument = instrument;
         this.n_spc = n_spc;
-        this.num_bd = num_bd;
+        this.num_bd = instrument.getNumBands();
 
         this.nb_coef_arr_all = new double[n_spc][num_bd];
         this.nb_intcp_arr_all = new double[n_spc];
@@ -55,7 +55,7 @@ public class N2Bconversion {
     }
 
     public void load() throws IOException {
-        String coeffFileName = getFileName(instrument, coeffPattern);
+        String coeffFileName = getFileName(instrument.getName(), coeffPattern);
         BufferedReader reader = new BufferedReader(new FileReader(coeffFileName));
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {
@@ -77,7 +77,7 @@ public class N2Bconversion {
             reader.close();
         }
 
-        String coeffDFileName = getFileName(instrument, coeffDPattern);
+        String coeffDFileName = getFileName(instrument.getName(), coeffDPattern);
         reader = new BufferedReader(new FileReader(coeffDFileName));
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {

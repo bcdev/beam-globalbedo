@@ -16,17 +16,18 @@
 
 package org.esa.beam.globalbedo.bbdr;
 
-import org.esa.beam.gpf.operators.meris.MerisBasisOp;
+import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
 
 /**
  * Encapsulates the differences between the 3 sensors
  */
 enum Sensor {
 
-    MERIS(15, 0.02, 6, 12, 1.0, 0.999, 2, 0.04, 0.05),
-    AATSR(4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15),
-    SPOT(4, 0.05, 1, 2, 1.096, 1.089, 1, 0.04, 0.05);
+    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 2, 0.04, 0.05, MERIS_WAVELENGHTS),
+    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_WAVELENGHTS),
+    SPOT_VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 1, 0.04, 0.05, VGT_WAVELENGHTS);
 
+    private final String name;
     private final int numBands;
     private final double radiometricError;
     private final int indexRed;
@@ -36,8 +37,10 @@ enum Sensor {
     private final int cwv_ozo_flag;
     private final double cwvError;
     private final double ozoError;
+    private final float[] wavelength;
 
-    private Sensor(int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI, double bNDVI, int cwv_ozo_flag, double cwvError, double ozoError) {
+    private Sensor(String name, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI, double bNDVI, int cwv_ozo_flag, double cwvError, double ozoError, float[] wavelength) {
+        this.name = name;
         this.numBands = numBands;
         this.radiometricError = radiometricError;
         this.indexRed = indexRed;
@@ -47,6 +50,11 @@ enum Sensor {
         this.cwv_ozo_flag = cwv_ozo_flag;
         this.cwvError = cwvError;
         this.ozoError = ozoError;
+        this.wavelength = wavelength;
+    }
+
+    public String getName() {
+        return name;
     }
 
     int getNumBands() {
@@ -86,5 +94,9 @@ enum Sensor {
 
     public double getOzoError() {
         return ozoError;
+    }
+
+    public float[] getWavelength() {
+        return wavelength;
     }
 }
