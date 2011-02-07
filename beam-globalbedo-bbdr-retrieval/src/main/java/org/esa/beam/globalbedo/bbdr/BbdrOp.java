@@ -22,6 +22,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
@@ -39,6 +40,11 @@ import static java.lang.StrictMath.toRadians;
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
+@OperatorMetadata(alias = "ga.bbdr",
+                  description = "Computes BBDRs and kernel parameters",
+                  authors = "Marco Zuehlke, Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
