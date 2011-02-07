@@ -1,2 +1,3 @@
 org.esa.beam.globalbedo.bbdr.ImageVarianceOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrOp$Spi
+org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi

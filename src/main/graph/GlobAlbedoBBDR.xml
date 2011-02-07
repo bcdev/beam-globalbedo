@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<graph id="GlobAlbedoBBDR-Tile">
+    <version>1.0</version>
+
+    <node id="AOT-Retrieval">
+		<operator>ga.MasterOp</operator>
+		<sources>
+			<sourceProduct>${sourceProduct}</sourceProduct>
+		</sources>
+		<parameters>
+            <copyToaRadBands>false</copyToaRadBands>
+            <copyToaReflBands>true</copyToaReflBands>
+        </parameters>
+    </node>
+
+    <node id="BBDR-Computation">
+		<operator>ga.bbdr</operator>
+		<sources>
+			<sourceProduct>AOT-Retrieval</sourceProduct>
+		</sources>
+    </node>
+
+    <!--
+       BEAM operator used to reproject any input product into a MODIS
+       tile described at https://lpdaac.usgs.gov/lpdaac/products/modis_overview.
+
+       Usage:
+          $BEAM_HOME/bin/gpt.bat MODIS-Sinusoidal-Tile.xml -Px=<x> -Py=<y> <input> -t <output> -f BEAM-DIMAP -e
+
+       Given MODIS tile index (i,j), the operator parameters x and y
+       (easting and northing in meters) can be computed as follows:
+         x = (i - 18) * PI * R / 18
+         y = (j -  9) * PI * R / 18
+       with
+         R = 6371007.181 m
+    -->
+    <node id="MODIS-Sinusoidal-Tile">
+		<operator>Reproject</operator>
+		<sources>
+			<sourceProduct>BBDR-Computation</sourceProduct>
+		</sources>
+		<parameters>
+			<easting>${x}</easting>
+			<northing>${y}</northing>
+
+			<crs>PROJCS["MODIS Sinusoidal",GEOGCS["WGS 84",DATUM["WGS_1984",SPHEROID["WGS 84",6378137,298.257223563,AUTHORITY["EPSG","7030"]],AUTHORITY["EPSG","6326"]],PRIMEM["Greenwich",0,AUTHORITY["EPSG","8901"]],UNIT["degree",0.01745329251994328,AUTHORITY["EPSG","9122"]],AUTHORITY["EPSG","4326"]],PROJECTION["Sinusoidal"],PARAMETER["false_easting",0.0],PARAMETER["false_northing",0.0],PARAMETER["central_meridian",0.0],PARAMETER["semi_major",6371007.181],PARAMETER["semi_minor",6371007.181],UNIT["m",1.0],AUTHORITY["SR-ORG","6974"]]</crs>
+			<resampling>Nearest</resampling>
+			<includeTiePointGrids>false</includeTiePointGrids>
+			<referencePixelX>0.0</referencePixelX>
+			<referencePixelY>0.0</referencePixelY>
+			<orientation>0.0</orientation>
+			<pixelSizeX>926.6254330558</pixelSizeX>
+			<pixelSizeY>926.6254330558</pixelSizeY>
+			<width>1200</width>
+			<height>1200</height>
+			<orthorectify>true</orthorectify>
+			<noDataValue>0.0</noDataValue>
+		</parameters>
+	</node>
+</graph>
