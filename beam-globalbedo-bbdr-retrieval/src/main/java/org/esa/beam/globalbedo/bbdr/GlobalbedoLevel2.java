@@ -17,16 +17,27 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.Geometry;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.Polygon;
+import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.beam.util.ProductUtils;
 
-import java.awt.Dimension;
+import java.awt.geom.GeneralPath;
+import java.awt.geom.Path2D;
+import java.awt.geom.PathIterator;
+import java.util.ArrayList;
 
 @OperatorMetadata(alias = "ga.l2")
 public class GlobalbedoLevel2 extends Operator {
@@ -34,25 +45,37 @@ public class GlobalbedoLevel2 extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @Parameter
+    private double easting;
+
+    @Parameter
+    private double northing;
+
     @Override
     public void initialize() throws OperatorException {
+        Geometry geometry = computeProductGeometry(reproject(sourceProduct));
+        SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setGeoRegion(geometry);
+        subsetOp.setSourceProduct(sourceProduct);
+        Product targetProduct = subsetOp.getTargetProduct();
+
         GaMasterOp gaMasterOp = new GaMasterOp();
         gaMasterOp.setParameter("copyToaRadBands", false);
         gaMasterOp.setParameter("copyToaReflBands", true);
-        gaMasterOp.setSourceProduct(sourceProduct);
+        gaMasterOp.setSourceProduct(targetProduct);
         Product aotProduct = gaMasterOp.getTargetProduct();
-        Dimension preferredTileSizeAOT = aotProduct.getPreferredTileSize();
-        System.out.println("preferredTileSize.aot = " + preferredTileSizeAOT);
 
         BbdrOp bbdrOp = new BbdrOp();
         bbdrOp.setSourceProduct(aotProduct);
         Product bbdrProduct = bbdrOp.getTargetProduct();
-        Dimension preferredTileSizeBbdr = aotProduct.getPreferredTileSize();
-        System.out.println("preferredTileSize.bbdr = " + preferredTileSizeBbdr);
 
+        setTargetProduct(reproject(bbdrProduct));
+    }
+
+    private Product reproject(Product bbdrProduct) {
         ReprojectionOp repro = new ReprojectionOp();
-        repro.setParameter("easting", 7783653.6);
-        repro.setParameter("northing", 3335851.6);
+        repro.setParameter("easting", easting);
+        repro.setParameter("northing", northing);
 
         repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
                 "GEOGCS[\"WGS 84\"," +
@@ -73,7 +96,7 @@ public class GlobalbedoLevel2 extends Operator {
                 "AUTHORITY[\"SR-ORG\",\"6974\"]]");
 
         repro.setParameter("resampling", "Nearest");
-        repro.setParameter("includeTiePointGrids", true);
+        repro.setParameter("includeTiePointGrids", false);
         repro.setParameter("referencePixelX", 0.0);
         repro.setParameter("referencePixelY", 0.0);
         repro.setParameter("orientation", 0.0);
@@ -84,11 +107,44 @@ public class GlobalbedoLevel2 extends Operator {
         repro.setParameter("orthorectify", true);
         repro.setParameter("noDataValue", 0.0);
         repro.setSourceProduct(bbdrProduct);
+        return repro.getTargetProduct();
+    }
 
-        Product reproProduct = repro.getTargetProduct();
-        Dimension preferredTileSizeRepro = reproProduct.getPreferredTileSize();
-        System.out.println("preferredTileSize.repro = " + preferredTileSizeRepro);
-        setTargetProduct(reproProduct);
+    static Geometry computeProductGeometry(Product product) {
+        final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
+        final Polygon[] polygons = new Polygon[paths.length];
+        final GeometryFactory factory = new GeometryFactory();
+        for (int i = 0; i < paths.length; i++) {
+            polygons[i] = convertAwtPathToJtsPolygon(paths[i], factory);
+        }
+        final DouglasPeuckerSimplifier peuckerSimplifier = new DouglasPeuckerSimplifier(
+                polygons.length == 1 ? polygons[0] : factory.createMultiPolygon(polygons));
+        return peuckerSimplifier.getResultGeometry();
+    }
+
+    private static Polygon convertAwtPathToJtsPolygon(Path2D path, GeometryFactory factory) {
+        final PathIterator pathIterator = path.getPathIterator(null);
+        ArrayList<double[]> coordList = new ArrayList<double[]>();
+        int lastOpenIndex = 0;
+        while (!pathIterator.isDone()) {
+            final double[] coords = new double[6];
+            final int segType = pathIterator.currentSegment(coords);
+            if (segType == PathIterator.SEG_CLOSE) {
+                // we should only detect a single SEG_CLOSE
+                coordList.add(coordList.get(lastOpenIndex));
+                lastOpenIndex = coordList.size();
+            } else {
+                coordList.add(coords);
+            }
+            pathIterator.next();
+        }
+        final Coordinate[] coordinates = new Coordinate[coordList.size()];
+        for (int i1 = 0; i1 < coordinates.length; i1++) {
+            final double[] coord = coordList.get(i1);
+            coordinates[i1] = new Coordinate(coord[0], coord[1]);
+        }
+
+        return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
     public static class Spi extends OperatorSpi {
