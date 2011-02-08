@@ -104,7 +104,7 @@ public class N2Bconversion {
     }
 
     private static String getFileName(String instrument, String pattern) {
-        final String pathPattern = InstrumentConsts.getInstance().getLutPath() + File.separator + pattern;
+        final String pathPattern = BbdrUtils.getLutPath() + File.separator + pattern;
         return pathPattern.replace("%INSTRUMENT%", instrument);
     }
 

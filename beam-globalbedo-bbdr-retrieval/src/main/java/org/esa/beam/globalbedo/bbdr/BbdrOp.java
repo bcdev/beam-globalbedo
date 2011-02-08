@@ -29,7 +29,6 @@ import org.esa.beam.framework.gpf.experimental.PixelOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
-import org.esa.beam.util.math.LookupTable;
 
 import java.io.IOException;
 

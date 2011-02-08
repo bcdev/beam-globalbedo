@@ -1,7 +1,5 @@
 package org.esa.beam.globalbedo.bbdr;
 
-import org.esa.beam.util.math.LookupTable;
-
 /**
  * wrapper object to hold an AOT lookup table as in IDL breadboard
  *

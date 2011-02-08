@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
-import org.esa.beam.util.math.LookupTable;
 
 /**
  * @author Olaf Danne

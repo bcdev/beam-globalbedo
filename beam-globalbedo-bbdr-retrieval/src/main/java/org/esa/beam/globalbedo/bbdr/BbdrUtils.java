@@ -2,13 +2,12 @@ package org.esa.beam.globalbedo.bbdr;
 
 
 import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
-import org.esa.beam.globalbedo.sdr.operators.InstrumentConsts;
 import org.esa.beam.util.Guardian;
-import org.esa.beam.util.math.LookupTable;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -26,6 +25,12 @@ public class BbdrUtils {
     public static final String cwvKxLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_6S_Kx-CWV_OZO.bin";
     public static final String nskyLutDwPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_80_Nsky_dw.bin";
     public static final String nskyLutDUpPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_80_Nsky_up.bin";
+
+    private static final String lutLocaFile = System.getProperty("user.home")
+                    + File.separator + ".beam"
+                    + File.separator + "ga-aerosol"
+                    + File.separator + "lut.location";
+
 
     /**
      * reads an AOT LUT (BBDR breadboard procedure GA_read_LUT_AOD)
@@ -286,32 +291,32 @@ public class BbdrUtils {
     }
 
     private static String getAotLutName(String instrument) {
-        final String aotLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + aotLutPattern;
+        final String aotLutPath = getLutPath() + File.separator + aotLutPattern;
         return aotLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getAotKxLutName(String instrument) {
-        final String aotLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + aotKxLutPattern;
+        final String aotLutPath = getLutPath() + File.separator + aotKxLutPattern;
         return aotLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     static String getCwvLutName(String instrument) {
-        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvLutPattern;
+        final String cwvLutPath = getLutPath() + File.separator + cwvLutPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     static String getCwvKxLutName(String instrument) {
-        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + cwvKxLutPattern;
+        final String cwvLutPath = getLutPath() + File.separator + cwvKxLutPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getNskyDwLutName(String instrument) {
-        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + nskyLutDwPattern;
+        final String cwvLutPath = getLutPath() + File.separator + nskyLutDwPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getNskyUpLutName(String instrument) {
-        final String cwvLutPath = InstrumentConsts.getInstance().getLutPath() + File.separator + nskyLutDUpPattern;
+        final String cwvLutPath = getLutPath() + File.separator + nskyLutDUpPattern;
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
@@ -352,5 +357,28 @@ public class BbdrUtils {
             }
         }
         throw new IllegalArgumentException();
+    }
+
+    public static String getLutPath() {
+        String lutP = null;
+        BufferedReader reader = null;
+        try{
+            reader = new BufferedReader(new FileReader(lutLocaFile));
+            String line;
+            while ((line = reader.readLine())!= null) {
+                if (line.startsWith("ga.lutInstallDir")) {
+                    String[] split = line.split("=");
+                    if(split.length > 1) {
+                        lutP = split[1].trim();
+                        break;
+                    }
+                }
+            }
+        } catch (IOException ex) {
+            throw new OperatorException(ex);
+        }
+        if (lutP == null) throw new OperatorException("Lut install dir  not found");
+        if (lutP.endsWith(File.separator) || lutP.endsWith("/")) lutP = lutP.substring(0, lutP.length()-1);
+        return lutP;
     }
 }
