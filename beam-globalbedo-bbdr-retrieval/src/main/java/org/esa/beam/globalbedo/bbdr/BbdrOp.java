@@ -56,8 +56,10 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_AOT = 7;
     private static final int SRC_AOT_ERR = 8;
     private static final int SRC_OZO = 9;
-    private static final int SRC_TOA_RFL = 10;
-    private static final int SRC_TOA_VAR = 10 + 15;
+    private static final int SRC_WVP = 10;
+    private static final int SRC_TOA_RFL = 11;
+//    private static final int SRC_TOA_VAR = 10 + 15;
+    private int SRC_TOA_VAR;
 
     private static final int TRG_BBDR = 0;
     private static final int TRG_ERRORS = 3;
@@ -80,9 +82,6 @@ public class BbdrOp extends PixelOperator {
 
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
-
-    @Parameter(defaultValue = "NOT l1_flags.INVALID AND (cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW)")
-    private String landMaskExpression;
 
     // Auxdata
     private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
@@ -182,7 +181,7 @@ public class BbdrOp extends PixelOperator {
         kpp_vol = nskyDwLut.getKppVol();
 
         gasLookupTable = new GasLookupTable(sensor);
-        gasLookupTable.load();
+        gasLookupTable.load(sourceProduct);
 
         LookupTable aotLut = this.aotLut.getLut();
 
@@ -205,37 +204,69 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
-        // TODO for now MERIS only --> handle SPOT and AATSR aswell
+        // TODO for now MERIS only --> handle SPOT and AATSR_NADIR aswell
+
+        String[] toaBandNames = null;
+
+        String landMaskExpression = null;
+        final String cloudMaskExpression = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+        final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
+
+        BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
+        Product snowMaskProduct = snowOp.getTargetProduct();
+        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
+
+        if (sensor == Sensor.MERIS) {
+            landMaskExpression = "NOT l1_flags.INVALID AND (" + cloudMaskExpression + ")";
+
+            configurator.defineSample(SRC_VZA, "view_zenith");
+            configurator.defineSample(SRC_VAA, "view_azimuth");
+            configurator.defineSample(SRC_SZA, "sun_zenith");
+            configurator.defineSample(SRC_SAA, "sun_azimuth");
+            configurator.defineSample(SRC_DEM, "elevation");
+            configurator.defineSample(SRC_AOT, "aot");
+            configurator.defineSample(SRC_AOT_ERR, "aot_err");
+            configurator.defineSample(SRC_OZO, "ozone");
+            configurator.defineSample(SRC_WVP, "ozone");
+
+            toaBandNames = new String[]{
+                    "reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
+                    "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
+                    "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"
+            };
+        } else if (sensor == Sensor.AATSR_NADIR) {
+
+        } else if (sensor == Sensor.SPOT_VGT) {
+
+            landMaskExpression =
+                    "SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD AND (" + cloudMaskExpression + ")";
+
+            configurator.defineSample(SRC_VZA, "VZA");
+            configurator.defineSample(SRC_VAA, "VAA");
+            configurator.defineSample(SRC_SZA, "SZA");
+            configurator.defineSample(SRC_SAA, "SAA");
+            configurator.defineSample(SRC_DEM, "elevation");
+            configurator.defineSample(SRC_AOT, "aot");
+            configurator.defineSample(SRC_AOT_ERR, "aot_err");
+            configurator.defineSample(SRC_OZO, "OG");
+            configurator.defineSample(SRC_WVP, "WVG");
+
+            toaBandNames = new String[]{
+                    "B0", "B2", "B3", "MIR"};
+        }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landMaskExpression, sourceProduct);
         Product landMaskProduct = landOp.getTargetProduct();
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
-        String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
-        BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
-        Product snowMaskProduct = snowOp.getTargetProduct();
-        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
-
-        configurator.defineSample(SRC_VZA, "view_zenith");
-        configurator.defineSample(SRC_VAA, "view_azimuth");
-        configurator.defineSample(SRC_SZA, "sun_zenith");
-        configurator.defineSample(SRC_SAA, "sun_azimuth");
-        configurator.defineSample(SRC_DEM, "elevation");
-
-        configurator.defineSample(SRC_OZO, "ozone");
-
-        configurator.defineSample(SRC_AOT, "aot");
-        configurator.defineSample(SRC_AOT_ERR, "aot_err");
-
-        String[] toaBandNames = {"reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
-                "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
-                "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"};
         for (int i = 0; i < toaBandNames.length; i++) {
             configurator.defineSample(SRC_TOA_RFL + i, toaBandNames[i], sourceProduct);
         }
+        SRC_TOA_VAR = SRC_TOA_RFL + toaBandNames.length;
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
         imageVarianceOp.setSourceProduct(sourceProduct);
+        imageVarianceOp.setParameter("sensor", sensor);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
 
         for (int i = 0; i < toaBandNames.length; i++) {
@@ -309,19 +340,29 @@ public class BbdrOp extends PixelOperator {
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_DEM].set(hsf);
 
-        double ozo = sourceSamples[SRC_OZO].getDouble();
+        double ozo;
+        double cwv;
+        double gas;
 
-        // TODO MERIS only
-        ozo *= 0.001;
-        double gas = ozo;
-        double gas2_val = 1.5;
-        double cwv = gas2_val;
+        // TODO MERIS, AATSR only
+//      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
+//      MERIS & AATSR: OZO per-pixel, CWV as constant value
+//      VGT: CWV per-pixel, OZO as constant value
+        if (sensor == Sensor.SPOT_VGT) {
+            ozo = gasLookupTable.getGasVal();   // mean value from whole image
+            cwv = sourceSamples[SRC_WVP].getDouble();
+            gas = cwv;
+        } else {
+            ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
+            cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
+            gas = ozo;
+        }
 
         double[] toa_rfl = new double[sensor.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
             toa_rfl[i] = sourceSamples[SRC_TOA_RFL + i].getDouble();
+            toa_rfl[i] /= sensor.getCal2Meris()[i];
         }
-
 
         double phi = abs(saa - vaa);
         if (phi > 180.0) {
@@ -340,14 +381,6 @@ public class BbdrOp extends PixelOperator {
 
         float[] tg = gasLookupTable.getTg((float) amf, (float) gas);
         float[][][] kx_tg = gasLookupTable.getKxTg((float) amf, (float) gas);
-//        double cwv = 0;//TODO
-//        double ozo = 0;//TODO
-
-        if (sensor.getCwv_ozo_flag() == 1) {
-            cwv = gas;
-        } else {
-            ozo = gas;
-        }
 
         double[][] f_int_all = interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
 
@@ -399,6 +432,7 @@ public class BbdrOp extends PixelOperator {
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
             err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+            err_coreg[i] *= sensor.getErrCoregScale();
         }
 
         Matrix err_aod_cov = matrixSquare(err_aod);
@@ -450,7 +484,8 @@ public class BbdrOp extends PixelOperator {
         int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
         double[] columnPackedCopy = err_sum.getColumnPackedCopy();
         for (int i = 0; i < relevantErrIndices.length; i++) {
-            targetSamples[TRG_ERRORS + i].set(sqrt(columnPackedCopy[relevantErrIndices[i]]));
+            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+            targetSamples[TRG_ERRORS + i].set(err_final);
         }
 
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)

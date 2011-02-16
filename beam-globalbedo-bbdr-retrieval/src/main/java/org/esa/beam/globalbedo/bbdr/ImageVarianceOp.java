@@ -25,6 +25,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.util.ProductUtils;
 
@@ -42,6 +43,9 @@ public class ImageVarianceOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @Parameter(defaultValue = "MERIS")
+    private Sensor sensor;
+
     @Override
     public void initialize() throws OperatorException {
         Product sourceProduct = getSourceProduct();
@@ -56,8 +60,16 @@ public class ImageVarianceOp extends Operator {
 
         Band[] bands = sourceProduct.getBands();
         for (Band band : bands) {
-            if (band.getName().startsWith("refl")) {
-                targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+            if (sensor == Sensor.MERIS) {
+                if (band.getName().startsWith("refl")) {
+                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                }
+            } else if (sensor == Sensor.AATSR_NADIR) {
+                // todo
+            } else if (sensor == Sensor.SPOT_VGT) {
+                if (band.getName().startsWith("B") || band.getName().equals("MIR")) {
+                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                }
             }
         }
         setTargetProduct(targetProduct);

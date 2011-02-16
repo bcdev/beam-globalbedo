@@ -1,9 +1,14 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.util.Guardian;
 
+import javax.media.jai.JAI;
+import javax.media.jai.ROI;
+import java.awt.image.RenderedImage;
+import java.awt.image.renderable.ParameterBlock;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
@@ -380,5 +385,23 @@ public class BbdrUtils {
         if (lutP == null) throw new OperatorException("Lut install dir  not found");
         if (lutP.endsWith(File.separator) || lutP.endsWith("/")) lutP = lutP.substring(0, lutP.length()-1);
         return lutP;
+    }
+
+    public static float getImageMeanValue(MultiLevelImage image) {
+         // Set up the parameter block for the source image and
+         // the three parameters.
+         ParameterBlock pb = new ParameterBlock();
+         pb.addSource(image);   // The source image
+         pb.add(null);       // null ROI means whole image
+         pb.add(1);          // check every pixel horizontally
+         pb.add(1);          // check every pixel vertically
+
+         // Perform the mean operation on the source image.
+         RenderedImage meanImage = JAI.create("mean", pb, null);
+
+         // Retrieve and report the mean pixel value.
+         double[] mean = (double[])meanImage.getProperty("mean");
+
+        return  (float) mean[0];
     }
 }

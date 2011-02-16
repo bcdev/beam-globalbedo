@@ -28,7 +28,7 @@ public class GasLookupTableTest {
     @Before
     public void before() {
         gasLookupTable = new GasLookupTable(Sensor.MERIS);
-        gasLookupTable.load();
+        gasLookupTable.load(null);
     }
 
     @Test

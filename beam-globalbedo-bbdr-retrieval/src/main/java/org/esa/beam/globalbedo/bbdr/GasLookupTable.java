@@ -1,5 +1,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
+import org.esa.beam.framework.datamodel.Product;
+
 import java.nio.ByteBuffer;
 
 /**
@@ -8,7 +10,7 @@ import java.nio.ByteBuffer;
  */
 class GasLookupTable {
 
-    private final float gas2val = 1.5f; //TODO this is MERIS and AATSTR only
+    private float gas2val = 1.5f; // keep variable name from breadboard
     private final Sensor sensor;
 
     private float[][][] lutGas;
@@ -17,17 +19,30 @@ class GasLookupTable {
     private float[] amfArray;
     private float[] cwvArray;
     private float[] gasArray;
+    private float[] ozoArray;
 
     GasLookupTable(Sensor sensor) {
         this.sensor = sensor;
     }
 
-    void load() {
+    void load(Product sourceProduct) {
+        if (sourceProduct != null && sensor == Sensor.SPOT_VGT) {
+            float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
+            setGasVal(ozoMeanValue);
+            // todo: check small deviation from breadboard mean value calculation (0.24251308 vs. 0.242677)
+//            setGasVal(0.242677f); // test!!
+        } else {
+            setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
+        }
         loadCwvOzoLookupTableArray(sensor);
         loadCwvOzoKxLookupTableArray(sensor);
     }
 
-    float getGas2val() {
+    void setGasVal(float value) {
+        gas2val = value;
+    }
+
+    public float getGasVal() {
         return gas2val;
     }
 
@@ -61,7 +76,7 @@ class GasLookupTable {
 
         final float[] angArr = BbdrUtils.readDimension(bb, nAng);
         cwvArray = BbdrUtils.readDimension(bb, nCwv);
-        final float[] ozoArr = BbdrUtils.readDimension(bb, nOzo);
+        ozoArray = BbdrUtils.readDimension(bb, nOzo);
 
         float[] wvl = instrument.getWavelength();
         final int nWvl = wvl.length;
@@ -79,7 +94,16 @@ class GasLookupTable {
         amfArray = convertAngArrayToAmfArray(angArr);
 
         if (sensor.equals(Sensor.SPOT_VGT)) {
-            //TODO
+            int iOzo = BbdrUtils.getIndexBefore(gas2val, ozoArray);
+            float term = (gas2val - ozoArray[iOzo]) / (ozoArray[iOzo + 1] - ozoArray[iOzo]);
+            for (int iWvl = 0; iWvl < nWvl; iWvl++) {
+                for (int iCwv = 0; iCwv < nCwv; iCwv++) {
+                    for (int iAng = 0; iAng < nAng; iAng++) {
+                        lutGas[iWvl][iCwv][iAng] = cwvOzoLutArray[iWvl][iOzo][iCwv][iAng] + (cwvOzoLutArray[iWvl][iOzo + 1][iCwv][iAng] - cwvOzoLutArray[iWvl][iOzo][iCwv][iAng]) * term;
+                    }
+                }
+            }
+            gasArray = cwvArray;
         } else {
             int iCwv = BbdrUtils.getIndexBefore(gas2val, cwvArray);
             float term = (gas2val - cwvArray[iCwv]) / (cwvArray[iCwv + 1] - cwvArray[iCwv]);
@@ -90,7 +114,7 @@ class GasLookupTable {
                     }
                 }
             }
-            gasArray = ozoArr;
+            gasArray = ozoArray;
         }
     }
 
@@ -131,7 +155,19 @@ class GasLookupTable {
 
         kxLutGas = new float[nWvl][nCwv][nAng][nKxcase][nKx];
         if (sensor.equals(Sensor.SPOT_VGT)) {
-            //TODO
+            int iOzo = BbdrUtils.getIndexBefore(gas2val, ozoArray);
+            for (int iWvl = 0; iWvl < nWvl; iWvl++) {
+                for (int iCwv = 0; iCwv < nCwv; iCwv++) {
+                    for (int iAng = 0; iAng < nAng; iAng++) {
+                        for (int iKxcase = 0; iKxcase < nKxcase; iKxcase++) {
+                            for (int iKx = 0; iKx < nKx; iKx++) {
+                                float term = (gas2val - ozoArray[iOzo]) / (ozoArray[iOzo + 1] - ozoArray[iOzo]);
+                                kxLutGas[iWvl][iCwv][iAng][iKxcase][iKx] = kxArray[iWvl][iOzo][iCwv][iAng][iKxcase][iKx] + (kxArray[iWvl][iOzo + 1][iCwv][iAng][iKxcase][iKx] - kxArray[iWvl][iOzo][iCwv][iAng][iKxcase][iKx]) * term;
+                            }
+                        }
+                    }
+                }
+            }
         } else {
             int iCwv = BbdrUtils.getIndexBefore(gas2val, cwvArray);
             for (int iWvl = 0; iWvl < nWvl; iWvl++) {

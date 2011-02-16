@@ -15,6 +15,10 @@ public class BbdrConstants {
         760.0f, 778.0f, 865.0f, 885.0f, 900.0f
     };
 
+    public final static float[] MERIS_CALIBRATION_COEFFS = {
+        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+    };
+
     // taken from LUT 'MERIS_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
     public final static float[] MERIS_SOLAR_IRRADIANCES = {
         1714.49f,1879.69f, 1929.27f, 1928.54f, 1803.06f,
@@ -26,6 +30,10 @@ public class BbdrConstants {
          550.0f, 665.0f, 865.0f, 1610.0f
     };
 
+    public final static float[] AATSR_CALIBRATION_COEFFS = {
+        1.0253f, 1.0093f, 1.0265f, 1.0f
+    };
+
     // taken from LUT 'AATSR_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
     public final static float[] AATSR_SOLAR_IRRADIANCES = {
          1819.54f, 1521.89f, 950.683f, 254.484f
@@ -35,10 +43,46 @@ public class BbdrConstants {
          450.0f, 645.0f, 835.0f, 1665.0f
     };
 
+    public final static float[] VGT_CALIBRATION_COEFFS = {
+        1.012f, 0.953f, 0.971f, 1.0f
+    };
+
     // taken from LUT 'VGT_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
     public final static float[] VGT_SOLAR_IRRADIANCES = {
          1938.27f, 1582.68f, 1036.09f, 224.581f
     };
+
+    public static float CWV_CONSTANT_VALUE = 1.5f; //TODO this is MERIS and AATSTR only
+
+    public final static String MERIS_VZA_TP_NAME = "view_zenith";
+    public final static String MERIS_VAA_TP_NAME = "view_azimuth";
+    public final static String MERIS_SZA_TP_NAME = "sun_zenith";
+    public final static String MERIS_SAA_TP_NAME = "sun_azimuth";
+    public final static String MERIS_OZO_TP_NAME = "ozone";
+    public final static String MERIS_DEM_BAND_NAME = "elevation";
+    public final static String MERIS_AOT_BAND_NAME = "aot";
+    public final static String MERIS_AOTERR_BAND_NAME = "aot_err";
+
+    public final static String AATSR_VZA_NADIR_TP_NAME = "view_elev_nadir";
+    public final static String AATSR_VAA_NADIR_TP_NAME = "view_azimuth_nadir";
+    public final static String AATSR_SZA_NADIR_TP_NAME = "sun_elev_nadir";
+    public final static String AATSR_SAA_NADIR_TP_NAME = "sun_azimuth_nadir";
+    public final static String AATSR_VZA_FWARD_TP_NAME = "view_elev_nadir";
+    public final static String AATSR_VAA_FWARD_TP_NAME = "view_azimuth_nadir";
+    public final static String AATSR_SZA_FWARD_TP_NAME = "sun_elev_nadir";
+    public final static String AATSR_SAA_FWARD_TP_NAME = "sun_azimuth_nadir";
+    public final static String AATSR_DEM_TP_NAME = "altitude";
+    public final static String AATSR_AOT_BAND_NAME = "aot";
+    public final static String AATSR_AOTERR_BAND_NAME = "aot_err";
+
+    public final static String VGT_VZA_BAND_NAME = "VZA";
+    public final static String VGT_VAA_BAND_NAME = "VAA";
+    public final static String VGT_SZA_BAND_NAME = "SZA";
+    public final static String VGT_SAA_BAND_NAME = "SAA";
+    public final static String VGT_DEM_BAND_NAME = "elevation";
+    public final static String VGT_OZO_BAND_NAME = "OG";
+    public final static String VGT_AOT_BAND_NAME = "aot";
+    public final static String VGT_AOTERR_BAND_NAME = "aot_err";
 
 }
 

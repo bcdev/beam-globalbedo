@@ -23,9 +23,11 @@ import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
  */
 enum Sensor {
 
-    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 2, 0.04, 0.05, MERIS_WAVELENGHTS),
-    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_WAVELENGHTS),
-    SPOT_VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 1, 0.04, 0.05, VGT_WAVELENGHTS);
+    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 2, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
+    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
+    AATSR_NADIR("AATSR_NADIR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
+    AATSR_FWARD("AATSR_FWARD", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4),
+    SPOT_VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 1, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1);
 
     private final String name;
     private final int numBands;
@@ -37,9 +39,12 @@ enum Sensor {
     private final int cwv_ozo_flag;
     private final double cwvError;
     private final double ozoError;
+    private final float[] cal2Meris;
     private final float[] wavelength;
+    private final double errCoregScale;
 
-    private Sensor(String name, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI, double bNDVI, int cwv_ozo_flag, double cwvError, double ozoError, float[] wavelength) {
+    private Sensor(String name, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI,
+                   double bNDVI, int cwv_ozo_flag, double cwvError, double ozoError, float[] cal2Meris, float[] wavelength, double errCoregScale) {
         this.name = name;
         this.numBands = numBands;
         this.radiometricError = radiometricError;
@@ -50,7 +55,9 @@ enum Sensor {
         this.cwv_ozo_flag = cwv_ozo_flag;
         this.cwvError = cwvError;
         this.ozoError = ozoError;
+        this.cal2Meris = cal2Meris;
         this.wavelength = wavelength;
+        this.errCoregScale = errCoregScale;
     }
 
     public String getName() {
@@ -98,5 +105,21 @@ enum Sensor {
 
     public float[] getWavelength() {
         return wavelength;
+    }
+
+    public double getaNDVI() {
+        return aNDVI;
+    }
+
+    public double getbNDVI() {
+        return bNDVI;
+    }
+
+    public float[] getCal2Meris() {
+        return cal2Meris;
+    }
+
+    public double getErrCoregScale() {
+        return errCoregScale;
     }
 }
