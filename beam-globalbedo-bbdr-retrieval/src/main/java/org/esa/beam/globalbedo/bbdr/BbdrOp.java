@@ -204,8 +204,6 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
-        // TODO for now MERIS only --> handle SPOT and AATSR_NADIR aswell
-
         String[] toaBandNames = null;
 
         String landMaskExpression = null;
@@ -219,23 +217,52 @@ public class BbdrOp extends PixelOperator {
         if (sensor == Sensor.MERIS) {
             landMaskExpression = "NOT l1_flags.INVALID AND (" + cloudMaskExpression + ")";
 
-            configurator.defineSample(SRC_VZA, "view_zenith");
-            configurator.defineSample(SRC_VAA, "view_azimuth");
-            configurator.defineSample(SRC_SZA, "sun_zenith");
-            configurator.defineSample(SRC_SAA, "sun_azimuth");
+            configurator.defineSample(SRC_VZA, BbdrConstants.MERIS_VZA_TP_NAME);
+            configurator.defineSample(SRC_VAA, BbdrConstants.MERIS_VAA_TP_NAME);
+            configurator.defineSample(SRC_SZA, BbdrConstants.MERIS_SZA_TP_NAME);
+            configurator.defineSample(SRC_SAA, BbdrConstants.MERIS_SAA_TP_NAME);
+            configurator.defineSample(SRC_DEM, BbdrConstants.MERIS_DEM_BAND_NAME);
+            configurator.defineSample(SRC_AOT, BbdrConstants.MERIS_AOT_BAND_NAME);
+            configurator.defineSample(SRC_AOT_ERR, BbdrConstants.MERIS_AOTERR_BAND_NAME);
+            configurator.defineSample(SRC_OZO, BbdrConstants.MERIS_OZO_TP_NAME);
+//            configurator.defineSample(SRC_WVP, "ozone");
+
+            toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
+            System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
+                             BbdrConstants.MERIS_TOA_BAND_NAMES.length);
+        } else if (sensor == Sensor.AATSR_NADIR) {
+            landMaskExpression = cloudMaskExpression;
+
+            configurator.defineSample(SRC_VZA, "view_elev_nadir");
+            configurator.defineSample(SRC_VAA, "view_azimuth_nadir");
+            configurator.defineSample(SRC_SZA, "sun_elev_nadir");
+            configurator.defineSample(SRC_SAA, "sun_azimuth_nadir");
             configurator.defineSample(SRC_DEM, "elevation");
             configurator.defineSample(SRC_AOT, "aot");
             configurator.defineSample(SRC_AOT_ERR, "aot_err");
-            configurator.defineSample(SRC_OZO, "ozone");
-            configurator.defineSample(SRC_WVP, "ozone");
+//            configurator.defineSample(SRC_OZO, "ozone");
+//            configurator.defineSample(SRC_WVP, "ozone");
 
-            toaBandNames = new String[]{
-                    "reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
-                    "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
-                    "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"
-            };
-        } else if (sensor == Sensor.AATSR_NADIR) {
+            toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
+            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
 
+        } else if (sensor == Sensor.AATSR_FWARD) {
+            landMaskExpression = cloudMaskExpression;
+
+            configurator.defineSample(SRC_VZA, "view_elev_fward");
+            configurator.defineSample(SRC_VAA, "view_azimuth_fward");
+            configurator.defineSample(SRC_SZA, "sun_elev_fward");
+            configurator.defineSample(SRC_SAA, "sun_azimuth_fward");
+            configurator.defineSample(SRC_DEM, "elevation");
+            configurator.defineSample(SRC_AOT, "aot");
+            configurator.defineSample(SRC_AOT_ERR, "aot_err");
+//            configurator.defineSample(SRC_OZO, "ozone");
+//            configurator.defineSample(SRC_WVP, "ozone");
+
+            toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
+            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         } else if (sensor == Sensor.SPOT_VGT) {
 
             landMaskExpression =
@@ -251,8 +278,9 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(SRC_OZO, "OG");
             configurator.defineSample(SRC_WVP, "WVG");
 
-            toaBandNames = new String[]{
-                    "B0", "B2", "B3", "MIR"};
+            toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
+            System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
+                             BbdrConstants.VGT_TOA_BAND_NAMES.length);
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landMaskExpression, sourceProduct);
@@ -344,18 +372,25 @@ public class BbdrOp extends PixelOperator {
         double cwv;
         double gas;
 
-        // TODO MERIS, AATSR only
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
-//      MERIS & AATSR: OZO per-pixel, CWV as constant value
+//      MERIS: OZO per-pixel, CWV as constant value
+//      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
-        if (sensor == Sensor.SPOT_VGT) {
-            ozo = gasLookupTable.getGasVal();   // mean value from whole image
-            cwv = sourceSamples[SRC_WVP].getDouble();
-            gas = cwv;
-        } else {
+        if (sensor == Sensor.MERIS) {
             ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
             cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
             gas = ozo;
+        } else if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+            ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
+            cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
+            gas = ozo;
+        } else if (sensor == Sensor.SPOT_VGT) {
+            ozo = gasLookupTable.getGasMeanVal();   // mean value from whole image
+            cwv = sourceSamples[SRC_WVP].getDouble();
+            cwv = max(cwv, 4.45);
+            gas = cwv;
+        } else {
+            throw new IllegalArgumentException("Sensor '" + sensor.getName() + "' not supported.");
         }
 
         double[] toa_rfl = new double[sensor.getNumBands()];

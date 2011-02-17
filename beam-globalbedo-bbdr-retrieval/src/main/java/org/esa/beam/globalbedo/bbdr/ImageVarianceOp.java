@@ -61,11 +61,17 @@ public class ImageVarianceOp extends Operator {
         Band[] bands = sourceProduct.getBands();
         for (Band band : bands) {
             if (sensor == Sensor.MERIS) {
-                if (band.getName().startsWith("refl")) {
+                if (band.getName().startsWith("reflectance")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
             } else if (sensor == Sensor.AATSR_NADIR) {
-                // todo
+                if (band.getName().startsWith("reflec_nadir")) {
+                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                }
+            } else if (sensor == Sensor.AATSR_FWARD) {
+                if (band.getName().startsWith("reflec_fward")) {
+                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                }
             } else if (sensor == Sensor.SPOT_VGT) {
                 if (band.getName().startsWith("B") || band.getName().equals("MIR")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);

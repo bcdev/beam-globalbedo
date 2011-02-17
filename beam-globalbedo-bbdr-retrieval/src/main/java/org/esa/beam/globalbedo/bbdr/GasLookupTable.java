@@ -42,7 +42,7 @@ class GasLookupTable {
         gas2val = value;
     }
 
-    public float getGasVal() {
+    public float getGasMeanVal() {
         return gas2val;
     }
 

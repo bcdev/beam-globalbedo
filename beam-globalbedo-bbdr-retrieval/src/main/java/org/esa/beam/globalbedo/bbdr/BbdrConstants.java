@@ -52,7 +52,12 @@ public class BbdrConstants {
          1938.27f, 1582.68f, 1036.09f, 224.581f
     };
 
-    public static float CWV_CONSTANT_VALUE = 1.5f; //TODO this is MERIS and AATSTR only
+    // MERIS has ozone, but no water vapour image
+    // AATSR has neither ozone nor water vapour image
+    // VGT has ozone and water vapour image
+    // --> use constants if images are not available
+    public static float CWV_CONSTANT_VALUE = 1.5f; // used for MERIS and AATSR only
+    public static float OZO_CONSTANT_VALUE = 0.32f; // used for AATSR only
 
     public final static String MERIS_VZA_TP_NAME = "view_zenith";
     public final static String MERIS_VAA_TP_NAME = "view_azimuth";
@@ -62,6 +67,12 @@ public class BbdrConstants {
     public final static String MERIS_DEM_BAND_NAME = "elevation";
     public final static String MERIS_AOT_BAND_NAME = "aot";
     public final static String MERIS_AOTERR_BAND_NAME = "aot_err";
+
+    public final static String[] MERIS_TOA_BAND_NAMES = new String[]{
+            "reflectance_1", "reflectance_2", "reflectance_3", "reflectance_4", "reflectance_5",
+            "reflectance_6", "reflectance_7", "reflectance_8", "reflectance_9", "reflectance_10",
+            "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"
+    };
 
     public final static String AATSR_VZA_NADIR_TP_NAME = "view_elev_nadir";
     public final static String AATSR_VAA_NADIR_TP_NAME = "view_azimuth_nadir";
@@ -75,6 +86,12 @@ public class BbdrConstants {
     public final static String AATSR_AOT_BAND_NAME = "aot";
     public final static String AATSR_AOTERR_BAND_NAME = "aot_err";
 
+    public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
+                    "reflec_nadir_550", "reflec_nadir_670", "reflec_nadir_870", "reflec_nadir_1600"};
+
+    public final static String[] AATSR_TOA_BAND_NAMES_FWARD = new String[]{
+                    "reflec_fward_550", "reflec_fward_670", "reflec_fward_870", "reflec_fward_1600"};
+
     public final static String VGT_VZA_BAND_NAME = "VZA";
     public final static String VGT_VAA_BAND_NAME = "VAA";
     public final static String VGT_SZA_BAND_NAME = "SZA";
@@ -83,6 +100,9 @@ public class BbdrConstants {
     public final static String VGT_OZO_BAND_NAME = "OG";
     public final static String VGT_AOT_BAND_NAME = "aot";
     public final static String VGT_AOTERR_BAND_NAME = "aot_err";
+
+    public final static String[] VGT_TOA_BAND_NAMES = new String[]{
+                    "B0", "B2", "B3", "MIR"};
 
 }
 

@@ -297,32 +297,50 @@ public class BbdrUtils {
 
     private static String getAotLutName(String instrument) {
         final String aotLutPath = getLutPath() + File.separator + aotLutPattern;
+        if (instrument.startsWith("AATSR")) {
+            return aotLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
         return aotLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getAotKxLutName(String instrument) {
-        final String aotLutPath = getLutPath() + File.separator + aotKxLutPattern;
-        return aotLutPath.replace("%INSTRUMENT%", instrument);
+        final String aotKxLutPath = getLutPath() + File.separator + aotKxLutPattern;
+        if (instrument.startsWith("AATSR")) {
+            return aotKxLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
+        return aotKxLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     static String getCwvLutName(String instrument) {
         final String cwvLutPath = getLutPath() + File.separator + cwvLutPattern;
+        if (instrument.startsWith("AATSR")) {
+            return cwvLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
         return cwvLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     static String getCwvKxLutName(String instrument) {
-        final String cwvLutPath = getLutPath() + File.separator + cwvKxLutPattern;
-        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+        final String cwvKxLutPath = getLutPath() + File.separator + cwvKxLutPattern;
+        if (instrument.startsWith("AATSR")) {
+            return cwvKxLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
+        return cwvKxLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getNskyDwLutName(String instrument) {
-        final String cwvLutPath = getLutPath() + File.separator + nskyLutDwPattern;
-        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+        final String nskyDwLutPath = getLutPath() + File.separator + nskyLutDwPattern;
+        if (instrument.startsWith("AATSR")) {
+            return nskyDwLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
+        return nskyDwLutPath.replace("%INSTRUMENT%", instrument);
     }
 
     private static String getNskyUpLutName(String instrument) {
-        final String cwvLutPath = getLutPath() + File.separator + nskyLutDUpPattern;
-        return cwvLutPath.replace("%INSTRUMENT%", instrument);
+        final String nskyUpLutPath = getLutPath() + File.separator + nskyLutDUpPattern;
+        if (instrument.startsWith("AATSR")) {
+            return nskyUpLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
+        return nskyUpLutPath.replace("%INSTRUMENT%", instrument);
     }
 
 

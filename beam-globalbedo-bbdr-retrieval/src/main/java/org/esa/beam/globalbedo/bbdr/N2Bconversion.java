@@ -105,6 +105,9 @@ public class N2Bconversion {
 
     private static String getFileName(String instrument, String pattern) {
         final String pathPattern = BbdrUtils.getLutPath() + File.separator + pattern;
+        if (instrument.startsWith("AATSR")) {
+            return pathPattern.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
+        }
         return pathPattern.replace("%INSTRUMENT%", instrument);
     }
 
