@@ -45,6 +45,9 @@ public class GlobalbedoLevel2 extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @Parameter(defaultValue = "MERIS")
+    private Sensor sensor;
+
     @Parameter
     private double easting;
 
@@ -67,6 +70,7 @@ public class GlobalbedoLevel2 extends Operator {
 
         BbdrOp bbdrOp = new BbdrOp();
         bbdrOp.setSourceProduct(aotProduct);
+        bbdrOp.setParameter("sensor", sensor);
         Product bbdrProduct = bbdrOp.getTargetProduct();
 
         setTargetProduct(reproject(bbdrProduct));
