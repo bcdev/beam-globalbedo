@@ -347,6 +347,11 @@ public class BbdrOp extends PixelOperator {
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
+
+        if (x == 1890 && y == 95) {
+            System.out.println();
+        }
+
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
@@ -387,7 +392,7 @@ public class BbdrOp extends PixelOperator {
         } else if (sensor == Sensor.SPOT_VGT) {
             ozo = gasLookupTable.getGasMeanVal();   // mean value from whole image
             cwv = sourceSamples[SRC_WVP].getDouble();
-            cwv = max(cwv, 4.45);
+            cwv = min(cwv, 4.45);
             gas = cwv;
         } else {
             throw new IllegalArgumentException("Sensor '" + sensor.getName() + "' not supported.");

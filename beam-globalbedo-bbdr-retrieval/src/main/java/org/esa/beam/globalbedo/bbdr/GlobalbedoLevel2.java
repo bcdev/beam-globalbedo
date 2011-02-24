@@ -48,6 +48,12 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
+    @Parameter(defaultValue = "false")
+    private boolean computeL1ToAotProductOnly;
+
+    @Parameter(defaultValue = "false")
+    private boolean computeAotToBbdrProductOnly;
+
     @Parameter
     private double easting;
 
@@ -56,24 +62,62 @@ public class GlobalbedoLevel2 extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        Geometry geometry = computeProductGeometry(reproject(sourceProduct));
-        SubsetOp subsetOp = new SubsetOp();
-        subsetOp.setGeoRegion(geometry);
-        subsetOp.setSourceProduct(sourceProduct);
-        Product targetProduct = subsetOp.getTargetProduct();
+        // old setup
+//        Geometry geometry = computeProductGeometry(reproject(sourceProduct));
+//        SubsetOp subsetOp = new SubsetOp();
+//        subsetOp.setGeoRegion(geometry);
+//        subsetOp.setSourceProduct(sourceProduct);
+//        Product targetProduct = subsetOp.getTargetProduct();
+//
+//        GaMasterOp gaMasterOp = new GaMasterOp();
+//        gaMasterOp.setParameter("copyToaRadBands", false);
+//        gaMasterOp.setParameter("copyToaReflBands", true);
+//        gaMasterOp.setSourceProduct(targetProduct);
+//        Product aotProduct = gaMasterOp.getTargetProduct();
+//
+//        if (computeL1ToAotProductOnly) {
+//            setTargetProduct(aotProduct);
+//        } else {
+//            BbdrOp bbdrOp = new BbdrOp();
+//            bbdrOp.setSourceProduct(aotProduct);
+//            bbdrOp.setParameter("sensor", sensor);
+//            Product bbdrProduct = bbdrOp.getTargetProduct();
+//
+//            setTargetProduct(reproject(bbdrProduct));
+//        }
 
-        GaMasterOp gaMasterOp = new GaMasterOp();
-        gaMasterOp.setParameter("copyToaRadBands", false);
-        gaMasterOp.setParameter("copyToaReflBands", true);
-        gaMasterOp.setSourceProduct(targetProduct);
-        Product aotProduct = gaMasterOp.getTargetProduct();
+        // this setup allows to split processing in two parts:
+        // 1. L1b --> AOT
+        // 2. AOT --> BBDR
+        // which seems to improve performance tremendously (more than factor 10 for a MERIS full orbit test product)
+        Product targetProduct = null;
+        Product aotProduct = null;
+        if (!computeAotToBbdrProductOnly) {
+            Geometry geometry = computeProductGeometry(reproject(sourceProduct));
+            SubsetOp subsetOp = new SubsetOp();
+            subsetOp.setGeoRegion(geometry);
+            subsetOp.setSourceProduct(sourceProduct);
+            targetProduct = subsetOp.getTargetProduct();
 
-        BbdrOp bbdrOp = new BbdrOp();
-        bbdrOp.setSourceProduct(aotProduct);
-        bbdrOp.setParameter("sensor", sensor);
-        Product bbdrProduct = bbdrOp.getTargetProduct();
+            GaMasterOp gaMasterOp = new GaMasterOp();
+            gaMasterOp.setParameter("copyToaRadBands", false);
+            gaMasterOp.setParameter("copyToaReflBands", true);
+            gaMasterOp.setSourceProduct(targetProduct);
+            aotProduct = gaMasterOp.getTargetProduct();
+        }  else {
+            aotProduct = sourceProduct;
+        }
 
-        setTargetProduct(reproject(bbdrProduct));
+        if (computeL1ToAotProductOnly) {
+            setTargetProduct(aotProduct);
+        } else {
+            BbdrOp bbdrOp = new BbdrOp();
+            bbdrOp.setSourceProduct(aotProduct);
+            bbdrOp.setParameter("sensor", sensor);
+            Product bbdrProduct = bbdrOp.getTargetProduct();
+
+            setTargetProduct(reproject(bbdrProduct));
+        }
     }
 
     private Product reproject(Product bbdrProduct) {
@@ -82,22 +126,22 @@ public class GlobalbedoLevel2 extends Operator {
         repro.setParameter("northing", northing);
 
         repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                "GEOGCS[\"WGS 84\"," +
-                "  DATUM[\"WGS_1984\"," +
-                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                "PROJECTION[\"Sinusoidal\"]," +
-                "PARAMETER[\"false_easting\",0.0]," +
-                "PARAMETER[\"false_northing\",0.0]," +
-                "PARAMETER[\"central_meridian\",0.0]," +
-                "PARAMETER[\"semi_major\",6371007.181]," +
-                "PARAMETER[\"semi_minor\",6371007.181]," +
-                "UNIT[\"m\",1.0]," +
-                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
+                                  "GEOGCS[\"WGS 84\"," +
+                                  "  DATUM[\"WGS_1984\"," +
+                                  "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+                                  "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+                                  "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+                                  "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+                                  "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+                                  "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+                                  "PROJECTION[\"Sinusoidal\"]," +
+                                  "PARAMETER[\"false_easting\",0.0]," +
+                                  "PARAMETER[\"false_northing\",0.0]," +
+                                  "PARAMETER[\"central_meridian\",0.0]," +
+                                  "PARAMETER[\"semi_major\",6371007.181]," +
+                                  "PARAMETER[\"semi_minor\",6371007.181]," +
+                                  "UNIT[\"m\",1.0]," +
+                                  "AUTHORITY[\"SR-ORG\",\"6974\"]]");
 
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", false);
@@ -152,6 +196,7 @@ public class GlobalbedoLevel2 extends Operator {
     }
 
     public static class Spi extends OperatorSpi {
+
         public Spi() {
             super(GlobalbedoLevel2.class);
         }
