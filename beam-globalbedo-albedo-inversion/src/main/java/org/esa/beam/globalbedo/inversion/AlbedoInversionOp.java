@@ -1,17 +1,73 @@
 package org.esa.beam.globalbedo.inversion;
 
 
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.framework.gpf.experimental.PointOperator;
 
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AlbedoInversionOp extends Operator {
+public class AlbedoInversionOp extends PixelOperator {
+
+    /* ------------------------------------------------------------------------------------------
+
+    Perform albedo inversion in following two main steps:
+        - optimal parameter estimation  (ATBD, section 6.3 (summary))
+        - albedo estimation  (ATBD, section 6.3 (summary))
+
+    Substeps:
+        - read input data (ATBD section 7.1.1):
+            * a set of prior estimates
+            * land surface and land cover mask
+            * set of BBDR observations to be accumulated
+
+            python routines used:
+                * Get_Observations (7.2.1.1)
+                * Get_Prior (7.2.1.2)
+                * Get_LandCoverMask (7.2.1.2)
+
+        - accumulate observations:
+            * accumulate all observations from a day into a single one (per-day accumulator file)
+                --> AlbedoInversionDailyAccumulator.py
+            * read ALL per-day accumulator files
+            * apply a temporal weighting
+                --> AlbedoInversion_multisensor_accum_v7.py
+
+             python routines used:
+                * Accumulate_OneStep (7.2.2.1)
+                * Accumulate_TwoWay (7.2.2.2)
+
+        - compute results:
+            * model parameter estimates (7.1.2.1)
+            * albedo (7.1.2.2)
+
+            python routines used:
+                *  Parameter_estimate (7.2.2.3)
+
+     ---------------------------------------------------------------------------------------- */
 
     @Override
-    public void initialize() throws OperatorException {
+    protected void configureTargetProduct(Product targetProduct) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void configureSourceSamples(Configurator configurator) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void configureTargetSamples(Configurator configurator) {
+        //To change body of implemented methods use File | Settings | File Templates.
+    }
+
+    @Override
+    protected void computePixel(int x, int y, Sample[] sourceSamples,
+                                WritableSample[] targetSamples) {
         //To change body of implemented methods use File | Settings | File Templates.
     }
 }
