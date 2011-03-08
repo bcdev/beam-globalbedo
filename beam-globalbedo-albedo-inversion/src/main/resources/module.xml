@@ -1,0 +1,32 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-albedo-inversion</symbolicName>
+    <version>0.1</version>
+    <name>Globalbedo Albeod Inversion</name>
+    <description>
+        Calculates Inversion from BBDR to Albedos.
+    </description>
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>
+        Max Planck Str.2, 21502 Geesthacht (Germany)
+    </contactAddress>
+    <copyright>(C) 2011 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog/>
+    
+    
+    <categories>Application,Processor,MERIS,AATSR</categories>
+
+	<dependency>
+        <module>beam-gpf</module>
+    </dependency>
+	 <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+	<dependency>
+        <module>beam-envisat-reader</module>
+    </dependency>
+</module>

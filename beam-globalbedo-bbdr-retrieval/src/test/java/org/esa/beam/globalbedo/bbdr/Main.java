@@ -32,11 +32,11 @@ public class Main {
         Product targetProduct = bbdrOp.getTargetProduct();
 
         final ReprojectionOp repro = new ReprojectionOp();
-//        repro.setParameter("easting", 7783653.6);
-//        repro.setParameter("northing", 3335851.6);
+        repro.setParameter("easting", 7783653.6);    // tile h25v06
+        repro.setParameter("northing", 3335851.6);
 
-        repro.setParameter("easting", -1111950.520);   // tile h17v03
-        repro.setParameter("northing", 6671703.118);
+//        repro.setParameter("easting", -1111950.520);   // tile h17v03
+//        repro.setParameter("northing", 6671703.118);
 
         repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
                                   "GEOGCS[\"WGS 84\"," +
