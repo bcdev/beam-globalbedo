@@ -48,12 +48,50 @@ public class AlbedoInversionOp extends PixelOperator {
             python routines used:
                 *  Parameter_estimate (7.2.2.3)
 
+        - write output data
+
+            python routines used:
+                * WriteDataset
+
+        - external: verification against breadboard results
+            * get python code running
+            * compare results for GL testdata
+
      ---------------------------------------------------------------------------------------- */
+
+    // BB line 597:
+    private static final int xmin = 1;
+    private static final int xmax = 1;
+    private static final int ymin = 1;
+    private static final int ymax = 1;
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
+        readAuxdata();
     }
+
+    private void readAuxdata() {
+        //To change body of created methods use File | Settings | File Templates.
+        readPriors();
+        readLandMask();
+        readObservationalData();
+
+    }
+
+    private void readObservationalData() {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+
+    private void readLandMask() {
+        //To change body of created methods use File | Settings | File Templates.
+    }
+
+    private void readPriors() {
+        //To change body of created methods use File | Settings | File Templates.
+        final double priorScaleFactor = 10.0;
+    }
+
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
