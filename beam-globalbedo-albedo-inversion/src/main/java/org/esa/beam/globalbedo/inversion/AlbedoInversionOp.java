@@ -84,7 +84,7 @@ public class AlbedoInversionOp extends PixelOperator {
     }
 
     private void readLandMask() {
-        //To change body of created methods use File | Settings | File Templates.
+        // todo: define which land mask should be used - can we use the 'mask == 1' from the priors?
     }
 
     private void readPriors() {
