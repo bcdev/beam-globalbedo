@@ -348,10 +348,6 @@ public class BbdrOp extends PixelOperator {
             return;
         }
 
-        if (x == 1890 && y == 95) {
-            System.out.println();
-        }
-
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
