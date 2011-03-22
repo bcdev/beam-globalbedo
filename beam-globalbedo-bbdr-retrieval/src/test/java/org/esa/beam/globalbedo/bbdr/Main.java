@@ -20,8 +20,8 @@ public class Main {
     public static void main(String[] args) throws IOException {
         JAI.enableDefaultTileCache();
         JAI.getDefaultInstance().getTileCache().setMemoryCapacity(756 * 1024 * 1024);
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(4);
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(4);
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         final String sensorName = args[0];
         final String sourceProductFileName = args[1];
         final String targetProductFileName = args[2];
