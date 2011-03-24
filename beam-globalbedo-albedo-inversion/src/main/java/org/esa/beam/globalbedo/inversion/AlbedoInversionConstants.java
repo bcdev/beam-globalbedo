@@ -1,6 +1,8 @@
 package org.esa.beam.globalbedo.inversion;
 
 /**
+ * Constants for Albedo Inversion part
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */

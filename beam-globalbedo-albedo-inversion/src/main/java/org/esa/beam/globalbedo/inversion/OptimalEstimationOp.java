@@ -4,14 +4,24 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
-import org.esa.beam.util.ProductUtils;
 
 /**
+ * Pixel operator implementing the daily accumulation part of python breadboard.
+ * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo López Saldaña.
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@OperatorMetadata(alias = "ga.inversion.optest",
+                  description = "Computes optimal estimation matrices for a single BBDR observation",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class OptimalEstimationOp extends PixelOperator {
 
     private static final int SRC_BB_VIS = 0;
@@ -29,7 +39,7 @@ public class OptimalEstimationOp extends PixelOperator {
     private static final int SRC_KGEO_BRDF_VIS = 12;
     private static final int SRC_KGEO_BRDF_NIR = 13;
     private static final int SRC_KGEO_BRDF_SW = 14;
-    private static final int SRC_AOD550 = 15; // ??? todo check
+    private static final int SRC_AOD550 = 15;
     private static final int SRC_NDVI = 16;
     private static final int SRC_SIG_NDVI = 17;
     private static final int SRC_VZA = 18;
@@ -38,100 +48,128 @@ public class OptimalEstimationOp extends PixelOperator {
     private static final int SRC_DEM = 21;
     private static final int SRC_SNOW_MASK = 22;
     private static final int SRC_LAND_MASK = 23;
-    // todo: provide VGT SM as flag band
-    // todo: provide AATSR flags
 
-    private static final int TRG_M_00 = 0;
-    private static final int TRG_M_01 = 1;
-    private static final int TRG_M_02 = 2;
-    private static final int TRG_M_10 = 3;
-    private static final int TRG_M_11 = 4;
-    private static final int TRG_M_12 = 5;
-    private static final int TRG_M_20 = 6;
-    private static final int TRG_M_21 = 7;
-    private static final int TRG_M_22 = 8;
-    private static final int TRG_V_0 = 9;
-    private static final int TRG_V_1 = 10;
-    private static final int TRG_V_2 = 11;
-    private static final int TRG_E = 12;
-    private static final int TRG_MASK = 13;
+    private static final int[][] TRG_M =
+            new int[3 * AlbedoInversionConstants.numBBDRWaveBands]
+                    [3 * AlbedoInversionConstants.numBBDRWaveBands];
 
-    @Parameter(description = "BBDR source product")
-    private Product sourceProduct;
+    private static final int[] TRG_V =
+            new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
+
+    private static final int TRG_E = 90;
+    private static final int TRG_MASK = 91;
+
+    private static final int sourceSampleOffset = 30;  // this value must be >= number of bands in a source product
+
+    private String[][] mBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
+            [3 * AlbedoInversionConstants.numBBDRWaveBands];
+
+    private String[] vBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands];
+
+    @SourceProducts(description = "BBDR source product")
+    private Product[] sourceProducts;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+
     @Override
     protected void configureSourceSamples(Configurator configurator) {
-        configurator.defineSample(SRC_BB_VIS, AlbedoInversionConstants.BBDR_BB_VIS_NAME);
-        configurator.defineSample(SRC_BB_NIR, AlbedoInversionConstants.BBDR_BB_NIR_NAME);
-        configurator.defineSample(SRC_BB_SW, AlbedoInversionConstants.BBDR_BB_SW_NAME);
-        configurator.defineSample(SRC_SIG_BB_VIS_VIS, AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME);
-        configurator.defineSample(SRC_SIG_BB_VIS_NIR, AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME);
-        configurator.defineSample(SRC_SIG_BB_VIS_SW, AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME);
-        configurator.defineSample(SRC_SIG_BB_NIR_NIR, AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME);
-        configurator.defineSample(SRC_SIG_BB_NIR_SW, AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME);
-        configurator.defineSample(SRC_SIG_BB_SW_SW, AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME);
-        configurator.defineSample(SRC_KVOL_BRDF_VIS, AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME);
-        configurator.defineSample(SRC_KVOL_BRDF_NIR, AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME);
-        configurator.defineSample(SRC_KVOL_BRDF_SW, AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME);
-        configurator.defineSample(SRC_KGEO_BRDF_VIS, AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME);
-        configurator.defineSample(SRC_KGEO_BRDF_NIR, AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME);
-        configurator.defineSample(SRC_KGEO_BRDF_SW, AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME);
-        configurator.defineSample(SRC_AOD550, AlbedoInversionConstants.BBDR_AOD550_NAME);
-        configurator.defineSample(SRC_NDVI, AlbedoInversionConstants.BBDR_NDVI_NAME);
-        configurator.defineSample(SRC_SIG_NDVI, AlbedoInversionConstants.BBDR_SIG_NDVI_NAME);
-        configurator.defineSample(SRC_VZA, AlbedoInversionConstants.BBDR_VZA_NAME);
-        configurator.defineSample(SRC_SZA, AlbedoInversionConstants.BBDR_SZA_NAME);
-        configurator.defineSample(SRC_RAA, AlbedoInversionConstants.BBDR_RAA_NAME);
-        configurator.defineSample(SRC_DEM, AlbedoInversionConstants.BBDR_DEM_NAME);
-        configurator.defineSample(SRC_SNOW_MASK, AlbedoInversionConstants.BBDR_SNOW_MASK_NAME);
+        for (int i = 0; i < sourceProducts.length; i++) {
+            Product sourceProduct = sourceProducts[i];
 
-        // get land mask from first source product // todo: discuss
-        AlbedoInversionUtils.setLandMaskSourceSample(configurator, SRC_LAND_MASK, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_BB_VIS, AlbedoInversionConstants.BBDR_BB_VIS_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_BB_NIR, AlbedoInversionConstants.BBDR_BB_NIR_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_BB_SW, AlbedoInversionConstants.BBDR_BB_SW_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_VIS,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_NIR,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_SW,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_NIR_NIR,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_NIR_SW,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_SW_SW,
+                                      AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_VIS,
+                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_NIR,
+                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_SW,
+                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_VIS,
+                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_NIR,
+                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_SW,
+                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_AOD550, AlbedoInversionConstants.BBDR_AOD550_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_NDVI, AlbedoInversionConstants.BBDR_NDVI_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_NDVI,
+                                      AlbedoInversionConstants.BBDR_SIG_NDVI_NAME, sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_VZA, AlbedoInversionConstants.BBDR_VZA_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SZA, AlbedoInversionConstants.BBDR_SZA_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_RAA, AlbedoInversionConstants.BBDR_RAA_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_DEM, AlbedoInversionConstants.BBDR_DEM_NAME,
+                                      sourceProduct);
+            configurator.defineSample((sourceSampleOffset * i) + SRC_SNOW_MASK,
+                                      AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, sourceProduct);
+
+            // get land mask (sensor dependent)
+            AlbedoInversionUtils.setLandMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_LAND_MASK,
+                                                         sourceProduct);
+        }
     }
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
-        String[] bandNames = {
-                "M_00", "M_01", "M_02",
-                "M_10", "M_11", "M_12",
-                "M_20", "M_21", "M_22",
-                "V_0", "V_1", "V_2",
-                "E", "mask"
-        };
-        for (String bandName : bandNames) {
-            Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                mBandNames[i][j] = "M_" + i + "" + j;
+                Band band = targetProduct.addBand(mBandNames[i][j], ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+            }
+        }
+
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            vBandNames[i] = "V_" + i;
+            Band band = targetProduct.addBand(vBandNames[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-        targetProduct.addBand("mask", ProductData.TYPE_INT8);
 
-        // copy flag coding and flag images
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-        final Band[] bands = sourceProduct.getBands();
-        for (Band band : bands) {
-            if (band.getFlagCoding() != null) {
-                targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
-            }
-        }
+        String eBandName = "E";
+        Band band = targetProduct.addBand(eBandName, ProductData.TYPE_FLOAT32);
+        band.setNoDataValue(Float.NaN);
+        band.setNoDataValueUsed(true);
+
+        targetProduct.addBand("mask", ProductData.TYPE_INT8);
+        targetProduct.setPreferredTileSize(100, 100);
     }
 
     @Override
     protected void configureTargetSamples(Configurator configurator) {
-        configurator.defineSample(TRG_M_00, "M_00");
-        configurator.defineSample(TRG_M_01, "M_01");
-        configurator.defineSample(TRG_M_02, "M_02");
-        configurator.defineSample(TRG_M_10, "M_10");
-        configurator.defineSample(TRG_M_11, "M_11");
-        configurator.defineSample(TRG_M_12, "M_12");
-        configurator.defineSample(TRG_M_20, "M_20");
-        configurator.defineSample(TRG_M_21, "M_21");
-        configurator.defineSample(TRG_M_22, "M_22");
-        configurator.defineSample(TRG_V_0, "V_0");
-        configurator.defineSample(TRG_V_1, "V_1");
-        configurator.defineSample(TRG_V_2, "V_2");
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                TRG_M[i][j] = 3 * AlbedoInversionConstants.numBBDRWaveBands * i + j;
+                configurator.defineSample(TRG_M[i][j], mBandNames[i][j]);
+            }
+        }
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            TRG_V[i] = 3 * 3 * AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands + i;
+            configurator.defineSample(TRG_V[i], vBandNames[i]);
+        }
         configurator.defineSample(TRG_E, "E");
         configurator.defineSample(TRG_MASK, "mask");
     }
@@ -140,21 +178,47 @@ public class OptimalEstimationOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples,
                                 WritableSample[] targetSamples) {
 
-        // do not consider non-land and non-snowfilter pixels
-        // todo: simplify this if we get mask from flag bands for all sensors
-        if (sourceProduct.getProductType().startsWith("MER")) {
-            if (!sourceSamples[SRC_LAND_MASK].getBoolean() || isSnowFilter(sourceSamples)) {
-                // only compute over land
-                fillTargetSampleWithNoDataValue(targetSamples);
-                return;
-            }
-        } else if (sourceProduct.getProductType().startsWith("VGT")) {
-            if ((sourceSamples[SRC_LAND_MASK].getInt() & 8) == 0 || isSnowFilter(sourceSamples)) {
-                fillTargetSampleWithNoDataValue(targetSamples);
-                return;
-            }
-        } else {
-            // todo: AATSR
+        Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                              3 * AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                              AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix E = new Matrix(1, 1);
+        int mask = 0;
+
+        if (x == 1095 && y == 806) {
+            System.out.println("computePixel: x,y = " + x + "," + y);
+        }
+
+        // accumulate the matrices from the single products...
+        for (int i = 0; i < sourceProducts.length; i++) {
+            OptimalEstimationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
+            M.plusEquals(container.getM());
+            V.plusEquals(container.getV());
+            E.plusEquals(container.getE());
+            mask += container.getMask();
+        }
+
+        // fill target samples...
+        fillTargetSamples(targetSamples, M, V, E, mask);
+    }
+
+    private OptimalEstimationMatrixContainer getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
+        OptimalEstimationMatrixContainer container = new OptimalEstimationMatrixContainer();
+
+        // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
+        if (isLandFilter(sourceSamples, sourceProductIndex) || isSnowFilter(sourceSamples, sourceProductIndex) ||
+            isBBDRFilter(sourceSamples, sourceProductIndex) || isSDFilter(sourceSamples, sourceProductIndex)) {
+            Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                      3 * AlbedoInversionConstants.numBBDRWaveBands);
+            Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                      AlbedoInversionConstants.numBBDRWaveBands);
+            Matrix zeroE = new Matrix(1, 1);
+            container.setM(zeroM);
+            container.setV(zeroV);
+            container.setE(zeroE);
+            container.setMask(0);
+
+            return container;
         }
 
         // get kernels...
@@ -162,29 +226,28 @@ public class OptimalEstimationOp extends PixelOperator {
 
         // compute C matrix...
         double[] correlation = new double[AlbedoInversionConstants.numBBDRWaveBands];
-        correlation[0] = sourceSamples[SRC_SIG_BB_VIS_NIR].getDouble();
-        correlation[1] = sourceSamples[SRC_SIG_BB_VIS_SW].getDouble();
-        correlation[2] = sourceSamples[SRC_SIG_BB_NIR_SW].getDouble();
+        correlation[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
+        correlation[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
+        correlation[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
 
         double[] SD = new double[3];
-        SD[0] = sourceSamples[SRC_SIG_BB_VIS_VIS].getDouble();
-        SD[1] = sourceSamples[SRC_SIG_BB_NIR_NIR].getDouble();
-        SD[2] = sourceSamples[SRC_SIG_BB_SW_SW].getDouble();
+        SD[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble();
+        SD[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble();
+        SD[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble();
 
-        Matrix C = new Matrix(AlbedoInversionConstants.numBBDRWaveBands*AlbedoInversionConstants.numBBDRWaveBands, 1);
-        Matrix inverseC = new Matrix(AlbedoInversionConstants.numBBDRWaveBands*AlbedoInversionConstants.numBBDRWaveBands, 1);
-        Matrix thisC = new Matrix(AlbedoInversionConstants.numBBDRWaveBands*AlbedoInversionConstants.numBBDRWaveBands, 1);
+        Matrix C = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
+        Matrix thisC = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
 
         Matrix bbdr = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, 1);
-        bbdr.set(0, 0, sourceSamples[SRC_BB_VIS].getDouble());
-        bbdr.set(1, 0, sourceSamples[SRC_BB_NIR].getDouble());
-        bbdr.set(2, 0, sourceSamples[SRC_BB_SW].getDouble());
+        bbdr.set(0, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble());
+        bbdr.set(1, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble());
+        bbdr.set(2, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble());
 
         int count = 0;
         int cCount = 0;
-        for (int j=0; j<AlbedoInversionConstants.numBBDRWaveBands; j++) {
-            for (int k=0; k<AlbedoInversionConstants.numBBDRWaveBands; k++) {
-                if (k == j+1) {
+        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            for (int k = j + 1; k < AlbedoInversionConstants.numBBDRWaveBands; k++) {
+                if (k == j + 1) {
                     cCount++;
                 }
                 C.set(cCount, 0, correlation[count] * SD[j] * SD[k]);
@@ -194,47 +257,52 @@ public class OptimalEstimationOp extends PixelOperator {
         }
 
         cCount = 0;
-        for (int j=0; j<AlbedoInversionConstants.numBBDRWaveBands; j++) {
-           C.set(cCount, 0, SD[j] * SD[j]);
-           cCount = cCount + AlbedoInversionConstants.numBBDRWaveBands - j;
+        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            C.set(cCount, 0, SD[j] * SD[j]);
+            cCount = cCount + AlbedoInversionConstants.numBBDRWaveBands - j;
         }
 
         count = 0;
-         for (int j=0; j<AlbedoInversionConstants.numBBDRWaveBands; j++) {
-            for (int k=0; k<AlbedoInversionConstants.numBBDRWaveBands; k++) {
-                thisC.set(j, k, C.get(j, k));
+        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            for (int k = j; k < AlbedoInversionConstants.numBBDRWaveBands; k++) {
+                thisC.set(j, k, C.get(count, 0));
                 thisC.set(k, j, thisC.get(j, k));
+                count++;
             }
-         }
+        }
 
         // compute M, V, E matrices...
-        Matrix M = new Matrix(3*AlbedoInversionConstants.numBBDRWaveBands, 3*AlbedoInversionConstants.numBBDRWaveBands);
-        Matrix V = new Matrix(3*AlbedoInversionConstants.numBBDRWaveBands, 1);
-        Matrix E = new Matrix(1, 1);
-//      for columns in range(0,xsize):
-//         for rows in range(0,ysize):
-//              if Mask[columns,rows] <> 0:
-//                  Cinv[:,:,columns,rows] = numpy.matrix(thisC[:,:,columns,rows]).I
-//
-//                  M[:,:,columns,rows] = numpy.matrix(kernels[:,:,columns,rows]).T *
-//                                        numpy.matrix(Cinv[:,:,columns,rows]) *
-//                                        numpy.matrix(kernels[:,:,columns,rows])
-//                  # Multiply only using lead diagonal of Cinv, additionally transpose the result to
-//                    store V as a 1 x 9 vector
-//                  V[:,columns,rows] = (numpy.matrix(kernels[:,:,columns,rows]).T *
-//                                       numpy.diagflat(numpy.diagonal(Cinv[:,:,columns,rows])) *
-//                                       BBDR[:,:,columns,rows]).T
-//                  E[columns,rows] = numpy.matrix(BBDR[:,:,columns,rows]).T *
-//                                    numpy.matrix(Cinv[:,:,columns,rows]) * BBDR[:,:,columns,rows]
+        final Matrix inverseC = thisC.inverse();
+        final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
+        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalFlatMatrix(inverseC);
+        final Matrix V = (kernels.transpose().times(inverseCDiagFlat)).times(bbdr.transpose());
+        final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
+        // return result
+        container.setM(M);
+        container.setV(V);
+        container.setE(E);
+        container.setMask(1);
 
+        return container;
+    }
 
-        // fill target bands...
-
+    private void fillTargetSamples(WritableSample[] targetSamples, Matrix m, Matrix v, Matrix e, int mask) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                targetSamples[TRG_M[i][j]].set(m.get(i, j));
+            }
+        }
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            targetSamples[TRG_V[i]].set(v.get(i, 0));
+        }
+        targetSamples[TRG_E].set(e.get(0, 0));
+        targetSamples[TRG_MASK].set(mask);
     }
 
     private Matrix initKernels(Sample[] sourceSamples) {
-        Matrix kernels = new Matrix(3,AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix kernels = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
+                                    3 * AlbedoInversionConstants.numBBDRWaveBands);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
@@ -249,16 +317,47 @@ public class OptimalEstimationOp extends PixelOperator {
         return kernels;
     }
 
-    private void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {
-        for (WritableSample targetSample : targetSamples) {
-            targetSample.set(Float.NaN);
+    private boolean isLandFilter(Sample[] sourceSamples, int sourceProductIndex) {
+        if (sourceProducts[sourceProductIndex].getProductType().startsWith("MER")) {
+            if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
+                return true;
+            }
+        } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("VGT")) {
+            if ((sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getInt() & 8) == 0) {
+                return true;
+            }
+        } else {
+            // todo: AATSR
+        }
+        return false;
+    }
+
+    private boolean isSnowFilter(Sample[] sourceSamples, int sourceProductIndex) {
+        return ((computeSnow && !(sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SNOW_MASK].getInt() == 1)) ||
+                (!computeSnow && (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SNOW_MASK].getInt() == 1)));
+    }
+
+
+    private boolean isBBDRFilter(Sample[] sourceSamples, int sourceProductIndex) {
+        return (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble() == 0.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble() == 9999.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 0.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 9999.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble() == 0.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble() == 9999.0);
+    }
+
+    private boolean isSDFilter(Sample[] sourceSamples, int sourceProductIndex) {
+        return (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble() == 0.0 &&
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble() == 0.0 &&
+                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble() == 0.0);
+    }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(OptimalEstimationOp.class);
         }
     }
-
-    private boolean isSnowFilter(Sample[] sourceSamples) {
-        return (( computeSnow && !(sourceSamples[SRC_LAND_MASK].getInt() == 1)) ||
-                (!computeSnow &&  (sourceSamples[SRC_LAND_MASK].getInt() == 1)));
-    }
-
 
 }

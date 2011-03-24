@@ -1,4 +1,3 @@
 org.esa.beam.globalbedo.inversion.AlbedoInversionOp$Spi
-org.esa.beam.globalbedo.inversion.GlobalbedoLevel3AccumulationOp$Spi
-org.esa.beam.globalbedo.inversion.OptimalEstimationAccumulator$Spi
+org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Accumulation$Spi
 org.esa.beam.globalbedo.inversion.OptimalEstimationOp$Spi

@@ -1,10 +1,9 @@
 package org.esa.beam.globalbedo.inversion;
 
+import Jama.Matrix;
 import junit.framework.TestCase;
-import org.esa.beam.framework.datamodel.Product;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author Olaf Danne
@@ -68,5 +67,53 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals("20040508", AlbedoInversionUtils.getDateFromDoy(year, doy));
         doy = 366;
         assertEquals("20041231", AlbedoInversionUtils.getDateFromDoy(year, doy));
+    }
+
+    public void testGetDiagonalMatrix() {
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 0, 4.0);
+        m.set(2, 0, 6.0);
+        m.set(0, 1, 8.0);
+        m.set(1, 1, 3.0);
+        m.set(2, 1, 5.0);
+        m.set(0, 2, 7.0);
+        m.set(1, 2, 9.0);
+        m.set(2, 2, 12.0);
+
+        Matrix diag = AlbedoInversionUtils.getRectangularDiagonalMatrix(m);
+        assertNotNull(diag);
+        assertEquals(3, diag.getRowDimension());
+        assertEquals(3, diag.getColumnDimension());
+        assertEquals(2.0, diag.get(0, 0));
+        assertEquals(0.0, diag.get(1, 0));
+        assertEquals(0.0, diag.get(2, 0));
+        assertEquals(0.0, diag.get(0, 1));
+        assertEquals(3.0, diag.get(1, 1));
+        assertEquals(0.0, diag.get(2, 1));
+        assertEquals(0.0, diag.get(0, 2));
+        assertEquals(0.0, diag.get(1, 2));
+        assertEquals(12.0, diag.get(2, 2));
+    }
+
+    public void testGetDiagonalFlatMatrix() {
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 0, 4.0);
+        m.set(2, 0, 6.0);
+        m.set(0, 1, 8.0);
+        m.set(1, 1, 3.0);
+        m.set(2, 1, 5.0);
+        m.set(0, 2, 7.0);
+        m.set(1, 2, 9.0);
+        m.set(2, 2, 12.0);
+
+        Matrix diagFlat = AlbedoInversionUtils.getRectangularDiagonalFlatMatrix(m);
+        assertNotNull(diagFlat);
+        assertEquals(3, diagFlat.getRowDimension());
+        assertEquals(1, diagFlat.getColumnDimension());
+        assertEquals(2.0, diagFlat.get(0, 0));
+        assertEquals(3.0, diagFlat.get(1, 0));
+        assertEquals(12.0, diagFlat.get(2, 0));
     }
 }

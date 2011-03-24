@@ -11,11 +11,12 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
 /**
+ * Operator for the daily accumulation part in Albedo Inversion
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
@@ -44,37 +45,28 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get BBDR input product list...
-        List<Product> sourceProducts;
+        Product[] inputProducts;
         try {
-            sourceProducts = getInputProducts();
+            inputProducts = getInputProducts();
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
-        // STEP 2: optimal estimation, PER OBSERVATION FILE:
-        Product[] singleOptimalEstimationProducts = new Product[sourceProducts.size()];
-        // create matrices :
-        //  M(obsDoy,i), V(obsDoy,i), E(obsDoy,i), mask(obsDoy,i)
-        // todo: use OptimalEstimationOp (pixelwise operator)
-        // parameter: sourceProducts[i]
-        // result: product with matrices from a single observation file
-        // --> this corresponds to breadboard method 'GetBBDR'
-
-        // STEP 3: accumulate all optimal estimations M, V, E as obtained above:
-        Product accumulationProduct = null;
-        // M_tot += M(obsDoy[i])
-        // V_tot += V(obsDoy[i])
-        // E_tot += E(obsDoy[i])
-        // parameter: singleOptimalEstimationProducts
-        // todo: use OptimalEstimationAccumulator (pixelwise operator)
-        // result: accumulation product with M_tot(i,j,x,y), V_tot(i,x,y), E_tot(x,y), mask(x,y)
-        // --> this is done in breadboard method 'CreateAccumulatorFiles'
+        // STEP 2: accumulate all optimal estimations M, V, E as obtained from single observation files:
+        // M_tot(DoY) = sum(M(obs[i]))
+        // V_tot(DoY) = sum(V(obs[i]))
+        // E_tot(DoY) = sum(E(obs[i]))
+        OptimalEstimationOp optimalEstimationOp = new OptimalEstimationOp();
+        optimalEstimationOp.setSourceProducts(inputProducts);
+//        Product[] testProducts = new Product[]{inputProducts[0]};
+//        optimalEstimationOp.setSourceProducts(testProducts);
+        optimalEstimationOp.setParameter("computeSnow", computeSnow);
+        Product accumulationProduct = optimalEstimationOp.getTargetProduct();
 
         setTargetProduct(accumulationProduct);
-
     }
 
-    private List<Product> getInputProducts() throws IOException {
+    private Product[] getInputProducts() throws IOException {
         String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -89,25 +81,31 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         List<String> vgtBbdrFileList = AlbedoInversionUtils.getDailyBBDRFilenames(vgtBbdrFiles, daystring);
 
-        List<Product> bbdrProducts = new ArrayList<Product>();
+        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
+//        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size();
+        Product[] bbdrProducts = new Product[numberOfInputProducts];
 
+        int productIndex = 0;
         for (Iterator<String> i = merisBbdrFileList.iterator(); i.hasNext();) {
             String sourceProductFileName = merisBbdrDir + File.separator + i.next();
             Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts.add(product);
+            bbdrProducts[productIndex] = product;
+            productIndex++;
         }
         for (Iterator<String> i = aatsrBbdrFileList.iterator(); i.hasNext();) {
             String sourceProductFileName = aatsrBbdrDir + File.separator + i.next();
             Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts.add(product);
+            bbdrProducts[productIndex] = product;
+            productIndex++;
         }
         for (Iterator<String> i = vgtBbdrFileList.iterator(); i.hasNext();) {
             String sourceProductFileName = vgtBbdrDir + File.separator + i.next();
             Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts.add(product);
+            bbdrProducts[productIndex] = product;
+            productIndex++;
         }
 
-        if (bbdrProducts.size() == 0) {
+        if (productIndex == 0) {
             throw new OperatorException("No source products found - check contents of BBDR directory!");
         }
 
