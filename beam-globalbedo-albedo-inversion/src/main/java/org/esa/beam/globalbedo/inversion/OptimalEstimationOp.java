@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.framework.gpf.experimental.PointOperator;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
@@ -180,18 +181,13 @@ public class OptimalEstimationOp extends PixelOperator {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                               3 * AlbedoInversionConstants.numBBDRWaveBands);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                              AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix E = new Matrix(1, 1);
         int mask = 0;
 
-        if (x == 1095 && y == 806) {
-            System.out.println("computePixel: x,y = " + x + "," + y);
-        }
-
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
-            OptimalEstimationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
+            final OptimalEstimationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
             M.plusEquals(container.getM());
             V.plusEquals(container.getV());
             E.plusEquals(container.getE());
@@ -208,11 +204,10 @@ public class OptimalEstimationOp extends PixelOperator {
         // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
         if (isLandFilter(sourceSamples, sourceProductIndex) || isSnowFilter(sourceSamples, sourceProductIndex) ||
             isBBDRFilter(sourceSamples, sourceProductIndex) || isSDFilter(sourceSamples, sourceProductIndex)) {
-            Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+            final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                                       3 * AlbedoInversionConstants.numBBDRWaveBands);
-            Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                      AlbedoInversionConstants.numBBDRWaveBands);
-            Matrix zeroE = new Matrix(1, 1);
+            final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,1);
+            final Matrix zeroE = new Matrix(1, 1);
             container.setM(zeroM);
             container.setV(zeroV);
             container.setE(zeroE);
@@ -222,26 +217,13 @@ public class OptimalEstimationOp extends PixelOperator {
         }
 
         // get kernels...
-        Matrix kernels = initKernels(sourceSamples);
+        Matrix kernels = getKernels(sourceSamples, sourceProductIndex);
 
         // compute C matrix...
-        double[] correlation = new double[AlbedoInversionConstants.numBBDRWaveBands];
-        correlation[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
-        correlation[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
-        correlation[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
-
-        double[] SD = new double[3];
-        SD[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble();
-        SD[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble();
-        SD[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble();
-
+        final double[] correlation = getCorrelation(sourceSamples, sourceProductIndex);
+        final double[] SD = getSD(sourceSamples, sourceProductIndex);
         Matrix C = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix thisC = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
-
-        Matrix bbdr = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, 1);
-        bbdr.set(0, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble());
-        bbdr.set(1, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble());
-        bbdr.set(2, 0, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble());
 
         int count = 0;
         int cCount = 0;
@@ -272,10 +254,12 @@ public class OptimalEstimationOp extends PixelOperator {
         }
 
         // compute M, V, E matrices...
+        final Matrix bbdr = getBBDR(sourceSamples, sourceProductIndex);
         final Matrix inverseC = thisC.inverse();
         final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
-        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalFlatMatrix(inverseC);
-        final Matrix V = (kernels.transpose().times(inverseCDiagFlat)).times(bbdr.transpose());
+        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
+        final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
+        final Matrix V = kernelTimesInvCDiag.times(bbdr);
         final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
         // return result
@@ -285,6 +269,33 @@ public class OptimalEstimationOp extends PixelOperator {
         container.setMask(1);
 
         return container;
+    }
+
+    private Matrix getBBDR(Sample[] sourceSamples, int sourceProductIndex) {
+        Matrix bbdr = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, 1);
+        final double bbVis = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble();
+        bbdr.set(0, 0, bbVis);
+        final double bbNir = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble();
+        bbdr.set(1, 0, bbNir);
+        final double bbSw = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble();
+        bbdr.set(2, 0, bbSw);
+        return bbdr;
+    }
+
+    private double[] getSD(Sample[] sourceSamples, int sourceProductIndex) {
+        double[] SD = new double[3];
+        SD[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble();
+        SD[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble();
+        SD[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble();
+        return SD;
+    }
+
+    private double[] getCorrelation(Sample[] sourceSamples, int sourceProductIndex) {
+        double[] correlation = new double[AlbedoInversionConstants.numBBDRWaveBands];
+        correlation[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
+        correlation[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
+        correlation[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
+        return correlation;
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, Matrix m, Matrix v, Matrix e, int mask) {
@@ -300,19 +311,19 @@ public class OptimalEstimationOp extends PixelOperator {
         targetSamples[TRG_MASK].set(mask);
     }
 
-    private Matrix initKernels(Sample[] sourceSamples) {
+    private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {
         Matrix kernels = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
                                     3 * AlbedoInversionConstants.numBBDRWaveBands);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
         kernels.set(2, 6, 1.0);
-        kernels.set(0, 1, sourceSamples[SRC_KVOL_BRDF_VIS].getDouble());
-        kernels.set(1, 4, sourceSamples[SRC_KVOL_BRDF_NIR].getDouble());
-        kernels.set(2, 7, sourceSamples[SRC_KVOL_BRDF_SW].getDouble());
-        kernels.set(0, 2, sourceSamples[SRC_KGEO_BRDF_VIS].getDouble());
-        kernels.set(1, 5, sourceSamples[SRC_KGEO_BRDF_NIR].getDouble());
-        kernels.set(2, 8, sourceSamples[SRC_KGEO_BRDF_SW].getDouble());
+        kernels.set(0, 1, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KVOL_BRDF_VIS].getDouble());
+        kernels.set(1, 4, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KVOL_BRDF_NIR].getDouble());
+        kernels.set(2, 7, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KVOL_BRDF_SW].getDouble());
+        kernels.set(0, 2, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KGEO_BRDF_VIS].getDouble());
+        kernels.set(1, 5, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KGEO_BRDF_NIR].getDouble());
+        kernels.set(2, 8, sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_KGEO_BRDF_SW].getDouble());
 
         return kernels;
     }
