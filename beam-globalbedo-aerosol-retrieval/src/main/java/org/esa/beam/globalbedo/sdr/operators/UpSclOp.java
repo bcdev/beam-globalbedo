@@ -6,9 +6,6 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-
-import java.awt.Rectangle;
-
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
@@ -26,15 +23,17 @@ import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
+import java.awt.Rectangle;
+
 /**
- *
  * @author akheckel
  */
 @OperatorMetadata(alias = "ga.UpSclOp",
                   description = "upscaling product",
                   authors = "Andreas Heckel",
                   version = "1.1",
-                  copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
+                  copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)",
+                  internal = true)
 public class UpSclOp extends Operator {
 
     @SourceProduct
@@ -44,33 +43,29 @@ public class UpSclOp extends Operator {
     @TargetProduct
     private Product targetProduct;
 
-    @Parameter(defaultValue="9")
+    @Parameter(defaultValue = "9")
     private int scale;
     private int offset;
-    private int targetWidth;
-    private int targetHeight;
     private int sourceRasterWidth;
     private int sourceRasterHeight;
-    private String targetProductName;
-    private String targetProductType;
     private Band validBand;
 
     @Override
     public void initialize() throws OperatorException {
         sourceRasterWidth = lowresProduct.getSceneRasterWidth();
         sourceRasterHeight = lowresProduct.getSceneRasterHeight();
-        targetWidth = hiresProduct.getSceneRasterWidth();
-        targetHeight = hiresProduct.getSceneRasterHeight();
+        int targetWidth = hiresProduct.getSceneRasterWidth();
+        int targetHeight = hiresProduct.getSceneRasterHeight();
 
-        offset = scale/2;
+        offset = scale / 2;
         InstrumentConsts instrC = InstrumentConsts.getInstance();
         String instrument = instrC.getInstrument(hiresProduct);
         final String validExpression = instrC.getValAotOutExpression(instrument);
         final BandMathsOp validBandOp = BandMathsOp.createBooleanExpressionBand(validExpression, hiresProduct);
         validBand = validBandOp.getTargetProduct().getBandAt(0);
 
-        targetProductName = lowresProduct.getName();
-        targetProductType = lowresProduct.getProductType();
+        String targetProductName = lowresProduct.getName();
+        String targetProductType = lowresProduct.getProductType();
         targetProduct = new Product(targetProductName, targetProductType, targetWidth, targetHeight);
         targetProduct.setStartTime(hiresProduct.getStartTime());
         targetProduct.setEndTime(hiresProduct.getEndTime());
@@ -79,13 +74,10 @@ public class UpSclOp extends Operator {
         ProductUtils.copyTiePointGrids(hiresProduct, targetProduct);
         ProductUtils.copyGeoCoding(hiresProduct, targetProduct);
         copyBands(lowresProduct, targetProduct);
-        Mask lowresMask;
-        Mask hiresMask;
-        for (int i=0; i<lowresProduct.getMaskGroup().getNodeCount(); i++){
-            lowresMask = lowresProduct.getMaskGroup().get(i);
+        for (int i = 0; i < lowresProduct.getMaskGroup().getNodeCount(); i++) {
+            Mask lowresMask = lowresProduct.getMaskGroup().get(i);
             targetProduct.getMaskGroup().add(lowresMask);
         }
-
 
         setTargetProduct(targetProduct);
     }
@@ -93,22 +85,16 @@ public class UpSclOp extends Operator {
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
         Rectangle tarRec = targetTile.getRectangle();
-//System.err.println("upscaling "+targetBand.getName()+" on tile: " + tarRec);
         String targetBandName = targetBand.getName();
-        Band sourceBand;
-        Tile sourceTile;
-        Tile validTile;
-
         final Rectangle srcRec = calcSourceRectangle(tarRec);
 
-        sourceBand = lowresProduct.getBand(targetBandName);
-        sourceTile = getSourceTile(sourceBand, srcRec);
-        validTile = getSourceTile(validBand, tarRec);
+        Band sourceBand = lowresProduct.getBand(targetBandName);
+        Tile sourceTile = getSourceTile(sourceBand, srcRec);
+        Tile validTile = getSourceTile(validBand, tarRec);
 
         if (!targetBand.isFlagBand()) {
             upscaleTileBilinear(sourceTile, validTile, targetTile, tarRec);
-        }
-        else {
+        } else {
             upscaleFlagCopy(sourceTile, targetTile, tarRec);
         }
     }
@@ -138,17 +124,14 @@ public class UpSclOp extends Operator {
     private void copyBands(Product sourceProduct, Product targetProduct) {
         Guardian.assertNotNull("source", sourceProduct);
         Guardian.assertNotNull("target", targetProduct);
-        Band sourceBand;
-        Band targetBand;
-        FlagCoding flgCoding;
         ProductNodeGroup<FlagCoding> targetFCG = targetProduct.getFlagCodingGroup();
 
         for (int iBand = 0; iBand < sourceProduct.getNumBands(); iBand++) {
-            sourceBand = sourceProduct.getBandAt(iBand);
+            Band sourceBand = sourceProduct.getBandAt(iBand);
             if (!targetProduct.containsBand(sourceBand.getName())) {
-                targetBand = copyBandScl(sourceBand.getName(), sourceProduct, sourceBand.getName(), targetProduct);
+                Band targetBand = copyBandScl(sourceBand.getName(), sourceProduct, sourceBand.getName(), targetProduct);
                 if (sourceBand.isFlagBand()) {
-                    flgCoding = sourceBand.getFlagCoding();
+                    FlagCoding flgCoding = sourceBand.getFlagCoding();
                     if (!targetFCG.contains(flgCoding.getName())) {
                         ProductUtils.copyFlagCoding(flgCoding, targetProduct);
                     }
@@ -165,11 +148,10 @@ public class UpSclOp extends Operator {
      * @param sourceProduct  the source product.
      * @param targetBandName the name of the band copied.
      * @param targetProduct  the target product.
-     *
      * @return the copy of the band, or <code>null</code> if the sourceProduct does not contain a band with the given name.
      */
     private Band copyBandScl(String sourceBandName, Product sourceProduct,
-                                String targetBandName, Product targetProduct) {
+                             String targetBandName, Product targetProduct) {
         Guardian.assertNotNull("sourceProduct", sourceProduct);
         Guardian.assertNotNull("targetProduct", targetProduct);
 
@@ -195,34 +177,63 @@ public class UpSclOp extends Operator {
         final int tarY = tarRec.y;
         final int tarWidth = tarRec.width;
         final int tarHeight = tarRec.height;
-        float erg;
-        float noData = (float) tarTile.getRasterDataNode().getGeophysicalNoDataValue();
+        final float noData = (float) tarTile.getRasterDataNode().getGeophysicalNoDataValue();
 
         for (int iTarY = tarY; iTarY < tarY + tarHeight; iTarY++) {
             int iSrcY = (iTarY - offset) / scale;
-            if (iSrcY >= srcTile.getMaxY()) iSrcY = srcTile.getMaxY() - 1;
+            if (iSrcY >= srcTile.getMaxY()) {
+                iSrcY = srcTile.getMaxY() - 1;
+            }
             float yFac = (float) (iTarY - offset) / scale - iSrcY;
             for (int iTarX = tarX; iTarX < tarX + tarWidth; iTarX++) {
                 checkForCancellation();
                 int iSrcX = (iTarX - offset) / scale;
-                if (iSrcX >= srcTile.getMaxX()) iSrcX = srcTile.getMaxX() - 1;
-                float xFrac = (float) (iTarX - offset) / scale - iSrcX;
-                erg = noData;
-
-                if (validTile.getSampleBoolean(iTarX, iTarY) && isSrcValid(srcTile, iSrcX, iSrcY, iSrcX+1, iSrcY+1)){
-                    try{
-                        erg = (1.0f - xFrac) * (1.0f - yFac) * srcTile.getSampleFloat(iSrcX, iSrcY);
-                        erg +=        (xFrac) * (1.0f - yFac) * srcTile.getSampleFloat(iSrcX+1, iSrcY);
-                        erg += (1.0f - xFrac) *        (yFac) * srcTile.getSampleFloat(iSrcX, iSrcY+1);
-                        erg +=        (xFrac) *        (yFac) * srcTile.getSampleFloat(iSrcX+1, iSrcY+1);
-                    } catch (Exception ex) {
-                        System.err.println(iTarX+" / "+iTarY);
-                        System.err.println(ex.getMessage());
-                    }
+                if (iSrcX >= srcTile.getMaxX()) {
+                    iSrcX = srcTile.getMaxX() - 1;
                 }
-                tarTile.setSample(iTarX, iTarY, erg);
+                float xFrac = (float) (iTarX - offset) / scale - iSrcX;
+
+                float erg = noData;
+                try {
+                    if (validTile.getSampleBoolean(iTarX, iTarY)) {
+                        erg = interpolatBilinear(srcTile, noData, xFrac, yFac, iSrcX, iSrcY);
+                    }
+                } catch (Exception ex) {
+                    System.err.println(iTarX + " / " + iTarY);
+                    System.err.println(ex.getMessage());
+                } finally {
+                    tarTile.setSample(iTarX, iTarY, erg);
+                }
             }
         }
+    }
+
+    private float interpolatBilinear(Tile srcTile, float nodataValue, float xFrac, float yFac, int x, int y) {
+        float value = srcTile.getSampleFloat(x, y);
+        if (Double.compare(nodataValue, value) == 0) {
+            return nodataValue;
+        }
+        float erg = (1.0f - xFrac) * (1.0f - yFac) * value;
+
+        value = srcTile.getSampleFloat(x + 1, y);
+        if (Double.compare(nodataValue, value) == 0) {
+            return nodataValue;
+        }
+        erg += (xFrac) * (1.0f - yFac) * value;
+
+        value = srcTile.getSampleFloat(x, y + 1);
+        if (Double.compare(nodataValue, value) == 0) {
+            return nodataValue;
+        }
+        erg += (1.0f - xFrac) * (yFac) * value;
+
+        value = srcTile.getSampleFloat(x + 1, y + 1);
+        if (Double.compare(nodataValue, value) == 0) {
+            return nodataValue;
+        }
+        erg += (xFrac) * (yFac) * value;
+
+        return erg;
     }
 
     private void upscaleFlagCopy(Tile srcTile, Tile tarTile, Rectangle tarRec) {
@@ -235,27 +246,20 @@ public class UpSclOp extends Operator {
         for (int iTarY = tarY; iTarY < tarY + tarHeight; iTarY++) {
             // int iSrcY = (iTarY - offset) / scale;
             int iSrcY = (iTarY) / scale;
-            if (iSrcY >= srcTile.getMaxY()) iSrcY = srcTile.getMaxY() - 1;
+            if (iSrcY >= srcTile.getMaxY()) {
+                iSrcY = srcTile.getMaxY() - 1;
+            }
             for (int iTarX = tarX; iTarX < tarX + tarWidth; iTarX++) {
                 checkForCancellation();
                 // int iSrcX = (iTarX - offset) / scale;
                 int iSrcX = (iTarX) / scale;
-                if (iSrcX >= srcTile.getMaxX()) iSrcX = srcTile.getMaxX() - 1;
+                if (iSrcX >= srcTile.getMaxX()) {
+                    iSrcX = srcTile.getMaxX() - 1;
+                }
                 tarTile.setSample(iTarX, iTarY, srcTile.getSampleInt(iSrcX, iSrcY));
             }
         }
     }
-
-    private boolean isSrcValid(Tile srcTile, int x1, int y1, int x2, int y2) {
-        double noSrcData = srcTile.getRasterDataNode().getGeophysicalNoDataValue();
-        boolean valid = Double.compare(noSrcData, srcTile.getSampleFloat(x1,y1)) != 0;
-        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x1,y2)) != 0;
-        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x2,y2)) != 0;
-        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x2,y1)) != 0;
-        return valid;
-    }
-
-
 
     /**
      * The SPI is used to register this operator in the graph processing framework

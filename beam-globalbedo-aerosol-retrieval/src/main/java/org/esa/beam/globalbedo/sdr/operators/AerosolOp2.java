@@ -102,7 +102,6 @@ public class AerosolOp2 extends Operator {
 
     @Parameter(defaultValue="9")
     private int scale;
-    private int offset;
     private int srcRasterWidth;
     private int srcRasterHeight;
     private int tarRasterWidth;
@@ -121,10 +120,10 @@ public class AerosolOp2 extends Operator {
     private float ndviThreshold;
 
     private boolean addFitBands = false;
+    private Map<String, Double> sourceNoDataValues;
 
     @Override
     public void initialize() throws OperatorException {
-        offset = 4;
         productName = sourceProduct.getName() + "_AOT";
         productType = sourceProduct.getProductType() + "_AOT";
         initRasterDimensions(sourceProduct, scale);
@@ -143,6 +142,11 @@ public class AerosolOp2 extends Operator {
         validName = validBand.getName();
 
         auxBandNames = new String[]{surfPresName, ozoneName, validName, ndviName};
+
+        sourceNoDataValues = getSourceNoDataValues(geomBandNames);
+        sourceNoDataValues.putAll(getSourceNoDataValues(specBandNames));
+        sourceNoDataValues.putAll(getSourceNoDataValues(auxBandNames));
+
 
         specWeights = instrC.getSpectralFitWeights(instrument);
         specWvl = getSpectralWvl(specBandNames);
@@ -173,18 +177,14 @@ public class AerosolOp2 extends Operator {
 
         Rectangle srcRec = getSourceRectangle(targetRectangle, pixelWindow);
 
-        if (! containsTileValidData(srcRec)){
+        if (!containsTileValidData(srcRec)){
             setInvalidTargetSamples(targetTiles);
             return;
         }
 
-        Map<String,Tile> sourceTiles = getSourceTiles(geomBandNames, srcRec, borderExt, ProgressMonitor.NULL);
-        sourceTiles.putAll(getSourceTiles(specBandNames, srcRec, borderExt, ProgressMonitor.NULL));
-        sourceTiles.putAll(getSourceTiles(auxBandNames, srcRec, borderExt, ProgressMonitor.NULL));
-
-        Map<String,Double> sourceNoDataValues = getSourceNoDataValues(geomBandNames);
-        sourceNoDataValues.putAll(getSourceNoDataValues(specBandNames));
-        sourceNoDataValues.putAll(getSourceNoDataValues(auxBandNames));
+        Map<String,Tile> sourceTiles = getSourceTiles(geomBandNames, srcRec, borderExt);
+        sourceTiles.putAll(getSourceTiles(specBandNames, srcRec, borderExt));
+        sourceTiles.putAll(getSourceTiles(auxBandNames, srcRec, borderExt));
 
         int x0 = (int) targetRectangle.getX();
         int y0 = (int) targetRectangle.getY();
@@ -192,26 +192,26 @@ public class AerosolOp2 extends Operator {
         int height = (int) targetRectangle.getHeight() + y0 - 1;
 
         for (int iY=y0; iY <= height; iY++) {
+            checkForCancellation();
             for (int iX=x0; iX <= width; iX++) {
-                processSuperPixel(sourceTiles, sourceNoDataValues, iX, iY, targetTiles);
-                if (pm.isCanceled()) return;
+                processSuperPixel(sourceTiles, iX, iY, targetTiles);
             }
             pm.worked(1);
         }
         pm.done();
     }
 
-    private void processSuperPixel(Map<String, Tile> sourceTiles, Map<String, Double> sourceNoDataValues, int iX, int iY, Map<Band, Tile> targetTiles) {
+    private void processSuperPixel(Map<String, Tile> sourceTiles, int iX, int iY, Map<Band, Tile> targetTiles) {
         // read pixel data and init brent fit
         InputPixelData[] inPixField = null;
         BrentFitFunction brentFitFunction = null;
         if (instrument.equals("AATSR")) {
-            inPixField = readAveragePixel(sourceTiles, sourceNoDataValues, iX, iY, pixelWindow);
+            inPixField = readAveragePixel(sourceTiles, iX, iY, pixelWindow);
             if (inPixField != null) {
                 brentFitFunction = new BrentFitFunction(BrentFitFunction.ANGULAR_MODEL, inPixField, momo, specWeights);
             }
         } else {
-            inPixField = readDarkestNPixels(sourceTiles, sourceNoDataValues, iX, iY, pixelWindow);
+            inPixField = readDarkestNPixels(sourceTiles, iX, iY, pixelWindow);
             if (inPixField != null) {
                 brentFitFunction = new BrentFitFunction(BrentFitFunction.SPECTRAL_MODEL, inPixField, momo, specWeights, soilSurfSpec, vegSurfSpec);
             }
@@ -328,7 +328,7 @@ public class AerosolOp2 extends Operator {
         tarRasterWidth  = srcRasterWidth  / scale;
     }
 
-    private Map<String, Tile> getSourceTiles(String[] bandNames, Rectangle srcRec, BorderExtender borderExt, ProgressMonitor pm) {
+    private Map<String, Tile> getSourceTiles(String[] bandNames, Rectangle srcRec, BorderExtender borderExt) {
         Map<String, Tile> tileMap = new HashMap<String, Tile>(bandNames.length);
         for (String name : bandNames) {
             RasterDataNode b = (name.equals(validName)) ? validBand : sourceProduct.getRasterDataNode(name);
@@ -346,10 +346,10 @@ public class AerosolOp2 extends Operator {
         return noDataMap;
     }
 
-    private InputPixelData[] readAveragePixel(Map<String, Tile> sourceTiles, Map<String,Double> sourceNoData, int iX, int iY, Rectangle pixelWindow) {
+    private InputPixelData[] readAveragePixel(Map<String, Tile> sourceTiles, int iX, int iY, Rectangle pixelWindow) {
         InputPixelData[] inPixField = null;
 
-        boolean valid = uniformityTest(sourceTiles, sourceNoData, iX, iY);
+        boolean valid = uniformityTest(sourceTiles, iX, iY);
         if (!valid) return null;
 
         double[] tileValues = new double[sourceTiles.size()];
@@ -362,7 +362,7 @@ public class AerosolOp2 extends Operator {
             for (int x = xOffset; x < xOffset+pixelWindow.width; x++){
                 valid = valid && sourceTiles.get(validName).getSampleBoolean(x, y);
                 if (valid) {
-                    valid = valid && readAllValues(x, y, sourceTiles, sourceNoData, tileValues);
+                    valid = valid && readAllValues(x, y, sourceTiles, tileValues);
                     if (valid){
                         addToSumArray(tileValues, sumVal);
                         nAve++;
@@ -380,8 +380,8 @@ public class AerosolOp2 extends Operator {
         return inPixField;
     }
 
-    private InputPixelData[] readDarkestNPixels(Map<String, Tile> sourceTiles, Map<String,Double> sourceNoData, int iX, int iY, Rectangle pixelWindow) {
-        boolean valid = uniformityTest(sourceTiles, sourceNoData, iX, iY);
+    private InputPixelData[] readDarkestNPixels(Map<String, Tile> sourceTiles, int iX, int iY, Rectangle pixelWindow) {
+        boolean valid = uniformityTest(sourceTiles, iX, iY);
         if (!valid) return null;
 
         int NPixel = 10;
@@ -415,7 +415,7 @@ public class AerosolOp2 extends Operator {
                     ndvi  = sourceTiles.get(ndviName).getSampleFloat(x, y);
                     if (valid && (ndvi >= ndviArr[ndviArr.length-10-NPixel])
                               && (ndvi <= ndviArr[ndviArr.length-1-NPixel])) {
-                        valid = valid && readAllValues(x, y, sourceTiles, sourceNoData, tileValues);
+                        valid = valid && readAllValues(x, y, sourceTiles, tileValues);
                         InputPixelData ipd = createInPixelData(tileValues);
                         if (valid && momo.isInsideLut(ipd)){
                             inPixelList.add(ipd);
@@ -560,17 +560,17 @@ public class AerosolOp2 extends Operator {
         return wvl;
     }
 
-    private boolean readAllValues(int x, int y, Map<String, Tile> sourceTiles, Map<String, Double> sourceNoData, double[] tileValues) {
+    private boolean readAllValues(int x, int y, Map<String, Tile> sourceTiles, double[] tileValues) {
         boolean valid = true;
         for (int i=0; i<geomBandNames.length; i++){
             tileValues[i] = sourceTiles.get(geomBandNames[i]).getSampleDouble(x, y);
-            valid = valid && (sourceNoData.get(geomBandNames[i]).compareTo(tileValues[i]) != 0);
+            valid = valid && (sourceNoDataValues.get(geomBandNames[i]).compareTo(tileValues[i]) != 0);
 
         }
         int skip = geomBandNames.length;
         for (int i=0; i<specBandNames.length; i++){
             tileValues[i+skip] = sourceTiles.get(specBandNames[i]).getSampleDouble(x, y);
-            valid = valid && (sourceNoData.get(specBandNames[i]).compareTo(tileValues[i+skip]) != 0);
+            valid = valid && (sourceNoDataValues.get(specBandNames[i]).compareTo(tileValues[i+skip]) != 0);
         }
         skip += specBandNames.length;
 /*
@@ -607,11 +607,11 @@ public class AerosolOp2 extends Operator {
  */
         // surface pressure data
         tileValues[skip] = sourceTiles.get(surfPresName).getSampleDouble(x, y);
-        valid = valid && (sourceNoData.get(surfPresName).compareTo(tileValues[skip]) != 0);
+        valid = valid && (sourceNoDataValues.get(surfPresName).compareTo(tileValues[skip]) != 0);
 
         // ozone data
         tileValues[skip+1] = sourceTiles.get(ozoneName).getSampleDouble(x, y);
-        valid = valid && (sourceNoData.get(ozoneName).compareTo(tileValues[skip+1]) != 0);
+        valid = valid && (sourceNoDataValues.get(ozoneName).compareTo(tileValues[skip+1]) != 0);
 
         return valid;
     }
@@ -642,27 +642,26 @@ public class AerosolOp2 extends Operator {
      */
     private boolean containsTileValidData(Rectangle srcRec) {
         Tile validTile = getSourceTile(validBand, srcRec);
-        boolean valid = false;
         for (Tile.Pos pos: validTile){
-            valid = valid || validTile.getSampleBoolean(pos.x, pos.y);
-            if (valid) break;
+            if (validTile.getSampleBoolean(pos.x, pos.y)) {
+                return true;
+            }
         }
-        return valid;
+        return false;
     }
 
     /**
      * Tests uniformity on the given bin pixel (e.g. 9x9 block)
      * based on the NIR reflectance (max - min < 0.2)
      * @param sourceTiles
-     * @param sourceNoData
      * @param iX
      * @param iY
      * @return (maxNirReflec - minNirReflec) < 0.2
      */
-    private boolean uniformityTest(Map<String, Tile> sourceTiles, Map<String, Double> sourceNoData, int iX, int iY) {
+    private boolean uniformityTest(Map<String, Tile> sourceTiles, int iX, int iY) {
         String nirName = instrC.getNirName(instrument);
         Guardian.assertNotNullOrEmpty("nirName is empty", nirName);
-        double nan = sourceNoData.get(nirName);
+        double nan = sourceNoDataValues.get(nirName);
         double min = Double.MAX_VALUE;
         double max = Double.MIN_VALUE;
         int xOffset = iX*pixelWindow.width + pixelWindow.x;

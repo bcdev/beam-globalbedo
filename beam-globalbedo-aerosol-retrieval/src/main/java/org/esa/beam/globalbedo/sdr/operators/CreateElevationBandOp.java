@@ -41,11 +41,12 @@ import org.esa.beam.gpf.operators.standard.MergeOp;
  * Operator that creates the one and only elevation band
  * based on sourceProduct and BEAM GETASSE30
  */
-@OperatorMetadata(alias="ga.CreateElevationBandOp",
+@OperatorMetadata(alias = "ga.CreateElevationBandOp",
                   description = "creates a single band with elevation from getasse",
                   authors = "A.Heckel",
                   version = "1.0",
-                  copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
+                  copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)",
+                  internal = true)
 public class CreateElevationBandOp extends Operator {
 
     @SourceProduct
@@ -53,10 +54,9 @@ public class CreateElevationBandOp extends Operator {
     @TargetProduct
     private Product targetProduct;
 
-    private final String elevName = "elevation";
-    private Band elevBand;
     private ElevationModel dem;
     private float noDataValue;
+    private GeoCoding geoCoding;
 
     /**
      * Default constructor. The graph processing framework
@@ -82,6 +82,7 @@ public class CreateElevationBandOp extends Operator {
     public void initialize() throws OperatorException {
         final int rasterWidth = sourceProduct.getSceneRasterWidth();
         final int rasterHeight = sourceProduct.getSceneRasterHeight();
+        geoCoding = sourceProduct.getGeoCoding();
         targetProduct = new Product("Elevation Product", "ELEV_GETASSE", rasterWidth, rasterHeight);
         targetProduct.setDescription("Elevation for "+sourceProduct.getName());
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
@@ -95,7 +96,8 @@ public class CreateElevationBandOp extends Operator {
         }
         dem = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
         noDataValue = dem.getDescriptor().getNoDataValue();
-        elevBand = targetProduct.addBand(elevName, ProductData.TYPE_INT16);
+        String elevName = "elevation";
+        Band elevBand = targetProduct.addBand(elevName, ProductData.TYPE_INT16);
         elevBand.setSynthetic(true);
         elevBand.setNoDataValue(noDataValue);
         elevBand.setNoDataValueUsed(true);
@@ -130,7 +132,7 @@ public class CreateElevationBandOp extends Operator {
             for (int y = y0; y < y0 + h; y++) {
                 for (int x = x0; x < x0 + w; x++) {
                     pixelPos.setLocation(x + 0.5f, y + 0.5f);
-                    targetProduct.getGeoCoding().getGeoPos(pixelPos, geoPos);
+                    geoCoding.getGeoPos(pixelPos, geoPos);
                     try {
                         elevation = dem.getElevation(geoPos);
                     } catch (Exception e) {
