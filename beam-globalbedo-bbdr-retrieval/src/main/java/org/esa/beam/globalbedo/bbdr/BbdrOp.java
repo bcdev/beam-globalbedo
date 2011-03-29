@@ -164,24 +164,24 @@ public class BbdrOp extends PixelOperator {
          N2Bconversion n2Bconversion = new N2Bconversion(sensor, 3);
         try {
             n2Bconversion.load();
+            rmse_arr_all = n2Bconversion.getRmse_arr_all();
+            nb_coef_arr_all = n2Bconversion.getNb_coef_arr_all();
+            nb_intcp_arr_all = n2Bconversion.getNb_intcp_arr_all();
+            nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
+            nb_intcp_arr_D = n2Bconversion.getNb_intcp_arr_D();
+
+            aotLut = BbdrUtils.getAotLookupTable(sensor);
+            kxAotLut = BbdrUtils.getAotKxLookupTable(sensor);
+            nskyDwLut = BbdrUtils.getNskyLookupTableDw(sensor);
+            nskyUpLut = BbdrUtils.getNskyLookupTableUp(sensor);
+            kpp_geo = nskyDwLut.getKppGeo();
+            kpp_vol = nskyDwLut.getKppVol();
+
+            gasLookupTable = new GasLookupTable(sensor);
+            gasLookupTable.load(sourceProduct);
         } catch (IOException e) {
             throw new OperatorException(e.getMessage());
         }
-        rmse_arr_all = n2Bconversion.getRmse_arr_all();
-        nb_coef_arr_all = n2Bconversion.getNb_coef_arr_all();
-        nb_intcp_arr_all = n2Bconversion.getNb_intcp_arr_all();
-        nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
-        nb_intcp_arr_D = n2Bconversion.getNb_intcp_arr_D();
-
-        aotLut = BbdrUtils.getAotLookupTable(sensor);
-        kxAotLut = BbdrUtils.getAotKxLookupTable(sensor);
-        nskyDwLut = BbdrUtils.getNskyLookupTableDw(sensor);
-        nskyUpLut = BbdrUtils.getNskyLookupTableUp(sensor);
-        kpp_geo = nskyDwLut.getKppGeo();
-        kpp_vol = nskyDwLut.getKppVol();
-
-        gasLookupTable = new GasLookupTable(sensor);
-        gasLookupTable.load(sourceProduct);
 
         LookupTable aotLut = this.aotLut.getLut();
 
@@ -391,7 +391,7 @@ public class BbdrOp extends PixelOperator {
             cwv = min(cwv, 4.45);
             gas = cwv;
         } else {
-            throw new IllegalArgumentException("Sensor '" + sensor.getName() + "' not supported.");
+            throw new IllegalArgumentException("Sensor '" + sensor.toString() + "' not supported.");
         }
 
         double[] toa_rfl = new double[sensor.getNumBands()];

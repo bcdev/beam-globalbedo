@@ -19,6 +19,8 @@ package org.esa.beam.globalbedo.bbdr;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.io.IOException;
+
 import static org.junit.Assert.*;
 
 public class GasLookupTableTest {
@@ -26,7 +28,7 @@ public class GasLookupTableTest {
     private GasLookupTable gasLookupTable;
 
     @Before
-    public void before() {
+    public void before() throws IOException {
         gasLookupTable = new GasLookupTable(Sensor.MERIS);
         gasLookupTable.load(null);
     }

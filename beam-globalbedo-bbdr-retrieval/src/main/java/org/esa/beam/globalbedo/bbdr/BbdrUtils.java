@@ -1,21 +1,14 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
-import com.bc.ceres.glevel.MultiLevelImage;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.util.Guardian;
+import org.esa.beam.globalbedo.auxdata.Luts;
 
+import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
-import javax.media.jai.ROI;
+import javax.media.jai.PlanarImage;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 
 /**
  * Utility class for BBDR retrieval
@@ -23,19 +16,6 @@ import java.nio.ByteOrder;
  * @author Olaf Danne
  */
 public class BbdrUtils {
-
-    public static final String aotLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_MOMO_ContinentalI_80_SDR_noG_v2.bin";
-    public static final String aotKxLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_MOMO_ContinentalI_80_SDR_noG_Kx-AOD_v2.bin";
-    public static final String cwvLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_6S_Tg_CWV_OZO.bin";
-    public static final String cwvKxLutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_6S_Kx-CWV_OZO.bin";
-    public static final String nskyLutDwPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_80_Nsky_dw.bin";
-    public static final String nskyLutDUpPattern = "%INSTRUMENT%/%INSTRUMENT%_ContinentalI_80_Nsky_up.bin";
-
-    private static final String lutLocaFile = System.getProperty("user.home")
-                    + File.separator + ".beam"
-                    + File.separator + "ga-aerosol"
-                    + File.separator + "lut.location";
-
 
     /**
      * reads an AOT LUT (BBDR breadboard procedure GA_read_LUT_AOD)
@@ -66,23 +46,21 @@ public class BbdrUtils {
      * A LUT value can be accessed with
      * lut.getValue(new double[]{wvlValue, aotValue, hsfValue, aziValue, szaValue, vzaValue, parameterValue});
      *
-     * @param instrument
+     * @param sensor
      *
      * @return LookupTable
      */
-    public static AotLookupTable getAotLookupTable(Sensor instrument) {
-        final String lutFileName = getAotLutName(instrument.getName());
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+    public static AotLookupTable getAotLookupTable(Sensor sensor) throws IOException {
+        ImageInputStream iis = Luts.getAotLutData(sensor.getInstrument());
 
         // read LUT dimensions and values
-        float[] vza = readDimension(bb);
+        float[] vza = readDimension(iis);
         int nVza = vza.length;
-        float[] sza = readDimension(bb);
+        float[] sza = readDimension(iis);
         int nSza = sza.length;
-        float[] azi = readDimension(bb);
+        float[] azi = readDimension(iis);
         int nAzi = azi.length;
-        float[] hsf = readDimension(bb);
+        float[] hsf = readDimension(iis);
         int nHsf = hsf.length;
         // conversion from surf.pressure to elevation ASL
         for (int i = 0; i < nHsf; i++) {
@@ -93,18 +71,16 @@ public class BbdrUtils {
                 hsf[i] = (float) (0.001 * (1.0 - Math.pow(a, b)) / 2.25577E-5);
             }
         }
-        float[] aot = readDimension(bb);
+        float[] aot = readDimension(iis);
         int nAot = aot.length;
 
         float[] parameters = new float[]{1.0f, 2.0f, 3.0f, 4.0f, 5.0f};
         int nParameters = parameters.length;
 
-        float[] wvl = instrument.getWavelength();
+        float[] wvl = sensor.getWavelength();
         final int nWvl = wvl.length;
 
         float[] tgLut = new float[nParameters * nVza * nSza * nAzi * nHsf * nAot * nWvl];
-        int index = 0;
-//        bb.asFloatBuffer().get(tgLut);
 
         for (int iWvl = 0; iWvl < nWvl; iWvl++) {
             for (int iAot = 0; iAot < nAot; iAot++) {
@@ -115,7 +91,7 @@ public class BbdrUtils {
                                 for (int iParams = 0; iParams < nParameters; iParams++) {
                                     int iAziTemp = nAzi - iAzi -1;
                                     int i = iParams + nParameters * (iVza + nVza * ( iSza + nSza * (iAziTemp + nAzi * (iHsf + nHsf * (iAot + nAot * iWvl)))));
-                                    tgLut[i] = bb.getFloat();
+                                    tgLut[i] = iis.readFloat();
                                 }
                             }
                         }
@@ -124,9 +100,8 @@ public class BbdrUtils {
             }
         }
 
-//        bb.position(bb.position() + 4 * tgLut.length);
-        readDimension(bb, nWvl); // skip wavelengths
-        float[] solarIrradiances = readDimension(bb, nWvl);
+        readDimension(iis, nWvl); // skip wavelengths
+        float[] solarIrradiances = readDimension(iis, nWvl);
 
         // store in original sequence (see breadboard: loop over bd, jj, ii, k, j, i in GA_read_lut_AOD
         AotLookupTable aotLut = new AotLookupTable();
@@ -135,7 +110,6 @@ public class BbdrUtils {
         aotLut.setSolarIrradiance(solarIrradiances);
 
         return aotLut;
-//        return new LookupTable(tgLut, wvl, aot, hsf, azi, sza, vza, parameters);
     }
 
     /**
@@ -144,38 +118,36 @@ public class BbdrUtils {
      * A LUT value can be accessed with
      * lut.getValue(new double[]{wvlValue, aotValue, hsfValue, aziValue, szaValue, vzaValue, parameterValue});
      *
-     * @param instrument
+     * @param sensor
      *
      * @return LookupTable
      */
-    public static LookupTable getAotKxLookupTable(Sensor instrument) {
-        final String lutFileName = getAotKxLutName(instrument.getName());
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+    public static LookupTable getAotKxLookupTable(Sensor sensor) throws IOException {
+        ImageInputStream iis = Luts.getAotKxLutData(sensor.getInstrument());
 
         // read LUT dimensions and values
-        float[] vza = readDimension(bb);
+        float[] vza = readDimension(iis);
         int nVza = vza.length;
-        float[] sza = readDimension(bb);
+        float[] sza = readDimension(iis);
         int nSza = sza.length;
-        float[] azi = readDimension(bb);
+        float[] azi = readDimension(iis);
         int nAzi = azi.length;
-        float[] hsf = readDimension(bb);
+        float[] hsf = readDimension(iis);
         int nHsf = hsf.length;
-        float[] aot = readDimension(bb);
+        float[] aot = readDimension(iis);
         int nAot = aot.length;
 
         float[] kx = new float[]{1.0f, 2.0f};
         int nKx = kx.length;
 
-        float[] wvl = instrument.getWavelength();
+        float[] wvl = sensor.getWavelength();
         final int nWvl = wvl.length;
 
-        float[] tgLut = new float[nKx * nVza * nSza * nAzi * nHsf * nAot * nWvl];
-        bb.asFloatBuffer().get(tgLut);
+        float[] lut = new float[nKx * nVza * nSza * nAzi * nHsf * nAot * nWvl];
+        iis.readFully(lut, 0, lut.length);
 
         // store in original sequence
-        return new LookupTable(tgLut, wvl, aot, hsf, azi, sza, vza, kx);
+        return new LookupTable(lut, wvl, aot, hsf, azi, sza, vza, kx);
     }
 
 
@@ -185,43 +157,41 @@ public class BbdrUtils {
      * * A LUT value can be accessed with
      * lut.getValue(new double[]{wvlValue, ozoValue, cwvValue, angValue, kxValue, kxcaseValue});
      *
-     * @param instrument
+     * @param sensor
      *
      * @return LookupTable
      */
-    public static NskyLookupTable getNskyLookupTableDw(Sensor instrument) {
-        final String lutFileName = getNskyDwLutName(instrument.getName());
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+    public static NskyLookupTable getNskyLookupTableDw(Sensor sensor) throws IOException {
+        ImageInputStream iis = Luts.getNskyDwLutData(sensor.getInstrument());
 
         // read LUT dimensions and values
-        float[] sza = readDimension(bb);
+        float[] sza = readDimension(iis);
         int nSza = sza.length;
-        float[] hsf = readDimension(bb);
+        float[] hsf = readDimension(iis);
         int nHsf = hsf.length;
-        float[] aot = readDimension(bb);
+        float[] aot = readDimension(iis);
         int nAot = aot.length;
 
-        int nSpec = bb.getInt();
+        int nSpec = iis.readInt();
         float[] spec = new float[nSpec];
         for (int i = 0; i < spec.length; i++) {
             spec[i] = (i + 1) * 1.0f;
         }
 
-        double kppVol = bb.getDouble();
-        double kppGeo = bb.getDouble();
+        double kppVol = iis.readDouble();
+        double kppGeo = iis.readDouble();
 
         // todo: again, we have an array of length 2 as innermost part of the LUT,
         // which has no meanigful name in breadboard --> clarify
         float[] values = new float[]{1.0f, 2.0f};
         int nValues = values.length;
 
-        float[] tgLut = new float[nValues * nSza * nHsf * nAot * nSpec];
-        bb.asFloatBuffer().get(tgLut);
+        float[] lut = new float[nValues * nSza * nHsf * nAot * nSpec];
+        iis.readFully(lut, 0, lut.length);
 
         // store in original sequence (see breadboard: GA_read_LUT_Nsky)
         NskyLookupTable nskyLut = new NskyLookupTable();
-        nskyLut.setLut(new LookupTable(tgLut, spec, aot, hsf, sza, values));
+        nskyLut.setLut(new LookupTable(lut, spec, aot, hsf, sza, values));
         nskyLut.setKppGeo(kppGeo);
         nskyLut.setKppVol(kppVol);
 
@@ -234,42 +204,40 @@ public class BbdrUtils {
      * * A LUT value can be accessed with
      * lut.getValue(new double[]{wvlValue, ozoValue, cwvValue, angValue, kxValue, kxcaseValue});
      *
-     * @param instrument
+     * @param sensor
      *
      * @return LookupTable
      */
-    public static NskyLookupTable getNskyLookupTableUp(Sensor instrument) {
-        final String lutFileName = getNskyUpLutName(instrument.getName());
-
-        ByteBuffer bb = readLutFileToByteBuffer(lutFileName);
+    public static NskyLookupTable getNskyLookupTableUp(Sensor sensor) throws IOException {
+        ImageInputStream iis = Luts.getNskyUpLutData(sensor.getInstrument());
 
         // read LUT dimensions and values
-        float[] vza = readDimension(bb);
+        float[] vza = readDimension(iis);
         int nVza = vza.length;
-        float[] hsf = readDimension(bb);
+        float[] hsf = readDimension(iis);
         int nHsf = hsf.length;
-        float[] aot = readDimension(bb);
+        float[] aot = readDimension(iis);
         int nAot = aot.length;
 
-        int nSpec = bb.getInt();
+        int nSpec = iis.readInt();
         float[] spec = new float[nSpec];
         for (int i = 0; i < spec.length; i++) {
             spec[i] = (i + 1) * 1.0f;
         }
-        double kppVol = bb.getDouble();
-        double kppGeo = bb.getDouble();
+        double kppVol = iis.readDouble();
+        double kppGeo = iis.readDouble();
 
         // todo: again, we have an array of length 2 as innermost part of the LUT,
         // which has no meanigful name in breadboard --> clarify
         float[] values = new float[]{1.0f, 2.0f};
         int nValues = values.length;
 
-        float[] tgLut = new float[nValues * nVza * nHsf * nAot * nSpec];
-        bb.asFloatBuffer().get(tgLut);
+        float[] lut = new float[nValues * nVza * nHsf * nAot * nSpec];
+        iis.readFully(lut, 0, lut.length);
 
         // store in original sequence (see breadboard: GA_read_LUT_Nsky)
         NskyLookupTable nskyLut = new NskyLookupTable();
-        nskyLut.setLut(new LookupTable(tgLut, spec, aot, hsf, vza, values));
+        nskyLut.setLut(new LookupTable(lut, spec, aot, hsf, vza, values));
         nskyLut.setKppGeo(kppGeo);
         nskyLut.setKppVol(kppVol);
 
@@ -281,92 +249,16 @@ public class BbdrUtils {
     // end of public
     //////////////////////////////////////////////////////////////////
 
-    private static float[] readDimension(ByteBuffer bb) {
-        int len = bb.getInt();
-        return readDimension(bb, len);
+    static float[] readDimension(ImageInputStream iis) throws IOException {
+        int len = iis.readInt();
+        return readDimension(iis, len);
     }
 
 
-    static float[] readDimension(ByteBuffer bb, int len) {
+    static float[] readDimension(ImageInputStream iis, int len) throws IOException {
         float[] dim = new float[len];
-        for (int i = 0; i < len; i++) {
-            dim[i] = bb.getFloat();
-        }
+        iis.readFully(dim, 0, len);
         return dim;
-    }
-
-    private static String getAotLutName(String instrument) {
-        final String aotLutPath = getLutPath() + File.separator + aotLutPattern;
-        if (instrument.startsWith("AATSR")) {
-            return aotLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return aotLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-    private static String getAotKxLutName(String instrument) {
-        final String aotKxLutPath = getLutPath() + File.separator + aotKxLutPattern;
-        if (instrument.startsWith("AATSR")) {
-            return aotKxLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return aotKxLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-    static String getCwvLutName(String instrument) {
-        final String cwvLutPath = getLutPath() + File.separator + cwvLutPattern;
-        if (instrument.startsWith("AATSR")) {
-            return cwvLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return cwvLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-    static String getCwvKxLutName(String instrument) {
-        final String cwvKxLutPath = getLutPath() + File.separator + cwvKxLutPattern;
-        if (instrument.startsWith("AATSR")) {
-            return cwvKxLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return cwvKxLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-    private static String getNskyDwLutName(String instrument) {
-        final String nskyDwLutPath = getLutPath() + File.separator + nskyLutDwPattern;
-        if (instrument.startsWith("AATSR")) {
-            return nskyDwLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return nskyDwLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-    private static String getNskyUpLutName(String instrument) {
-        final String nskyUpLutPath = getLutPath() + File.separator + nskyLutDUpPattern;
-        if (instrument.startsWith("AATSR")) {
-            return nskyUpLutPath.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return nskyUpLutPath.replace("%INSTRUMENT%", instrument);
-    }
-
-
-    static ByteBuffer readLutFileToByteBuffer(String lutName) {
-        ByteBuffer bb = null;
-        File lutFile = new File(lutName);
-        Guardian.assertTrue("lookup table file exists", lutFile.exists());
-        FileInputStream fis = null;
-        try {
-            fis = new FileInputStream(lutFile);
-            byte[] buffer = new byte[(int) lutFile.length()];
-            fis.read(buffer, 0, (int) lutFile.length());
-            bb = ByteBuffer.wrap(buffer).order(ByteOrder.LITTLE_ENDIAN);
-        } catch (Exception ex) {
-            System.err.println(ex.getMessage());
-            throw new OperatorException(ex.getCause());
-        } finally {
-            if (fis != null) {
-                try {
-                    fis.close();
-                } catch (IOException ex) {
-                    System.err.println(ex.getMessage());
-                }
-            }
-        }
-        return bb;
     }
 
     public static int getIndexBefore(float value, float[] array) {
@@ -382,30 +274,7 @@ public class BbdrUtils {
         throw new IllegalArgumentException();
     }
 
-    public static String getLutPath() {
-        String lutP = null;
-        BufferedReader reader = null;
-        try{
-            reader = new BufferedReader(new FileReader(lutLocaFile));
-            String line;
-            while ((line = reader.readLine())!= null) {
-                if (line.startsWith("ga.lutInstallDir")) {
-                    String[] split = line.split("=");
-                    if(split.length > 1) {
-                        lutP = split[1].trim();
-                        break;
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            throw new OperatorException(ex);
-        }
-        if (lutP == null) throw new OperatorException("Lut install dir  not found");
-        if (lutP.endsWith(File.separator) || lutP.endsWith("/")) lutP = lutP.substring(0, lutP.length()-1);
-        return lutP;
-    }
-
-    public static float getImageMeanValue(MultiLevelImage image) {
+    public static float getImageMeanValue(PlanarImage image) {
          // Set up the parameter block for the source image and
          // the three parameters.
          ParameterBlock pb = new ParameterBlock();

@@ -2,32 +2,34 @@ package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 public class AatsrLutTest extends TestCase {
 
-    public void testLutAot() {
-        AotLookupTable lut = BbdrUtils.getAotLookupTable(Sensor.AATSR);
+    public void testLutAot() throws IOException {
+        AotLookupTable lut = BbdrUtils.getAotLookupTable(Sensor.AATSR_FWARD);
         assertNotNull(lut);
         // TODO write tests
     }
 
-    public void testAotKx() {
-        LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.AATSR);
+    public void testAotKx() throws IOException {
+        LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.AATSR_FWARD);
         assertNotNull(lut);
         // TODO write tests
     }
 
-    public void testMerisNskyLutDw() {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw(Sensor.AATSR);
+    public void testMerisNskyLutDw() throws IOException {
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw(Sensor.AATSR_FWARD);
         assertNotNull(lut);
         // TODO write tests
     }
 
-    public void testMerisNskyLutUp() {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp(Sensor.AATSR);
+    public void testMerisNskyLutUp() throws IOException {
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp(Sensor.AATSR_FWARD);
         assertNotNull(lut);
         // TODO write tests
     }

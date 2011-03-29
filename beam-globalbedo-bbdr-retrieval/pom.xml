@@ -21,7 +21,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.4</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
@@ -34,6 +33,11 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-auxdata</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
         <dependency>

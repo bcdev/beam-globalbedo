@@ -1,8 +1,10 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.globalbedo.auxdata.Luts;
 
-import java.nio.ByteBuffer;
+import javax.imageio.stream.ImageInputStream;
+import java.io.IOException;
 
 /**
  * @author Olaf Danne
@@ -25,7 +27,7 @@ class GasLookupTable {
         this.sensor = sensor;
     }
 
-    void load(Product sourceProduct) {
+    void load(Product sourceProduct) throws IOException {
         if (sourceProduct != null && sensor == Sensor.SPOT_VGT) {
             float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
             setGasVal(ozoMeanValue);
@@ -66,26 +68,25 @@ class GasLookupTable {
         return gasArray;
     }
 
-    private void loadCwvOzoLookupTableArray(Sensor instrument) {
+    private void loadCwvOzoLookupTableArray(Sensor sensor) throws IOException {
         // todo: test this method!
-        final String lutFileName = BbdrUtils.getCwvLutName(instrument.getName());
-        ByteBuffer bb = BbdrUtils.readLutFileToByteBuffer(lutFileName);
-        int nAng = bb.getInt();
-        int nCwv = bb.getInt();
-        int nOzo = bb.getInt();
+        ImageInputStream iis = Luts.getCwvLutData(sensor.getInstrument());
+        int nAng = iis.readInt();
+        int nCwv = iis.readInt();
+        int nOzo = iis.readInt();
 
-        final float[] angArr = BbdrUtils.readDimension(bb, nAng);
-        cwvArray = BbdrUtils.readDimension(bb, nCwv);
-        ozoArray = BbdrUtils.readDimension(bb, nOzo);
+        final float[] angArr = BbdrUtils.readDimension(iis, nAng);
+        cwvArray = BbdrUtils.readDimension(iis, nCwv);
+        ozoArray = BbdrUtils.readDimension(iis, nOzo);
 
-        float[] wvl = instrument.getWavelength();
+        float[] wvl = sensor.getWavelength();
         final int nWvl = wvl.length;
         float[][][][] cwvOzoLutArray = new float[nWvl][nOzo][nCwv][nAng];
         for (int iAng = 0; iAng < nAng; iAng++) {
             for (int iCwv = 0; iCwv < nCwv; iCwv++) {
                 for (int iOzo = 0; iOzo < nOzo; iOzo++) {
                     for (int iWvl = 0; iWvl < nWvl; iWvl++) {
-                        cwvOzoLutArray[iWvl][iOzo][iCwv][iAng] = bb.getFloat();
+                        cwvOzoLutArray[iWvl][iOzo][iCwv][iAng] = iis.readFloat();
                     }
                 }
             }
@@ -93,7 +94,7 @@ class GasLookupTable {
         lutGas = new float[nWvl][nCwv][nAng];
         amfArray = convertAngArrayToAmfArray(angArr);
 
-        if (sensor.equals(Sensor.SPOT_VGT)) {
+        if (this.sensor.equals(Sensor.SPOT_VGT)) {
             int iOzo = BbdrUtils.getIndexBefore(gas2val, ozoArray);
             float term = (gas2val - ozoArray[iOzo]) / (ozoArray[iOzo + 1] - ozoArray[iOzo]);
             for (int iWvl = 0; iWvl < nWvl; iWvl++) {
@@ -118,24 +119,22 @@ class GasLookupTable {
         }
     }
 
-    private void loadCwvOzoKxLookupTableArray(Sensor instrument) {
+    private void loadCwvOzoKxLookupTableArray(Sensor sensor) throws IOException {
         // todo: test this method!!
-        final String lutFileName = BbdrUtils.getCwvKxLutName(instrument.getName());
-
-        ByteBuffer bb = BbdrUtils.readLutFileToByteBuffer(lutFileName);
+        ImageInputStream iis = Luts.getCwvKxLutData(sensor.getInstrument());
 
         // read LUT dimensions and values
-        int nAng = bb.getInt();
-        BbdrUtils.readDimension(bb, nAng);
-        int nCwv = bb.getInt();
-        BbdrUtils.readDimension(bb, nCwv);
-        int nOzo = bb.getInt();
-        BbdrUtils.readDimension(bb, nOzo);
+        int nAng = iis.readInt();
+        BbdrUtils.readDimension(iis, nAng);
+        int nCwv = iis.readInt();
+        BbdrUtils.readDimension(iis, nCwv);
+        int nOzo = iis.readInt();
+        BbdrUtils.readDimension(iis, nOzo);
 
         int nKx = 2;
         int nKxcase = 2;
 
-        float[] wvl = instrument.getWavelength();
+        float[] wvl = sensor.getWavelength();
         final int nWvl = wvl.length;
 
         float[][][][][][] kxArray = new float[nWvl][nOzo][nCwv][nAng][nKxcase][nKx];
@@ -145,7 +144,7 @@ class GasLookupTable {
                     for (int iAng = 0; iAng < nAng; iAng++) {
                         for (int iKxCase = 0; iKxCase < nKxcase; iKxCase++) {
                             for (int iKx = 0; iKx < nKx; iKx++) {
-                                kxArray[iWvl][iOzo][iCwv][iAng][iKxCase][iKx] = bb.getFloat();
+                                kxArray[iWvl][iOzo][iCwv][iAng][iKxCase][iKx] = iis.readFloat();
                             }
                         }
                     }

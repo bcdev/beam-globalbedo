@@ -63,6 +63,7 @@
     </distributionManagement>
 
     <modules>
+        <module>beam-globalbedo-auxdata</module>
         <module>beam-globalbedo-aerosol-retrieval</module>
         <module>beam-globalbedo-bootstrap</module>
 		<module>beam-globalbedo-bbdr-retrieval</module>
@@ -89,6 +90,12 @@
             <dependency>
                 <groupId>com.bc.ceres</groupId>
                 <artifactId>ceres-core</artifactId>
+                <version>${ceres.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>com.bc.ceres</groupId>
+                <artifactId>ceres-ui</artifactId>
                 <version>${ceres.version}</version>
             </dependency>
 

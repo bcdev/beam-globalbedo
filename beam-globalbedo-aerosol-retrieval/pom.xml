@@ -2,7 +2,7 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-     <modelVersion>4.0.0</modelVersion>
+    <modelVersion>4.0.0</modelVersion>
 
     <parent>
         <artifactId>beam-globalbedo</artifactId>
@@ -18,7 +18,7 @@
     <description>Calculates Aerosol from MERIs, AATSR and SPOT-VGT L1 data</description>
 
     <dependencies>
-		<dependency>
+        <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
         </dependency>
@@ -32,6 +32,13 @@
             <artifactId>beam-spot-vgt-reader</artifactId>
             <version>1.0</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-auxdata</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>

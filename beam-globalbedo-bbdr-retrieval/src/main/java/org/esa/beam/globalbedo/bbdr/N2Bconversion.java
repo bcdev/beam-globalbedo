@@ -16,21 +16,17 @@
 
 package org.esa.beam.globalbedo.bbdr;
 
-import org.esa.beam.globalbedo.sdr.operators.InstrumentConsts;
+import org.esa.beam.globalbedo.auxdata.Luts;
 
 import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 
 /**
  * The narrow to broadband conversion.
  */
 public class N2Bconversion {
-    private static final String coeffPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_rmse_v2.txt";
-    private static final String coeffDPattern = "%INSTRUMENT%/N2B_coefs_%INSTRUMENT%_Ddw_Dup.txt";
 
-    private final Sensor instrument;
+    private final Sensor sensor;
     private final int n_spc;
     private final int num_bd;
 
@@ -41,10 +37,10 @@ public class N2Bconversion {
     private final double[][] nb_coef_arr_D;
     private final double[] nb_intcp_arr_D;
 
-    public N2Bconversion(Sensor instrument, int n_spc) {
-        this.instrument = instrument;
+    public N2Bconversion(Sensor sensor, int n_spc) {
+        this.sensor = sensor;
         this.n_spc = n_spc;
-        this.num_bd = instrument.getNumBands();
+        this.num_bd = sensor.getNumBands();
 
         this.nb_coef_arr_all = new double[n_spc][num_bd];
         this.nb_intcp_arr_all = new double[n_spc];
@@ -55,8 +51,7 @@ public class N2Bconversion {
     }
 
     public void load() throws IOException {
-        String coeffFileName = getFileName(instrument.getName(), coeffPattern);
-        BufferedReader reader = new BufferedReader(new FileReader(coeffFileName));
+        BufferedReader reader = Luts.getN2BCoeffReader(sensor.getInstrument());
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {
                 reader.readLine(); // skip this
@@ -77,8 +72,7 @@ public class N2Bconversion {
             reader.close();
         }
 
-        String coeffDFileName = getFileName(instrument.getName(), coeffDPattern);
-        reader = new BufferedReader(new FileReader(coeffDFileName));
+        reader = Luts.getN2BCoeffDReader(sensor.getInstrument());
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {
                 reader.readLine(); // skip this
@@ -101,14 +95,6 @@ public class N2Bconversion {
 
     private static double readDouble(BufferedReader reader) throws IOException {
         return Double.parseDouble(reader.readLine().trim());
-    }
-
-    private static String getFileName(String instrument, String pattern) {
-        final String pathPattern = BbdrUtils.getLutPath() + File.separator + pattern;
-        if (instrument.startsWith("AATSR")) {
-            return pathPattern.replace("%INSTRUMENT%", "AATSR");     // no need to distinguish nadir/forward
-        }
-        return pathPattern.replace("%INSTRUMENT%", instrument);
     }
 
     public double[][] getNb_coef_arr_all() {

@@ -2,13 +2,15 @@ package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
 
+import java.io.IOException;
+
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 public class MerisLutTest extends TestCase {
 
-    public void testLutAot() {
+    public void testLutAot() throws IOException {
         AotLookupTable aotLut = BbdrUtils.getAotLookupTable(Sensor.MERIS);
         assertNotNull(aotLut);
         LookupTable lut = aotLut.getLut();
@@ -138,7 +140,7 @@ public class MerisLutTest extends TestCase {
         assertEquals(0.998625, value, 1.E-4);
     }
 
-    public void testLutAotKx() {
+    public void testLutAotKx() throws IOException {
         LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.MERIS);
         assertNotNull(lut);
 
@@ -235,7 +237,7 @@ public class MerisLutTest extends TestCase {
         assertEquals(0.007395, value, 1.E-4);
     }
 
-    public void testNskyLutDw() {
+    public void testNskyLutDw() throws IOException {
         NskyLookupTable nskyLut = BbdrUtils.getNskyLookupTableDw(Sensor.MERIS);
         assertNotNull(nskyLut);
         LookupTable lut = nskyLut.getLut();
@@ -315,7 +317,7 @@ public class MerisLutTest extends TestCase {
         assertEquals(5.84008, value, 1.E-4);
     }
 
-    public void testNskyLutUp() {
+    public void testNskyLutUp() throws IOException {
         NskyLookupTable nskyLut = BbdrUtils.getNskyLookupTableUp(Sensor.MERIS);
         assertNotNull(nskyLut);
         LookupTable lut = nskyLut.getLut();
