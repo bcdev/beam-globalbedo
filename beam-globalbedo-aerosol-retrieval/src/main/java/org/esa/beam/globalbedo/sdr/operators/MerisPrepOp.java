@@ -51,7 +51,7 @@ public class MerisPrepOp extends Operator {
         final boolean needElevation = (!sourceProduct.containsBand(instrC.getElevationBandName()));
         final boolean needSurfacePres = (!sourceProduct.containsBand(instrC.getSurfPressureName("MERIS")));
 
-        //general SzaSubset to less 70°
+        //general SzaSubset to less 70 degree
         Map<String,Object> szaSubParam = new HashMap<String, Object>(3);
         szaSubParam.put("szaBandName", "sun_zenith");
         szaSubParam.put("hasSolarElevation", false);
@@ -74,8 +74,8 @@ public class MerisPrepOp extends Operator {
         targetProduct.setEndTime(szaSubProduct.getEndTime());
         targetProduct.setPointingFactory(szaSubProduct.getPointingFactory());
         ProductUtils.copyTiePointGrids(szaSubProduct, targetProduct);
-        ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
         ProductUtils.copyFlagBands(szaSubProduct, targetProduct);
+        ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
         Mask mask;
         for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
             mask = szaSubProduct.getMaskGroup().get(i);

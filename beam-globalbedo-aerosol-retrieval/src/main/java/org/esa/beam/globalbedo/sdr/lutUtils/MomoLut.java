@@ -67,7 +67,6 @@ public class MomoLut implements AerosolLookupTable{
      * standart constructor reading the binary LUT file from "lutName"
      * the number of channels or wavelength for which the LUTs is given
      * is not contained in the file
-     * @param instrument - instrument name
      * @param lutName - file name of the binary LUTs (original format from FUB)
      * @param nWvl - number of spectral channels
      */
