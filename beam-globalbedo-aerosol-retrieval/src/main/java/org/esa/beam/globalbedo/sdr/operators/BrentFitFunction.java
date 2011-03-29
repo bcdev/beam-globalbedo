@@ -158,7 +158,6 @@ public class BrentFitFunction implements UnivRetrievalFunction {
                 break;
             case SPECTRAL_MODEL:
                 p = new double[]{0.9, 0.1};
-                //p = new double[]{0.5, 0.5, 0.0};
                 break;
             case SYNERGY_MODEL:
             default:

@@ -34,8 +34,9 @@ public class PointRetrieval {
         b.brent(0.001, 0.5*maxAOT, maxAOT, brentFitFct, 5e-6);
         float optAOT = (float) b.getXmin();
         float optErr = (float) b.getFx();
-        boolean failed = (optAOT <= 0.01);
+        boolean failed = (optAOT <= 0.003);
         double curv = calcCurvature(optAOT, optErr, maxAOT);
+        failed = failed || (curv < 0);// || (optErr > 0.001);
         float retrievalErr = (float) calcErrFromCurv(optErr, curv);
 
         RetrievalResults results = new RetrievalResults(failed, optAOT, optErr, retrievalErr, (float) curv);

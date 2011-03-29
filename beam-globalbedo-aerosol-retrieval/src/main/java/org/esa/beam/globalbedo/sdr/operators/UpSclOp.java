@@ -82,7 +82,7 @@ public class UpSclOp extends Operator {
         offset = scale/2;
         InstrumentConsts instrC = InstrumentConsts.getInstance();
         String instrument = instrC.getInstrument(hiresProduct);
-        final String validExpression = instrC.getAotExpression(instrument);
+        final String validExpression = instrC.getValAotOutExpression(instrument);
         final BandMathsOp validBandOp = BandMathsOp.createBooleanExpressionBand(validExpression, hiresProduct);
         validBand = validBandOp.getTargetProduct().getBandAt(0);
 
@@ -225,7 +225,8 @@ public class UpSclOp extends Operator {
                 if (iSrcX >= srcTile.getMaxX()) iSrcX = srcTile.getMaxX() - 1;
                 float xFrac = (float) (iTarX - offset) / scale - iSrcX;
                 erg = noData;
-                if (validTile.getSampleBoolean(iTarX, iTarY)){
+
+                if (validTile.getSampleBoolean(iTarX, iTarY) && isSrcValid(srcTile, iSrcX, iSrcY, iSrcX+1, iSrcY+1)){
                     try{
                         erg = (1.0f - xFrac) * (1.0f - yFac) * srcTile.getSampleFloat(iSrcX, iSrcY);
                         erg +=        (xFrac) * (1.0f - yFac) * srcTile.getSampleFloat(iSrcX+1, iSrcY);
@@ -260,6 +261,15 @@ public class UpSclOp extends Operator {
                 tarTile.setSample(iTarX, iTarY, srcTile.getSampleInt(iSrcX, iSrcY));
             }
         }
+    }
+
+    private boolean isSrcValid(Tile srcTile, int x1, int y1, int x2, int y2) {
+        double noSrcData = srcTile.getRasterDataNode().getGeophysicalNoDataValue();
+        boolean valid = Double.compare(noSrcData, srcTile.getSampleFloat(x1,y1)) != 0;
+        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x1,y2)) != 0;
+        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x2,y2)) != 0;
+        valid = valid && Double.compare(noSrcData, srcTile.getSampleFloat(x2,y1)) != 0;
+        return valid;
     }
 
 

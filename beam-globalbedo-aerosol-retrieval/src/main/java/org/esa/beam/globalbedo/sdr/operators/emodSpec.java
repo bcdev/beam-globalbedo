@@ -52,7 +52,19 @@ public class emodSpec implements MvFunction {
         for (int iwvl = 0; iwvl < nSpecChannels; iwvl++) {
             // mval: rho_spec_mod in ATBD (p. 22) (model function)
             //mval[iwvl] = p[0] * specVeg[iwvl] + p[1] * specSoil[iwvl] + p[2];
+
             mval[iwvl] = p[0] * specVeg[iwvl] + p[1] * specSoil[iwvl];
+/*
+            double ndvi = 0;
+            if (nSpecChannels == 15){
+                ndvi = (surfReflec[12]-surfReflec[6])/(surfReflec[12]+surfReflec[6]);
+            }
+            else{
+                ndvi = (surfReflec[2]-surfReflec[1])/(surfReflec[2]+surfReflec[1]);
+            }
+
+            mval[iwvl] = p[0] * (ndvi * specVeg[iwvl] + (1-ndvi) * specSoil[iwvl]);// + p[1];
+*/
             // difference to measurement:
             double k = surfReflec[iwvl] - mval[iwvl];
             // residual:
@@ -64,12 +76,12 @@ public class emodSpec implements MvFunction {
         double limit;
         if (p[0] < 0.0) resid = resid + p[0] * p[0] * 1000;
         if (p[1] < 0.0) resid = resid + p[1] * p[1] * 1000;
-        limit = -0.03;
-        /*
+/*
+        limit = -0.02;
         if (p[2] < limit) resid = resid + (p[2]-limit) * (p[2]-limit) * 1000;
-        limit = 0.0;
+        limit = 0.02;
         if (p[2] > limit) resid = resid + (p[2]-limit) * (p[2]-limit) * 1000;
-         */
+*/
 
         return(resid);
     }

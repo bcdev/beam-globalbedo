@@ -67,6 +67,7 @@ public class MomoLut implements AerosolLookupTable{
      * standart constructor reading the binary LUT file from "lutName"
      * the number of channels or wavelength for which the LUTs is given
      * is not contained in the file
+     * @param instrument - instrument name
      * @param lutName - file name of the binary LUTs (original format from FUB)
      * @param nWvl - number of spectral channels
      */
@@ -451,69 +452,5 @@ public class MomoLut implements AerosolLookupTable{
             this.min = min;
             this.max = max;
         }
-    }
-
-    /////////////////////////////////////////////////////////////////////////////////////
-    // getters
-    /////////////////////////////////////////////////////////////////////////////////////
-
-    public int getnWvl() {
-        return nWvl;
-    }
-
-    public int getnParameter() {
-        return nParameter;
-    }
-
-    public int getnVza() {
-        return nVza;
-    }
-
-    public int getnSza() {
-        return nSza;
-    }
-
-    public int getnAzi() {
-        return nAzi;
-    }
-
-    public int getnHsf() {
-        return nHsf;
-    }
-
-    public int getnAot() {
-        return nAot;
-    }
-
-    public float[] getVza() {
-        return vza;
-    }
-
-    public float[] getSza() {
-        return sza;
-    }
-
-    public float[] getAzi() {
-        return azi;
-    }
-
-    public float[] getHsf() {
-        return hsf;
-    }
-
-    public float[] getAot() {
-        return aot;
-    }
-
-    public float[] getWvl() {
-        return wvl;
-    }
-
-    public float[] getValues() {
-        return values;
-    }
-
-    public float getSolIrrad() {
-        return solIrrad;
     }
 }

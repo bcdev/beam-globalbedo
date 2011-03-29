@@ -56,10 +56,14 @@ public class GaMasterOp  extends Operator {
     @Parameter(defaultValue="false")
     private boolean saveModelBands = false;
 */
-    @Parameter(defaultValue="2")
+    @Parameter(defaultValue="1")
+    private int soilSpecId;
+    @Parameter(defaultValue="5")
     private int vegSpecId;
     @Parameter(defaultValue="9")
     private int scale;
+    @Parameter(defaultValue="0.3")
+    private float ndviThr;
     private String instrument;
 
     @Override
@@ -76,10 +80,10 @@ public class GaMasterOp  extends Operator {
         RenderingHints rhFill = new RenderingHints(GPF.KEY_TILE_SIZE, fillTS);
 
 
-        String productType = sourceProduct.getProductType();
-        boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
-        final boolean isAatsrProduct = productType.equals(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
-        final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
+        boolean isMerisProduct = sourceProduct.getProductType().equals(EnvisatConstants.MERIS_RR_L1B_PRODUCT_TYPE_NAME);
+        isMerisProduct = isMerisProduct || sourceProduct.getProductType().equals(EnvisatConstants.MERIS_FRS_L1B_PRODUCT_TYPE_NAME);
+        final boolean isAatsrProduct = sourceProduct.getProductType().equals(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+        final boolean isVgtProduct = sourceProduct.getProductType().startsWith("VGT PRODUCT FORMAT V1.");
 
         Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isAatsrProduct ^ isVgtProduct));
 
@@ -100,8 +104,10 @@ public class GaMasterOp  extends Operator {
 
 
         Map<String, Object> aotParams = new HashMap<String, Object>(4);
+        aotParams.put("soilSpecId", soilSpecId);
         aotParams.put("vegSpecId", vegSpecId);
         aotParams.put("scale", scale);
+        aotParams.put("ndviThreshold", ndviThr);
         /*
         aotParams.put("retrieveAOT", retrieveAOT);
         aotParams.put("saveToaBands", saveToaBands);

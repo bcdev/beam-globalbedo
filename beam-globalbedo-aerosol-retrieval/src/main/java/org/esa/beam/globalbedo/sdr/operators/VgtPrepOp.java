@@ -88,6 +88,7 @@ public class VgtPrepOp extends Operator {
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
+            pixelClassParam.put("gaCloudBufferWidth", 3);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct);
             for (int i=0; i<idepixProduct.getMaskGroup().getNodeCount(); i++){

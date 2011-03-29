@@ -92,6 +92,7 @@ public class AatsrPrepOp extends Operator {
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaUseAatsrFwardForClouds", false);
+            pixelClassParam.put("gaCloudBufferWidth", 3);
             idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixNadirProduct, targetProduct);
             for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
