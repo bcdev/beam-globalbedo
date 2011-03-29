@@ -2,17 +2,14 @@ package org.esa.beam.globalbedo.inversion;
 
 
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
 
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AlbedoInversionOp extends PixelOperator {
+public class InversionOp extends PixelOperator {
 
     /* ------------------------------------------------------------------------------------------
 
@@ -113,7 +110,7 @@ public class AlbedoInversionOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AlbedoInversionOp.class);
+            super(InversionOp.class);
         }
     }
 }
