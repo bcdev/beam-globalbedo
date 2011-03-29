@@ -6,31 +6,14 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.glevel.MultiLevelImage;
+
 import java.awt.Rectangle;
-import java.awt.image.ColorModel;
-import java.awt.image.DataBuffer;
-import java.awt.image.DataBufferFloat;
-import java.awt.image.SampleModel;
-import java.awt.image.WritableRaster;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.media.jai.BorderExtender;
-import javax.media.jai.PlanarImage;
-import javax.media.jai.RasterFactory;
-import javax.media.jai.TiledImage;
+
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.TiePointGrid;
-import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -119,14 +102,14 @@ public class UpSclOp extends Operator {
         final Rectangle srcRec = calcSourceRectangle(tarRec);
 
         sourceBand = lowresProduct.getBand(targetBandName);
-        sourceTile = getSourceTile(sourceBand, srcRec, ProgressMonitor.NULL);
-        validTile = getSourceTile(validBand, tarRec, ProgressMonitor.NULL);
+        sourceTile = getSourceTile(sourceBand, srcRec);
+        validTile = getSourceTile(validBand, tarRec);
 
         if (!targetBand.isFlagBand()) {
-            upscaleTileBilinear(sourceTile, validTile, targetTile, tarRec, ProgressMonitor.NULL);
+            upscaleTileBilinear(sourceTile, validTile, targetTile, tarRec);
         }
         else {
-            upscaleFlagCopy(sourceTile, targetTile, tarRec, ProgressMonitor.NULL);
+            upscaleFlagCopy(sourceTile, targetTile, tarRec);
         }
     }
 
@@ -206,7 +189,7 @@ public class UpSclOp extends Operator {
         return targetBand;
     }
 
-    private void upscaleTileBilinear(Tile srcTile, Tile validTile, Tile tarTile, Rectangle tarRec, ProgressMonitor pm) {
+    private void upscaleTileBilinear(Tile srcTile, Tile validTile, Tile tarTile, Rectangle tarRec) {
 
         final int tarX = tarRec.x;
         final int tarY = tarRec.y;
@@ -220,7 +203,7 @@ public class UpSclOp extends Operator {
             if (iSrcY >= srcTile.getMaxY()) iSrcY = srcTile.getMaxY() - 1;
             float yFac = (float) (iTarY - offset) / scale - iSrcY;
             for (int iTarX = tarX; iTarX < tarX + tarWidth; iTarX++) {
-                checkForCancellation(pm);
+                checkForCancellation();
                 int iSrcX = (iTarX - offset) / scale;
                 if (iSrcX >= srcTile.getMaxX()) iSrcX = srcTile.getMaxX() - 1;
                 float xFrac = (float) (iTarX - offset) / scale - iSrcX;
@@ -242,7 +225,7 @@ public class UpSclOp extends Operator {
         }
     }
 
-    private void upscaleFlagCopy(Tile srcTile, Tile tarTile, Rectangle tarRec, ProgressMonitor pm) {
+    private void upscaleFlagCopy(Tile srcTile, Tile tarTile, Rectangle tarRec) {
 
         final int tarX = tarRec.x;
         final int tarY = tarRec.y;
@@ -254,7 +237,7 @@ public class UpSclOp extends Operator {
             int iSrcY = (iTarY) / scale;
             if (iSrcY >= srcTile.getMaxY()) iSrcY = srcTile.getMaxY() - 1;
             for (int iTarX = tarX; iTarX < tarX + tarWidth; iTarX++) {
-                checkForCancellation(pm);
+                checkForCancellation();
                 // int iSrcX = (iTarX - offset) / scale;
                 int iSrcX = (iTarX) / scale;
                 if (iSrcX >= srcTile.getMaxX()) iSrcX = srcTile.getMaxX() - 1;

@@ -6,9 +6,7 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.globalbedo.sdr.lutUtils.AerosolLookupTable;
 import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
-import org.esa.beam.globalbedo.sdr.lutUtils.SdrDiffuseFrac;
 import org.esa.beam.globalbedo.sdr.util.math.Function;
 import org.esa.beam.globalbedo.sdr.util.math.MvFunction;
 import org.esa.beam.globalbedo.sdr.util.math.Powell;
@@ -18,18 +16,18 @@ import org.esa.beam.util.Guardian;
  *
  * @author akheckel
  */
-public class BrentFitFunction implements UnivRetrievalFunction {
+class BrentFitFunction implements Function {
 
     public static final int ANGULAR_MODEL = 1;
     public static final int SPECTRAL_MODEL = 2;
     public static final int SYNERGY_MODEL = 3;
 
+    private static final float PENALTY = 1000f;
+    private static final float LLIMIT = 5e-6f;
 
     private final int model;
     private final InputPixelData[] inPixField;
-    private final AerosolLookupTable lut;
-    private final float llimit;
-    private final float penalty;
+    private final MomoLut lut;
     private final double[] specWeights;
     private final double[] specSoil;
     private final double[] specVeg;
@@ -39,8 +37,6 @@ public class BrentFitFunction implements UnivRetrievalFunction {
         this.model = modelType;
         this.inPixField = inPixField;
         this.lut = lut;
-        this.llimit = 5e-6f;
-        this.penalty = 1000f;
         this.specWeights = specWeights;
         this.specSoil = null;
         this.specVeg = null;
@@ -50,8 +46,6 @@ public class BrentFitFunction implements UnivRetrievalFunction {
         this.model = modelType;
         this.inPixField = inPixField;
         this.lut = lut;
-        this.llimit = 5e-6f;
-        this.penalty = 1000f;
         this.specWeights = specWeights;
         this.specSoil = specSoil;
         this.specVeg = specVeg;
@@ -66,31 +60,15 @@ public class BrentFitFunction implements UnivRetrievalFunction {
         return fmin;
     }
 
-    @Override
-    public float[] getModelReflec(float aot) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] getSurfReflec(float aot) {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
-    @Override
-    public double[] getpAtMin() {
-        throw new UnsupportedOperationException("Not supported yet.");
-    }
-
     public synchronized double getMaxAOT() {
-        if (lut instanceof MomoLut){
-            int min = 0;
-            for (int i=0; i<inPixField.length; i++)
-                if (inPixField[i].getToaReflec()[0] < inPixField[min].getToaReflec()[0]) min=i;
-            return ((MomoLut) lut).getMaxAOT(inPixField[min]);
+        int min = 0;
+        for (int i = 0; i < inPixField.length; i++) {
+            if (inPixField[i].getToaReflec()[0] < inPixField[min].getToaReflec()[0]) {
+                min = i;
+            }
         }
-        return 2.0;
+        return lut.getMaxAOT(inPixField[min]);
     }
-
 
     //private methods
 
@@ -105,17 +83,16 @@ public class BrentFitFunction implements UnivRetrievalFunction {
             MvFunction surfModel = null;
             switch (model){
                 case 1:
-                    surfModel = new emodAng(inPixData.getDiffuseFrac(), inPixData.getSurfReflec(), specWeights);
+                    surfModel = new EmodAng(inPixData.getDiffuseFrac(), inPixData.getSurfReflec(), specWeights);
                     break;
                 case 2:
-                    surfModel = new emodSpec(specSoil, specVeg, inPixData.getSurfReflec()[0], specWeights);
+                    surfModel = new EmodSpec(specSoil, specVeg, inPixData.getSurfReflec()[0], specWeights);
                     break;
                 case 3:
                 default: throw new OperatorException("invalid surface reflectance model");
             }
 
-            Powell powell = new Powell(p, xi, ftol, surfModel);
-            fmin = powell.getFmin();
+            fmin = Powell.fmin(p, xi, ftol, surfModel);
         }
         else {
             fmin += 1e-8;
@@ -132,12 +109,12 @@ public class BrentFitFunction implements UnivRetrievalFunction {
      * @param sdr
      * @return
      */
-    private double isSdrNegativ(double[][] sdr) {
+    private static double isSdrNegativ(double[][] sdr) {
         double fmin = 0;
         for (int iView = 0; iView < sdr.length; iView++) {
             for (int iWvl = 0; iWvl < sdr[0].length; iWvl++) {
-                if (sdr[0][iWvl] < llimit) {
-                    fmin += (sdr[iView][iWvl] - llimit) * (sdr[iView][iWvl] - llimit) * penalty;
+                if (sdr[0][iWvl] < LLIMIT) {
+                    fmin += (sdr[iView][iWvl] - LLIMIT) * (sdr[iView][iWvl] - LLIMIT) * PENALTY;
                 }
             }
         }
@@ -150,22 +127,17 @@ public class BrentFitFunction implements UnivRetrievalFunction {
      * @param model
      * @return p - start vector for Powell
      */
-    private double[] initStartVector(int model) {
-        double[] p = null;
-        switch (model){
+    private static double[] initStartVector(int model) {
+        switch (model) {
             case ANGULAR_MODEL:
-                p = new double[]{0.1f, 0.1f, 0.1f, 0.1f, 0.5f, 0.3f};
-                break;
+                return new double[]{0.1f, 0.1f, 0.1f, 0.1f, 0.5f, 0.3f};
             case SPECTRAL_MODEL:
-                p = new double[]{0.9, 0.1};
-                break;
+                return new double[]{0.9, 0.1};
             case SYNERGY_MODEL:
             default:
                 throw new OperatorException("Surface Model not implemented");
         }
-        return p;
     }
-
 
     /**
      * defining unit matrix as base of the parameter space
@@ -173,10 +145,10 @@ public class BrentFitFunction implements UnivRetrievalFunction {
      * @param length of parameter vector <b>p</b>
      * @return a unit matrix <b>xi</b> as orthonormal basis
      */
-    private double[][] initParameterBasis(int length) {
-            double xi[][] = new double[length][length];
-            for (int i = 0; i < length; i++) xi[i][i] = 1.0;
-            return xi;
+    private static double[][] initParameterBasis(int length) {
+        double xi[][] = new double[length][length];
+        for (int i = 0; i < length; i++) xi[i][i] = 1.0;
+        return xi;
     }
 
 }

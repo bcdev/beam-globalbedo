@@ -13,37 +13,23 @@ import org.esa.beam.globalbedo.sdr.util.math.MvFunction;
  *
  *
  */
-public class emodAng implements MvFunction {
+class EmodAng implements MvFunction {
 
     private final double[][] diffuseFraction;
     private final double[][] surfReflec;
     private final double[] specWeights;
     private final int nSpecChannels;
 
-    public emodAng(double[][] diffFrac, double[][] surfReflec, double[] specWeights) {
+    public EmodAng(double[][] diffFrac, double[][] surfReflec, double[] specWeights) {
         this.diffuseFraction = diffFrac;
         this.surfReflec = surfReflec;
         this.specWeights = specWeights;
         this.nSpecChannels = surfReflec[0].length;
     }
 
-    public emodAng(float[][] diffFrac, float[][] surfReflec, double[] specWeights) {
-        this.surfReflec = new double[surfReflec.length][surfReflec[0].length];
-        this.diffuseFraction = new double[diffFrac.length][diffFrac[0].length];
-        for (int i=0; i<surfReflec.length; i++){
-            for (int j=0; j<surfReflec[0].length; j++){
-                this.surfReflec[i][j] = surfReflec[i][j];
-                this.diffuseFraction[i][j] = diffFrac[i][j];
-            }
-        }
-        this.specWeights = specWeights;
-        this.nSpecChannels = surfReflec[0].length;
-    }
-
     @Override
     public double f(double[] p) {
-        double[][] mval = new double[2][nSpecChannels];
-        double resid = getModelSpec(mval, p);
+        double resid = getModelSpec(p);
 
         // constraints for fit parameter p
         // Will Greys constraints from aatsr_aardvarc_4d
@@ -56,11 +42,7 @@ public class emodAng implements MvFunction {
         return(resid);
     }
 
-    @Override
-    public void g(double[] x, double[] g) {
-    }
-
-    public double getModelSpec(double[][] mval, double[] p){
+    private double getModelSpec(double[] p){
         double resid = 0.0;
         //double DF = 1.0f;
         double DF = 0.3f;
@@ -75,9 +57,8 @@ public class emodAng implements MvFunction {
                 dif = (DF * diffuseFraction[iview][iwvl]
                         + g * (1.0 - DF * diffuseFraction[iview][iwvl])) * gamma * p[iwvl] / (1.0 - g);
                 // mval: rho_spec_ang in ATBD (p. 23) (model function)
-                mval[iview][iwvl] = (dir + dif);
                 // difference to measurement:
-                k   = surfReflec[iview][iwvl] - mval[iview][iwvl];
+                k   = surfReflec[iview][iwvl] - (dir + dif);
                 // residual:
                 resid = resid + specWeights[iwvl] * k * k;
             }

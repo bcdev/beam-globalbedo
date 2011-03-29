@@ -6,8 +6,29 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.datamodel.VirtualBand;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.Tile;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.util.Guardian;
+import org.esa.beam.util.math.RsMathUtils;
+
+import javax.media.jai.BorderExtender;
 import java.awt.Rectangle;
-import java.awt.image.DataBuffer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -18,36 +39,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.media.jai.BorderExtender;
-import org.esa.beam.examples.data_export.GeoCodingEx;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Mask;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ROIDefinition;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.Stx;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
-import org.esa.beam.framework.datamodel.TiePointGrid;
-import org.esa.beam.framework.datamodel.VirtualBand;
-import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.framework.gpf.OperatorSpi;
-import org.esa.beam.framework.gpf.Tile;
-import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.globalbedo.sdr.lutUtils.Aardvarc4DLut;
-import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.util.BitSetter;
-import org.esa.beam.util.Guardian;
-import org.esa.beam.util.math.RsMathUtils;
 
 /**
  * Generates currently 2 bands: aot and aot_err on lower spatial resolution
@@ -121,8 +112,6 @@ public class AerosolOp2 extends Operator {
     private double[] specWeights;
     private MomoLut momo;
     private Band validBand;
-    private Aardvarc4DLut aardvarcLut;
-    private boolean useAardvarcLut = false;
     private BorderExtender borderExt;
     private Rectangle pixelWindow;
 
@@ -156,15 +145,7 @@ public class AerosolOp2 extends Operator {
         specWeights = instrC.getSpectralFitWeights(instrument);
         specWvl = getSpectralWvl(specBandNames);
         nSpecWvl = specWvl[0].length;
-/*
-        if (instrument.equals("MERIS")) {
-            readSurfaceSpectra("SYNSURFREFLSPEC.ASC");
-        }
-        else {
- *
- */
-            readSurfaceSpectra(SurfaceSpecName);
-//        }
+        readSurfaceSpectra(SurfaceSpecName);
 
         if (!sourceProduct.containsRasterDataNode(ozoneName)){
             createConstOzoneBand(0.35f);
@@ -172,7 +153,6 @@ public class AerosolOp2 extends Operator {
         if (!sourceProduct.containsBand(ndviName)){
             createNdviBand();
         }
-        //ndviTheshold = 0.1f;
 
         readLookupTable();
 
@@ -215,9 +195,6 @@ public class AerosolOp2 extends Operator {
         pm.done();
     }
 
-
-
-    
     private void processSuperPixel(Map<String, Tile> sourceTiles, Map<String, Double> sourceNoDataValues, int iX, int iY, Map<Band, Tile> targetTiles) {
         // read pixel data and init brent fit
         InputPixelData[] inPixField = null;
@@ -256,10 +233,6 @@ public class AerosolOp2 extends Operator {
         RetrievalResults result = pR.runRetrieval(maxAOT);
         return result;
     }
-
-
-
-
 
     private InputPixelData createInPixelData(double[] tileValues) {
         PixelGeometry geomNadir = null;
@@ -303,11 +276,11 @@ public class AerosolOp2 extends Operator {
     }
 
     private void createTargetProductBands() {
-        Band targetBand = GaHelper.getInstance().createTargetBand(AotConsts.aot, tarRasterWidth, tarRasterHeight);
+        Band targetBand = GaHelper.createTargetBand(AotConsts.aot, tarRasterWidth, tarRasterHeight);
         //targetBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
         targetProduct.addBand(targetBand);
 
-        targetBand = GaHelper.getInstance().createTargetBand(AotConsts.aotErr, tarRasterWidth, tarRasterHeight);
+        targetBand = GaHelper.createTargetBand(AotConsts.aotErr, tarRasterWidth, tarRasterHeight);
         targetBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
         targetProduct.addBand(targetBand);
 
@@ -353,7 +326,7 @@ public class AerosolOp2 extends Operator {
         Map<String, Tile> tileMap = new HashMap<String, Tile>(bandNames.length);
         for (String name : bandNames) {
             RasterDataNode b = (name.equals(validName)) ? validBand : sourceProduct.getRasterDataNode(name);
-            tileMap.put(name, getSourceTile(b, srcRec, borderExt, ProgressMonitor.NULL));
+            tileMap.put(name, getSourceTile(b, srcRec, borderExt));
         }
         return tileMap;
     }
@@ -568,11 +541,6 @@ public class AerosolOp2 extends Operator {
         String lutName = InstrumentConsts.getInstance().getLutName(instrument);
         int nLutBands = InstrumentConsts.getInstance().getnLutBands(instrument);
         momo = new MomoLut(lutName, nLutBands);
-        if (useAardvarcLut){
-            Guardian.assertEquals("instrument", instrument, "AATSR");
-            lutName = "e:/projects/Synergy/wgrey/AATSR/src/aardvarc/aardvarc_v1/LUT6S/LUT6s_1_4D";
-            aardvarcLut = new Aardvarc4DLut(lutName);
-        }
     }
 
     private float[][] getSpectralWvl(String[] bandNames) {
@@ -666,22 +634,13 @@ public class AerosolOp2 extends Operator {
      * @return valid
      */
     private boolean containsTileValidData(Rectangle srcRec) {
-        Tile validTile = getSourceTile(validBand, srcRec, ProgressMonitor.NULL);
+        Tile validTile = getSourceTile(validBand, srcRec);
         boolean valid = false;
         for (Tile.Pos pos: validTile){
             valid = valid || validTile.getSampleBoolean(pos.x, pos.y);
             if (valid) break;
         }
         return valid;
-    }
-
-    private void printInData(InputPixelData ipd) {
-        for (int i=0;i<15;i++) System.err.printf("%ff, ", ipd.getSpecWvl()[i]);
-        System.err.println();
-        for (int i=0;i<15;i++) System.err.printf("%ff, ",ipd.getToaReflec()[i]);
-        System.err.println();
-        System.err.printf("%ff %ff %ff",ipd.getGeom().sza, ipd.getGeom().vza, ipd.getGeom().razi);
-        System.err.println();
     }
 
     /**

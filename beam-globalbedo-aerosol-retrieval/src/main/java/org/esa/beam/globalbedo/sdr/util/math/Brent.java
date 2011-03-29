@@ -9,46 +9,24 @@ package org.esa.beam.globalbedo.sdr.util.math;
  */
 public class Brent {
 
-    private final static int ITMAX = 100;
-    private final static double CGOLD = 0.3819660;
-    private final static double ZEPS = 1.0e-10;
-    private double xmin;
-    private double fx;
+    private static final int ITMAX = 100;
+    private static final double CGOLD = 0.3819660;
+    private static final double ZEPS = 1.0e-10;
 
     /**
-     *  put your documentation comment here
-     */
-    public Brent() {
-    }
-
-    /**
-     *  put your documentation comment here
-     *
-     *@param  ax                         Description of Parameter
-     *@param  bx                         Description of Parameter
-     *@param  cx                         Description of Parameter
-     *@param  fun                        Description of Parameter
-     *@param  tol                        Description of Parameter
-     *@exception  IllegalStateException  Description of Exception
-     */
-    public Brent(double ax, double bx, double cx, Function fun, double tol) throws IllegalStateException {
-        brent(ax, bx, cx, fun, tol);
-    }
-
-    /**
-     *  Given a function f and a bracket triplet of abscissas, ax, bx, cx, this method
+     * Given a function f and a bracket triplet of abscissas, ax, bx, cx, this method
      * isolates the minimum (f(bx) < f(ax) and f(bx) < f(cx)) to a fractional precision of about tol.
-     * 
      *
-     *@param  ax                         left bracket
-     *@param  bx                         inner value
-     *@param  cx                         right bracket
-     *@param  fun                        the function
-     *@param  tol                        tolerance
-     *@exception  IllegalStateException  Description of Exception
+     * @param ax  left bracket
+     * @param bx  inner value
+     * @param cx  right bracket
+     * @param fun the function
+     * @param tol tolerance
+     * @return An array containing xmin and fx
+     *
+     * @throws IllegalStateException Description of Exception
      */
-    public synchronized void brent(double ax, double bx, double cx, Function fun, double tol) throws IllegalStateException {
-        xmin = Double.NaN;
+    public static double[] brent(double ax, double bx, double cx, Function fun, double tol) throws IllegalStateException {
         double e = 0.0;
         double d = 0.0;
         double a = (ax < cx ? ax : cx);
@@ -58,14 +36,13 @@ public class Brent {
         double v = bx;
         double fw = fun.f(x);
         double fv = fun.f(x);
-        fx = fun.f(x);
+        double fx = fun.f(x);
         for (int iter = 0; iter < ITMAX; iter++) {
             double xm = 0.5 * (a + b);
             double tol1 = tol * Math.abs(x) + ZEPS;
             double tol2 = 2.0 * tol1;
             if (Math.abs(x - xm) <= (tol2 - 0.5 * (b - a))) {
-                xmin = x;
-                return;
+                return new double[]{x, fx};
             }
             if (Math.abs(e) > tol1) {
                 double r = (x - w) * (fx - fv);
@@ -123,15 +100,6 @@ public class Brent {
                 }
             }
         }
-        xmin = x;
         throw new IllegalStateException("Too many iterations in brent");
-    }
-
-    public synchronized double getXmin() {
-        return xmin;
-    }
-
-    public synchronized double getFx() {
-        return fx;
     }
 }

@@ -6,14 +6,8 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import java.awt.Rectangle;
-import java.util.Map;
-import javax.media.jai.BorderExtender;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -24,6 +18,10 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
+
+import javax.media.jai.BorderExtender;
+import java.awt.Rectangle;
+import java.util.Map;
 
 /**
  *
@@ -38,10 +36,12 @@ public class GapFillingOp extends Operator {
 
     @SourceProduct
     private Product aotProduct;
-    private int f_interp;
-    private int f_clim;
+
     @TargetProduct
     private Product targetProduct;
+
+    private int f_interp;
+    private int f_clim;
     private int box;
     private int off;
     private int rasterHeight;
@@ -67,8 +67,8 @@ public class GapFillingOp extends Operator {
         aotFlagCoding.addFlag("aot_climatology", BitSetter.setFlag(0, f_clim), "aot from climatology only");
         aotFlagCoding.addFlag("aot_interp", BitSetter.setFlag(0, f_interp), "aot spatially interpolated");
         targetProduct.getFlagCodingGroup().add(aotFlagCoding);
-        GaHelper.getInstance().createFlagMasks(targetProduct);
-        Band targetBand = GaHelper.getInstance().createTargetBand(AotConsts.aotFlags, rasterWidth, rasterHeight);
+        GaHelper.createFlagMasks(targetProduct);
+        Band targetBand = GaHelper.createTargetBand(AotConsts.aotFlags, rasterWidth, rasterHeight);
         targetBand.setSampleCoding(aotFlagCoding);
         targetProduct.addBand(targetBand);
 
@@ -82,16 +82,13 @@ public class GapFillingOp extends Operator {
         Rectangle srcRec = new Rectangle(tarRec.x-off, tarRec.y-off, tarRec.width+box, tarRec.height+box);
         Tile latTile = getSourceTile(aotProduct.getBand("latitude"),
                                      srcRec,
-                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO),
-                                     ProgressMonitor.NULL);
+                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO));
         Tile aotTile = getSourceTile(aotProduct.getBand(AotConsts.aot.name),
                                      srcRec,
-                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO),
-                                     ProgressMonitor.NULL);
+                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO));
         Tile aotErrTile = getSourceTile(aotProduct.getBand(AotConsts.aotErr.name),
                                      srcRec,
-                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO),
-                                     ProgressMonitor.NULL);
+                                     BorderExtender.createInstance(BorderExtender.BORDER_ZERO));
         Tile tarAotTile = targetTiles.get(targetProduct.getBand(AotConsts.aot.name));
         Tile tarAotErrTile = targetTiles.get(targetProduct.getBand(AotConsts.aotErr.name));
         Tile tarAotFlagsTile = targetTiles.get(targetProduct.getBand(AotConsts.aotFlags.name));

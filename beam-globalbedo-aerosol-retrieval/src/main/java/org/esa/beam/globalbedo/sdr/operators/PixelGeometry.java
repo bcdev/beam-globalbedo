@@ -14,12 +14,6 @@ public class PixelGeometry {
     public final float vza;
     public final float razi;
 
-    public PixelGeometry(float sza, float saa, float vza, float vaa) {
-        this.sza = sza;
-        this.vza = vza;
-        this.razi = getRelativeAzi(saa, vaa);
-    }
-
     public PixelGeometry(double sza, double saa, double vza, double vaa) {
         this.sza = (float) sza;
         this.vza = (float) vza;

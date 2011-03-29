@@ -11,7 +11,7 @@ import org.esa.beam.framework.datamodel.ProductData;
  *
  * @author akheckel
  */
-public enum AotConsts {
+enum AotConsts {
     aot("aot", "aerosol optical thickness", "dl", ProductData.TYPE_FLOAT32, -1, true, 1, 0),
     aotErr("aot_err", "aot uncertainty", "dl", ProductData.TYPE_FLOAT32, -1, true, 1, 0),
     aotFlags("aot_flags", "aerosol retrieval qa flags", "dl", ProductData.TYPE_UINT8, 0, false, 1, 0);

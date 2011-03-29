@@ -13,7 +13,7 @@ import java.util.Iterator;
  *
  * @author akheckel
  */
-public class MyMaskColor implements Iterable<Color>, Iterator<Color>{
+class MyMaskColor implements Iterable<Color>, Iterator<Color>{
     ArrayList<Color> cl = new ArrayList<Color>();
     private int index = 0;
 

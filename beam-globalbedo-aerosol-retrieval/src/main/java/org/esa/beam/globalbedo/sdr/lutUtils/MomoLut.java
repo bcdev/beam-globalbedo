@@ -41,7 +41,7 @@ import org.esa.beam.util.math.VectorLookupTable;
  *
  * @author akheckel
  */
-public class MomoLut implements AerosolLookupTable{
+public class MomoLut {
 
     private final int nWvl;
     private final int nParameter;
@@ -127,7 +127,6 @@ public class MomoLut implements AerosolLookupTable{
     }
 
     // public methods
-    @Override
     public synchronized void getSdrAndDiffuseFrac(InputPixelData inPix, double tau) {
         Guardian.assertEquals("InputPixelData.nSpecWvl", inPix.nSpecWvl, nWvl);
         Guardian.assertNotNull("InputPixelData.diffuseFrac[][]", inPix.diffuseFrac);
@@ -155,50 +154,6 @@ public class MomoLut implements AerosolLookupTable{
         }
     }
 
-    public double[][][] getXaXbXc(InputPixelData inPix, double tau) {
-        double[][][] xaXbXc = new double[3][2][4];
-        Guardian.assertEquals("InputPixelData.nSpecWvl", inPix.nSpecWvl, nWvl);
-        Guardian.assertNotNull("InputPixelData.diffuseFrac[][]", inPix.diffuseFrac);
-        Guardian.assertNotNull("InputPixelData.surfReflec[][]", inPix.surfReflec);
-        PixelGeometry geom;
-        for (int iView=0; iView<2; iView++){
-            geom = (iView == 0)? inPix.geom : inPix.geomFward;
-            //final double rad2rfl = Math.PI / Math.cos(Math.toRadians(geom.sza));
-            final float geomAMF = (float) ((1 / Math.cos(Math.toRadians(geom.sza))
-                                            + 1 / Math.cos(Math.toRadians(geom.vza))));
-            final double[] gasT = getGasTransmission(geomAMF, (float)inPix.wvCol, (float)(inPix.o3du/1000));
-            double[][] lutValues = sdrLut.getValues(inPix.surfPressure, geom.vza, geom.sza, geom.razi, tau);
-            for (int iWvl=0; iWvl<inPix.nSpecWvl; iWvl++){
-                double rhoPath = lutValues[iWvl][0] * Math.PI / Math.cos(Math.toRadians(geom.sza));
-                double tupTdown = lutValues[iWvl][1] / Math.cos(Math.toRadians(geom.sza));
-                double spherAlb = lutValues[iWvl][2];
-
-                double xa = 1/tupTdown/gasT[iWvl];
-                double xb = rhoPath/tupTdown;
-                double xc = spherAlb;
-
-                xaXbXc[0][iView][iWvl] = xa;
-                xaXbXc[1][iView][iWvl] = xb;
-                xaXbXc[2][iView][iWvl] = xc;
-            }
-        }
-        return xaXbXc;
-    }
-
-    public double[][] getAtmPar(InputPixelData inPix, double tau){
-        PixelGeometry geom = inPix.geomFward;
-        System.err.printf("reading values for:\n");
-        System.err.printf("p: %f, VZA: %f, SZA: %f, PHI: %f, AOT: %f\n",inPix.surfPressure, geom.vza, geom.sza, geom.razi, tau);
-        double[][] lutVals = this.sdrLut.getValues(inPix.surfPressure, geom.vza, geom.sza, geom.razi, tau);
-        double[][] atmP = new double[4][4];
-        for (int j=0; j<4; j++){
-            atmP[0][j] = lutVals[j][0] * Math.PI / Math.cos(Math.toRadians(geom.sza));
-            atmP[1][j] = lutVals[j][1] / Math.cos(Math.toRadians(geom.sza));
-            atmP[2][j] = lutVals[j][2];
-            atmP[3][j] = 1.0 - lutVals[j][3];
-        }
-        return atmP;
-    }
 
     public boolean isInsideLut(InputPixelData ipd){
         Map<DimSelector, LutLimits> lutLimits = getLutLimits();
@@ -327,45 +282,6 @@ public class MomoLut implements AerosolLookupTable{
         return val;
     }
 
-    private float[] readO3corr() {
-        final InputStream inputStream = MomoLut.class.getResourceAsStream("o3Correction.asc");
-        BufferedReader reader = null;
-        reader = new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-        float[] o3cwvl = new float[15 + 4 + 4];
-        float[] o3c = new float[15 + 4 + 4];
-        try {
-            int i = 0;
-            while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (!(line.isEmpty() || line.startsWith("#") || line.startsWith("*"))) {
-                    String[] stmp = line.split("[ \t]+");
-                    o3cwvl[i] = Float.valueOf(stmp[1]);
-                    o3c[i] = Float.valueOf(stmp[2]);
-                    i++;
-                }
-            }
-        } catch (IOException ex) {
-            Logger.getLogger(MomoLut.class.getName()).log(Level.SEVERE, null, ex);
-            throw new OperatorException(ex.getMessage(), ex.getCause());
-        }
-
-        return getO3CorrOfBands(o3c, o3cwvl, wvl);
-    }
-
-    private float[] getO3CorrOfBands(float[] o3c, float[] o3cWvl, float[] lutWvl) {
-        int jmin = 0;
-        float[] lutO3c = new float[lutWvl.length];
-        for (int i = 0; i < lutWvl.length; i++) {
-            for (int j = 0; j < o3cWvl.length; j++) {
-                if (Math.abs(o3cWvl[j] - lutWvl[i]) < Math.abs(o3cWvl[jmin] - lutWvl[i])) {
-                    jmin = j;
-                }
-            }
-            lutO3c[i] = o3c[jmin];
-        }
-        return lutO3c;
-    }
 
     private VectorLookupTable readGasTransTable(String gasFileName) {
         ByteBuffer bb = readFileToByteBuffer(gasFileName);
@@ -384,59 +300,6 @@ public class MomoLut implements AerosolLookupTable{
         for (int i=0; i<nAng; i++) geomAmf[i] = (float) (2.0 / Math.cos(Math.toRadians(ang[i])));
         //return new LookupTable(tgLut, new float[][]{geomAmf, cwv, ozo, wvl});
         return new VectorLookupTable(nWvl, tgLut, geomAmf, cwv, ozo);
-    }
-
-    private LookupTable readSdrKxLut(String sdrKxName) {
-        ByteBuffer bb = readFileToByteBuffer(sdrKxName);
-        int nDims = 7;     // number of dimensions
-        int[] dimLen = new int[nDims];
-        float[][] dims = new float[nDims][0];
-        // dim arrays are stored with the fastest varying first
-        // thus invert the order to store dims in LookupTable class
-        dimLen[nDims-1] = 2;
-        dims[nDims-1] = new float[]{0,1};
-        int totalSize = dimLen[nDims-1]; // size of the LUT array
-        for (int iDim=nDims-2; iDim>0; iDim--){
-            dimLen[iDim] = bb.getInt();
-            totalSize *= dimLen[iDim];
-            dims[iDim] = new float[dimLen[iDim]];
-            for(int j=0; j<dimLen[iDim]; j++) dims[iDim][j]=bb.getFloat();
-        }
-        dimLen[0] = nWvl;
-        totalSize *= dimLen[0];
-        dims[0] = wvl;
-
-        float[] kxValues = new float[totalSize];
-        bb.asFloatBuffer().get(kxValues);
-        return new LookupTable(kxValues, dims);
-    }
-
-    private LookupTable readGasTransKxLut(String gasTransKxName) {
-        ByteBuffer bb = readFileToByteBuffer(gasTransKxName);
-        int nDims = 6;
-        int[] dimLen = new int[nDims];
-        float[][] dims = new float[nDims][0];
-        // dim arrays are stored with the fastest varying first
-        // thus invert the order to store dims in LookupTable class
-        dimLen[nDims-1] = 2;
-        dims[nDims-1] = new float[]{0,1};
-        int totalSize = dimLen[nDims-1]; // size of the LUT array
-        dimLen[nDims-2] = 2;
-        dims[nDims-2] = new float[]{0,1};
-        totalSize *= dimLen[nDims-2];
-        for (int iDim=nDims-3; iDim>0; iDim--){
-            dimLen[iDim] = bb.getInt();
-            totalSize *= dimLen[iDim];
-            dims[iDim] = new float[dimLen[iDim]];
-            for(int j=0; j<dimLen[iDim]; j++) dims[iDim][j]=bb.getFloat();
-        }
-        dimLen[0] = nWvl;
-        totalSize *= dimLen[0];
-        dims[0] = wvl;
-        
-        float[] kxValues = new float[totalSize];
-        bb.asFloatBuffer().get(kxValues);
-        return new LookupTable(kxValues, dims);
     }
 
     public enum DimSelector {

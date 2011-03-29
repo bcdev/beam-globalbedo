@@ -17,16 +17,9 @@ import org.esa.beam.util.Guardian;
  *
  * @author akheckel
  */
-public class GaHelper {
-    private static GaHelper instance;
-    private GaHelper() {}
+class GaHelper {
 
-    public synchronized static GaHelper getInstance() {
-        if (instance == null) instance = new GaHelper();
-        return instance;
-    }
-
-    public void createFlagMasks(Product targetProduct) {
+    static void createFlagMasks(Product targetProduct) {
         Guardian.assertNotNull("targetProduct", targetProduct);
         int w = targetProduct.getSceneRasterWidth();
         int h = targetProduct.getSceneRasterHeight();
@@ -45,18 +38,7 @@ public class GaHelper {
         }
     }
 
-    public void createFlagMask(FlagCoding fc, int rasterWidth, int rasterHeight) {
-        Guardian.assertNotNull("FlagCoding", fc);
-
-        MyMaskColor mColor = new MyMaskColor();
-        for (int i=0; i<fc.getNumAttributes(); i++){
-            MetadataAttribute f = fc.getAttributeAt(i);
-            String expr = fc.getName() + "." + f.getName();
-            Mask m = Mask.BandMathsType.create(f.getName(), f.getDescription(), rasterWidth, rasterHeight, expr, mColor.next(), 0.5);
-        }
-    }
-
-    public Band createTargetBand(AotConsts bandFeat, int rasterWidth, int rasterHeight) {
+    static Band createTargetBand(AotConsts bandFeat, int rasterWidth, int rasterHeight) {
         Band targetBand = new Band(bandFeat.name,
                                    bandFeat.type,
                                    rasterWidth,

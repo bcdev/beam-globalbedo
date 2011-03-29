@@ -9,61 +9,38 @@ package org.esa.beam.globalbedo.sdr.util.math;
  */
 public class Powell {
 
-    private double fret;
-    private double[] pret;
-    private final int ITMAX = 1000;
+    private static final int ITMAX = 1000;
 
     /**
-     *  Constructor for the powell object
+     * This method provides a minimisation of a function of n variables
      *
-     */
-    public Powell() {
-    }
-
-    /**
-     *  Constructor for the powell object
+     * @param p    array of variables (has length n)
+     * @param xi   initial matrix
+     * @param ftol fractional tolerance in function value
+     * @param func function to be minimised
+     * @return the minimum
      *
-     *@param  p     Description of Parameter
-     *@param  xi    Description of Parameter
-     *@param  ftol  Description of Parameter
-     *@param  func  Description of Parameter
+     * @throws IllegalMonitorStateException Description of Exception
+     * @throws IllegalArgumentException     Description of Exception
      */
-    public Powell(double[] p, double[][] xi, double ftol, MvFunction func) {
-        powell(p, xi, ftol, func);
-    }
-
-    /**
-     *  This method provides a minimisation of a function of n variables
-     *
-     *@param  p                                 array of variables (has length n)
-     *@param  xi                                initial matrix
-     *@param  ftol                              fractional tolerance in function value
-     *@param  func                              function to be minimised
-     *@exception  IllegalMonitorStateException  Description of Exception
-     *@exception  IllegalArgumentException      Description of Exception
-     */
-    public synchronized void powell(double[] p, double[][] xi, double ftol, MvFunction func)
+    public static double fmin(double[] p, double[][] xi, double ftol, MvFunction func)
             throws IllegalMonitorStateException,
             IllegalArgumentException {
 
         Linmin linmin = new Linmin();
 
-        int n = 0;
         if (p.length != xi.length || xi.length != xi[0].length) {
             throw new IllegalArgumentException("dimentions must agree");
         }
-        if (n != p.length) {
-            n = p.length;
-        }
+        final int n = p.length;
         double[] pt = new double[n];
         double[] ptt = new double[n];
         double[] xit = new double[n];
 
-        fret = func.f(p);
-        pret = p;
+        double fret = func.f(p);
 
         System.arraycopy(p, 0, pt, 0, n);
-        
+
         for (int iter = 1; true; ++iter) {
             double fp = fret;
             int ibig = 0;
@@ -75,14 +52,13 @@ public class Powell {
                 double fptt = fret;
                 linmin.linmin(p, xit, func);
                 fret = linmin.getFret();
-                pret = p;
                 if (Math.abs(fptt - fret) > del) {
                     del = Math.abs(fptt - fret);
                     ibig = i;
                 }
             }
             if (2.0 * Math.abs(fp - fret) <= ftol * (Math.abs(fp) + Math.abs(fret))) {
-                return;
+                return fret;
             }
             if (iter == ITMAX) {
                 throw new IllegalMonitorStateException("powell exceeding maximum iterations.");
@@ -99,7 +75,6 @@ public class Powell {
                 if (t < 0.0) {
                     linmin = new Linmin(p, xit, func);
                     fret = linmin.getFret();
-                    pret = p;
                     for (int j = 0; j < n; j++) {
                         xi[j][ibig] = xi[j][n - 1];
                         xi[j][n - 1] = xit[j];
@@ -107,14 +82,6 @@ public class Powell {
                 }
             }
         }
-    }
-
-    public synchronized double getFmin() {
-        return fret;
-    }
-
-    public synchronized  double[] getP() {
-        return pret;
     }
 
 }

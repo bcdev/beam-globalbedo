@@ -15,14 +15,4 @@ public interface MvFunction {
      */
     double f(double[] x);
 
-
-    /**
-     *  vector of first derivitives of f(x)
-     *
-     * @param  x - point at which function should be calculated
-     * @param  g - vector of first derivatives evaluated at x
-     * @throws   UnsupportedOperationException -
-     *
-     */
-    void g(double[] x, double[] g);
 }

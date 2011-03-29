@@ -23,7 +23,7 @@ import org.esa.beam.framework.gpf.OperatorException;
  * TODO: revise validPixel Expression: properly include range of LUTs
  * TODO: revise validPixel Expression: enable separate treatment of snow pixels
  */
-public class InstrumentConsts {
+class InstrumentConsts {
 
     private static InstrumentConsts instance;
 
@@ -271,10 +271,6 @@ public class InstrumentConsts {
         return reflecNames.get(instrument);
     }
 
-    public String[] getSupportedInstruments() {
-        return supportedInstruments;
-    }
-
     public String getValidRetrievalExpression(String instrument) {
         return validRetrievalExpr.get(instrument);
     }
@@ -293,49 +289,6 @@ public class InstrumentConsts {
 
     public String getOzoneName(String instrument) {
         return ozoneName.get(instrument);
-    }
-
-    public boolean isReflectanceBand(Band band) {
-        Product p = band.getProduct();
-        String instrument = getInstrument(p);
-        boolean isReflecBand = false;
-        for (String specBandName : getSpecBandNames(instrument)){
-            if (band.getName().equals(specBandName)){
-                isReflecBand = true;
-                break;
-            }
-        }
-        return isReflecBand;
-    }
-
-    public boolean isToaBand(Band band) {
-        Product p = band.getProduct();
-        String instrument = getInstrument(p);
-
-        boolean isToaBand = false;
-        for (String specBandName : getSpecBandNames(instrument)){
-            if (band.getName().equals(specBandName)){
-                isToaBand = true;
-                return isToaBand;
-            }
-        }
-        if (instrument.equals("VGT")){
-            for (String specBandName : getGeomBandNames(instrument)){
-                if (band.getName().equals(specBandName)){
-                    isToaBand = true;
-                    return isToaBand;
-                }
-            }
-            if (band.getName().equals("WVG") || band.getName().equals("OG")){
-                return true;
-            }
-        }
-
-        return isToaBand;
-    }
-
-    public boolean isElevationBand(Band band){
-        return band.getName().equals("elevation");
     }
 
     public String getNdviName() {

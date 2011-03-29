@@ -193,15 +193,6 @@ public class GaMasterOp  extends Operator {
         return tarP;
     }
 
-    private void copyFlagBandsWithMask(Product sourceProduct, Product targetProduct) {
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-        Mask mask;
-        for (int i=0; i<sourceProduct.getMaskGroup().getNodeCount(); i++){
-            mask = sourceProduct.getMaskGroup().get(i);
-            targetProduct.getMaskGroup().add(mask);
-        }
-    }
-
     /**
      * The SPI is used to register this operator in the graph processing framework
      * via the SPI configuration file
