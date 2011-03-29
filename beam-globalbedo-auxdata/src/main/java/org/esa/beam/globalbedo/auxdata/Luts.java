@@ -20,6 +20,7 @@ import javax.imageio.stream.ImageInputStream;
 import javax.imageio.stream.MemoryCacheImageInputStream;
 import java.io.BufferedInputStream;
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteOrder;
@@ -90,4 +91,13 @@ public class Luts {
         return inputStream;
     }
 
+    public static float[] readDimension(ImageInputStream iis) throws IOException {
+        return readDimension(iis, iis.readInt());
+    }
+
+    public static float[] readDimension(ImageInputStream iis, int len) throws IOException {
+        float[] dim = new float[len];
+        iis.readFully(dim, 0, len);
+        return dim;
+    }
 }

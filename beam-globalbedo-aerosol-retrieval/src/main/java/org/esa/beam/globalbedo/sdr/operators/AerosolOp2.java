@@ -22,11 +22,13 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.globalbedo.auxdata.Luts;
 import org.esa.beam.globalbedo.sdr.lutUtils.MomoLut;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.math.RsMathUtils;
 
+import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.BorderExtender;
 import java.awt.Rectangle;
 import java.io.BufferedReader;
@@ -154,7 +156,11 @@ public class AerosolOp2 extends Operator {
             createNdviBand();
         }
 
-        readLookupTable();
+        try {
+            readLookupTable();
+        } catch (IOException e) {
+            throw new OperatorException("Failed to read LUTs. "+ e.getMessage(), e);
+        }
 
         borderExt = BorderExtender.createInstance(BorderExtender.BORDER_COPY);
         pixelWindow = new Rectangle(0, 0, scale, scale);
@@ -537,10 +543,11 @@ public class AerosolOp2 extends Operator {
         }
     }
 
-    private void readLookupTable() {
-        String lutName = InstrumentConsts.getInstance().getLutName(instrument);
+    private void readLookupTable() throws IOException {
+        ImageInputStream aotIis = Luts.getAotLutData(instrument);
+        ImageInputStream gasIis = Luts.getCwvLutData(instrument);
         int nLutBands = InstrumentConsts.getInstance().getnLutBands(instrument);
-        momo = new MomoLut(lutName, nLutBands);
+        momo = new MomoLut(aotIis, gasIis, nLutBands);
     }
 
     private float[][] getSpectralWvl(String[] bandNames) {

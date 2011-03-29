@@ -5,16 +5,13 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Instrument specific constants
@@ -170,16 +167,9 @@ class InstrumentConsts {
     private final Map<String, String> ozoneName;
     private final Map<String, String> ndviExpression;
 
-    private final String lutLocaFile = System.getProperty("user.home")
-                    + File.separator + ".beam"
-                    + File.separator + "ga-aerosol"
-                    + File.separator + "lut.location";
-    private final String lutPattern = "%INSTRUMENT%/%INSTRUMENT%_LUT_MOMO_ContinentalI_80_SDR_noG_v2.bin";
-    private final String lutPath;
     private final String ndviName;
 
     private InstrumentConsts() {
-        lutPath = getLutPath() + "/" + lutPattern;
 
         this.supportedInstruments = new String[]{"MERIS", "VGT", "AATSR"};
 
@@ -230,8 +220,6 @@ class InstrumentConsts {
         ndviExpression.put(supportedInstruments[2], aatsrNdviExp);
     }
 
-
-
     public static InstrumentConsts getInstance() {
         if (instance == null) {
             instance = new InstrumentConsts();
@@ -240,17 +228,13 @@ class InstrumentConsts {
     }
 
     public String getInstrument(Product p) {
-        String inst = null;
-        //String[] supportedInstruments = InstrumentConsts.getInstance().getSupportedInstruments();
         for (String suppInstr : supportedInstruments) {
             String[] specBands = getSpecBandNames(suppInstr);
             if (specBands.length > 0 && p.containsBand(specBands[0])) {
-                inst = suppInstr;
-                break;
+                return suppInstr;
             }
         }
-        if (inst.equals(null)) throw new OperatorException("Product not supported.");
-        return inst;
+        throw new OperatorException("Product not supported.");
     }
 
     public double[] getSpectralFitWeights(String instrument) {
@@ -260,11 +244,6 @@ class InstrumentConsts {
 
     public String[] getGeomBandNames(String instrument) {
         return geomNames.get(instrument);
-    }
-
-    public String getLutName(String instrument) {
-
-        return lutPath.replace("%INSTRUMENT%", instrument);
     }
 
     public String[] getSpecBandNames(String instrument) {
@@ -309,29 +288,6 @@ class InstrumentConsts {
 
     public String getElevationBandName() {
         return elevationBandName;
-    }
-
-    private String getLutPath() {
-        String lutP = null;
-        BufferedReader reader = null;
-        try{
-            reader = new BufferedReader(new FileReader(lutLocaFile));
-            String line;
-            while ((line = reader.readLine())!= null) {
-                if (line.startsWith("ga.lutInstallDir")) {
-                    String[] split = line.split("=");
-                    if(split.length > 1) {
-                        lutP = split[1].trim();
-                        break;
-                    }
-                }
-            }
-        } catch (IOException ex) {
-            throw new OperatorException(ex);
-        }
-        if (lutP == null) throw new OperatorException("Lut install dir  not found");
-        if (lutP.endsWith(File.separator) || lutP.endsWith("/")) lutP = lutP.substring(0, lutP.length()-1);
-        return lutP;
     }
 
     private double[] normalize(double[] fa) {
