@@ -116,4 +116,12 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(3.0, diagFlat.get(1, 0));
         assertEquals(12.0, diagFlat.get(2, 0));
     }
+
+    public void testGetPriorProductNames() throws Exception {
+        // todo: implement, write test
+    }
+
+    public void testGetInputProductNames() throws Exception {
+        // todo: implement, write test
+    }
 }

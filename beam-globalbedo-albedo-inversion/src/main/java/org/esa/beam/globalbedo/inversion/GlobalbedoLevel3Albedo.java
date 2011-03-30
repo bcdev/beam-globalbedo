@@ -48,6 +48,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
         JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
+        String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile +
+                          "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+
 
         // STEP 2: get Daily Accumulator input files...
 
@@ -57,25 +60,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
     }
 
-    private Product[] getPriorProducts() throws IOException {
+    private Product[] getPriorProducts(String priorDir, boolean computeSnow) throws IOException {
 
-        String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile +
-                          "background/processed.p1.0.618034.p2.1.00000_java";
-
-        String[] priorFiles = (new File(priorDir)).list();
-
-        List<String> snowFilteredPriorList = new ArrayList<String>();
-        for (String s:priorFiles) {
-            if (computeSnow) {
-                if (s.endsWith("_Snow")) {
-                    snowFilteredPriorList.add(s);
-                }
-            } else {
-                if (s.endsWith("_NoSnow")) {
-                    snowFilteredPriorList.add(s);
-                }
-            }
-        }
+        List<String> snowFilteredPriorList = getPriorProductNames(priorDir, computeSnow);
 
         Product[] priorProducts = new Product[snowFilteredPriorList.size()];
 
@@ -90,10 +77,39 @@ public class GlobalbedoLevel3Albedo extends Operator {
         return priorProducts;
     }
 
+    List<String> getPriorProductNames(String priorDir, boolean computeSnow) {
+        String[] priorFiles = (new File(priorDir)).list();
+
+        List<String> snowFilteredPriorList = new ArrayList<String>();
+        for (String s : priorFiles) {
+            if (computeSnow) {
+                if (s.endsWith("_Snow")) {
+                    snowFilteredPriorList.add(s);
+                }
+            } else {
+                if (s.endsWith("_NoSnow")) {
+                    snowFilteredPriorList.add(s);
+                }
+            }
+        }
+        return snowFilteredPriorList;
+    }
+
+    List<String> getInputProductNames(String priorDir, boolean computeSnow) {
+        // todo implement
+        return null;
+    }
+
 //    private Product[] getInputProducts(int doy) throws IOException {
 //        String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 //
-//        String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
+//        String dailyAccumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles" + year +
+//                              File.separator + tile + File.separator;
+//        if (computeSnow) {
+//            dailyAccumulatorDir.concat("Snow");
+//        } else {
+//            dailyAccumulatorDir.concat("NoSnow");
+//        }
 //        String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
 //        List<String> merisBbdrFileList = AlbedoInversionUtils.getDailyBBDRFilenames(merisBbdrFiles, daystring);
 //
