@@ -143,11 +143,6 @@ public class AerosolOp2 extends Operator {
 
         auxBandNames = new String[]{surfPresName, ozoneName, validName, ndviName};
 
-        sourceNoDataValues = getSourceNoDataValues(geomBandNames);
-        sourceNoDataValues.putAll(getSourceNoDataValues(specBandNames));
-        sourceNoDataValues.putAll(getSourceNoDataValues(auxBandNames));
-
-
         specWeights = instrC.getSpectralFitWeights(instrument);
         specWvl = getSpectralWvl(specBandNames);
         nSpecWvl = specWvl[0].length;
@@ -159,6 +154,10 @@ public class AerosolOp2 extends Operator {
         if (!sourceProduct.containsBand(ndviName)){
             createNdviBand();
         }
+
+        sourceNoDataValues = getSourceNoDataValues(geomBandNames);
+        sourceNoDataValues.putAll(getSourceNoDataValues(specBandNames));
+        sourceNoDataValues.putAll(getSourceNoDataValues(auxBandNames));
 
         try {
             readLookupTable();

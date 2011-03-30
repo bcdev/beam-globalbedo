@@ -64,7 +64,7 @@ class Linmin implements Function {
         double[] axbxcx = Mnbrak.compute(ax, xx, this);
         ax = axbxcx[0];
         xx = axbxcx[1];
-        double bx = axbxcx[3];
+        double bx = axbxcx[2];
         double[] brent = Brent.brent(ax, xx, bx, this, TOL);
         double xmin = brent[0];
         fret = brent[1];
