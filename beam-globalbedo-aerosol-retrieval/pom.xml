@@ -38,7 +38,11 @@
             <artifactId>beam-globalbedo-auxdata</artifactId>
             <version>0.1-SNAPSHOT</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-meris-radiometry</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>

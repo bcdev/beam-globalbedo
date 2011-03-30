@@ -21,7 +21,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.ComputeChainOp;
-import org.esa.beam.meris.brr.Rad2ReflOp;
+import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
@@ -59,7 +59,7 @@ public class MerisPrepOp extends Operator {
         Product szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SzaSubsetOp.class), szaSubParam, sourceProduct);
 
         // convert radiance bands to reflectance
-        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(Rad2ReflOp.class), GPF.NO_PARAMS, szaSubProduct);
+        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), GPF.NO_PARAMS, szaSubProduct);
 
         // subset might have set ptype to null, thus:
         if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("MERIS Radiance product");
@@ -131,7 +131,7 @@ public class MerisPrepOp extends Operator {
                 tarBand.setSourceImage(srcBand.getSourceImage());
             }
             else if (srcName.startsWith("radiance")){
-                String reflName = "rho_toa_" + srcName.split("_")[1];
+                String reflName = "reflec_" + srcName.split("_")[1];
                 String tarName = "reflectance_" + srcName.split("_")[1];
                 tarBand = ProductUtils.copyBand(reflName, reflProduct, targetProduct);
                 tarBand.setName(tarName);
