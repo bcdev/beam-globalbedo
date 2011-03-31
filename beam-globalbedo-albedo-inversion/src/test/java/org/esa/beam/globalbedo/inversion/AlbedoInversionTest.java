@@ -11,48 +11,6 @@ import java.util.List;
  */
 public class AlbedoInversionTest extends TestCase {
 
-    public void testSomething() {
-        // todo: implement tests
-        assertTrue(true);
-    }
-
-    public void testGetDailyBBDRFiles() {
-        String[] bbdrFilenames = new String[]{
-                "Meris_20050101_080302_BBDR.dim",
-                "Meris_20050317_072032_BBDR.dim",
-                "Meris_20050317_130356_BBDR.dim",
-                "Meris_20050317_151302_BBDR.dim",
-                "Meris_20051113_182241_BBDR.dim",
-                "Meris_20051113_080302_BBDR.dim"
-        };
-
-        String day1String = "20050101";
-        List<String> day1ProductNames = AlbedoInversionUtils.getDailyBBDRFilenames(bbdrFilenames, day1String);
-        assertNotNull(day1ProductNames);
-        assertEquals(1, day1ProductNames.size());
-        assertEquals("Meris_20050101_080302_BBDR.dim", day1ProductNames.get(0));
-
-        String day2String = "20050317";
-        List<String> day2ProductNames = AlbedoInversionUtils.getDailyBBDRFilenames(bbdrFilenames, day2String);
-        assertNotNull(day2ProductNames);
-        assertEquals(3, day2ProductNames.size());
-        assertEquals("Meris_20050317_072032_BBDR.dim", day2ProductNames.get(0));
-        assertEquals("Meris_20050317_130356_BBDR.dim", day2ProductNames.get(1));
-        assertEquals("Meris_20050317_151302_BBDR.dim", day2ProductNames.get(2));
-
-        String day3String = "20051113";
-        List<String> day3ProductNames = AlbedoInversionUtils.getDailyBBDRFilenames(bbdrFilenames, day3String);
-        assertNotNull(day3ProductNames);
-        assertEquals(2, day3ProductNames.size());
-        assertEquals("Meris_20051113_182241_BBDR.dim", day3ProductNames.get(0));
-        assertEquals("Meris_20051113_080302_BBDR.dim", day3ProductNames.get(1));
-
-        String day4String = "20051231";
-        List<String> day4ProductNames = AlbedoInversionUtils.getDailyBBDRFilenames(bbdrFilenames, day4String);
-        assertNotNull(day4ProductNames);
-        assertEquals(0, day4ProductNames.size());
-    }
-
     public void testGetDateFromDoy() {
         int year = 2005;
         int doy = 129;
@@ -67,6 +25,25 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals("20040508", AlbedoInversionUtils.getDateFromDoy(year, doy));
         doy = 366;
         assertEquals("20041231", AlbedoInversionUtils.getDateFromDoy(year, doy));
+    }
+
+    public void testGetDoyFromPriorName() throws Exception {
+        String priorName = "Kernels_105_005_h18v04_backGround_NoSnow.hdr";
+        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName));
+
+        priorName = "bla.hdr";
+        try {
+            AlbedoInversionUtils.getDoyFromPriorName(priorName);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Invalid prior name bla.hdr", e.getMessage());
+        }
+
+        priorName = "Kernels_999_005_h18v04_backGround_Snow.hdr";
+        try {
+            AlbedoInversionUtils.getDoyFromPriorName(priorName);
+        } catch (IllegalArgumentException e) {
+            assertEquals("Invalid doy 999 retrieved from prior name Kernels_999_005_h18v04_backGround_Snow.hdr", e.getMessage());
+        }
     }
 
     public void testGetDiagonalMatrix() {
@@ -117,11 +94,26 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(12.0, diagFlat.get(2, 0));
     }
 
-    public void testGetPriorProductNames() throws Exception {
-        // todo: implement, write test
+    public void testGetUpperLeftCornerOfModisTiles() throws Exception {
+        String tile = "h18v04";
+        assertEquals(0.0, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
+        assertEquals(5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+
+        tile = "h19v08";
+        assertEquals(1111950.519667000044137, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
+        assertEquals(1111950.519667000044137, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+
+        tile = "h22v02";
+        assertEquals(4447802.078666999936104, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
+        assertEquals(7783653.637667000293732, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+
+        tile = "h25v06";
+        assertEquals(7783653.637667000293732, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
+        assertEquals(3335851.558999999891967, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+
+        tile = "h13v14";
+        assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
+        assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
     }
 
-    public void testGetInputProductNames() throws Exception {
-        // todo: implement, write test
-    }
 }

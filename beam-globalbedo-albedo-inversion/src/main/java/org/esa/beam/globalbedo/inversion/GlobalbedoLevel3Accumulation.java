@@ -47,7 +47,7 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = getInputProducts();
+            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
@@ -66,51 +66,6 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         setTargetProduct(accumulationProduct);
     }
 
-    private Product[] getInputProducts() throws IOException {
-        String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
-
-        String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
-        String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
-        List<String> merisBbdrFileList = AlbedoInversionUtils.getDailyBBDRFilenames(merisBbdrFiles, daystring);
-
-        String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
-        String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
-        List<String> aatsrBbdrFileList = AlbedoInversionUtils.getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
-
-        String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
-        String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
-        List<String> vgtBbdrFileList = AlbedoInversionUtils.getDailyBBDRFilenames(vgtBbdrFiles, daystring);
-
-        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
-//        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size();
-        Product[] bbdrProducts = new Product[numberOfInputProducts];
-
-        int productIndex = 0;
-        for (Iterator<String> i = merisBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = merisBbdrDir + File.separator + i.next();
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
-        for (Iterator<String> i = aatsrBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = aatsrBbdrDir + File.separator + i.next();
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
-        for (Iterator<String> i = vgtBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = vgtBbdrDir + File.separator + i.next();
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
-
-        if (productIndex == 0) {
-            throw new OperatorException("No source products found - check contents of BBDR directory!");
-        }
-
-        return bbdrProducts;
-    }
 
     public static class Spi extends OperatorSpi {
 

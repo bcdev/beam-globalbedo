@@ -18,9 +18,13 @@
     <description>Calculates Albedo for MERIs, AATSR and SPOT-VGT</description>
 
     <dependencies>
-		<dependency>
+        <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-envi-reader</artifactId>
         </dependency>
     </dependencies>
 

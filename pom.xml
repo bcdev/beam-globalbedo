@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -12,7 +13,7 @@
 
     <repositories>
         <repository>
-            <id>bc-mvn-repo-http</id>            
+            <id>bc-mvn-repo-http</id>
             <name>Public Maven Repository at Brockmann-Consult</name>
             <url>http://www.brockmann-consult.de/mvn/os</url>
             <releases>
@@ -66,16 +67,16 @@
         <module>beam-globalbedo-auxdata</module>
         <module>beam-globalbedo-aerosol-retrieval</module>
         <module>beam-globalbedo-bootstrap</module>
-		<module>beam-globalbedo-bbdr-retrieval</module>
+        <module>beam-globalbedo-bbdr-retrieval</module>
         <module>beam-globalbedo-albedo-inversion</module>
     </modules>
 
-   <properties>
+    <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<ceres.version>0.12-SNAPSHOT</ceres.version>
+        <ceres.version>0.12-SNAPSHOT</ceres.version>
         <beam.version>4.9-SNAPSHOT</beam.version>
     </properties>
-	
+
     <dependencyManagement>
         <dependencies>
 
@@ -121,6 +122,11 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
                 <version>1.4-SNAPSHOT</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-envi-reader</artifactId>
+                <version>1.1</version>
             </dependency>
 
             <!-- JUnit Libraries ############################################# -->

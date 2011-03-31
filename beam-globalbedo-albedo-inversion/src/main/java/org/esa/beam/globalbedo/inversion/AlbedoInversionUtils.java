@@ -4,6 +4,7 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.experimental.PointOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
@@ -18,26 +19,6 @@ import java.util.List;
  * @version $Revision: $ $Date:  $
  */
 public class AlbedoInversionUtils {
-
-    /**
-     * Filters from a list of BBDR file names the ones which contain a given daystring
-     *
-     * @param bbdrFilenames - the list of filenames
-     * @param daystring  - the daystring
-     * @return   List<String> - the filtered list
-     */
-    public static List<String> getDailyBBDRFilenames(String[] bbdrFilenames, String daystring) {
-        List<String> dailyBBDRFilenames = new ArrayList<String>();
-        if (bbdrFilenames != null && bbdrFilenames.length > 0 && StringUtils.isNotNullAndNotEmpty(daystring)) {
-            for (String s : bbdrFilenames) {
-                if (s.endsWith(".dim") && s.contains(daystring)) {
-                    dailyBBDRFilenames.add(s);
-                }
-            }
-        }
-
-        return dailyBBDRFilenames;
-    }
 
     /**
      * Converts a day of year to a datestring in yyyyMMdd format
@@ -112,5 +93,77 @@ public class AlbedoInversionUtils {
             diagFlat.set(i, 0, m.get(i, i));
         }
         return diagFlat;
+    }
+
+    /**
+     * Returns the upper left corner of a MODIS tile (e.g. h18v04) in (x,y)-coordinates of sinusoidal projection used
+     * in the Globalbedo project. These values represent the easting/northing parameters.
+     * // todo: apply this also in BBDR module, then easting/northing parameters will not be needed any more
+     *
+     * @param modisTile
+     * @return
+     * @throws NumberFormatException
+     */
+    public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
+        double[] upperLeftPoint = new double[2];
+
+        final int eastingIndex = Integer.parseInt(modisTile.substring(1,3)) - 18;
+        final int northingIndex = 9 - Integer.parseInt(modisTile.substring(4,6));
+
+        upperLeftPoint[0] = eastingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
+        upperLeftPoint[1] = northingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
+
+        return upperLeftPoint;
+    }
+
+    public static Product reprojectToSinusoidal(Product sourceProduct, double easting, double northing) {
+        ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameter("easting", easting);
+        repro.setParameter("northing", northing);
+
+        repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
+                                  "GEOGCS[\"WGS 84\"," +
+                                  "  DATUM[\"WGS_1984\"," +
+                                  "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+                                  "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+                                  "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+                                  "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+                                  "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+                                  "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+                                  "PROJECTION[\"Sinusoidal\"]," +
+                                  "PARAMETER[\"false_easting\",0.0]," +
+                                  "PARAMETER[\"false_northing\",0.0]," +
+                                  "PARAMETER[\"central_meridian\",0.0]," +
+                                  "PARAMETER[\"semi_major\",6371007.181]," +
+                                  "PARAMETER[\"semi_minor\",6371007.181]," +
+                                  "UNIT[\"m\",1.0]," +
+                                  "AUTHORITY[\"SR-ORG\",\"6974\"]]");
+
+        repro.setParameter("resampling", "Nearest");
+        repro.setParameter("includeTiePointGrids", false);
+        repro.setParameter("referencePixelX", 0.0);
+        repro.setParameter("referencePixelY", 0.0);
+        repro.setParameter("orientation", 0.0);
+        repro.setParameter("pixelSizeX", 926.6254330558);
+        repro.setParameter("pixelSizeY", 926.6254330558);
+        repro.setParameter("width", 1200);
+        repro.setParameter("height", 1200);
+        repro.setParameter("orthorectify", true);
+        repro.setParameter("noDataValue", 0.0);
+        repro.setSourceProduct(sourceProduct);
+        return repro.getTargetProduct();
+    }
+
+    public static int getDoyFromPriorName(String priorName) {
+        int doy;
+        if (priorName.startsWith("Kernels_")) {
+            doy = Integer.parseInt(priorName.substring(8,11));
+            if (Math.abs(doy) > 366) {
+                throw new IllegalArgumentException("Invalid doy " + doy + " retrieved from prior name " + priorName);
+            }
+            return doy;
+        } else {
+            throw new IllegalArgumentException("Invalid prior name " + priorName);
+        }
     }
 }
