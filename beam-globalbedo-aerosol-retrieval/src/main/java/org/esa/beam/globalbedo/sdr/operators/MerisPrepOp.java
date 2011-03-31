@@ -41,6 +41,7 @@ import org.esa.beam.util.ProductUtils;
                   copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
 public class MerisPrepOp extends Operator {
 
+    public static final String ALTITUDE_BAND_NAME = "altitude";
     @SourceProduct
     private Product sourceProduct;
     @TargetProduct
@@ -110,7 +111,7 @@ public class MerisPrepOp extends Operator {
 
         // create elevation product if band is missing in sourceProduct
         Product elevProduct = null;
-        if (needElevation){
+        if (needElevation && !sourceProduct.containsBand(ALTITUDE_BAND_NAME)){
             elevProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CreateElevationBandOp.class), GPF.NO_PARAMS, szaSubProduct);
         }
 
@@ -164,11 +165,16 @@ public class MerisPrepOp extends Operator {
 
         // add elevation band if needed
         if (needElevation){
-            Guardian.assertNotNull("elevProduct", elevProduct);
-            Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
-            Guardian.assertNotNull("elevation band", srcBand);
-            tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
-            tarBand.setSourceImage(srcBand.getSourceImage());
+            if (elevProduct != null) {
+                Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
+                Guardian.assertNotNull("elevation band", srcBand);
+                tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
+                tarBand.setSourceImage(srcBand.getSourceImage());
+            } else if (sourceProduct.containsBand(ALTITUDE_BAND_NAME)) {
+                Band altitude = ProductUtils.copyBand(ALTITUDE_BAND_NAME, sourceProduct, instrC.getElevationBandName(), targetProduct);
+                altitude.setSourceImage(sourceProduct.getBand(ALTITUDE_BAND_NAME).getSourceImage());
+
+            }
         }
 
         // add vitrual surface pressure band if needed
