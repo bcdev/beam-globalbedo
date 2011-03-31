@@ -115,6 +115,9 @@ public class AerosolOp2 extends Operator {
     private Band validBand;
     private BorderExtender borderExt;
     private Rectangle pixelWindow;
+    private Band aotBand;
+    private Band aotErrorBand;
+    private Band latBand;
 
     @Parameter(defaultValue="0.2")
     private float ndviThreshold;
@@ -281,21 +284,18 @@ public class AerosolOp2 extends Operator {
     }
 
     private void createTargetProductBands() {
-        Band targetBand = GaHelper.createTargetBand(AotConsts.aot, tarRasterWidth, tarRasterHeight);
+        aotBand = GaHelper.createTargetBand(AotConsts.aot, tarRasterWidth, tarRasterHeight);
         //targetBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
-        targetProduct.addBand(targetBand);
+        targetProduct.addBand(aotBand);
 
-        targetBand = GaHelper.createTargetBand(AotConsts.aotErr, tarRasterWidth, tarRasterHeight);
-        targetBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
-        targetProduct.addBand(targetBand);
-
-        targetBand = new Band("latitude", ProductData.TYPE_FLOAT32, tarRasterWidth, tarRasterHeight);
-        targetProduct.addBand(targetBand);
-        targetBand = new Band("longitude", ProductData.TYPE_FLOAT32, tarRasterWidth, tarRasterHeight);
-        targetProduct.addBand(targetBand);
+        aotErrorBand = GaHelper.createTargetBand(AotConsts.aotErr, tarRasterWidth, tarRasterHeight);
+        aotErrorBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
+        targetProduct.addBand(aotErrorBand);
+        latBand = new Band("latitude", ProductData.TYPE_FLOAT32, tarRasterWidth, tarRasterHeight);
+        targetProduct.addBand(latBand);
 
         if (addFitBands){
-            targetBand = new Band("fit_err", ProductData.TYPE_FLOAT32, tarRasterWidth, tarRasterHeight);
+            Band targetBand = new Band("fit_err", ProductData.TYPE_FLOAT32, tarRasterWidth, tarRasterHeight);
             targetBand.setDescription("aot uncertainty");
             targetBand.setNoDataValue(-1);
             targetBand.setNoDataValueUsed(true);
@@ -433,36 +433,22 @@ public class AerosolOp2 extends Operator {
     private void setTargetSamples(Map<Band, Tile> targetTiles, int iX, int iY, RetrievalResults result) {
 
         float[] latLon = getLatLon(iX, iY, pixelWindow, sourceProduct);
-        targetTiles.get(targetProduct.getBand("latitude")).setSample(iX, iY, latLon[0]);
-        targetTiles.get(targetProduct.getBand("longitude")).setSample(iX, iY, latLon[1]);
+        targetTiles.get(latBand).setSample(iX, iY, latLon[0]);
 
-        targetTiles.get(targetProduct.getBand("aot")).setSample(iX, iY, result.getOptAOT());
-        targetTiles.get(targetProduct.getBand("aot_err")).setSample(iX, iY, result.getRetrievalErr());
+        targetTiles.get(aotBand).setSample(iX, iY, result.getOptAOT());
+        targetTiles.get(aotErrorBand).setSample(iX, iY, result.getRetrievalErr());
         if (addFitBands){
             targetTiles.get(targetProduct.getBand("fit_err")).setSample(iX, iY, result.getOptErr());
             targetTiles.get(targetProduct.getBand("fit_curv")).setSample(iX, iY, result.getCurvature());
         }
     }
-/*
-    private void setInvalidTargetSamples(Map<Band, Tile> targetTiles, int iX, int iY) {
-        targetTiles.get(targetProduct.getBand("aot")).setSample(iX, iY, targetProduct.getBand("aot").getGeophysicalNoDataValue());
-        targetTiles.get(targetProduct.getBand("aot_err")).setSample(iX, iY, targetProduct.getBand("aot_err").getGeophysicalNoDataValue());
-        if (addFitBands){
-            targetTiles.get(targetProduct.getBand("fit_err")).setSample(iX, iY, targetProduct.getBand("fit_err").getGeophysicalNoDataValue());
-            targetTiles.get(targetProduct.getBand("fit_curv")).setSample(iX, iY, targetProduct.getBand("fit_curv").getGeophysicalNoDataValue());
-        }
-    }
-*/
+
     private void setInvalidTargetSamples(Map<Band, Tile> targetTiles, int iX, int iY) {
         float[] latLon = getLatLon(iX, iY, pixelWindow, sourceProduct);
         for (Tile t : targetTiles.values()){
-            if (t.getRasterDataNode().getName().equals("latitude")){
+            if (t.getRasterDataNode() == latBand){
                 targetTiles.get(targetProduct.getBand("latitude")).setSample(iX, iY, latLon[0]);
-            }
-            else if (t.getRasterDataNode().getName().equals("longitude")){
-                targetTiles.get(targetProduct.getBand("longitude")).setSample(iX, iY, latLon[1]);
-            }
-            else {
+            } else {
                 t.setSample(iX, iY, t.getRasterDataNode().getNoDataValue());
             }
         }
@@ -482,7 +468,6 @@ public class AerosolOp2 extends Operator {
         ozoneBand.setNoDataValueUsed(true);
         ozoneBand.setUnit("atm.cm");
         sourceProduct.addBand(ozoneBand);
-
     }
 
     private void createNdviBand() {
