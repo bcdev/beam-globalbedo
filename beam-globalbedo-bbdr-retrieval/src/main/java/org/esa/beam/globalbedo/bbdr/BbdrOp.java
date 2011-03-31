@@ -119,6 +119,10 @@ public class BbdrOp extends PixelOperator {
             sdrError.setNoDataValue(Float.NaN);
             sdrError.setNoDataValueUsed(true);
 
+            Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
+            ndvi.setNoDataValue(Float.NaN);
+            ndvi.setNoDataValueUsed(true);
+
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
             final Band[] bands = sourceProduct.getBands();
@@ -310,6 +314,7 @@ public class BbdrOp extends PixelOperator {
                 configurator.defineSample(i, "sdr_" + (i + 1));
             }
             configurator.defineSample(sensor.getNumBands(), "sdr_error");
+            configurator.defineSample(sensor.getNumBands()+1, "ndvi");
         } else {
             configurator.defineSample(TRG_BBDR    , "BB_VIS");
             configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
@@ -364,10 +369,12 @@ public class BbdrOp extends PixelOperator {
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
-        targetSamples[TRG_VZA].set(vza);
-        targetSamples[TRG_SZA].set(sza);
-        targetSamples[TRG_DEM].set(hsf);
+        if (!sdrOnly) {
+            targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+            targetSamples[TRG_VZA].set(vza);
+            targetSamples[TRG_SZA].set(sza);
+            targetSamples[TRG_DEM].set(hsf);
+        }
 
         double ozo;
         double cwv;
@@ -406,7 +413,9 @@ public class BbdrOp extends PixelOperator {
         }
         phi = min(phi, 179);
         phi = max(phi, 1);
-        targetSamples[TRG_RAA].set(phi);
+        if (!sdrOnly) {
+            targetSamples[TRG_RAA].set(phi);
+        }
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -446,7 +455,11 @@ public class BbdrOp extends PixelOperator {
         double rfl_nir = rfl_pix[sensor.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[TRG_NDVI].set(ndvi_land);
+        if (sdrOnly) {
+            targetSamples[sensor.getNumBands()+1].set(ndvi_land);
+        } else {
+            targetSamples[TRG_NDVI].set(ndvi_land);
+        }
 
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
 
