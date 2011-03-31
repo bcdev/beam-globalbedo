@@ -82,6 +82,8 @@ public class BbdrOp extends PixelOperator {
 
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
+    @Parameter
+    private String landExpression;
 
     // Auxdata
     private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
@@ -210,8 +212,13 @@ public class BbdrOp extends PixelOperator {
     protected void configureSourceSamples(Configurator configurator) {
         String[] toaBandNames = null;
 
-        String landMaskExpression = null;
-        final String cloudMaskExpression = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+        String landExpr = null;
+        final String commonLandExpr;
+        if (landExpression != null && !landExpression.isEmpty()) {
+            commonLandExpr = landExpression;
+        } else {
+            commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+        }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
 
         BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
@@ -219,7 +226,7 @@ public class BbdrOp extends PixelOperator {
         configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 
         if (sensor == Sensor.MERIS) {
-            landMaskExpression = "NOT l1_flags.INVALID AND (" + cloudMaskExpression + ")";
+            landExpr = "NOT l1_flags.INVALID AND (" + commonLandExpr + ")";
 
             configurator.defineSample(SRC_VZA, BbdrConstants.MERIS_VZA_TP_NAME);
             configurator.defineSample(SRC_VAA, BbdrConstants.MERIS_VAA_TP_NAME);
@@ -235,7 +242,7 @@ public class BbdrOp extends PixelOperator {
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
                              BbdrConstants.MERIS_TOA_BAND_NAMES.length);
         } else if (sensor == Sensor.AATSR_NADIR) {
-            landMaskExpression = cloudMaskExpression;
+            landExpr = commonLandExpr;
 
             configurator.defineSample(SRC_VZA, "view_elev_nadir");
             configurator.defineSample(SRC_VAA, "view_azimuth_nadir");
@@ -252,7 +259,7 @@ public class BbdrOp extends PixelOperator {
                              BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
 
         } else if (sensor == Sensor.AATSR_FWARD) {
-            landMaskExpression = cloudMaskExpression;
+            landExpr = commonLandExpr;
 
             configurator.defineSample(SRC_VZA, "view_elev_fward");
             configurator.defineSample(SRC_VAA, "view_azimuth_fward");
@@ -269,8 +276,8 @@ public class BbdrOp extends PixelOperator {
                              BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         } else if (sensor == Sensor.SPOT_VGT) {
 
-            landMaskExpression =
-                    "SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD AND (" + cloudMaskExpression + ")";
+            landExpr =
+                    "SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD AND (" + commonLandExpr + ")";
 
             configurator.defineSample(SRC_VZA, "VZA");
             configurator.defineSample(SRC_VAA, "VAA");
@@ -287,7 +294,7 @@ public class BbdrOp extends PixelOperator {
                              BbdrConstants.VGT_TOA_BAND_NAMES.length);
         }
 
-        BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landMaskExpression, sourceProduct);
+        BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
         Product landMaskProduct = landOp.getTargetProduct();
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
