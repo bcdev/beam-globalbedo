@@ -65,6 +65,9 @@ public class GaMasterOp  extends Operator {
     private int scale;
     @Parameter(defaultValue="0.3")
     private float ndviThr;
+    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
+    private boolean gaUseL1bLandWaterFlag;
+
     private String instrument;
 
     @Override
@@ -84,7 +87,9 @@ public class GaMasterOp  extends Operator {
         Product reflProduct = null;
         if (isMerisProduct) {
             instrument = "MERIS";
-            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+            Map<String, Object> params = new HashMap<String, Object>(4);
+            params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {
             instrument = "AATSR";

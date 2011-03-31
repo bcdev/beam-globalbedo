@@ -18,6 +18,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
@@ -46,6 +47,10 @@ public class MerisPrepOp extends Operator {
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
+    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
+    private boolean gaUseL1bLandWaterFlag;
+
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -101,6 +106,7 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
+            pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct);
             for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){

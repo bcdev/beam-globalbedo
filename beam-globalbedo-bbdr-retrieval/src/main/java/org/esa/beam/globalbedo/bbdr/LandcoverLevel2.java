@@ -65,6 +65,7 @@ public class LandcoverLevel2 extends Operator {
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
+            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
             gaMasterOp.setSourceProduct(targetProduct);
             targetProduct = gaMasterOp.getTargetProduct();
         }
