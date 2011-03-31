@@ -5,13 +5,8 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import java.awt.Dimension;
-import java.awt.RenderingHints;
-import java.util.HashMap;
-import java.util.Map;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -21,8 +16,14 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
+
+import java.awt.Dimension;
+import java.awt.RenderingHints;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Main Operator producing AOT for GlobAlbedo
@@ -68,17 +69,10 @@ public class GaMasterOp  extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        //if (tc1G) org.esa.beam.util.jai.JAIUtils.setDefaultTileCacheCapacity(1024);
-        int npix=1;
-        //int tarTileWidth = Math.min(targetProduct.getSceneRasterWidth(), npix * 51 * scale);
-        Dimension fillTS = new Dimension(npix, npix);
-        Dimension aotTS = new Dimension(npix*9, npix*9);
-        //Dimension targetTS = new Dimension(tarTileWidth, scale);
-        Dimension targetTS = new Dimension(npix*9*scale, npix*9*scale);
+        Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
+        Dimension aotTS = new Dimension(targetTS.width/9, targetTS.height/9);
         RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
         RenderingHints rhAot = new RenderingHints(GPF.KEY_TILE_SIZE, aotTS);
-        RenderingHints rhFill = new RenderingHints(GPF.KEY_TILE_SIZE, fillTS);
-
 
         String productType = sourceProduct.getProductType();
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
@@ -121,7 +115,7 @@ public class GaMasterOp  extends Operator {
         if (!noFilling){
             Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
             fillSourceProds.put("aotProduct", aotDownsclProduct);
-            fillAotProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GapFillingOp.class), GPF.NO_PARAMS, fillSourceProds, rhFill);
+            fillAotProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GapFillingOp.class), GPF.NO_PARAMS, fillSourceProds);
         }
 
         targetProduct = fillAotProduct;
