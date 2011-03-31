@@ -113,9 +113,11 @@ public class BbdrOp extends PixelOperator {
     protected void configureTargetProduct(Product targetProduct) {
         if (sdrOnly) {
             for (int i = 0; i < sensor.getNumBands(); i++) {
+                Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
                 Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
+                ProductUtils.copySpectralBandProperties(srcBand, band);
             }
             Band sdrError = targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
             sdrError.setNoDataValue(Float.NaN);
