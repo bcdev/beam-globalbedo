@@ -5,13 +5,19 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.MetadataAttribute;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
+import org.esa.beam.framework.datamodel.RasterDataNode;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.util.Guardian;
+
+import java.awt.Rectangle;
+import java.io.IOException;
 
 /**
  *
@@ -51,5 +57,34 @@ class GaHelper {
         targetBand.setScalingOffset(bandFeat.offset);
         return targetBand;
     }
-
+     static Rectangle getSzaRegion(RasterDataNode szaBand, boolean hasSolarElevation, double szaLimit) throws OperatorException {
+        int srcWidth = szaBand.getSceneRasterWidth();
+        int srcHeight = szaBand.getSceneRasterHeight();
+        float[] sza0 = new float[srcHeight];
+        float[] sza1 = new float[srcHeight];
+        try {
+            szaBand.readPixels(0, 0, 1, srcHeight, sza0, ProgressMonitor.NULL);
+            szaBand.readPixels(srcWidth - 1, 0, 1, srcHeight, sza1, ProgressMonitor.NULL);
+        } catch (IOException ex) {
+            throw new OperatorException(ex);
+        }
+        int start = 0;
+        int end = srcHeight - 1;
+        if (hasSolarElevation) {
+            while (start < srcHeight - 1 && (90 - sza0[start]) > szaLimit && (90 - sza1[start]) > szaLimit) {
+                start++;
+            }
+            while (end > start && (90 - sza0[end]) > szaLimit && (90 - sza1[end]) > szaLimit) {
+                end--;
+            }
+        } else {
+            while (start < srcHeight - 1 && (sza0[start]) > szaLimit && (sza1[start]) > szaLimit) {
+                start++;
+            }
+            while (end > start && (sza0[end]) > szaLimit && (sza1[end]) > szaLimit) {
+                end--;
+            }
+        }
+        return new Rectangle(0, start, srcWidth, end - start + 1);
+    }
 }

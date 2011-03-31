@@ -5,6 +5,7 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
 import org.esa.beam.aatsrrecalibration.operators.RecalibrateAATSRReflectancesOp;
@@ -20,6 +21,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.util.Guardian;
@@ -49,12 +51,18 @@ public class AatsrPrepOp extends Operator {
         final boolean needSurfacePres = (!sourceProduct.containsBand(instrC.getSurfPressureName("AATSR")));
 
 
-        //general SzaSubset to less 70°
-        Map<String,Object> szaSubParam = new HashMap<String, Object>(3);
-        szaSubParam.put("szaBandName", "sun_elev_nadir");
-        szaSubParam.put("hasSolarElevation", true);
-        szaSubParam.put("szaLimit", 69.99);
-        Product szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SzaSubsetOp.class), szaSubParam, sourceProduct);
+        //general SzaSubset to less 70 degree
+        Product szaSubProduct;
+        Rectangle szaRegion = GaHelper.getSzaRegion(sourceProduct.getRasterDataNode("sun_elev_nadir"), true, 69.99);
+        if (szaRegion.x == 0 && szaRegion.y == 0 &&
+                szaRegion.width == sourceProduct.getSceneRasterWidth() &&
+                szaRegion.height == sourceProduct.getSceneRasterHeight()) {
+            szaSubProduct = sourceProduct;
+        } else {
+            Map<String,Object> subsetParam = new HashMap<String, Object>(3);
+            subsetParam.put("region", szaRegion);
+            szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParam, sourceProduct);
+        }
 
         // subset might have set ptype to null, thus:
         if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("aatsr product");
