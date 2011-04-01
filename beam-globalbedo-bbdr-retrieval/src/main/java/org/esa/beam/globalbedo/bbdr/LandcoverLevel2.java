@@ -17,11 +17,9 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
-import com.vividsolutions.jts.geom.Coordinate;
-import com.vividsolutions.jts.geom.Geometry;
-import com.vividsolutions.jts.geom.GeometryFactory;
-import com.vividsolutions.jts.geom.Polygon;
-import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
+import com.bc.ceres.jai.tilecache.DefaultSwapSpace;
+import com.bc.ceres.jai.tilecache.SwappingTileCache;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -29,15 +27,13 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.util.ProductUtils;
 
-import java.awt.geom.GeneralPath;
-import java.awt.geom.Path2D;
-import java.awt.geom.PathIterator;
-import java.util.ArrayList;
+import javax.media.jai.OpImage;
+import javax.media.jai.TileCache;
+import java.awt.image.RenderedImage;
+import java.io.File;
 
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
@@ -54,32 +50,60 @@ public class LandcoverLevel2 extends Operator {
     @Parameter(defaultValue = "true")
     private boolean step2;
 
+    @Parameter(defaultValue = "true")
+    private boolean useFileTileCache;
+
+    private File tmpDir;
+
     @Override
     public void initialize() throws OperatorException {
-         // this setup allows to split processing in two parts:
-        // 1. L1b --> AOT
-        // 2. AOT --> BBDR
-        // which seems to improve performance tremendously (more than factor 10 for a MERIS full orbit test product)
         Product targetProduct = sourceProduct;
         if (step1) {
-            GaMasterOp gaMasterOp = new GaMasterOp();
-            gaMasterOp.setParameter("copyToaRadBands", false);
-            gaMasterOp.setParameter("copyToaReflBands", true);
-            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
-            gaMasterOp.setSourceProduct(targetProduct);
-            targetProduct = gaMasterOp.getTargetProduct();
+            targetProduct = processAot(targetProduct);
+        }
+        if (useFileTileCache) {
+            attachFileTileCache(targetProduct);
         }
         if (step2) {
-            BbdrOp bbdrOp = new BbdrOp();
-            bbdrOp.setSourceProduct(targetProduct);
-            bbdrOp.setParameter("sensor", sensor);
-            bbdrOp.setParameter("sdrOnly", true);
-            bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
-            targetProduct = bbdrOp.getTargetProduct();
+            targetProduct = processBbdr(targetProduct);
         }
         setTargetProduct(targetProduct);
     }
 
+    private Product processAot(Product product) {
+        GaMasterOp gaMasterOp = new GaMasterOp();
+        gaMasterOp.setParameter("copyToaRadBands", false);
+        gaMasterOp.setParameter("copyToaReflBands", true);
+        gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
+        gaMasterOp.setSourceProduct(product);
+        return gaMasterOp.getTargetProduct();
+    }
+
+    private Product processBbdr(Product product) {
+        BbdrOp bbdrOp = new BbdrOp();
+        bbdrOp.setSourceProduct(product);
+        bbdrOp.setParameter("sensor", sensor);
+        bbdrOp.setParameter("sdrOnly", true);
+        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
+        return bbdrOp.getTargetProduct();
+    }
+    private void attachFileTileCache(Product product) {
+        String productName = sourceProduct.getName();
+        tmpDir = new File(System.getProperty("java.io.tmpdir"), productName + "_" + System.currentTimeMillis());
+        if (!tmpDir.mkdirs()) {
+            throw new OperatorException("Failed to create tmp dir for SwappingTileCache: " + tmpDir.getAbsolutePath());
+        }
+        tmpDir.deleteOnExit();
+        TileCache tileCache = new SwappingTileCache(16L * 1024L * 1024L, new DefaultSwapSpace(tmpDir));
+        Band[] bands = product.getBands();
+        for (Band band : bands) {
+            RenderedImage image = band.getSourceImage().getImage(0);
+            if (image instanceof OperatorImage) {//opImage is subclass of OpImage
+                OpImage opImage = (OpImage) image;
+                opImage.setTileCache(tileCache);
+            }
+        }
+    }
 
    public static class Spi extends OperatorSpi {
 
