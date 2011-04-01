@@ -86,10 +86,10 @@ public class BbdrOp extends PixelOperator {
     private String landExpression;
 
     // Auxdata
-    private double[][] nb_coef_arr_all; // = fltarr(n_spc, num_bd)
-    private double[] nb_intcp_arr_all; // = fltarr(n_spc)
+    private Matrix nb_coef_arr_all; // = fltarr(n_spc, num_bd)
+    private Matrix nb_intcp_arr_all; // = fltarr(n_spc)
     private double[] rmse_arr_all; // = fltarr(n_spc)
-    private double[][] nb_coef_arr_D; // = fltarr(n_spc, num_bd)
+    private Matrix[] nb_coef_arr; // = fltarr(n_spc, num_bd)
     private double[] nb_intcp_arr_D; //= fltarr(n_spc)
     private double kpp_vol;
     private double kpp_geo;
@@ -173,9 +173,15 @@ public class BbdrOp extends PixelOperator {
         try {
             n2Bconversion.load();
             rmse_arr_all = n2Bconversion.getRmse_arr_all();
-            nb_coef_arr_all = n2Bconversion.getNb_coef_arr_all();
-            nb_intcp_arr_all = n2Bconversion.getNb_intcp_arr_all();
-            nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
+            nb_coef_arr_all = new Matrix(n2Bconversion.getNb_coef_arr_all());
+            double[] nb_intcp_arr_all_data = n2Bconversion.getNb_intcp_arr_all();
+            nb_intcp_arr_all = new Matrix(nb_intcp_arr_all_data, nb_intcp_arr_all_data.length);
+
+            double[][] nb_coef_arr_D = n2Bconversion.getNb_coef_arr_D();
+            nb_coef_arr = new Matrix[n_spc];
+            for (int i_bb = 0; i_bb < n_spc; i_bb++) {
+                nb_coef_arr[i_bb] = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length).transpose();
+            }
             nb_intcp_arr_D = n2Bconversion.getNb_intcp_arr_D();
 
             aotLut = BbdrUtils.getAotLookupTable(sensor);
@@ -521,18 +527,15 @@ public class BbdrOp extends PixelOperator {
 
         // BB conversion and error var-cov calculation
 
-        Matrix nb_coef_arr_all_m = new Matrix(nb_coef_arr_all);
         Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
-        Matrix nb_intcp_arr_all_m = new Matrix(nb_intcp_arr_all, nb_intcp_arr_all.length);
-
-        Matrix bdr_mat_all = nb_coef_arr_all_m.times(rfl_pix_m).plus(nb_intcp_arr_all_m);
+        Matrix bdr_mat_all = nb_coef_arr_all.times(rfl_pix_m).plus(nb_intcp_arr_all);
 
         double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
         for (int i = 0; i < bbdrsData.length; i++) {
             targetSamples[TRG_BBDR + i].set(bbdrsData[i]);
         }
 
-        Matrix err2_mat_rfl = nb_coef_arr_all_m.times(err2_tot_cov).times(nb_coef_arr_all_m.transpose());
+        Matrix err2_mat_rfl = nb_coef_arr_all.times(err2_tot_cov).times(nb_coef_arr_all.transpose());
         Matrix err2_n2b_all = new Matrix(n_spc, n_spc);
         for (int i = 0; i < n_spc; i++) {
             err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
@@ -580,7 +583,7 @@ public class BbdrOp extends PixelOperator {
         Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
         Matrix rat_tup_m = new Matrix(rat_tup, rat_tup.length);
         for (int i_bb = 0; i_bb < n_spc; i_bb++) {
-            Matrix nb_coef_arr_D_m = new Matrix(nb_coef_arr_D[i_bb], nb_coef_arr_D[i_bb].length).transpose();
+            Matrix nb_coef_arr_D_m = nb_coef_arr[i_bb];
             Matrix m1 = nb_coef_arr_D_m.times(rat_tdw_m);
             double rat_tdw_bb = m1.get(0, 0) + nb_intcp_arr_D[i_bb];
 
