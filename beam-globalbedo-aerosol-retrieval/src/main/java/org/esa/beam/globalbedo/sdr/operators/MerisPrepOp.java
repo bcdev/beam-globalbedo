@@ -144,19 +144,16 @@ public class MerisPrepOp extends Operator {
             if (srcBand.isFlagBand()){
                 tarBand = targetProduct.getBand(srcName);
                 tarBand.setSourceImage(srcBand.getSourceImage());
-            }
-            else if (srcName.startsWith("radiance")){
+            } else if (srcName.startsWith("radiance")){
                 String reflName = "reflec_" + srcName.split("_")[1];
                 String tarName = "reflectance_" + srcName.split("_")[1];
                 tarBand = ProductUtils.copyBand(reflName, reflProduct, targetProduct);
                 tarBand.setName(tarName);
                 Band reflBand = reflProduct.getBand(reflName);
                 tarBand.setSourceImage(reflBand.getSourceImage());
-            }
-            else {
+            } else if (!targetProduct.containsBand(srcName)) {
                 tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
                 tarBand.setSourceImage(srcBand.getSourceImage());
-
             }
         }
 

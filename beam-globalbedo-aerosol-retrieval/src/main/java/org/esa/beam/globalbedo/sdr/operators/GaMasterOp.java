@@ -183,11 +183,11 @@ public class GaMasterOp  extends Operator {
             bname = b.getName();
             if (b.isFlagBand()){
                 tarBand = tarP.getBand(bname);
-            }
-            else {
+                tarBand.setSourceImage(b.getSourceImage());
+            } else if (!tarP.containsBand(bname)) {
                 tarBand = ProductUtils.copyBand(bname, aotHiresProduct, tarP);
+                tarBand.setSourceImage(b.getSourceImage());
             }
-            tarBand.setSourceImage(b.getSourceImage());
         }
         return tarP;
     }
