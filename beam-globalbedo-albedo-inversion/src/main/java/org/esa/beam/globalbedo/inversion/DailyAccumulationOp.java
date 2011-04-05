@@ -9,7 +9,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
@@ -23,7 +22,7 @@ import org.esa.beam.framework.gpf.experimental.PointOperator;
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
-public class OptimalEstimationOp extends PixelOperator {
+public class DailyAccumulationOp extends PixelOperator {
 
     private static final int SRC_BB_VIS = 0;
     private static final int SRC_BB_NIR = 1;
@@ -187,7 +186,7 @@ public class OptimalEstimationOp extends PixelOperator {
 
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
-            final OptimalEstimationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
+            final AccumulationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
             M.plusEquals(container.getM());
             V.plusEquals(container.getV());
             E.plusEquals(container.getE());
@@ -198,8 +197,8 @@ public class OptimalEstimationOp extends PixelOperator {
         fillTargetSamples(targetSamples, M, V, E, mask);
     }
 
-    private OptimalEstimationMatrixContainer getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
-        OptimalEstimationMatrixContainer container = new OptimalEstimationMatrixContainer();
+    private AccumulationMatrixContainer getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
+        AccumulationMatrixContainer container = new AccumulationMatrixContainer();
 
         // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
         if (isLandFilter(sourceSamples, sourceProductIndex) || isSnowFilter(sourceSamples, sourceProductIndex) ||
@@ -367,7 +366,7 @@ public class OptimalEstimationOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(OptimalEstimationOp.class);
+            super(DailyAccumulationOp.class);
         }
     }
 

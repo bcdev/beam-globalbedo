@@ -8,12 +8,13 @@ import Jama.Matrix;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class OptimalEstimationMatrixContainer {
+public class AccumulationMatrixContainer {
 
     Matrix M;
     Matrix V;
     Matrix E;
     int mask;
+    int doyClosestSample;  // needed in full accumulation part
 
     // getters and setters...
     public Matrix getM() {
@@ -48,4 +49,11 @@ public class OptimalEstimationMatrixContainer {
         this.mask = mask;
     }
 
+    public int getDoyClosestSample() {
+        return doyClosestSample;
+    }
+
+    public void setDoyClosestSample(int doyClosestSample) {
+        this.doyClosestSample = doyClosestSample;
+    }
 }

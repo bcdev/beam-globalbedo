@@ -1,6 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -9,10 +8,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 
 import javax.media.jai.JAI;
-import java.io.File;
 import java.io.IOException;
-import java.util.Iterator;
-import java.util.List;
 
 /**
  * Operator for the daily accumulation part in Albedo Inversion
@@ -56,12 +52,12 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         // M_tot(DoY) = sum(M(obs[i]))
         // V_tot(DoY) = sum(V(obs[i]))
         // E_tot(DoY) = sum(E(obs[i]))
-        OptimalEstimationOp optimalEstimationOp = new OptimalEstimationOp();
-        optimalEstimationOp.setSourceProducts(inputProducts);
+        DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+        accumulationOp.setSourceProducts(inputProducts);
 //        Product[] testProducts = new Product[]{inputProducts[0]};
-//        optimalEstimationOp.setSourceProducts(testProducts);
-        optimalEstimationOp.setParameter("computeSnow", computeSnow);
-        Product accumulationProduct = optimalEstimationOp.getTargetProduct();
+//        accumulationOp.setSourceProducts(testProducts);
+        accumulationOp.setParameter("computeSnow", computeSnow);
+        Product accumulationProduct = accumulationOp.getTargetProduct();
 
         setTargetProduct(accumulationProduct);
     }
