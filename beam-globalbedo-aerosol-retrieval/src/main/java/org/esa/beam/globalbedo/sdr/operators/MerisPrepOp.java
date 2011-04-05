@@ -73,7 +73,9 @@ public class MerisPrepOp extends Operator {
         }
 
         // convert radiance bands to reflectance
-        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), GPF.NO_PARAMS, szaSubProduct);
+        Map<String,Object> relfParam = new HashMap<String, Object>(3);
+        relfParam.put("doRadToRefl", true);
+        Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, szaSubProduct);
 
         // subset might have set ptype to null, thus:
         if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("MERIS Radiance product");
