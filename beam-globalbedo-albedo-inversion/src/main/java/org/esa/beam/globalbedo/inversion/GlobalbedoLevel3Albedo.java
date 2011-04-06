@@ -68,7 +68,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         AlbedoInputContainer inputProductContainer = null;
         double[] allWeights = new double[priorProducts.length];
         Vector allDoysVector = new Vector();
-        int productIndex = 0;
+        int priorIndex = 0;
         for (Product priorProduct : priorProducts) {
             int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName());
             allDoysVector.clear();
@@ -77,33 +77,37 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 inputProductContainer = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
                                                                        wings,
                                                                        computeSnow);
-                allWeights[productIndex] = Math.exp(-1.0 * inputProductContainer.getInputProductDoys().length / HALFLIFE);
+                allWeights[priorIndex] = Math.exp(
+                        -1.0 * inputProductContainer.getInputProductDoys().length / HALFLIFE);
                 int[] allDoys = inputProductContainer.getInputProductDoys();
                 allDoysVector.add(allDoys);
-                productIndex++;
+                priorIndex++;
             } catch (IOException e) {
                 throw new OperatorException("Cannot load input products: " + e.getMessage());
             }
         }
 
-        // STEP 3: do the full accumulation (pixelwise matrix addition, so we need another pixel operator...
-        // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
-        FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
-        // todo: the following means that the source products corresponding to the LAST prior are used
-        // this seems to be as in breadboard, but make sure that this is correct
-        // todo: make one product PER PRIOR, move in loop below in step 5
-        fullAccumulationOp.setSourceProducts(inputProductContainer.getInputProducts());
-        fullAccumulationOp.setParameter("allDoys", allDoysVector);
-        fullAccumulationOp.setParameter("allWeights", allWeights);
-        Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
-
-        // STEP 4: we need to reproject the priors for further use...
+        // STEP 3: we need to reproject the priors for further use...
         Product[] reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
                                                                                  inputProductContainer.getInputProducts()[0]);
 
-        // STEP 5: compute pixelwise results (perform inversion) and write output
-        // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
+        // do the next steps per prior product:
+        priorIndex = 0;
         for (Product priorProduct : reprojectedPriorProducts) {
+
+            // STEP 4: do the full accumulation (pixelwise matrix addition, so we need another pixel operator...
+            // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
+
+            FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
+            // todo: the following means that the source products corresponding to the LAST prior are used
+            // this seems to be as in breadboard, but make sure that this is correct
+            fullAccumulationOp.setSourceProducts(inputProductContainer.getInputProducts());
+            fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
+            fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
+            Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
+
+            // STEP 5: compute pixelwise results (perform inversion) and write output
+            // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
             InversionOp inversionOp = new InversionOp();
             inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
             inversionOp.setSourceProduct("priorProduct", priorProduct);
@@ -117,6 +121,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             File targetFile = null; // todo define
             final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
             writeOp.writeProduct(ProgressMonitor.NULL);
+            priorIndex++;
         }
 
 
