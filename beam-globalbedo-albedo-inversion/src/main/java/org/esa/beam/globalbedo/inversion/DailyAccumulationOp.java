@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.

@@ -13,6 +13,8 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.media.jai.JAI;
@@ -65,7 +67,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //                                File.separator + year + File.separator + tile;
         String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
-        AlbedoInputContainer inputProductContainer = null;
+        AlbedoInput inputProduct = null;
         double[] allWeights = new double[priorProducts.length];
         Vector allDoysVector = new Vector();
         int priorIndex = 0;
@@ -74,12 +76,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
             allDoysVector.clear();
             try {
                 // todo: how to proceed if input file(s) cannot be read?
-                inputProductContainer = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
-                                                                       wings,
-                                                                       computeSnow);
+                inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
+                        wings,
+                        computeSnow);
                 allWeights[priorIndex] = Math.exp(
-                        -1.0 * inputProductContainer.getInputProductDoys().length / HALFLIFE);
-                int[] allDoys = inputProductContainer.getInputProductDoys();
+                        -1.0 * inputProduct.getProductDoys().length / HALFLIFE);
+                int[] allDoys = inputProduct.getProductDoys();
                 allDoysVector.add(allDoys);
                 priorIndex++;
             } catch (IOException e) {
@@ -89,7 +91,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 3: we need to reproject the priors for further use...
         Product[] reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
-                                                                                 inputProductContainer.getInputProducts()[0]);
+                                                                                 inputProduct.getProducts()[0]);
 
         // do the next steps per prior product:
         priorIndex = 0;
@@ -101,7 +103,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
             // todo: the following means that the source products corresponding to the LAST prior are used
             // this seems to be as in breadboard, but make sure that this is correct
-            fullAccumulationOp.setSourceProducts(inputProductContainer.getInputProducts());
+            fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
             fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
             fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
             Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();

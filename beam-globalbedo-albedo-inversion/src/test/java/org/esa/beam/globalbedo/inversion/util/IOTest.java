@@ -1,6 +1,8 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
+import org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;

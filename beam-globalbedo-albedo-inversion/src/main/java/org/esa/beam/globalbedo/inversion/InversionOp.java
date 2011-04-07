@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -281,8 +282,8 @@ public class InversionOp extends PixelOperator {
                 uncertainties = tmpM;
             } else {
                 parameters = AlbedoInversionUtils.getConstantMatrix(AlbedoInversionConstants.numBBDRWaveBands,
-                                                                    AlbedoInversionConstants.numAlbedoParameters,
-                                                                    -9999.0);
+                        AlbedoInversionConstants.numAlbedoParameters,
+                        -9999.0);
                 uncertainties = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                                                                        3 * AlbedoInversionConstants.numAlbedoParameters,
                                                                        -9999.0);

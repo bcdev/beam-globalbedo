@@ -1,8 +1,9 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 

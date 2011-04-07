@@ -1,8 +1,9 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
@@ -139,7 +140,7 @@ public class IOUtils {
         return snowFilteredPriorList;
     }
 
-    public static AlbedoInputContainer getAlbedoInputProducts(String accumulatorRootDir, int doy, int year, String tile,
+    public static AlbedoInput getAlbedoInputProducts(String accumulatorRootDir, int doy, int year, String tile,
                                                               int wings,
                                                               boolean computeSnow) throws IOException {
 
@@ -173,12 +174,12 @@ public class IOUtils {
             productIndex++;
         }
 
-        AlbedoInputContainer inputProductContainer = new AlbedoInputContainer();
-        inputProductContainer.setInputProducts(albedoInputProducts);
-        inputProductContainer.setInputProductDoys(albedoInputProductDoys);
-        inputProductContainer.setInputProductYears(albedoInputProductYears);
+        AlbedoInput inputProduct = new AlbedoInput();
+        inputProduct.setProducts(albedoInputProducts);
+        inputProduct.setProductDoys(albedoInputProductDoys);
+        inputProduct.setProductYears(albedoInputProductYears);
 
-        return inputProductContainer;
+        return inputProduct;
     }
 
     static List<String> getAlbedoInputProductNames(String accumulatorRootDir, int doy, int year, String tile, int wings,
