@@ -53,8 +53,6 @@ public class LandcoverLevel2 extends Operator {
     @Parameter(defaultValue = "true")
     private boolean useFileTileCache;
 
-    private File tmpDir;
-
     @Override
     public void initialize() throws OperatorException {
         Product targetProduct = sourceProduct;
@@ -75,6 +73,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaRadBands", false);
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
+        gaMasterOp.setParameter("doEqualization", false);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }
@@ -89,7 +88,7 @@ public class LandcoverLevel2 extends Operator {
     }
     private void attachFileTileCache(Product product) {
         String productName = sourceProduct.getName();
-        tmpDir = new File(System.getProperty("java.io.tmpdir"), productName + "_" + System.currentTimeMillis());
+        File tmpDir = new File(System.getProperty("java.io.tmpdir"), productName + "_" + System.currentTimeMillis());
         if (!tmpDir.mkdirs()) {
             throw new OperatorException("Failed to create tmp dir for SwappingTileCache: " + tmpDir.getAbsolutePath());
         }

@@ -65,7 +65,13 @@ public class GaMasterOp  extends Operator {
     private int scale;
     @Parameter(defaultValue="0.3")
     private float ndviThr;
-    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
+
+    @Parameter(defaultValue = "true",
+               label = "Perform equalization",
+               description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
+    private boolean doEqualization;
+    @Parameter(defaultValue = "true",
+               label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
 
     private String instrument;
@@ -89,6 +95,7 @@ public class GaMasterOp  extends Operator {
             instrument = "MERIS";
             Map<String, Object> params = new HashMap<String, Object>(4);
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            params.put("doEqualization", doEqualization);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {

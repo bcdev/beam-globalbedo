@@ -47,7 +47,14 @@ public class MerisPrepOp extends Operator {
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
-    @Parameter(defaultValue = "true", label = " Use land-water flag from L1b product instead")
+
+    @Parameter(defaultValue = "true",
+               label = "Perform equalization",
+               description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
+    private boolean doEqualization;
+
+    @Parameter(defaultValue = "true",
+               label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
 
 
@@ -75,6 +82,7 @@ public class MerisPrepOp extends Operator {
         // convert radiance bands to reflectance
         Map<String,Object> relfParam = new HashMap<String, Object>(3);
         relfParam.put("doRadToRefl", true);
+        relfParam.put("doEqualization", doEqualization);
         Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, szaSubProduct);
 
         // subset might have set ptype to null, thus:
