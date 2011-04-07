@@ -40,4 +40,6 @@ public class AlbedoInversionConstants {
 
     // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
+
+    public static final double INVALID = -9999.0;
 }

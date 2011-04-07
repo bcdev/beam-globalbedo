@@ -75,7 +75,6 @@ public class GlobalbedoLevel3Albedo extends Operator {
             int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName());
             allDoysVector.clear();
             try {
-                // todo: how to proceed if input file(s) cannot be read?
                 inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
                         wings,
                         computeSnow);
@@ -85,7 +84,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 allDoysVector.add(allDoys);
                 priorIndex++;
             } catch (IOException e) {
-                throw new OperatorException("Cannot load input products: " + e.getMessage());
+                // todo: just skip product, but add appropriate logging here
+//                throw new OperatorException("Cannot load input products: " + e.getMessage());
             }
         }
 
@@ -101,8 +101,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
             // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
 
             FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
-            // todo: the following means that the source products corresponding to the LAST prior are used
-            // this seems to be as in breadboard, but make sure that this is correct
+            // the following means that the source products corresponding to the LAST prior are used
+            // this is ok since the input products are the same for all priors (checked with GL, 20110407)
             fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
             fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
             fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
@@ -120,7 +120,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //                    PriorFileToProcess[0], columns, rows, UsePrior, data.DoYClosestSample[i], tile, year, Snow])
 
             setTargetProduct(fullAccumulationOp.getTargetProduct());
-            File targetFile = null; // todo define
+            File targetFile = null; // todo: define
             final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
             writeOp.writeProduct(ProgressMonitor.NULL);
             priorIndex++;

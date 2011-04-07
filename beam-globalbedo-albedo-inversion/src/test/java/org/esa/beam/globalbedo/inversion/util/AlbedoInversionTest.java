@@ -94,6 +94,45 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(12.0, diagFlat.get(2, 0));
     }
 
+    public void testGetReciprocalMatrix() {
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 0, 4.0);
+        m.set(2, 0, 6.0);
+        m.set(0, 1, 8.0);
+        m.set(1, 1, 3.0);
+        m.set(2, 1, 5.0);
+        m.set(0, 2, 7.0);
+        m.set(1, 2, 9.0);
+        m.set(2, 2, 12.0);
+
+        Matrix recip = AlbedoInversionUtils.getReciprocalMatrix(m);
+        assertNotNull(recip);
+        assertEquals(3, recip.getRowDimension());
+        assertEquals(3, recip.getColumnDimension());
+        assertEquals(0.5, recip.get(0, 0));
+        assertEquals(0.125, recip.get(0, 1));
+        assertEquals(0.11111, recip.get(1, 2), 1.E-4);
+    }
+
+    public void testGetMatrixAllElementsProduct() {
+           Matrix m = new Matrix(3, 3);
+           m.set(0, 0, 2.0);
+           m.set(1, 0, 4.0);
+           m.set(2, 0, 6.0);
+           m.set(0, 1, 8.0);
+           m.set(1, 1, 3.0);
+           m.set(2, 1, 5.0);
+           m.set(0, 2, 7.0);
+           m.set(1, 2, 9.0);
+           m.set(2, 2, 12.0);
+
+           double product = AlbedoInversionUtils.getMatrixAllElementsProduct(m);
+           assertEquals(4354560.0, product);
+       }
+
+
+
     public void testMatrixHasNaNElements() throws Exception {
         Matrix m = new Matrix(3, 3);
         m.set(0, 0, 2.0);

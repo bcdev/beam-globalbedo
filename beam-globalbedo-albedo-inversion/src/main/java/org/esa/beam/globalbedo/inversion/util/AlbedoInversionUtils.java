@@ -23,7 +23,6 @@ public class AlbedoInversionUtils {
      *
      * @param year - the year
      * @param doy  - the day of year
-     *
      * @return String - the datestring
      */
     public static String getDateFromDoy(int year, int doy) {
@@ -62,7 +61,6 @@ public class AlbedoInversionUtils {
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
-     *
      * @return Matrix - the filtered matrix
      */
     public static Matrix getRectangularDiagonalMatrix(Matrix m) {
@@ -81,7 +79,6 @@ public class AlbedoInversionUtils {
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix
-     *
      * @return Matrix - the nx1 result matrix
      */
     public static Matrix getRectangularDiagonalFlatMatrix(Matrix m) {
@@ -99,10 +96,9 @@ public class AlbedoInversionUtils {
     /**
      * Returns a rows x columns matrix with constant elements
      *
-     * @param rows                - the matrix row dimension
-     * @param columns             - the matrix column dimension
+     * @param rows          - the matrix row dimension
+     * @param columns       - the matrix column dimension
      * @param constantValue - the constant value to set
-     *
      * @return Matrix - the constant matrix
      */
     public static Matrix getConstantMatrix(int rows, int columns, double constantValue) {
@@ -116,10 +112,46 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * Returns a rows x columns matrix with reciprocal elements
+     *
+     * @param m - the input matrix
+     * @return Matrix - the result matrix
+     */
+    public static Matrix getReciprocalMatrix(Matrix m) {
+        final int rows = m.getRowDimension();
+        final int cols = m.getColumnDimension();
+        Matrix resultM = new Matrix(rows, cols);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                resultM.set(i, j, 1.0 / m.get(i, j));
+            }
+        }
+        return resultM;
+    }
+
+    /**
+     * Returns the product of all elements of a matrix
+     * (equivalent to Python's numpy.product(m))
+     *
+     * @param m - the input matrix
+     * @return double - the result
+     */
+    public static double getMatrixAllElementsProduct(Matrix m) {
+        final int rows = m.getRowDimension();
+        final int cols = m.getColumnDimension();
+        double result = 1.0;
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < cols; j++) {
+                result *= m.get(i, j);
+            }
+        }
+        return result;
+    }
+
+    /**
      * Checks if a matrix contains NaN elements
      *
      * @param m - original matrix
-     *
      * @return boolean
      */
     public static boolean matrixHasNanElements(Matrix m) {
@@ -138,7 +170,6 @@ public class AlbedoInversionUtils {
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
-     *
      * @return boolean
      */
     public static boolean matrixHasZerosInDiagonale(Matrix m) {
@@ -157,9 +188,7 @@ public class AlbedoInversionUtils {
      * // todo: apply this also in BBDR module, then easting/northing parameters will not be needed any more
      *
      * @param modisTile
-     *
      * @return
-     *
      * @throws NumberFormatException
      */
     public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
@@ -180,22 +209,22 @@ public class AlbedoInversionUtils {
         repro.setParameter("northing", northing);
 
         repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                                  "GEOGCS[\"WGS 84\"," +
-                                  "  DATUM[\"WGS_1984\"," +
-                                  "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                                  "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                                  "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                                  "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                                  "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                                  "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                                  "PROJECTION[\"Sinusoidal\"]," +
-                                  "PARAMETER[\"false_easting\",0.0]," +
-                                  "PARAMETER[\"false_northing\",0.0]," +
-                                  "PARAMETER[\"central_meridian\",0.0]," +
-                                  "PARAMETER[\"semi_major\",6371007.181]," +
-                                  "PARAMETER[\"semi_minor\",6371007.181]," +
-                                  "UNIT[\"m\",1.0]," +
-                                  "AUTHORITY[\"SR-ORG\",\"6974\"]]");
+                "GEOGCS[\"WGS 84\"," +
+                "  DATUM[\"WGS_1984\"," +
+                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+                "PROJECTION[\"Sinusoidal\"]," +
+                "PARAMETER[\"false_easting\",0.0]," +
+                "PARAMETER[\"false_northing\",0.0]," +
+                "PARAMETER[\"central_meridian\",0.0]," +
+                "PARAMETER[\"semi_major\",6371007.181]," +
+                "PARAMETER[\"semi_minor\",6371007.181]," +
+                "UNIT[\"m\",1.0]," +
+                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
 
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", false);
@@ -224,4 +253,6 @@ public class AlbedoInversionUtils {
             throw new IllegalArgumentException("Invalid prior name " + priorName);
         }
     }
+
+
 }

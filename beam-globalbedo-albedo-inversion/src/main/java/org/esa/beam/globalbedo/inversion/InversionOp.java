@@ -3,6 +3,7 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
+import Jama.SingularValueDecomposition;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -16,6 +17,8 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import java.util.HashMap;
 import java.util.Map;
 
+import static java.lang.Math.*;
+
 /**
  * Pixel operator implementing the inversion part of python breadboard.
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
@@ -24,10 +27,10 @@ import java.util.Map;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-                  description = "Performs final inversion from fully accumulated optimal estimation matrices",
-                  authors = "Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Performs final inversion from fully accumulated optimal estimation matrices",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
 
@@ -56,7 +59,7 @@ public class InversionOp extends PixelOperator {
             new int[AlbedoInversionConstants.numAlbedoParameters]
                     [AlbedoInversionConstants.numAlbedoParameters];
 
-    public static final int priorOffset = (int) Math.pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
+    public static final int priorOffset = (int) pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
     public static final int SRC_PRIOR_NSAMPLES = 2 * priorOffset + 1;
     public static final int SRC_PRIOR_MASK = 2 * priorOffset + 2;
 
@@ -70,8 +73,8 @@ public class InversionOp extends PixelOperator {
     private static final int[] TRG_PARAMETERS = new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
-    private static final int targetOffset = ((int) Math.pow(3 * AlbedoInversionConstants.numBBDRWaveBands, 2.0)
-                                             + 3 * AlbedoInversionConstants.numBBDRWaveBands) / 2;
+    private static final int targetOffset = ((int) pow(3 * AlbedoInversionConstants.numBBDRWaveBands, 2.0)
+            + 3 * AlbedoInversionConstants.numBBDRWaveBands) / 2;
 
     private static final int[] TRG_UNCERTAINTIES = new int[targetOffset];
 
@@ -135,7 +138,7 @@ public class InversionOp extends PixelOperator {
             // only UR matrix + diagonale
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 uncertaintyBandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i) + "_f" + i +
-                                             waveBandsOffsetMap.get(j) + "_f" + j;
+                        waveBandsOffsetMap.get(j) + "_f" + j;
                 Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
@@ -154,7 +157,7 @@ public class InversionOp extends PixelOperator {
 
         weightedNumberOfSamplesBandName = "Weighted_Number_of_Samples";
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                                                                 ProductData.TYPE_FLOAT32);
+                ProductData.TYPE_FLOAT32);
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
@@ -239,14 +242,14 @@ public class InversionOp extends PixelOperator {
                                 WritableSample[] targetSamples) {
 
         Matrix parameters = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
-                                       AlbedoInversionConstants.numAlbedoParameters);
+                AlbedoInversionConstants.numAlbedoParameters);
         Matrix parametersNoPrior = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
-                                              AlbedoInversionConstants.numAlbedoParameters);
+                AlbedoInversionConstants.numAlbedoParameters);
 
         Matrix uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                          3 * AlbedoInversionConstants.numAlbedoParameters);
+                3 * AlbedoInversionConstants.numAlbedoParameters);
         Matrix uncertaintiesNoPrior = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                 3 * AlbedoInversionConstants.numAlbedoParameters);
+                3 * AlbedoInversionConstants.numAlbedoParameters);
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
@@ -256,7 +259,6 @@ public class InversionOp extends PixelOperator {
 
         Matrix M = accumulator.getM();
         Matrix V = accumulator.getV();
-        Matrix E = accumulator.getE();
         int maskAcc = accumulator.getMask();
         int maskPrior = prior.getMask();
 
@@ -270,46 +272,64 @@ public class InversionOp extends PixelOperator {
                 V = V.plus(prior.getV());
             }
 
-            LUDecomposition lud = new LUDecomposition(M);
+            final LUDecomposition lud = new LUDecomposition(M);
             if (lud.isNonsingular()) {
                 Matrix tmpM = M.inverse();
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
                         tmpM)) {
                     tmpM = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                                  3 * AlbedoInversionConstants.numAlbedoParameters,
-                                                                  -9999.0);
+                            3 * AlbedoInversionConstants.numAlbedoParameters,
+                            -9999.0);
                 }
                 uncertainties = tmpM;
             } else {
                 parameters = AlbedoInversionUtils.getConstantMatrix(AlbedoInversionConstants.numBBDRWaveBands,
                         AlbedoInversionConstants.numAlbedoParameters,
-                        -9999.0);
+                        AlbedoInversionConstants.INVALID);
                 uncertainties = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                                       3 * AlbedoInversionConstants.numAlbedoParameters,
-                                                                       -9999.0);
+                        3 * AlbedoInversionConstants.numAlbedoParameters,
+                        AlbedoInversionConstants.INVALID);
                 maskAcc = 0;
             }
 
             if (maskAcc != 0) {
                 // do parameters estimation:
+
 //                # Compute least-squares solution to equation Ax = b
 //                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
 //
 //                (P, rho_residuals, rank, svals) = lstsq(M, V)
 //                parameters[:,column,row] = P
+                parameters = M.solve(V);
 //
 //                # Compute singluar value decomposition
 //                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html
 //                U, S, Vh = svd(M)
 //                det[column,row] = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
 //
+                final SingularValueDecomposition svdM = M.svd();
+                final Matrix svdMS = svdM.getS();
+                final Matrix svdMSRecip = AlbedoInversionUtils.getReciprocalMatrix(svdMS);
+                final double productSvdMSRecip = AlbedoInversionUtils.getMatrixAllElementsProduct(svdMSRecip);
+                entropy = 0.5 * log(productSvdMSRecip) + svdMS.getRowDimension() * sqrt(log(2.0 * PI * E));
+
 //                # This can be calculated earlier for the prior
 //                U, S, Vh = svd(numpy.matrix(M_p))
+                final SingularValueDecomposition svdMP = prior.getM().svd();
+                final Matrix svdMPS = svdMP.getS();
+                final Matrix svdMPSRecip = AlbedoInversionUtils.getReciprocalMatrix(svdMPS);
+                final double productSvdMPSRecip = AlbedoInversionUtils.getMatrixAllElementsProduct(svdMPSRecip);
 //                PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+                final double entropyPrior = 0.5 * log(productSvdMPSRecip) + svdMPS.getRowDimension() * sqrt(log(2.0 * PI * E));
 //                if UsePrior == 1:
 //                    RelativeEntropy[column,row] = PriorDet - det[column,row]
 //                else:
 //                    RelativeEntropy[column,row] = Invalid # As this has no meaning
+                if (usePrior) {
+                    relEntropy = entropyPrior - entropy;
+                } else {
+                    relEntropy = AlbedoInversionConstants.INVALID;
+                }
             }
         } else {
 //            # If there is not a single sample available, just use the prior parameters (f0, f1, f2) and prior uncertainties

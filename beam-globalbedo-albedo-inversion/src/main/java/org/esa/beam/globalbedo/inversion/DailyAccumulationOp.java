@@ -18,8 +18,8 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.optest",
-                  description = "Computes optimal estimation matrices for a single BBDR observation",
+@OperatorMetadata(alias = "ga.inversion.dailyacc",
+                  description = "Provides daily accumulation of single BBDR observations",
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
