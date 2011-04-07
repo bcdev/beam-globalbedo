@@ -5,12 +5,9 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.experimental.PointOperator;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.util.StringUtils;
 
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 
 /**
  * Utility class for Albedo Inversion part
@@ -24,7 +21,8 @@ public class AlbedoInversionUtils {
      * Converts a day of year to a datestring in yyyyMMdd format
      *
      * @param year - the year
-     * @param doy - the day of year
+     * @param doy  - the day of year
+     *
      * @return String - the datestring
      */
     public static String getDateFromDoy(int year, int doy) {
@@ -40,8 +38,8 @@ public class AlbedoInversionUtils {
     /**
      * Adds a land mask sample definition to a configurator used in a point operator
      *
-     * @param configurator - the configurator
-     * @param index - the sample index
+     * @param configurator  - the configurator
+     * @param index         - the sample index
      * @param sourceProduct - the source product
      */
     public static void setLandMaskSourceSample(PointOperator.Configurator configurator, int index,
@@ -62,7 +60,8 @@ public class AlbedoInversionUtils {
      * Returns a matrix which contains on the diagonal the original elements, and zeros elsewhere
      * Input must be a nxm matrix with n = m
      *
-     * @param m  - original matrix
+     * @param m - original matrix
+     *
      * @return Matrix - the filtered matrix
      */
     public static Matrix getRectangularDiagonalMatrix(Matrix m) {
@@ -81,7 +80,8 @@ public class AlbedoInversionUtils {
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix
-     * @return  Matrix - the nx1 result matrix
+     *
+     * @return Matrix - the nx1 result matrix
      */
     public static Matrix getRectangularDiagonalFlatMatrix(Matrix m) {
         if (m.getRowDimension() != m.getColumnDimension()) {
@@ -96,19 +96,76 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * Returns a rows x columns matrix with constant elements
+     *
+     * @param rows                - the matrix row dimension
+     * @param columns             - the matrix column dimension
+     * @param constantValue - the constant value to set
+     *
+     * @return Matrix - the constant matrix
+     */
+    public static Matrix getConstantMatrix(int rows, int columns, double constantValue) {
+        Matrix m = new Matrix(rows, columns);
+        for (int i = 0; i < rows; i++) {
+            for (int j = 0; j < columns; j++) {
+                m.set(i, j, constantValue);
+            }
+        }
+        return m;
+    }
+
+    /**
+     * Checks if a matrix contains NaN elements
+     *
+     * @param m - original matrix
+     *
+     * @return boolean
+     */
+    public static boolean matrixHasNanElements(Matrix m) {
+        for (int i = 0; i < m.getRowDimension(); i++) {
+            for (int j = 0; j < m.getColumnDimension(); j++) {
+                if (Double.isNaN(m.get(i, j))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Checks if a matrix contains zeros in diagonale
+     * Input must be a nxm matrix with n = m
+     *
+     * @param m - original matrix
+     *
+     * @return boolean
+     */
+    public static boolean matrixHasZerosInDiagonale(Matrix m) {
+        for (int i = 0; i < m.getRowDimension(); i++) {
+            if (m.get(i, i) == 0.0) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
+    /**
      * Returns the upper left corner of a MODIS tile (e.g. h18v04) in (x,y)-coordinates of sinusoidal projection used
      * in the Globalbedo project. These values represent the easting/northing parameters.
      * // todo: apply this also in BBDR module, then easting/northing parameters will not be needed any more
      *
      * @param modisTile
+     *
      * @return
+     *
      * @throws NumberFormatException
      */
     public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
         double[] upperLeftPoint = new double[2];
 
-        final int eastingIndex = Integer.parseInt(modisTile.substring(1,3)) - 18;
-        final int northingIndex = 9 - Integer.parseInt(modisTile.substring(4,6));
+        final int eastingIndex = Integer.parseInt(modisTile.substring(1, 3)) - 18;
+        final int northingIndex = 9 - Integer.parseInt(modisTile.substring(4, 6));
 
         upperLeftPoint[0] = eastingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
         upperLeftPoint[1] = northingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
@@ -157,7 +214,7 @@ public class AlbedoInversionUtils {
     public static int getDoyFromPriorName(String priorName) {
         int doy;
         if (priorName.startsWith("Kernels_")) {
-            doy = Integer.parseInt(priorName.substring(8,11));
+            doy = Integer.parseInt(priorName.substring(8, 11));
             if (Math.abs(doy) > 366) {
                 throw new IllegalArgumentException("Invalid doy " + doy + " retrieved from prior name " + priorName);
             }

@@ -1,6 +1,8 @@
 package org.esa.beam.globalbedo.inversion;
 
 
+import Jama.LUDecomposition;
+import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -34,28 +36,28 @@ public class InversionOp extends PixelOperator {
     private static final int ymin = 1;
     private static final int ymax = 1;
 
-    private static final int[][] SRC_ACCUM_M =
+    public static final int[][] SRC_ACCUM_M =
             new int[3 * AlbedoInversionConstants.numBBDRWaveBands]
                     [3 * AlbedoInversionConstants.numBBDRWaveBands];
 
-    private static final int[] SRC_ACCUM_V =
+    public static final int[] SRC_ACCUM_V =
             new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
 
-    private static final int SRC_ACCUM_E = 90;
-    private static final int SRC_ACCUM_MASK = 91;
-    private static final int SRC_ACCUM_DOY_CLOSEST_SAMPLE = 92;
+    public static final int SRC_ACCUM_E = 90;
+    public static final int SRC_ACCUM_MASK = 91;
+    public static final int SRC_ACCUM_DOY_CLOSEST_SAMPLE = 92;
 
-    private static final int[][] SRC_PRIOR_MEAN =
+    public static final int[][] SRC_PRIOR_MEAN =
             new int[AlbedoInversionConstants.numAlbedoParameters]
-                   [AlbedoInversionConstants.numAlbedoParameters];
+                    [AlbedoInversionConstants.numAlbedoParameters];
 
-    private static final int[][] SRC_PRIOR_SD =
+    public static final int[][] SRC_PRIOR_SD =
             new int[AlbedoInversionConstants.numAlbedoParameters]
-                   [AlbedoInversionConstants.numAlbedoParameters];
+                    [AlbedoInversionConstants.numAlbedoParameters];
 
-    private static final int priorOffset = (int) Math.pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
-    private static final int SRC_PRIOR_NSAMPLES = 2*priorOffset + 1;
-    private static final int SRC_PRIOR_MASK = 2*priorOffset + 2;
+    public static final int priorOffset = (int) Math.pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
+    public static final int SRC_PRIOR_NSAMPLES = 2 * priorOffset + 1;
+    public static final int SRC_PRIOR_MASK = 2 * priorOffset + 2;
 
     private static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
 
@@ -110,6 +112,10 @@ public class InversionOp extends PixelOperator {
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
+
+    @Parameter(defaultValue = "true", description = "Use prior information")
+    private boolean usePrior;
+
 
     @Override
     protected void configureTargetProduct(Product targetProduct) {
@@ -194,11 +200,13 @@ public class InversionOp extends PixelOperator {
         for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
                 final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = priorOffset +  AlbedoInversionConstants.numAlbedoParameters* i + j + 1;
+                SRC_PRIOR_SD[i][j] = priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j + 1;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
-        configurator.defineSample(SRC_ACCUM_E, "E", accumulationProduct);
+        // todo: define constants for names
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, "N_samples", priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, "Mask", priorProduct);
     }
 
     @Override
@@ -228,7 +236,101 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples,
                                 WritableSample[] targetSamples) {
-        //To change body of implemented methods use File | Settings | File Templates.
+
+        Matrix parameters = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
+                                       AlbedoInversionConstants.numAlbedoParameters);
+        Matrix parametersNoPrior = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
+                                              AlbedoInversionConstants.numAlbedoParameters);
+
+        Matrix uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                          3 * AlbedoInversionConstants.numAlbedoParameters);
+        Matrix uncertaintiesNoPrior = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                 3 * AlbedoInversionConstants.numAlbedoParameters);
+
+        double entropy = 0.0; // == det in BB
+        double relEntropy = 0.0;
+
+        Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
+        Prior prior = Prior.createForInversion(sourceSamples);
+
+        Matrix M = accumulator.getM();
+        Matrix V = accumulator.getV();
+        Matrix E = accumulator.getE();
+        int maskAcc = accumulator.getMask();
+        int maskPrior = prior.getMask();
+
+        if (maskAcc > 0 && maskPrior > 0) {
+
+            if (usePrior) {
+                for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+                    double m_ii_accum = M.get(i, i);
+                    M.set(i, i, m_ii_accum + prior.getM().get(i, i));
+                }
+                V = V.plus(prior.getV());
+            }
+
+            LUDecomposition lud = new LUDecomposition(M);
+            if (lud.isNonsingular()) {
+                Matrix tmpM = M.inverse();
+                if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
+                        tmpM)) {
+                    tmpM = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                                  3 * AlbedoInversionConstants.numAlbedoParameters,
+                                                                  -9999.0);
+                }
+                uncertainties = tmpM;
+            } else {
+                parameters = AlbedoInversionUtils.getConstantMatrix(AlbedoInversionConstants.numBBDRWaveBands,
+                                                                    AlbedoInversionConstants.numAlbedoParameters,
+                                                                    -9999.0);
+                uncertainties = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                                       3 * AlbedoInversionConstants.numAlbedoParameters,
+                                                                       -9999.0);
+                maskAcc = 0;
+            }
+
+            if (maskAcc != 0) {
+                // do parameters estimation:
+//                # Compute least-squares solution to equation Ax = b
+//                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
+//
+//                (P, rho_residuals, rank, svals) = lstsq(M, V)
+//                parameters[:,column,row] = P
+//
+//                # Compute singluar value decomposition
+//                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html
+//                U, S, Vh = svd(M)
+//                det[column,row] = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+//
+//                # This can be calculated earlier for the prior
+//                U, S, Vh = svd(numpy.matrix(M_p))
+//                PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+//                if UsePrior == 1:
+//                    RelativeEntropy[column,row] = PriorDet - det[column,row]
+//                else:
+//                    RelativeEntropy[column,row] = Invalid # As this has no meaning
+            }
+        } else {
+//            # If there is not a single sample available, just use the prior parameters (f0, f1, f2) and prior uncertainties
+//                if Mask_prior[column,row] > 0:
+//                    for i in range(0,nWaveBands*3):
+//                        parameters[i,column,row] = Parameters_prior[i,column,row]
+//
+//                    if UsePrior == 1:
+//                        uncertainties[:,:,column,row] = numpy.matrix(M_prior[:,:,column,row]).I
+//                        U, S, Vh = svd(numpy.matrix(M_prior[:,:,column,row]))
+//                        PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+//                        det[column,row] = PriorDet
+//                        RelativeEntropy[column,row] = 0.0
+//                    else:
+//                        uncertainties[:,:,column,row] = Invalid # As this has no meaning
+//                        det[column,row] = Invalid # as this has no meaning
+//                        RelativeEntropy[column,row] = Invalid # as this has no meaning
+//                        # a flag should be passed through to say that it is prior
+        }
+
+        // fill target samples...
+        // todo
     }
 
     public static class Spi extends OperatorSpi {

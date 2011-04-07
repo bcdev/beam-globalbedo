@@ -3,8 +3,6 @@ package org.esa.beam.globalbedo.inversion;
 import Jama.Matrix;
 import junit.framework.TestCase;
 
-import java.util.List;
-
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -42,7 +40,8 @@ public class AlbedoInversionTest extends TestCase {
         try {
             AlbedoInversionUtils.getDoyFromPriorName(priorName);
         } catch (IllegalArgumentException e) {
-            assertEquals("Invalid doy 999 retrieved from prior name Kernels_999_005_h18v04_backGround_Snow.hdr", e.getMessage());
+            assertEquals("Invalid doy 999 retrieved from prior name Kernels_999_005_h18v04_backGround_Snow.hdr",
+                         e.getMessage());
         }
     }
 
@@ -92,6 +91,34 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(2.0, diagFlat.get(0, 0));
         assertEquals(3.0, diagFlat.get(1, 0));
         assertEquals(12.0, diagFlat.get(2, 0));
+    }
+
+    public void testMatrixHasNaNElements() throws Exception {
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 0, 4.0);
+        m.set(2, 0, 6.0);
+        m.set(0, 1, 8.0);
+        m.set(1, 1, 3.0);
+        m.set(2, 1, 5.0);
+        m.set(0, 2, 7.0);
+        m.set(1, 2, 9.0);
+        m.set(2, 2, 12.0);
+
+        assertFalse(AlbedoInversionUtils.matrixHasNanElements(m));
+        m.set(1,2, Double.NaN);
+        assertTrue(AlbedoInversionUtils.matrixHasNanElements(m));
+    }
+
+    public void testMatrixHasZerosInDiagonale() throws Exception {
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 1, 4.0);
+        m.set(2, 2, 6.0);
+
+        assertFalse(AlbedoInversionUtils.matrixHasZerosInDiagonale(m));
+        m.set(2, 2, 0.0);
+        assertTrue(AlbedoInversionUtils.matrixHasZerosInDiagonale(m));
     }
 
     public void testGetUpperLeftCornerOfModisTiles() throws Exception {

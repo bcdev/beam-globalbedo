@@ -186,19 +186,19 @@ public class DailyAccumulationOp extends PixelOperator {
 
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
-            final AccumulationMatrixContainer container = getMatricesPerBBDRDataset(sourceSamples, i);
-            M.plusEquals(container.getM());
-            V.plusEquals(container.getV());
-            E.plusEquals(container.getE());
-            mask += container.getMask();
+            final Accumulator accumulator = getMatricesPerBBDRDataset(sourceSamples, i);
+            M.plusEquals(accumulator.getM());
+            V.plusEquals(accumulator.getV());
+            E.plusEquals(accumulator.getE());
+            mask += accumulator.getMask();
         }
 
         // fill target samples...
-        fillTargetSamples(targetSamples, M, V, E, mask);
+        Accumulator accumulator = new Accumulator(M, V, E, mask);
+        fillTargetSamples(targetSamples, accumulator);
     }
 
-    private AccumulationMatrixContainer getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
-        AccumulationMatrixContainer container = new AccumulationMatrixContainer();
+    private Accumulator getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
 
         // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
         if (isLandFilter(sourceSamples, sourceProductIndex) || isSnowFilter(sourceSamples, sourceProductIndex) ||
@@ -207,12 +207,8 @@ public class DailyAccumulationOp extends PixelOperator {
                                       3 * AlbedoInversionConstants.numBBDRWaveBands);
             final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,1);
             final Matrix zeroE = new Matrix(1, 1);
-            container.setM(zeroM);
-            container.setV(zeroV);
-            container.setE(zeroE);
-            container.setMask(0);
 
-            return container;
+            return new Accumulator(zeroM, zeroV, zeroE, 0);
         }
 
         // get kernels...
@@ -262,12 +258,7 @@ public class DailyAccumulationOp extends PixelOperator {
         final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
         // return result
-        container.setM(M);
-        container.setV(V);
-        container.setE(E);
-        container.setMask(1);
-
-        return container;
+        return new Accumulator(M, V, E, 1);
     }
 
     private Matrix getBBDR(Sample[] sourceSamples, int sourceProductIndex) {
@@ -297,17 +288,17 @@ public class DailyAccumulationOp extends PixelOperator {
         return correlation;
     }
 
-    private void fillTargetSamples(WritableSample[] targetSamples, Matrix m, Matrix v, Matrix e, int mask) {
+    private void fillTargetSamples(WritableSample[] targetSamples, Accumulator accumulator) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                targetSamples[TRG_M[i][j]].set(m.get(i, j));
+                targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i, j));
             }
         }
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            targetSamples[TRG_V[i]].set(v.get(i, 0));
+            targetSamples[TRG_V[i]].set(accumulator.getV().get(i, 0));
         }
-        targetSamples[TRG_E].set(e.get(0, 0));
-        targetSamples[TRG_MASK].set(mask);
+        targetSamples[TRG_E].set(accumulator.getE().get(0, 0));
+        targetSamples[TRG_MASK].set(accumulator.getMask());
     }
 
     private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {

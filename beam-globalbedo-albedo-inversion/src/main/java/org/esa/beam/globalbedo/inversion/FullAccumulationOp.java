@@ -225,21 +225,22 @@ public class FullAccumulationOp extends PixelOperator {
         }
 
         // fill target samples...
-        fillTargetSamples(targetSamples, M, V, E, mask, doyClosestSample);
+        Accumulator accumulator = new Accumulator(M, V, E, mask, doyClosestSample);
+        fillTargetSamples(targetSamples, accumulator);
     }
 
-    private void fillTargetSamples(PointOperator.WritableSample[] targetSamples, Matrix m, Matrix v, Matrix e, int mask,
-                                   int doyClosestSample) {
+    private void fillTargetSamples(PointOperator.WritableSample[] targetSamples, Accumulator accumulator) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                targetSamples[TRG_M[i][j]].set(m.get(i, j));
+                targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i, j));
             }
         }
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            targetSamples[TRG_V[i]].set(v.get(i, 0));
+            targetSamples[TRG_V[i]].set(accumulator.getV().get(i, 0));
         }
-        targetSamples[TRG_E].set(e.get(0, 0));
-        targetSamples[TRG_MASK].set(mask);
+        targetSamples[TRG_E].set(accumulator.getE().get(0, 0));
+        targetSamples[TRG_MASK].set(accumulator.getMask());
+        targetSamples[TRG_DOY_CLOSEST_SAMPLE].set(accumulator.getDoyClosestSample());
 
     }
 
