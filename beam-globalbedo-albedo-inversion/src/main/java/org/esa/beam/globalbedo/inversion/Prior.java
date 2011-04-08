@@ -15,9 +15,9 @@ public class Prior {
     private Matrix M;
     private Matrix V;
     private int mask;
-    private double[][] parameters;
+    private Matrix parameters;
 
-    public Prior(Matrix m, Matrix v, int mask, double[][] parameters) {
+    public Prior(Matrix m, Matrix v, int mask, Matrix parameters) {
         this.M = m;
         this.V = v;
         this.mask = mask;
@@ -44,32 +44,32 @@ public class Prior {
 
         final double priorScaleFactor = 10.0;
 
-        double[][] priorMean = new double[AlbedoInversionConstants.numBBDRWaveBands][AlbedoInversionConstants.numBBDRWaveBands];
-        double[][] priorSD = new double[AlbedoInversionConstants.numBBDRWaveBands][AlbedoInversionConstants.numBBDRWaveBands];
+        Matrix priorMean = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix priorSD   = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
 
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                priorMean[i][j] = sourceSamples[InversionOp.SRC_PRIOR_MEAN[i][j]].getDouble();
-                priorSD[i][j] = sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble();
-                if (priorMean[i][j] > 0.0 && priorSD[i][j] == 0.0) {
+                priorMean.set(i, j, sourceSamples[InversionOp.SRC_PRIOR_MEAN[i][j]].getDouble());
+                priorSD.set(i, j, sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble());
+                if (priorMean.get(i, j) > 0.0 && priorSD.get(i, j) == 0.0) {
                     mask = 1;
                     nSamples = 1.E-20;
-                    priorSD[i][j] = 1.0;
+                    priorSD.set(i, j, 1.0);
                 }
-                if (priorMean[i][j] > 0.0 && sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble() > 0.0 &&
+                if (priorMean.get(i, j) > 0.0 && sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble() > 0.0 &&
                     sourceSamples[InversionOp.SRC_PRIOR_MASK].getInt() > 0) {
                     mask = 1;
                     nSamples = 1.E-20;
-                    priorSD[i][j] = 1.0;
+                    priorSD.set(i, j, 1.0);
                 }
             }
         }
 
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                priorSD[i][j] = Math.min(1.0, priorSD[i][j] * priorScaleFactor);
+                priorSD.set(i, j, Math.min(1.0, priorSD.get(i, j) * priorScaleFactor));
                 if (i == j) {
-                    C.set(i, j, priorSD[i][j] * priorSD[i][j]);
+                    C.set(i, j, priorSD.get(i, j) * priorSD.get(i, j));
                 }
             }
         }
@@ -83,7 +83,8 @@ public class Prior {
                 inverseC = C.inverse();
             } else {
                 for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                    if (priorMean[0][j] <= 0.0 || priorMean[0][j] > 1.0 || priorSD[0][j] <= 0.0 || priorSD[0][j] > 1.0) {
+                    if (priorMean.get(0, j) <= 0.0 || priorMean.get(0, j) > 1.0 ||
+                        priorSD.get(0, j) <= 0.0 || priorSD.get(0, j) > 1.0) {
                         processPixel = false;
                         break;
                     }
@@ -96,7 +97,7 @@ public class Prior {
                 int index = 0;
                 for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
                     for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                        inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean[i][j]);
+                        inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(i, j));
                         index++;
                     }
                 }
@@ -121,7 +122,7 @@ public class Prior {
         return mask;
     }
 
-    public double[][] getParameters() {
+    public Matrix getParameters() {
         return parameters;
     }
 }

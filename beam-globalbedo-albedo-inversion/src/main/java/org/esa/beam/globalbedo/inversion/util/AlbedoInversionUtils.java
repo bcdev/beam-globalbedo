@@ -94,24 +94,6 @@ public class AlbedoInversionUtils {
     }
 
     /**
-     * Returns a rows x columns matrix with constant elements
-     *
-     * @param rows          - the matrix row dimension
-     * @param columns       - the matrix column dimension
-     * @param constantValue - the constant value to set
-     * @return Matrix - the constant matrix
-     */
-    public static Matrix getConstantMatrix(int rows, int columns, double constantValue) {
-        Matrix m = new Matrix(rows, columns);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < columns; j++) {
-                m.set(i, j, constantValue);
-            }
-        }
-        return m;
-    }
-
-    /**
      * Returns a rows x columns matrix with reciprocal elements
      *
      * @param m - the input matrix

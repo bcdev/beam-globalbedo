@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.framework.gpf.experimental.PointOperator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 import java.util.HashMap;
@@ -27,10 +28,10 @@ import static java.lang.Math.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-        description = "Performs final inversion from fully accumulated optimal estimation matrices",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+                  description = "Performs final inversion from fully accumulated optimal estimation matrices",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
 
@@ -74,7 +75,7 @@ public class InversionOp extends PixelOperator {
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
     private static final int targetOffset = ((int) pow(3 * AlbedoInversionConstants.numBBDRWaveBands, 2.0)
-            + 3 * AlbedoInversionConstants.numBBDRWaveBands) / 2;
+                                             + 3 * AlbedoInversionConstants.numBBDRWaveBands) / 2;
 
     private static final int[] TRG_UNCERTAINTIES = new int[targetOffset];
 
@@ -138,7 +139,7 @@ public class InversionOp extends PixelOperator {
             // only UR matrix + diagonale
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 uncertaintyBandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i) + "_f" + i +
-                        waveBandsOffsetMap.get(j) + "_f" + j;
+                                             waveBandsOffsetMap.get(j) + "_f" + j;
                 Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
@@ -157,7 +158,7 @@ public class InversionOp extends PixelOperator {
 
         weightedNumberOfSamplesBandName = "Weighted_Number_of_Samples";
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                ProductData.TYPE_FLOAT32);
+                                                                 ProductData.TYPE_FLOAT32);
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
@@ -242,53 +243,56 @@ public class InversionOp extends PixelOperator {
                                 WritableSample[] targetSamples) {
 
         Matrix parameters = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
-                AlbedoInversionConstants.numAlbedoParameters);
+                                       AlbedoInversionConstants.numAlbedoParameters);
         Matrix parametersNoPrior = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
-                AlbedoInversionConstants.numAlbedoParameters);
+                                              AlbedoInversionConstants.numAlbedoParameters);
 
         Matrix uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                3 * AlbedoInversionConstants.numAlbedoParameters);
+                                          3 * AlbedoInversionConstants.numAlbedoParameters);
         Matrix uncertaintiesNoPrior = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                3 * AlbedoInversionConstants.numAlbedoParameters);
+                                                 3 * AlbedoInversionConstants.numAlbedoParameters);
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 
-        Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
-        Prior prior = Prior.createForInversion(sourceSamples);
+        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
+        final Prior prior = Prior.createForInversion(sourceSamples);
 
-        Matrix M = accumulator.getM();
-        Matrix V = accumulator.getV();
+        final Matrix mAcc = accumulator.getM();
+        Matrix vAcc = accumulator.getV();
+        final Matrix eAcc = accumulator.getE();
         int maskAcc = accumulator.getMask();
+        final int doyClosestSample = accumulator.getDoyClosestSample();
+
         int maskPrior = prior.getMask();
 
         if (maskAcc > 0 && maskPrior > 0) {
 
             if (usePrior) {
                 for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                    double m_ii_accum = M.get(i, i);
-                    M.set(i, i, m_ii_accum + prior.getM().get(i, i));
+                    double m_ii_accum = mAcc.get(i, i);
+                    mAcc.set(i, i, m_ii_accum + prior.getM().get(i, i));
                 }
-                V = V.plus(prior.getV());
+                vAcc = vAcc.plus(prior.getV());
             }
 
-            final LUDecomposition lud = new LUDecomposition(M);
+            final LUDecomposition lud = new LUDecomposition(mAcc);
             if (lud.isNonsingular()) {
-                Matrix tmpM = M.inverse();
+                Matrix tmpM = mAcc.inverse();
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
                         tmpM)) {
-                    tmpM = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                            3 * AlbedoInversionConstants.numAlbedoParameters,
-                            -9999.0);
+                    tmpM = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                                  3 * AlbedoInversionConstants.numAlbedoParameters,
+                                                                  AlbedoInversionConstants.INVALID);
                 }
                 uncertainties = tmpM;
             } else {
-                parameters = AlbedoInversionUtils.getConstantMatrix(AlbedoInversionConstants.numBBDRWaveBands,
-                        AlbedoInversionConstants.numAlbedoParameters,
-                        AlbedoInversionConstants.INVALID);
-                uncertainties = AlbedoInversionUtils.getConstantMatrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                        3 * AlbedoInversionConstants.numAlbedoParameters,
-                        AlbedoInversionConstants.INVALID);
+                parameters = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
+                                                                    AlbedoInversionConstants.numAlbedoParameters,
+                                                                    AlbedoInversionConstants.INVALID);
+                uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                                       3 * AlbedoInversionConstants.numAlbedoParameters,
+                                                                       AlbedoInversionConstants.INVALID);
                 maskAcc = 0;
             }
 
@@ -298,29 +302,19 @@ public class InversionOp extends PixelOperator {
 //                # Compute least-squares solution to equation Ax = b
 //                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
 //
-//                (P, rho_residuals, rank, svals) = lstsq(M, V)
+//                (P, rho_residuals, rank, svals) = lstsq(mAcc, vAcc)
 //                parameters[:,column,row] = P
-                parameters = M.solve(V);
+                parameters = mAcc.solve(vAcc);
 //
 //                # Compute singluar value decomposition
 //                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html
-//                U, S, Vh = svd(M)
+//                U, S, Vh = svd(mAcc)
 //                det[column,row] = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
-//
-                final SingularValueDecomposition svdM = M.svd();
-                final Matrix svdMS = svdM.getS();
-                final Matrix svdMSRecip = AlbedoInversionUtils.getReciprocalMatrix(svdMS);
-                final double productSvdMSRecip = AlbedoInversionUtils.getMatrixAllElementsProduct(svdMSRecip);
-                entropy = 0.5 * log(productSvdMSRecip) + svdMS.getRowDimension() * sqrt(log(2.0 * PI * E));
+                entropy = getEntropy(mAcc);
 
 //                # This can be calculated earlier for the prior
 //                U, S, Vh = svd(numpy.matrix(M_p))
-                final SingularValueDecomposition svdMP = prior.getM().svd();
-                final Matrix svdMPS = svdMP.getS();
-                final Matrix svdMPSRecip = AlbedoInversionUtils.getReciprocalMatrix(svdMPS);
-                final double productSvdMPSRecip = AlbedoInversionUtils.getMatrixAllElementsProduct(svdMPSRecip);
-//                PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
-                final double entropyPrior = 0.5 * log(productSvdMPSRecip) + svdMPS.getRowDimension() * sqrt(log(2.0 * PI * E));
+                double entropyPrior = getEntropy(prior.getM());
 //                if UsePrior == 1:
 //                    RelativeEntropy[column,row] = PriorDet - det[column,row]
 //                else:
@@ -332,26 +326,77 @@ public class InversionOp extends PixelOperator {
                 }
             }
         } else {
-//            # If there is not a single sample available, just use the prior parameters (f0, f1, f2) and prior uncertainties
-//                if Mask_prior[column,row] > 0:
-//                    for i in range(0,nWaveBands*3):
-//                        parameters[i,column,row] = Parameters_prior[i,column,row]
-//
-//                    if UsePrior == 1:
-//                        uncertainties[:,:,column,row] = numpy.matrix(M_prior[:,:,column,row]).I
-//                        U, S, Vh = svd(numpy.matrix(M_prior[:,:,column,row]))
-//                        PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
-//                        det[column,row] = PriorDet
-//                        RelativeEntropy[column,row] = 0.0
-//                    else:
-//                        uncertainties[:,:,column,row] = Invalid # As this has no meaning
-//                        det[column,row] = Invalid # as this has no meaning
-//                        RelativeEntropy[column,row] = Invalid # as this has no meaning
-//                        # a flag should be passed through to say that it is prior
+            if (maskPrior > 0) {
+                parameters = prior.getParameters();
+                if (usePrior) {
+                    uncertainties = prior.getM().inverse();
+                    entropy = getEntropy(prior.getM());
+                    relEntropy = 0.0;
+                } else {
+                    uncertainties = new Matrix(
+                            3 * AlbedoInversionConstants.numBBDRWaveBands,
+                            3 * AlbedoInversionConstants.numAlbedoParameters, AlbedoInversionConstants.INVALID);
+                    entropy = AlbedoInversionConstants.INVALID;
+                    relEntropy = AlbedoInversionConstants.INVALID;
+                }
+            }
         }
 
-        // fill target samples...
-        // todo
+        // finally we need the 'Goodness of Fit'...
+        double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+
+        // we have the final result - fill target samples...
+        InversionResult result = new InversionResult(parameters, uncertainties, entropy, relEntropy,
+                                                     maskAcc, doyClosestSample, goodnessOfFit);
+        fillTargetSamples(targetSamples, result);
+    }
+
+    private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, int maskAcc) {
+        Matrix goodnessOfFitMatrix = new Matrix(1, 1, 0.0);
+        if (maskAcc > 0) {
+            final Matrix gofTerm1 = fPars.times(mAcc).times(fPars.transpose());
+            final Matrix gofTerm2 = fPars.times(vAcc.transpose());
+            final Matrix m2 = new Matrix(1, 1, 2.0);
+            final Matrix gofTerm3 = m2.times(eAcc);
+            goodnessOfFitMatrix = gofTerm1.plus(gofTerm2).minus(gofTerm3);
+        }
+        return goodnessOfFitMatrix.get(0, 0);
+    }
+
+    private void fillTargetSamples(PointOperator.WritableSample[] targetSamples, InversionResult result) {
+
+        // parameters
+        int index = 0;
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                targetSamples[TRG_PARAMETERS[index]].set(result.getParameters().get(i, j));
+                index++;
+            }
+        }
+
+        index = 0;
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                targetSamples[TRG_UNCERTAINTIES[index]].set(result.getUncertainties().get(i, j));
+            }
+        }
+
+        targetSamples[TRG_ENTROPY].set(result.getEntropy());
+        targetSamples[TRG_REL_ENTROPY].set(result.getRelEntropy());
+        targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
+        targetSamples[TRG_DAYS_CLOSEST_SAMPLE].set(result.getDoyClosestSample());
+        targetSamples[TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
+
+    }
+
+    private double getEntropy(Matrix m) {
+        final SingularValueDecomposition svdM = m.svd();
+        final Matrix svdMS = svdM.getS();
+        final Matrix svdMSRecip = AlbedoInversionUtils.getReciprocalMatrix(svdMS);
+        final double productSvdMSRecip = AlbedoInversionUtils.getMatrixAllElementsProduct(svdMSRecip);
+        double entropy = 0.5 * log(productSvdMSRecip) + svdMS.getRowDimension() * sqrt(log(2.0 * PI * E));
+
+        return entropy;
     }
 
     public static class Spi extends OperatorSpi {
