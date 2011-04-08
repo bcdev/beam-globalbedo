@@ -127,7 +127,7 @@ public class MerisPrepOp extends Operator {
 
         // create elevation product if band is missing in sourceProduct
         Product elevProduct = null;
-        if (needElevation && !sourceProduct.containsBand(ALTITUDE_BAND_NAME)){
+        if (needElevation && !szaSubProduct.containsBand(ALTITUDE_BAND_NAME)){
             elevProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CreateElevationBandOp.class), GPF.NO_PARAMS, szaSubProduct);
         }
 
@@ -184,8 +184,8 @@ public class MerisPrepOp extends Operator {
                 tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
                 tarBand.setSourceImage(srcBand.getSourceImage());
             } else if (sourceProduct.containsBand(ALTITUDE_BAND_NAME)) {
-                Band altitude = ProductUtils.copyBand(ALTITUDE_BAND_NAME, sourceProduct, instrC.getElevationBandName(), targetProduct);
-                altitude.setSourceImage(sourceProduct.getBand(ALTITUDE_BAND_NAME).getSourceImage());
+                Band altitude = ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct);
+                altitude.setSourceImage(szaSubProduct.getBand(ALTITUDE_BAND_NAME).getSourceImage());
 
             }
         }
