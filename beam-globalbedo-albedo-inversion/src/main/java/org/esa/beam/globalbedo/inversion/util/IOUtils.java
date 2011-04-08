@@ -141,8 +141,8 @@ public class IOUtils {
     }
 
     public static AlbedoInput getAlbedoInputProducts(String accumulatorRootDir, int doy, int year, String tile,
-                                                              int wings,
-                                                              boolean computeSnow) throws IOException {
+                                                     int wings,
+                                                     boolean computeSnow) throws IOException {
 
         List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile, wings,
                                                                          computeSnow);
@@ -181,6 +181,38 @@ public class IOUtils {
 
         return inputProduct;
     }
+
+    /**
+     * Returns the filename for an inversion output product
+     *
+     * @param year        - year
+     * @param tile        - tile
+     * @param computeSnow - boolean
+     * @param usePrior    - boolean
+     *
+     * @return String
+     */
+    public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
+                                                    boolean usePrior) {
+        String targetFileName;
+
+        //  build up a name like this: GlobAlbedo.2005129.h18v04.NoSnow.bin
+        if (computeSnow) {
+            if (usePrior) {
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.bin";
+            } else {
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.NoPrior.bin";
+            }
+        } else {
+            if (usePrior) {
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.bin";
+            } else {
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.NoPrior.bin";
+            }
+        }
+        return targetFileName;
+    }
+
 
     static List<String> getAlbedoInputProductNames(String accumulatorRootDir, int doy, int year, String tile, int wings,
                                                    boolean computeSnow) {
@@ -230,23 +262,29 @@ public class IOUtils {
                     //    # Left wing
                     if (365 + (doy - wings) <= 366) {
                         for (int i = 0; i < daysOfThisYear.length; i++) {
-                            if (daysOfThisYear[i] >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
-                                albedoInputProductList.add(s);
+                            if (!albedoInputProductList.contains(s)) {
+                                if (daysOfThisYear[i] >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
+                                    albedoInputProductList.add(s);
+                                }
                             }
                         }
                     }
                     //    # Center
                     for (int i = 0; i < daysOfThisYear.length; i++) {
-                        if ((daysOfThisYear[i] < doy + wings) && (daysOfThisYear[i] >= doy - wings) &&
-                            (Integer.parseInt(thisYear) == year)) {
-                            albedoInputProductList.add(s);
+                        if (!albedoInputProductList.contains(s)) {
+                            if ((daysOfThisYear[i] < doy + wings) && (daysOfThisYear[i] >= doy - wings) &&
+                                (Integer.parseInt(thisYear) == year)) {
+                                albedoInputProductList.add(s);
+                            }
                         }
                     }
                     //    # Right wing
                     if ((doy + wings) - 365 > 0) {
                         for (int i = 0; i < daysOfThisYear.length; i++) {
-                            if (daysOfThisYear[i] <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
-                                albedoInputProductList.add(s);
+                            if (!albedoInputProductList.contains(s)) {
+                                if (daysOfThisYear[i] <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
+                                    albedoInputProductList.add(s);
+                                }
                             }
                         }
                     }

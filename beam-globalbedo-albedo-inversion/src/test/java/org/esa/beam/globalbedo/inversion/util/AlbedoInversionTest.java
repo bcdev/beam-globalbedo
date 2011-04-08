@@ -28,18 +28,21 @@ public class AlbedoInversionTest extends TestCase {
 
     public void testGetDoyFromPriorName() throws Exception {
         String priorName = "Kernels_105_005_h18v04_backGround_NoSnow.hdr";
-        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName));
+        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName, false));
+
+        priorName = "projected_Kernels_105_005_h18v04_backGround_NoSnow.hdr";
+        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName, true));
 
         priorName = "bla.hdr";
         try {
-            AlbedoInversionUtils.getDoyFromPriorName(priorName);
+            AlbedoInversionUtils.getDoyFromPriorName(priorName, false);
         } catch (IllegalArgumentException e) {
             assertEquals("Invalid prior name bla.hdr", e.getMessage());
         }
 
         priorName = "Kernels_999_005_h18v04_backGround_Snow.hdr";
         try {
-            AlbedoInversionUtils.getDoyFromPriorName(priorName);
+            AlbedoInversionUtils.getDoyFromPriorName(priorName, false);
         } catch (IllegalArgumentException e) {
             assertEquals("Invalid doy 999 retrieved from prior name Kernels_999_005_h18v04_backGround_Snow.hdr",
                          e.getMessage());

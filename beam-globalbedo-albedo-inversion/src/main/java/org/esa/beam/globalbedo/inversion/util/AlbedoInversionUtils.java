@@ -223,10 +223,16 @@ public class AlbedoInversionUtils {
         return repro.getTargetProduct();
     }
 
-    public static int getDoyFromPriorName(String priorName) {
+    public static int getDoyFromPriorName(String priorName, boolean reprojected) {
         int doy;
-        if (priorName.startsWith("Kernels_")) {
-            doy = Integer.parseInt(priorName.substring(8, 11));
+        String prefix;
+        if (reprojected) {
+           prefix = "projected_Kernels_";
+        } else {
+            prefix = "Kernels_";
+        }
+        if (priorName.startsWith(prefix)) {
+            doy = Integer.parseInt(priorName.substring(prefix.length(), prefix.length()+3));
             if (Math.abs(doy) > 366) {
                 throw new IllegalArgumentException("Invalid doy " + doy + " retrieved from prior name " + priorName);
             }

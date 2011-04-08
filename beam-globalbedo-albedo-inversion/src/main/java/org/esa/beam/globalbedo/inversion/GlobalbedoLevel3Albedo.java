@@ -45,6 +45,10 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
+
+    // todo: do we need this configurable?
+    private boolean usePrior = true;
+
     private static final double HALFLIFE = 11.54;
 
     @Override
@@ -72,20 +76,23 @@ public class GlobalbedoLevel3Albedo extends Operator {
         Vector allDoysVector = new Vector();
         int priorIndex = 0;
         for (Product priorProduct : priorProducts) {
-            int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName());
-            allDoysVector.clear();
-            try {
-                inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
-                        wings,
-                        computeSnow);
-                allWeights[priorIndex] = Math.exp(
-                        -1.0 * inputProduct.getProductDoys().length / HALFLIFE);
-                int[] allDoys = inputProduct.getProductDoys();
-                allDoysVector.add(allDoys);
-                priorIndex++;
-            } catch (IOException e) {
-                // todo: just skip product, but add appropriate logging here
+            if (priorIndex == 0) {   // test!!
+                int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
+                allDoysVector.clear();
+                try {
+                    inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
+                                                                  wings,
+                                                                  computeSnow);
+                    allWeights[priorIndex] = Math.exp(
+                            -1.0 * inputProduct.getProductDoys().length / HALFLIFE);
+                    int[] allDoys = inputProduct.getProductDoys();
+                    allDoysVector.add(allDoys);
+                    priorIndex++;
+                } catch (IOException e) {
+                    // todo: just skip product, but add appropriate logging here
+                    System.out.println("Could not process DoY " + doy + " - skipping.");
 //                throw new OperatorException("Cannot load input products: " + e.getMessage());
+                }
             }
         }
 
@@ -99,31 +106,38 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
             // STEP 4: do the full accumulation (pixelwise matrix addition, so we need another pixel operator...
             // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
+            if (priorIndex == 0) {   // test!!
+                FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
+                // the following means that the source products corresponding to the LAST prior are used
+                // this is ok since the input products are the same for all priors (checked with GL, 20110407)
+                fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
+                fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
+                fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
+                Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
 
-            FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
-            // the following means that the source products corresponding to the LAST prior are used
-            // this is ok since the input products are the same for all priors (checked with GL, 20110407)
-            fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
-            fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
-            fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
-            Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
+                // STEP 5: compute pixelwise results (perform inversion) and write output
+                // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
+                InversionOp inversionOp = new InversionOp();
+                inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
+                inversionOp.setSourceProduct("priorProduct", priorProduct);
+                inversionOp.setParameter("year", year);
+                inversionOp.setParameter("tile", tile);
+                inversionOp.setParameter("computeSnow", computeSnow);
+                inversionOp.setParameter("usePrior", usePrior);
+                Product inversionProduct = inversionOp.getTargetProduct();
 
-            // STEP 5: compute pixelwise results (perform inversion) and write output
-            // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
-            InversionOp inversionOp = new InversionOp();
-            inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
-            inversionOp.setSourceProduct("priorProduct", priorProduct);
-            inversionOp.setParameter("year", year);
-            inversionOp.setParameter("tile", tile);
-            inversionOp.setParameter("computeSnow", computeSnow);
-//            target=ProcessInversion, args=[ data.MData[i], data.VData[i], data.EData[i], data.Mask[i], Lambda,
-//                    PriorFileToProcess[0], columns, rows, UsePrior, data.DoYClosestSample[i], tile, year, Snow])
+//                setTargetProduct(fullAccumulationProduct);
+                setTargetProduct(inversionProduct);
 
-            setTargetProduct(fullAccumulationOp.getTargetProduct());
-            File targetFile = null; // todo: define
-            final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-            writeOp.writeProduct(ProgressMonitor.NULL);
-            priorIndex++;
+                int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
+                String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+
+                final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
+                File targetFile = new File(inversionTargetDir, targetFileName);
+                final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                writeOp.writeProduct(ProgressMonitor.NULL);
+                priorIndex++;
+            }
         }
 
 

@@ -64,7 +64,7 @@ public class InversionOp extends PixelOperator {
     public static final int SRC_PRIOR_NSAMPLES = 2 * priorOffset + 1;
     public static final int SRC_PRIOR_MASK = 2 * priorOffset + 2;
 
-    private static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
+    public static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
 
     private String[][] mBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
             [3 * AlbedoInversionConstants.numBBDRWaveBands];
@@ -104,7 +104,7 @@ public class InversionOp extends PixelOperator {
     }
 
     @SourceProduct(description = "Full accumulation product")
-    private Product accumulationProduct;
+    private Product fullAccumulationProduct;
 
     @SourceProduct(description = "Prior product")
     private Product priorProduct;
@@ -128,23 +128,27 @@ public class InversionOp extends PixelOperator {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
-                parameterBandNames[index++] = "MEAN_" + waveBandsOffsetMap.get(j) + "_f" + j;
-                Band band = targetProduct.addBand(parameterBandNames[i], ProductData.TYPE_FLOAT32);
+                parameterBandNames[index] = "MEAN_" + waveBandsOffsetMap.get(i) + "_f" + j;
+                System.out.println("parameterBandNames = " + parameterBandNames[index]);
+                Band band = targetProduct.addBand(parameterBandNames[index], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
+                index++;
             }
         }
 
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             // only UR matrix + diagonale
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                uncertaintyBandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i) + "_f" + i +
-                                             waveBandsOffsetMap.get(j) + "_f" + j;
+                uncertaintyBandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i/3) + "_f" + i + "_" +
+                                             waveBandsOffsetMap.get(i/3) + "_f" + j;
+                System.out.println("uncertaintyBandNames[i][j] = " + uncertaintyBandNames[i][j]);
                 Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
             }
         }
+//        'VAR_VIS_f1VIS_f1'
 
         entropyBandName = "Entropy";
         Band entropyBand = targetProduct.addBand(entropyBandName, ProductData.TYPE_FLOAT32);
@@ -175,21 +179,24 @@ public class InversionOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(Configurator configurator) {
+
         // accumulation product:
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                mBandNames[i][j] = "M_" + i + "" + j;
                 SRC_ACCUM_M[i][j] = 3 * AlbedoInversionConstants.numBBDRWaveBands * i + j;
-                configurator.defineSample(SRC_ACCUM_M[i][j], mBandNames[i][j], accumulationProduct);
+                configurator.defineSample(SRC_ACCUM_M[i][j], mBandNames[i][j], fullAccumulationProduct);
             }
         }
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            vBandNames[i] = "V_" + i;
             SRC_ACCUM_V[i] = 3 * 3 * AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands + i;
-            configurator.defineSample(SRC_ACCUM_V[i], vBandNames[i], accumulationProduct);
+            configurator.defineSample(SRC_ACCUM_V[i], vBandNames[i], fullAccumulationProduct);
         }
         // todo: define constants for names
-        configurator.defineSample(SRC_ACCUM_E, "E", accumulationProduct);
-        configurator.defineSample(SRC_ACCUM_MASK, "mask", accumulationProduct);
-        configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE, "doy_closest_sample", accumulationProduct);
+        configurator.defineSample(SRC_ACCUM_E, "E", fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_MASK, "mask", fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE, "doy_closest_sample", fullAccumulationProduct);
 
         // prior product:
         // we have:
@@ -197,7 +204,7 @@ public class InversionOp extends PixelOperator {
         for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
                 final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_MEAN[i][j] = AlbedoInversionConstants.numAlbedoParameters * i + j;
+                SRC_PRIOR_MEAN[i][j] = sourceSampleOffset + AlbedoInversionConstants.numAlbedoParameters * i + j;
                 configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
             }
         }
@@ -205,13 +212,13 @@ public class InversionOp extends PixelOperator {
         for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
                 final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j + 1;
+                SRC_PRIOR_SD[i][j] = sourceSampleOffset + priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j + 1;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
         // todo: define constants for names
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, "N_samples", priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, "Mask", priorProduct);
+        configurator.defineSample(sourceSampleOffset + SRC_PRIOR_NSAMPLES, "N_samples", priorProduct);
+        configurator.defineSample(sourceSampleOffset + SRC_PRIOR_MASK, "Mask", priorProduct);
     }
 
     @Override

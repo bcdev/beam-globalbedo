@@ -46,8 +46,8 @@ public class Accumulator {
         Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix E = new Matrix(1, 1);
 
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 M.set(i, j, sourceSamples[InversionOp.SRC_ACCUM_M[i][j]].getDouble());
             }
             V.set(i, 0, sourceSamples[InversionOp.SRC_ACCUM_V[i]].getDouble());

@@ -84,6 +84,7 @@ public class FullAccumulationOp extends PixelOperator {
             configurator.defineSample((sourceSampleOffset * k) + SRC_E, "E", sourceProduct);
             configurator.defineSample((sourceSampleOffset * k) + SRC_MASK, "mask", sourceProduct);
         }
+        System.out.println();
     }
 
     @Override
@@ -133,64 +134,6 @@ public class FullAccumulationOp extends PixelOperator {
     }
 
     @Override
-//    protected void computePixel(int x, int y, PointOperator.Sample[] sourceSamples,
-//                                PointOperator.WritableSample[] targetSamples) {
-//
-//        int numberOfAccumulators = allDoys.size();
-//
-//        Matrix[] allM = new Matrix[numberOfAccumulators];
-//        Matrix[] allV = new Matrix[numberOfAccumulators];
-//        Matrix[] allE = new Matrix[numberOfAccumulators];
-//        int[] allMask = new int[numberOfAccumulators];
-//        int[] doyClosestSample = new int[numberOfAccumulators];
-//
-//        for (int i = 0; i < numberOfAccumulators; i++) {   // BB: for i in range(0,NumberOfAccumulators)
-//            allM[i] = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-//                                 3 * AlbedoInversionConstants.numBBDRWaveBands);
-//            allV[i] = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
-//            allE[i] = new Matrix(1, 1);
-//            allMask[i] = 0;
-//            doyClosestSample[i] = -1;
-//        }
-//
-//        for (int m = 0; m < numberOfAccumulators; m++) { // BB: for i in range(0,NumberOfAccumulators)
-//            for (int k = 0; k < sourceProducts.length; k++) {  // BB: for BBDR in AllFiles
-//                for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-//                    for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-//                        final double allm_ij = allM[m].get(i, j);
-//                        final double m_ij = allWeights[m] * sourceSamples[k * sourceSampleOffset + SRC_M[i][j]].getDouble();
-//                        allM[m].set(i, j, allm_ij + m_ij);
-//                    }
-//                    final double allv_i = allV[m].get(i, 0);
-//                    final double v_i = allWeights[m] * sourceSamples[k * sourceSampleOffset + SRC_V[i]].getDouble();
-//                    allV[m].set(i, 0, allv_i + v_i);
-//                }
-//                final double alle_00 = allE[m].get(0, 0) + sourceSamples[k * sourceSampleOffset + SRC_E].getDouble();
-//                final double e_00 = allWeights[m] * sourceSamples[k * sourceSampleOffset + SRC_E].getDouble();
-//                allE[m].set(0, 0, alle_00 + e_00);
-//
-//                allMask[m] += allWeights[m] * sourceSamples[k * sourceSampleOffset + SRC_MASK].getInt();
-//            }
-//        }
-//
-//        // todo: this
-////        for i in range(0,NumberOfAccumulators):
-////            BBDR_DaysToDoY = numpy.abs(AllDoY[i,AllFiles.index(BBDR)]) + 1 # Plus one to avoid 0s
-////            #First file
-////            if AllFiles.index(BBDR) == 0:
-////                DoYClosestSample[i] = numpy.where(Mask > 0, BBDR_DaysToDoY, DoYClosestSample[i])
-////            else:
-////                # Where there are no observations asign the DoYClosestSample
-////                DoYClosestSample[i] = numpy.where((Mask>0) & (DoYClosestSample[i]==0), BBDR_DaysToDoY, DoYClosestSample[i])
-////                # Find the closest DoY to BBDR_DaysToDoY
-////                DoYClosestSample[i] = numpy.where((Mask>0) & (DoYClosestSample[i]>0), numpy.minimum(BBDR_DaysToDoY, DoYClosestSample[i]), DoYClosestSample[i])
-//
-//
-//        // fill target samples...
-//        // todo: one target product per accumulator!
-////        fillTargetSamples(targetSamples, allM, allV, allE, allMask, doyClosestSample);
-//    }
-
     protected void computePixel(int x, int y, PointOperator.Sample[] sourceSamples,
                                 PointOperator.WritableSample[] targetSamples) {
 
