@@ -17,7 +17,7 @@ import java.io.IOException;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.dailyacc")
+@OperatorMetadata(alias = "ga.inversion.accumulation")
 public class GlobalbedoLevel3Accumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")

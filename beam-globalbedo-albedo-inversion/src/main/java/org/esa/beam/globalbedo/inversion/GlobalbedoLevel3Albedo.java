@@ -53,11 +53,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
         String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                          "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
 
         Product[] priorProducts;
         try {
@@ -81,8 +81,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 allDoysVector.clear();
                 try {
                     inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
-                                                                  wings,
-                                                                  computeSnow);
+                            wings,
+                            computeSnow);
                     allWeights[priorIndex] = Math.exp(
                             -1.0 * inputProduct.getProductDoys().length / HALFLIFE);
                     int[] allDoys = inputProduct.getProductDoys();
@@ -98,7 +98,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 3: we need to reproject the priors for further use...
         Product[] reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
-                                                                                 inputProduct.getProducts()[0]);
+                inputProduct.getProducts()[0]);
 
         // do the next steps per prior product:
         priorIndex = 0;
@@ -107,13 +107,29 @@ public class GlobalbedoLevel3Albedo extends Operator {
             // STEP 4: do the full accumulation (pixelwise matrix addition, so we need another pixel operator...
             // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
             if (priorIndex == 0) {   // test!!
-                FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
-                // the following means that the source products corresponding to the LAST prior are used
-                // this is ok since the input products are the same for all priors (checked with GL, 20110407)
-                fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
-                fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
-                fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
-                Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
+//                FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
+//                // the following means that the source products corresponding to the LAST prior are used
+//                // this is ok since the input products are the same for all priors (checked with GL, 20110407)
+//                fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
+//                fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
+//                fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
+//                Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
+
+                // test: JAI accumulator
+                FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
+                jaiOp.setSourceProducts(inputProduct.getProducts());
+                jaiOp.setSourceProduct("sp1", inputProduct.getProducts()[0]);
+                jaiOp.setSourceProduct("sp2", inputProduct.getProducts()[1]);
+                jaiOp.setParameter("weight", allWeights[priorIndex]);
+                Product fullAccumulationProduct = jaiOp.getTargetProduct();
+//                for (int i = 1; i < inputProduct.getProducts().length - 1; i++) {
+//                    jaiOp = new FullAccumulationJAIOp();
+//                    jaiOp.setSourceProduct("sp1", fullAccumulationProduct);
+//                    jaiOp.setSourceProduct("sp2", inputProduct.getProducts()[i+1]);
+//                    jaiOp.setParameter("weight", allWeights[priorIndex]);
+//                    fullAccumulationProduct = jaiOp.getTargetProduct();
+//                }
+                // end test
 
                 // STEP 5: compute pixelwise results (perform inversion) and write output
                 // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
@@ -127,14 +143,15 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 Product inversionProduct = inversionOp.getTargetProduct();
 
 //                setTargetProduct(fullAccumulationProduct);
-                setTargetProduct(inversionProduct);
+//                setTargetProduct(inversionProduct);
 
                 int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
                 String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
 
                 final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
                 File targetFile = new File(inversionTargetDir, targetFileName);
-                final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+//                final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
                 writeOp.writeProduct(ProgressMonitor.NULL);
                 priorIndex++;
             }
