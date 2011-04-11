@@ -2,7 +2,6 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
 import org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo;
-import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.io.IOException;
 import java.net.URL;
@@ -111,5 +110,86 @@ public class IOTest extends TestCase {
         computeSnow = true;
         targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
         assertEquals("GlobAlbedo.2005123.h18v04.Snow.NoPrior.bin", targetFileName);
+    }
+
+    public void testGetInversionParameterBandnames() throws Exception {
+        String[] bandNames = IOUtils.getInversionParameterBandNames();
+        assertNotNull(bandNames);
+        assertEquals(9, bandNames.length);
+        assertEquals("mean_VIS_f0", bandNames[0]);
+        assertEquals("mean_VIS_f1", bandNames[1]);
+        assertEquals("mean_VIS_f2", bandNames[2]);
+        assertEquals("mean_NIR_f0", bandNames[3]);
+        assertEquals("mean_NIR_f1", bandNames[4]);
+        assertEquals("mean_NIR_f2", bandNames[5]);
+        assertEquals("mean_SW_f0", bandNames[6]);
+        assertEquals("mean_SW_f1", bandNames[7]);
+        assertEquals("mean_SW_f2", bandNames[8]);
+    }
+
+    public void testGetInversionUncertaintyBandnames() throws Exception {
+        String[][] bandNames = IOUtils.getInversionUncertaintyBandNames();
+        assertNotNull(bandNames);
+        assertEquals(9, bandNames.length);
+        assertEquals(9, bandNames[0].length);
+
+        assertEquals("VAR_VIS_f0_VIS_f0", bandNames[0][0]);
+        assertEquals("VAR_VIS_f0_VIS_f1", bandNames[0][1]);
+        assertEquals("VAR_VIS_f0_VIS_f2", bandNames[0][2]);
+        assertEquals("VAR_VIS_f0_NIR_f0", bandNames[0][3]);
+        assertEquals("VAR_VIS_f0_NIR_f1", bandNames[0][4]);
+        assertEquals("VAR_VIS_f0_NIR_f2", bandNames[0][5]);
+        assertEquals("VAR_VIS_f0_SW_f0", bandNames[0][6]);
+        assertEquals("VAR_VIS_f0_SW_f1", bandNames[0][7]);
+        assertEquals("VAR_VIS_f0_SW_f2", bandNames[0][8]);
+
+        assertEquals("VAR_VIS_f1_VIS_f1", bandNames[1][1]);
+        assertEquals("VAR_VIS_f1_VIS_f2", bandNames[1][2]);
+        assertEquals("VAR_VIS_f1_NIR_f0", bandNames[1][3]);
+        assertEquals("VAR_VIS_f1_NIR_f1", bandNames[1][4]);
+        assertEquals("VAR_VIS_f1_NIR_f2", bandNames[1][5]);
+        assertEquals("VAR_VIS_f1_SW_f0", bandNames[1][6]);
+        assertEquals("VAR_VIS_f1_SW_f1", bandNames[1][7]);
+        assertEquals("VAR_VIS_f1_SW_f2", bandNames[1][8]);
+
+        assertEquals("VAR_VIS_f2_VIS_f2", bandNames[2][2]);
+        assertEquals("VAR_VIS_f2_NIR_f0", bandNames[2][3]);
+        assertEquals("VAR_VIS_f2_NIR_f1", bandNames[2][4]);
+        assertEquals("VAR_VIS_f2_NIR_f2", bandNames[2][5]);
+        assertEquals("VAR_VIS_f2_SW_f0", bandNames[2][6]);
+        assertEquals("VAR_VIS_f2_SW_f1", bandNames[2][7]);
+        assertEquals("VAR_VIS_f2_SW_f2", bandNames[2][8]);
+
+        assertEquals("VAR_NIR_f0_NIR_f0", bandNames[3][3]);
+        assertEquals("VAR_NIR_f0_NIR_f1", bandNames[3][4]);
+        assertEquals("VAR_NIR_f0_NIR_f2", bandNames[3][5]);
+        assertEquals("VAR_NIR_f0_SW_f0", bandNames[3][6]);
+        assertEquals("VAR_NIR_f0_SW_f1", bandNames[3][7]);
+        assertEquals("VAR_NIR_f0_SW_f2", bandNames[3][8]);
+
+        assertEquals("VAR_NIR_f1_NIR_f1", bandNames[4][4]);
+        assertEquals("VAR_NIR_f1_NIR_f2", bandNames[4][5]);
+        assertEquals("VAR_NIR_f1_SW_f0", bandNames[4][6]);
+        assertEquals("VAR_NIR_f1_SW_f1", bandNames[4][7]);
+        assertEquals("VAR_NIR_f1_SW_f2", bandNames[4][8]);
+
+        assertEquals("VAR_NIR_f2_NIR_f2", bandNames[5][5]);
+        assertEquals("VAR_NIR_f2_SW_f0", bandNames[5][6]);
+        assertEquals("VAR_NIR_f2_SW_f1", bandNames[5][7]);
+        assertEquals("VAR_NIR_f2_SW_f2", bandNames[5][8]);
+
+        assertEquals("VAR_SW_f0_SW_f0", bandNames[6][6]);
+        assertEquals("VAR_SW_f0_SW_f1", bandNames[6][7]);
+        assertEquals("VAR_SW_f0_SW_f2", bandNames[6][8]);
+
+        assertEquals("VAR_SW_f1_SW_f1", bandNames[7][7]);
+        assertEquals("VAR_SW_f1_SW_f2", bandNames[7][8]);
+
+        assertEquals("VAR_SW_f2_SW_f2", bandNames[8][8]);
+
+        // we expect nulls for j < i
+        assertNull(bandNames[4][2]);
+        assertNull(bandNames[5][4]);
+        assertNull(bandNames[6][1]);
     }
 }

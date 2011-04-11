@@ -44,24 +44,26 @@ public class Prior {
 
         final double priorScaleFactor = 10.0;
 
-        Matrix priorMean = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix priorMean = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix priorSD   = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
 
+        int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                priorMean.set(i, j, sourceSamples[InversionOp.SRC_PRIOR_MEAN[i][j]].getDouble());
+                priorMean.set(index, 0, sourceSamples[InversionOp.SRC_PRIOR_MEAN[i][j]].getDouble());
                 priorSD.set(i, j, sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble());
-                if (priorMean.get(i, j) > 0.0 && priorSD.get(i, j) == 0.0) {
+                if (priorMean.get(index, 0) > 0.0 && priorSD.get(i, j) == 0.0) {
                     mask = 1;
                     nSamples = 1.E-20;
                     priorSD.set(i, j, 1.0);
                 }
-                if (priorMean.get(i, j) > 0.0 && sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble() > 0.0 &&
+                if (priorMean.get(index, 0) > 0.0 && sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble() > 0.0 &&
                     sourceSamples[InversionOp.SRC_PRIOR_MASK].getInt() > 0) {
                     mask = 1;
                     nSamples = 1.E-20;
                     priorSD.set(i, j, 1.0);
                 }
+                index++;
             }
         }
 
@@ -82,22 +84,24 @@ public class Prior {
             if (lud.isNonsingular()) {
                 inverseC = C.inverse();
             } else {
+                index = 0;
                 for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                    if (priorMean.get(0, j) <= 0.0 || priorMean.get(0, j) > 1.0 ||
+                    if (priorMean.get(index*3, 0) <= 0.0 || priorMean.get(index*3, 0) > 1.0 ||
                         priorSD.get(0, j) <= 0.0 || priorSD.get(0, j) > 1.0) {
                         processPixel = false;
                         break;
                     }
+                    index++;
                 }
             }
             if (processPixel) {
                 final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.numBBDRWaveBands,
                                                          3 * AlbedoInversionConstants.numBBDRWaveBands);    // 9x9
                 inverseC = cIdentity.inverse();
-                int index = 0;
+                index = 0;
                 for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
                     for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                        inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(i, j));
+                        inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(index, 0));
                         index++;
                     }
                 }
