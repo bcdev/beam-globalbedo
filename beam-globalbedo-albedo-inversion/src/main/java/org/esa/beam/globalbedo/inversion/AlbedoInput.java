@@ -10,16 +10,17 @@ import org.esa.beam.framework.datamodel.Product;
  */
 public class AlbedoInput {
 
-    private Product[] products;
+//    private Product[] products;
+    private String[] productFilenames;
     private int[] productDoys;
     private int[] productYears;
 
-    public Product[] getProducts() {
-        return products;
+    public String[] getProductFilenames() {
+        return productFilenames;
     }
 
-    public void setProducts(Product[] products) {
-        this.products = products;
+    public void setProductFilenames(String[] productFilenames) {
+        this.productFilenames = productFilenames;
     }
 
     public int[] getProductDoys() {

@@ -97,8 +97,14 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 3: we need to reproject the priors for further use...
-        Product[] reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
-                inputProduct.getProducts()[0]);
+        Product[] reprojectedPriorProducts = new Product[0];
+        try {
+            reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
+                                                                           inputProduct.getProductFilenames()[0]);
+        } catch (IOException e) {
+            // todo
+            e.printStackTrace();
+        }
 
         // do the next steps per prior product:
         priorIndex = 0;
@@ -117,18 +123,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
                 // test: JAI accumulator
                 FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
-                jaiOp.setSourceProducts(inputProduct.getProducts());
-                jaiOp.setSourceProduct("sp1", inputProduct.getProducts()[0]);
-                jaiOp.setSourceProduct("sp2", inputProduct.getProducts()[1]);
+                jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
                 jaiOp.setParameter("weight", allWeights[priorIndex]);
                 Product fullAccumulationProduct = jaiOp.getTargetProduct();
-//                for (int i = 1; i < inputProduct.getProducts().length - 1; i++) {
-//                    jaiOp = new FullAccumulationJAIOp();
-//                    jaiOp.setSourceProduct("sp1", fullAccumulationProduct);
-//                    jaiOp.setSourceProduct("sp2", inputProduct.getProducts()[i+1]);
-//                    jaiOp.setParameter("weight", allWeights[priorIndex]);
-//                    fullAccumulationProduct = jaiOp.getTargetProduct();
-//                }
                 // end test
 
                 // STEP 5: compute pixelwise results (perform inversion) and write output

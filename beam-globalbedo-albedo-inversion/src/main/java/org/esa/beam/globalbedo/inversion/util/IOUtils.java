@@ -107,10 +107,11 @@ public class IOUtils {
     }
 
     public static Product[] getReprojectedPriorProducts(Product[] priorProducts, String tile,
-                                                        Product geoCodingReferenceProduct) {
+                                                        String sourceProductFileName) throws IOException {
         Product[] reprojectedProducts = new Product[priorProducts.length];
         for (int i = 0; i < priorProducts.length; i++) {
             Product priorProduct = priorProducts[i];
+            Product geoCodingReferenceProduct = ProductIO.readProduct(sourceProductFileName);
             ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
             double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
             double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
@@ -146,7 +147,7 @@ public class IOUtils {
         List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile, wings,
                 computeSnow);
 
-        Product[] albedoInputProducts = new Product[albedoInputProductList.size()];
+        String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
         int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
         int[] albedoInputProductYears = new int[albedoInputProductList.size()];
 
@@ -166,15 +167,15 @@ public class IOUtils {
             }
 
             String sourceProductFileName = productYearRootDir + File.separator + thisProductName;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            albedoInputProducts[productIndex] = product;
+//            Product product = ProductIO.readProduct(sourceProductFileName);
+            albedoInputProductFilenames[productIndex] = sourceProductFileName;
             albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy);
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
             productIndex++;
         }
 
         AlbedoInput inputProduct = new AlbedoInput();
-        inputProduct.setProducts(albedoInputProducts);
+        inputProduct.setProductFilenames(albedoInputProductFilenames);
         inputProduct.setProductDoys(albedoInputProductDoys);
         inputProduct.setProductYears(albedoInputProductYears);
 
