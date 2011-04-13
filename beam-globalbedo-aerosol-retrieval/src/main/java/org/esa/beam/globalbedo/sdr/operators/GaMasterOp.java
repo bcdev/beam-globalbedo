@@ -140,6 +140,7 @@ public class GaMasterOp  extends Operator {
             Product aotHiresProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(UpSclOp.class), sclParams, upsclProducts, rhTarget);
 
             targetProduct = mergeToTargetProduct(reflProduct, aotHiresProduct);
+            ProductUtils.copyPreferredTileSize(reflProduct, targetProduct);
         }
         setTargetProduct(targetProduct);
     }

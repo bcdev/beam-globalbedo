@@ -5,7 +5,9 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
+import java.awt.Dimension;
 import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.util.HashMap;
 import java.util.Map;
 import org.esa.beam.framework.datamodel.Band;
@@ -24,6 +26,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.ComputeChainOp;
+import org.esa.beam.jai.ImageManager;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
@@ -76,7 +79,9 @@ public class MerisPrepOp extends Operator {
         } else {
             Map<String,Object> subsetParam = new HashMap<String, Object>(3);
             subsetParam.put("region", szaRegion);
-            szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParam, sourceProduct);
+            Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
+            RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
+            szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParam, sourceProduct, rhTarget);
         }
 
         // convert radiance bands to reflectance
@@ -194,6 +199,7 @@ public class MerisPrepOp extends Operator {
         if (needSurfacePres) {
             targetProduct.addBand(surfPresBand);
         }
+        ProductUtils.copyPreferredTileSize(szaSubProduct, targetProduct);
 
     }
 
