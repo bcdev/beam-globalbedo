@@ -83,10 +83,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
                     inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
                             wings,
                             computeSnow);
-                    allWeights[priorIndex] = Math.exp(
-                            -1.0 * inputProduct.getProductDoys().length / HALFLIFE);
                     int[] allDoys = inputProduct.getProductDoys();
                     allDoysVector.add(allDoys);
+                    allWeights[priorIndex] = Math.exp(-1.0 * allDoys[priorIndex] / HALFLIFE);
                     priorIndex++;
                 } catch (IOException e) {
                     // todo: just skip product, but add appropriate logging here
@@ -147,8 +146,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
                 final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
                 File targetFile = new File(inversionTargetDir, targetFileName);
-//                final WriteOp writeOp = new WriteOp(getTargetProduct(), targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+//                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
                 writeOp.writeProduct(ProgressMonitor.NULL);
                 priorIndex++;
             }

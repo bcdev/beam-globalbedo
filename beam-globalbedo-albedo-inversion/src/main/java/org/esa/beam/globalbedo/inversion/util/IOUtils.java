@@ -169,7 +169,7 @@ public class IOUtils {
             String sourceProductFileName = productYearRootDir + File.separator + thisProductName;
 //            Product product = ProductIO.readProduct(sourceProductFileName);
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
-            albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy);
+            albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy) - (doy + 8);
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
             productIndex++;
         }

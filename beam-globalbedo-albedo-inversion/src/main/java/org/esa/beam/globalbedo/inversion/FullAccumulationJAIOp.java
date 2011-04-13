@@ -3,7 +3,9 @@ package org.esa.beam.globalbedo.inversion;
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.DataNode;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -13,6 +15,7 @@ import javax.media.jai.RenderedOp;
 import javax.media.jai.operator.AddDescriptor;
 import javax.media.jai.operator.ConstantDescriptor;
 import javax.media.jai.operator.MultiplyConstDescriptor;
+import javax.xml.datatype.DatatypeConfigurationException;
 import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
 import java.io.File;
@@ -92,8 +95,12 @@ public class FullAccumulationJAIOp extends Operator {
         }
 
         for (int i = 0; i < bandNames.length; i++) {
-            Band targetBand = targetProduct.addBand(bandNames[i], bandDataTypes[i]);
-            targetBand.setSourceImage(accu[i]);
+            // todo check which bands we need
+            if (bandDataTypes[i] == ProductData.TYPE_FLOAT32) {
+                Band targetBand = targetProduct.addBand(bandNames[i], bandDataTypes[i]);
+                targetBand.setSourceImage(accu[i]);
+            }
+
         }
 
         setTargetProduct(targetProduct);
