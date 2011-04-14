@@ -14,17 +14,17 @@ public class Accumulator {
     private Matrix M;
     private Matrix V;
     private Matrix E;
-    private int mask;
+    private double mask;
     private int doyClosestSample;  // needed in full accumulation part
 
-    public Accumulator(Matrix m, Matrix v, Matrix e, int mask) {
+    public Accumulator(Matrix m, Matrix v, Matrix e, double mask) {
         this.M = m;
         this.V = v;
         this.E = e;
         this.mask = mask;
     }
 
-    public Accumulator(Matrix m, Matrix v, Matrix e, int mask, int doyClosestSample) {
+    public Accumulator(Matrix m, Matrix v, Matrix e, double mask, int doyClosestSample) {
         this.M = m;
         this.V = v;
         this.E = e;
@@ -48,12 +48,16 @@ public class Accumulator {
 
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                M.set(i, j, sourceSamples[InversionOp.SRC_ACCUM_M[i][j]].getDouble());
+                final int srcIndexMij = InversionOp.SRC_ACCUM_M[i][j];
+                M.set(i, j, sourceSamples[srcIndexMij].getDouble());
             }
-            V.set(i, 0, sourceSamples[InversionOp.SRC_ACCUM_V[i]].getDouble());
+            final int srcIndexVi = InversionOp.SRC_ACCUM_V[i];
+            V.set(i, 0, sourceSamples[srcIndexVi].getDouble());
         }
-        E.set(0, 0, sourceSamples[InversionOp.SRC_ACCUM_E].getDouble());
-        final int mask = sourceSamples[InversionOp.SRC_ACCUM_MASK].getInt();
+        final int srcIndexE = InversionOp.SRC_ACCUM_E;
+        E.set(0, 0, sourceSamples[srcIndexE].getDouble());
+        final int srcIndexMask = InversionOp.SRC_ACCUM_MASK;
+        final double mask = sourceSamples[srcIndexMask].getDouble();
 
         return new Accumulator(M, V, E, mask);
     }
@@ -72,7 +76,7 @@ public class Accumulator {
         return E;
     }
 
-    public int getMask() {
+    public double getMask() {
         return mask;
     }
 

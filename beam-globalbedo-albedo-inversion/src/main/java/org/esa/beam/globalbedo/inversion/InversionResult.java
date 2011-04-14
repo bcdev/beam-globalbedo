@@ -13,12 +13,12 @@ public class InversionResult {
     private Matrix uncertainties;
     private double entropy;
     private double relEntropy;
-    private int weightedNumberOfSamples;
+    private double weightedNumberOfSamples;
     private int doyClosestSample;
     private double goodnessOfFit;
 
     public InversionResult(Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                           int weightedNumberOfSamples, int doyClosestSample, double goodnessOfFit) {
+                           double weightedNumberOfSamples, int doyClosestSample, double goodnessOfFit) {
         this.parameters = parameters;
         this.uncertainties = uncertainties;
         this.entropy = entropy;
@@ -44,7 +44,7 @@ public class InversionResult {
         return relEntropy;
     }
 
-    public int getWeightedNumberOfSamples() {
+    public double getWeightedNumberOfSamples() {
         return weightedNumberOfSamples;
     }
 

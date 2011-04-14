@@ -14,10 +14,10 @@ public class Prior {
 
     private Matrix M;
     private Matrix V;
-    private int mask;
+    private double mask;
     private Matrix parameters;
 
-    public Prior(Matrix m, Matrix v, int mask, Matrix parameters) {
+    public Prior(Matrix m, Matrix v, double mask, Matrix parameters) {
         this.M = m;
         this.V = v;
         this.mask = mask;
@@ -31,7 +31,7 @@ public class Prior {
      * @param sourceSamples - the source samples as defined in {@link InversionOp}}.
      * @return Prior
      */
-    public static Prior createForInversion(PointOperator.Sample[] sourceSamples) {
+    public static Prior createForInversion(PointOperator.Sample[] sourceSamples, double priorScaleFactor) {
 
         Matrix C = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                               3 * AlbedoInversionConstants.numBBDRWaveBands);              // 9x9
@@ -39,10 +39,11 @@ public class Prior {
                                      3 * AlbedoInversionConstants.numBBDRWaveBands);       // 9x9
         Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);  // 9x1
 
-        int mask = sourceSamples[InversionOp.SRC_PRIOR_MASK].getInt();
-        double nSamples = sourceSamples[InversionOp.SRC_PRIOR_NSAMPLES].getDouble();
+        final int priorIndexMask = InversionOp.SRC_PRIOR_MASK; // not needed?
 
-        final double priorScaleFactor = 10.0;
+        double mask = 0.0;
+        final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;
+        double nSamples = sourceSamples[priorIndexNsamples].getDouble();
 
         Matrix priorMean = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix priorSD   = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
@@ -50,16 +51,19 @@ public class Prior {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                priorMean.set(index, 0, sourceSamples[InversionOp.SRC_PRIOR_MEAN[i][j]].getDouble());
-                priorSD.set(i, j, sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble());
+                final int priorIndexMij = InversionOp.SRC_PRIOR_MEAN[i][j];
+                final double m_ij = sourceSamples[priorIndexMij].getDouble();
+                priorMean.set(index, 0, m_ij);
+                final int priorIndexSDij = InversionOp.SRC_PRIOR_SD[i][j];
+                final double sd_ij = sourceSamples[priorIndexSDij].getDouble();
+                priorSD.set(i, j, sd_ij);
                 if (priorMean.get(index, 0) > 0.0 && priorSD.get(i, j) == 0.0) {
-                    mask = 1;
+                    mask = 1.0;
                     nSamples = 1.E-20;
                     priorSD.set(i, j, 1.0);
                 }
-                if (priorMean.get(index, 0) > 0.0 && sourceSamples[InversionOp.SRC_PRIOR_SD[i][j]].getDouble() > 0.0 &&
-                    sourceSamples[InversionOp.SRC_PRIOR_MASK].getInt() > 0) {
-                    mask = 1;
+                if (priorMean.get(index, 0) > 0.0 && sd_ij > 0.0 && mask > 0) {
+                    mask = 1.0;
                     nSamples = 1.E-20;
                     priorSD.set(i, j, 1.0);
                 }
@@ -80,11 +84,15 @@ public class Prior {
         // simplified condition (GL, 20110407)
         if  (nSamples > 0.0) {
             boolean processPixel = true;
+            mask = 1.0;
             LUDecomposition lud = new LUDecomposition(C);
             if (lud.isNonsingular()) {
                 inverseC = C.inverse();
             } else {
                 index = 0;
+                final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.numBBDRWaveBands,
+                                                         3 * AlbedoInversionConstants.numBBDRWaveBands);    // 9x9
+                inverseC = cIdentity.inverse();
                 for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
                     if (priorMean.get(index*3, 0) <= 0.0 || priorMean.get(index*3, 0) > 1.0 ||
                         priorSD.get(0, j) <= 0.0 || priorSD.get(0, j) > 1.0) {
@@ -95,9 +103,6 @@ public class Prior {
                 }
             }
             if (processPixel) {
-                final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                         3 * AlbedoInversionConstants.numBBDRWaveBands);    // 9x9
-                inverseC = cIdentity.inverse();
                 index = 0;
                 for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
                     for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
@@ -106,7 +111,7 @@ public class Prior {
                     }
                 }
             } else {
-                mask = 0;
+                mask = 0.0;
             }
 
         }
@@ -122,7 +127,7 @@ public class Prior {
         return V;
     }
 
-    public int getMask() {
+    public double getMask() {
         return mask;
     }
 

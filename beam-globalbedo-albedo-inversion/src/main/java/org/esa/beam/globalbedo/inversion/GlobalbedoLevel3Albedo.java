@@ -46,6 +46,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "30.0", description = "Prior scale factor")
+    private double priorScaleFactor;
+
     // todo: do we need this configurable?
     private boolean usePrior = true;
 
@@ -53,7 +56,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
         String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
@@ -136,6 +139,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 inversionOp.setParameter("tile", tile);
                 inversionOp.setParameter("computeSnow", computeSnow);
                 inversionOp.setParameter("usePrior", usePrior);
+                inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
                 Product inversionProduct = inversionOp.getTargetProduct();
 
 //                setTargetProduct(fullAccumulationProduct);
@@ -146,8 +150,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
                 final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
                 File targetFile = new File(inversionTargetDir, targetFileName);
-                final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-//                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+//                final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+//                final WriteOp writeOp = new WriteOp(priorProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
                 writeOp.writeProduct(ProgressMonitor.NULL);
                 priorIndex++;
             }

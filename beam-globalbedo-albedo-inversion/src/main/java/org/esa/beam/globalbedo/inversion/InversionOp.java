@@ -61,11 +61,11 @@ public class InversionOp extends PixelOperator {
             new int[AlbedoInversionConstants.numAlbedoParameters]
                     [AlbedoInversionConstants.numAlbedoParameters];
 
-    public static final int priorOffset = (int) pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
-    public static final int SRC_PRIOR_NSAMPLES = 2 * priorOffset + 1;
-    public static final int SRC_PRIOR_MASK = 2 * priorOffset + 2;
-
     public static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
+    public static final int priorOffset = (int) pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
+    public static final int SRC_PRIOR_NSAMPLES = sourceSampleOffset + 2 * priorOffset;
+
+    public static final int SRC_PRIOR_MASK = sourceSampleOffset + 2 * priorOffset + 1;
 
     private String[][] mBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
             [3 * AlbedoInversionConstants.numBBDRWaveBands];
@@ -121,6 +121,9 @@ public class InversionOp extends PixelOperator {
 
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
+
+    @Parameter(defaultValue = "30.0", description = "Prior scale factor")
+    private double priorScaleFactor;
 
 
     @Override
@@ -205,13 +208,13 @@ public class InversionOp extends PixelOperator {
         for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
                 final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = sourceSampleOffset + priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j + 1;
+                SRC_PRIOR_SD[i][j] = sourceSampleOffset + priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
         // todo: define constants for names
-        configurator.defineSample(sourceSampleOffset + SRC_PRIOR_NSAMPLES, "N_samples", priorProduct);
-        configurator.defineSample(sourceSampleOffset + SRC_PRIOR_MASK, "Mask", priorProduct);
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, "N samples", priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, "Mask", priorProduct);
     }
 
     @Override
@@ -255,16 +258,22 @@ public class InversionOp extends PixelOperator {
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 
+        if ((x == 342 && y == 200) || (x == 427 && y == 383) || (x == 570 && y == 288) || (x == 727 && y == 291) || (x == 714 && y == 541)) {
+            System.out.println();
+        }
+
         final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
-        final Prior prior = Prior.createForInversion(sourceSamples);
+        final Prior prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
 
         final Matrix mAcc = accumulator.getM();
         Matrix vAcc = accumulator.getV();
         final Matrix eAcc = accumulator.getE();
-        int maskAcc = accumulator.getMask();
+        double maskAcc = accumulator.getMask();
         final int doyClosestSample = accumulator.getDoyClosestSample();
 
-        int maskPrior = prior.getMask();
+        double maskPrior = prior.getMask();
+
+
 
         if (maskAcc > 0 && maskPrior > 0) {
 
@@ -293,10 +302,10 @@ public class InversionOp extends PixelOperator {
                 uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                         3 * AlbedoInversionConstants.numAlbedoParameters,
                         AlbedoInversionConstants.INVALID);
-                maskAcc = 0;
+                maskAcc = 0.0;
             }
 
-            if (maskAcc != 0) {
+            if (maskAcc != 0.0) {
                 // do parameters estimation:
 
 //                # Compute least-squares solution to equation Ax = b
@@ -326,7 +335,7 @@ public class InversionOp extends PixelOperator {
                 }
             }
         } else {
-            if (maskPrior > 0) {
+            if (maskPrior > 0.0) {
                 parameters = prior.getParameters();
                 if (usePrior) {
                     final LUDecomposition lud = new LUDecomposition(prior.getM());
@@ -359,7 +368,7 @@ public class InversionOp extends PixelOperator {
         fillTargetSamples(targetSamples, result);
     }
 
-    private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, int maskAcc) {
+    private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
         Matrix goodnessOfFitMatrix = new Matrix(1, 1, 0.0);
         if (maskAcc > 0) {
             final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);

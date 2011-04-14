@@ -155,7 +155,7 @@ public class DailyAccumulationOp extends PixelOperator {
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
 
-        targetProduct.addBand("mask", ProductData.TYPE_INT8);
+        targetProduct.addBand("mask", ProductData.TYPE_FLOAT32);
         targetProduct.setPreferredTileSize(100, 100);
     }
 
@@ -183,7 +183,7 @@ public class DailyAccumulationOp extends PixelOperator {
                               3 * AlbedoInversionConstants.numBBDRWaveBands);
         Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
         Matrix E = new Matrix(1, 1);
-        int mask = 0;
+        double mask = 0.0;
 
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
