@@ -177,7 +177,8 @@ public class FullAccumulationOp extends PixelOperator {
         }
 
         // fill target samples...
-        Accumulator accumulator = new Accumulator(M, V, E, mask, doyClosestSample);
+//        Accumulator accumulator = new Accumulator(M, V, E, mask, doyClosestSample);
+        Accumulator accumulator = new Accumulator(M, V, E, mask);
         fillTargetSamples(targetSamples, accumulator);
     }
 
@@ -192,7 +193,7 @@ public class FullAccumulationOp extends PixelOperator {
         }
         targetSamples[TRG_E].set(accumulator.getE().get(0, 0));
         targetSamples[TRG_MASK].set(accumulator.getMask());
-        targetSamples[TRG_DOY_CLOSEST_SAMPLE].set(accumulator.getDoyClosestSample());
+//        targetSamples[TRG_DOY_CLOSEST_SAMPLE].set(accumulator.getDoyClosestSample());
 
     }
 

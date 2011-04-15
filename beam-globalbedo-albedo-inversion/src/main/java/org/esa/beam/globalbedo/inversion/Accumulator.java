@@ -15,21 +15,12 @@ public class Accumulator {
     private Matrix V;
     private Matrix E;
     private double mask;
-    private int doyClosestSample;  // needed in full accumulation part
 
     public Accumulator(Matrix m, Matrix v, Matrix e, double mask) {
         this.M = m;
         this.V = v;
         this.E = e;
         this.mask = mask;
-    }
-
-    public Accumulator(Matrix m, Matrix v, Matrix e, double mask, int doyClosestSample) {
-        this.M = m;
-        this.V = v;
-        this.E = e;
-        this.mask = mask;
-        this.doyClosestSample = doyClosestSample;
     }
 
     /**
@@ -56,6 +47,7 @@ public class Accumulator {
         }
         final int srcIndexE = InversionOp.SRC_ACCUM_E;
         E.set(0, 0, sourceSamples[srcIndexE].getDouble());
+
         final int srcIndexMask = InversionOp.SRC_ACCUM_MASK;
         final double mask = sourceSamples[srcIndexMask].getDouble();
 
@@ -78,9 +70,5 @@ public class Accumulator {
 
     public double getMask() {
         return mask;
-    }
-
-    public int getDoyClosestSample() {
-        return doyClosestSample;
     }
 }

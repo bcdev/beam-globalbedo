@@ -137,6 +137,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 inversionOp.setSourceProduct("priorProduct", priorProduct);
                 inversionOp.setParameter("year", year);
                 inversionOp.setParameter("tile", tile);
+                inversionOp.setParameter("allDoys", allDoysVector.get(priorIndex));
                 inversionOp.setParameter("computeSnow", computeSnow);
                 inversionOp.setParameter("usePrior", usePrior);
                 inversionOp.setParameter("priorScaleFactor", priorScaleFactor);

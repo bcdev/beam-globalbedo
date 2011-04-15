@@ -105,7 +105,11 @@ public class AlbedoInversionUtils {
         Matrix resultM = new Matrix(rows, cols);
         for (int i = 0; i < rows; i++) {
             for (int j = 0; j < cols; j++) {
-                resultM.set(i, j, 1.0 / m.get(i, j));
+                if (m.get(i, j) != 0.0) {
+                    resultM.set(i, j, 1.0 / m.get(i, j));
+                } else {
+                    resultM.set(i, j, 0.0);
+                }
             }
         }
         return resultM;
