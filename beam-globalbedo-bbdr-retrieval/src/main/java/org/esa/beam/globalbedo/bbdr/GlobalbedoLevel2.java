@@ -104,6 +104,7 @@ public class GlobalbedoLevel2 extends Operator {
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
+            //TODO handle EMPTY_PRODUCT case
         }  else {
             aotProduct = sourceProduct;
         }

@@ -58,6 +58,10 @@ public class LandcoverLevel2 extends Operator {
         Product targetProduct = sourceProduct;
         if (step1) {
             targetProduct = processAot(targetProduct);
+            if (targetProduct == GaMasterOp.EMPTY_PRODUCT) {
+                setTargetProduct(GaMasterOp.EMPTY_PRODUCT);
+                return;
+            }
         }
         if (useFileTileCache) {
             attachFileTileCache(targetProduct);

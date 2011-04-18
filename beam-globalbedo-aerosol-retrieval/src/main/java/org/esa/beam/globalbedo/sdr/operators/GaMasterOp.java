@@ -35,6 +35,8 @@ import java.util.Map;
                   copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
 public class GaMasterOp  extends Operator {
 
+    public static final Product EMPTY_PRODUCT = new Product("empty", "empty", 0, 0);
+
     @SourceProduct
     private Product sourceProduct;
     @TargetProduct
@@ -107,7 +109,10 @@ public class GaMasterOp  extends Operator {
             if (sourceProduct.getSceneRasterWidth() > 40000) throw new OperatorException("Product too large, who would do a global grid at 0.008deg resolution???");
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         }
-
+        if (reflProduct == EMPTY_PRODUCT) {
+            setTargetProduct(EMPTY_PRODUCT);
+            return;
+        }
 
         Map<String, Object> aotParams = new HashMap<String, Object>(4);
         aotParams.put("soilSpecId", soilSpecId);

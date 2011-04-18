@@ -76,6 +76,9 @@ public class MerisPrepOp extends Operator {
                 szaRegion.width == sourceProduct.getSceneRasterWidth() &&
                 szaRegion.height == sourceProduct.getSceneRasterHeight()) {
             szaSubProduct = sourceProduct;
+        } else if (szaRegion.width < 2 || szaRegion.height < 2) {
+            targetProduct = GaMasterOp.EMPTY_PRODUCT;
+            return;
         } else {
             Map<String,Object> subsetParam = new HashMap<String, Object>(3);
             subsetParam.put("region", szaRegion);
