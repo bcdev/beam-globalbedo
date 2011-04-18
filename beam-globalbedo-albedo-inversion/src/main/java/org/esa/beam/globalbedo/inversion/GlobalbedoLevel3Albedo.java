@@ -52,11 +52,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     // todo: do we need this configurable?
     private boolean usePrior = true;
 
-    private static final double HALFLIFE = 11.54;
-
     @Override
     public void initialize() throws OperatorException {
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
         String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
@@ -75,7 +73,6 @@ public class GlobalbedoLevel3Albedo extends Operator {
         String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
         AlbedoInput inputProduct = null;
-        double[] allWeights = new double[priorProducts.length];
         Vector allDoysVector = new Vector();
         int priorIndex = 0;
         for (Product priorProduct : priorProducts) {
@@ -88,7 +85,6 @@ public class GlobalbedoLevel3Albedo extends Operator {
                             computeSnow);
                     int[] allDoys = inputProduct.getProductDoys();
                     allDoysVector.add(allDoys);
-                    allWeights[priorIndex] = Math.exp(-1.0 * allDoys[priorIndex] / HALFLIFE);
                     priorIndex++;
                 } catch (IOException e) {
                     // todo: just skip product, but add appropriate logging here
@@ -126,7 +122,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 // test: JAI accumulator
                 FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
                 jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-                jaiOp.setParameter("weight", allWeights[priorIndex]);
+                jaiOp.setParameter("allDoys", allDoysVector.get(priorIndex));
                 Product fullAccumulationProduct = jaiOp.getTargetProduct();
                 // end test
 

@@ -28,11 +28,14 @@ import java.io.IOException;
  */
 public class FullAccumulationJAIOp extends Operator {
 
+    private static final double HALFLIFE = 11.54;
+
+
     @Parameter(description = "Source filenames")
     private String[] sourceFilenames;
 
-    @Parameter(description = "Weight factor for full accumulation")
-    private double weight;
+    @Parameter(description = "All DoYs for full accumulation")
+    private int[] allDoys;
 
     @Override
     public void initialize() throws OperatorException {
@@ -46,6 +49,11 @@ public class FullAccumulationJAIOp extends Operator {
         }
 
         final String[] bandNames = sourceProduct0.getBandNames();
+
+        double[] weight = new double[sourceFilenames.length];
+        for (int i = 0; i < sourceFilenames.length; i++) {
+            weight[i] = Math.exp(-1.0 * Math.abs(allDoys[i]) / HALFLIFE);
+        }
 
         int[] bandDataTypes = new int[bandNames.length];
         for (int i = 0; i < bandDataTypes.length; i++) {
@@ -63,8 +71,6 @@ public class FullAccumulationJAIOp extends Operator {
         ProductUtils.copyGeoCoding(sourceProduct0, targetProduct);
         sourceProduct0.dispose();
 
-        double[] factor = new double[]{weight};
-
         BufferedImage[] accu = new BufferedImage[bandNames.length];
         for (int i = 0; i < accu.length; i++) {
             if (bandDataTypes[i] == ProductData.TYPE_FLOAT32) {
@@ -73,6 +79,7 @@ public class FullAccumulationJAIOp extends Operator {
             }
         }
 
+        int fileIndex = 0;
         for (String sourceFileName : sourceFilenames) {
             Product product = null;
             try {
@@ -83,15 +90,23 @@ public class FullAccumulationJAIOp extends Operator {
             }
             int bandIndex = 0;
             for (Band band : product.getBands()) {
-                final MultiLevelImage geophysicalImage = band.getGeophysicalImage();
-                final RenderedImage image = geophysicalImage.getImage(0);
+                if (band.getName().equals("mask")) {
+                    // todo: derive dayOfClosestSample
+                    setDayOfClosestSampleImage(band, bandIndex);
+                } else {
+                    final MultiLevelImage geophysicalImage = band.getGeophysicalImage();
+                    final RenderedImage image = geophysicalImage.getImage(0);
 
-                RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image, factor, null);
-                final RenderedOp result = AddDescriptor.create(accu[bandIndex], multipliedSourceImageToAccum, null);
-                accu[bandIndex] = result.getAsBufferedImage();
+                    RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image,
+                                                                                             new double[]{weight[fileIndex]},
+                                                                                             null);
+                    final RenderedOp result = AddDescriptor.create(accu[bandIndex], multipliedSourceImageToAccum, null);
+                    accu[bandIndex] = result.getAsBufferedImage();
+                }
                 bandIndex++;
             }
             product.dispose();
+            fileIndex++;
         }
 
         for (int i = 0; i < bandNames.length; i++) {
@@ -100,5 +115,17 @@ public class FullAccumulationJAIOp extends Operator {
         }
 
         setTargetProduct(targetProduct);
+    }
+
+    private void setDayOfClosestSampleImage(Band docsBand, int bandIndex) {
+        // todo: we need to implement dayOfClosestSample derival here because mask of each data file is needed :-( move from InversionOp!
+        final MultiLevelImage geophysicalImage = docsBand.getGeophysicalImage();
+        final RenderedImage image = geophysicalImage.getImage(0);
+        for (int i = 0; i < image.getWidth(); i++) {
+            for (int j = 0; j < image.getWidth(); j++) {
+                final double aDouble_1 = image.getData().getSampleDouble(i, j, bandIndex); // does this work??
+                final double aDouble_2 = docsBand.getPixelDouble(i, j);      // or this??
+            }
+        }
     }
 }
