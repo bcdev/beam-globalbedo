@@ -1,11 +1,7 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
-import org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo;
 
-import java.io.IOException;
-import java.net.URL;
-import java.net.URLDecoder;
 import java.util.List;
 
 /**
@@ -13,17 +9,6 @@ import java.util.List;
  * @version $Revision: $ $Date:  $
  */
 public class IOTest extends TestCase {
-
-    private String testResourcePath;
-
-    protected void setUp() {
-        try {
-            final URL url = GlobalbedoLevel3Albedo.class.getResource("");
-            testResourcePath = URLDecoder.decode(url.getPath(), "UTF-8");
-        } catch (IOException e) {
-            fail("Test resource data could not be loaded: " + e.getMessage());
-        }
-    }
 
     public void testGetDailyBBDRFiles() {
         String[] bbdrFilenames = new String[]{

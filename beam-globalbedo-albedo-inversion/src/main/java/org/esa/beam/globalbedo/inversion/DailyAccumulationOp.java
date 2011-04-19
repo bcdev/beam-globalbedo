@@ -150,12 +150,13 @@ public class DailyAccumulationOp extends PixelOperator {
             band.setNoDataValueUsed(true);
         }
 
-        String eBandName = "E";
+        final String eBandName = AlbedoInversionConstants.ACC_E_NAME;
         Band band = targetProduct.addBand(eBandName, ProductData.TYPE_FLOAT32);
         band.setNoDataValue(Float.NaN);
         band.setNoDataValueUsed(true);
 
-        targetProduct.addBand("mask", ProductData.TYPE_FLOAT32);
+        final String maskBandName = AlbedoInversionConstants.ACC_MASK_NAME;
+        targetProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
         targetProduct.setPreferredTileSize(100, 100);
     }
 
@@ -171,8 +172,8 @@ public class DailyAccumulationOp extends PixelOperator {
             TRG_V[i] = 3 * 3 * AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands + i;
             configurator.defineSample(TRG_V[i], vBandNames[i]);
         }
-        configurator.defineSample(TRG_E, "E");
-        configurator.defineSample(TRG_MASK, "mask");
+        configurator.defineSample(TRG_E, AlbedoInversionConstants.ACC_E_NAME);
+        configurator.defineSample(TRG_MASK, AlbedoInversionConstants.ACC_MASK_NAME);
     }
 
     @Override

@@ -2,7 +2,6 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
 import junit.framework.TestCase;
-import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
  * @author Olaf Danne

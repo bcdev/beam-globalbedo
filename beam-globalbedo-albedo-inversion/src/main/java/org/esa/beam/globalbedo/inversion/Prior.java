@@ -29,6 +29,7 @@ public class Prior {
      * This method basically represents the BB implementation 'GetPrior'
      *
      * @param sourceSamples - the source samples as defined in {@link InversionOp}}.
+     * @param priorScaleFactor - the prior scale factor
      *
      * @return Prior
      */
@@ -39,8 +40,6 @@ public class Prior {
         Matrix inverseC = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                                      3 * AlbedoInversionConstants.numBBDRWaveBands);       // 9x9
         Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);  // 9x1
-
-        final int priorIndexMask = InversionOp.SRC_PRIOR_MASK; // not needed?
 
         double mask = 0.0;
         final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;

@@ -1,7 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.datamodel.Product;
-
 /**
  * Container object holding the lists of input products and wing-dependent productDoys for albedo retrieval
  *
@@ -10,7 +8,6 @@ import org.esa.beam.framework.datamodel.Product;
  */
 public class AlbedoInput {
 
-//    private Product[] products;
     private String[] productFilenames;
     private int[] productDoys;
     private int[] productYears;

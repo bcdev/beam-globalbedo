@@ -55,10 +55,8 @@ public class GlobalbedoLevel3Accumulation extends Operator {
         // E_tot(DoY) = sum(E(obs[i]))
         DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
         accumulationOp.setSourceProducts(inputProducts);
-//        Product[] testProducts = new Product[]{inputProducts[0]};
-//        accumulationOp.setSourceProducts(testProducts);
         accumulationOp.setParameter("computeSnow", computeSnow);
-        Product accumulationProduct = accumulationOp.getTargetProduct();
+        final Product accumulationProduct = accumulationOp.getTargetProduct();
 
         setTargetProduct(accumulationProduct);
     }

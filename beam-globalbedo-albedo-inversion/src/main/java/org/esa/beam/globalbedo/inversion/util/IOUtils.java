@@ -1,9 +1,7 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
@@ -13,9 +11,15 @@ import org.esa.beam.util.StringUtils;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
+ * Utility class for Albedo Inversion I/O operations
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
@@ -23,38 +27,38 @@ public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
             IOException {
-        String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
+        final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
-        String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
-        String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
-        List<String> merisBbdrFileList = getDailyBBDRFilenames(merisBbdrFiles, daystring);
+        final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
+        final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
+        final List<String> merisBbdrFileList = getDailyBBDRFilenames(merisBbdrFiles, daystring);
 
-        String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
-        String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
-        List<String> aatsrBbdrFileList = getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
+        final String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
+        final String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
+        final List<String> aatsrBbdrFileList = getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
 
-        String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
-        String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
-        List<String> vgtBbdrFileList = getDailyBBDRFilenames(vgtBbdrFiles, daystring);
+        final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
+        final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
+        final List<String> vgtBbdrFileList = getDailyBBDRFilenames(vgtBbdrFiles, daystring);
 
         final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
         Product[] bbdrProducts = new Product[numberOfInputProducts];
 
         int productIndex = 0;
-        for (Iterator<String> i = merisBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = merisBbdrDir + File.separator + i.next();
+        for (String aMerisBbdrFileList : merisBbdrFileList) {
+            String sourceProductFileName = merisBbdrDir + File.separator + aMerisBbdrFileList;
             Product product = ProductIO.readProduct(sourceProductFileName);
             bbdrProducts[productIndex] = product;
             productIndex++;
         }
-        for (Iterator<String> i = aatsrBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = aatsrBbdrDir + File.separator + i.next();
+        for (String anAatsrBbdrFileList : aatsrBbdrFileList) {
+            String sourceProductFileName = aatsrBbdrDir + File.separator + anAatsrBbdrFileList;
             Product product = ProductIO.readProduct(sourceProductFileName);
             bbdrProducts[productIndex] = product;
             productIndex++;
         }
-        for (Iterator<String> i = vgtBbdrFileList.iterator(); i.hasNext();) {
-            String sourceProductFileName = vgtBbdrDir + File.separator + i.next();
+        for (String aVgtBbdrFileList : vgtBbdrFileList) {
+            String sourceProductFileName = vgtBbdrDir + File.separator + aVgtBbdrFileList;
             Product product = ProductIO.readProduct(sourceProductFileName);
             bbdrProducts[productIndex] = product;
             productIndex++;
@@ -88,16 +92,16 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    public static Product[] getPriorProducts(String priorDir, String tile, boolean computeSnow) throws IOException {
+    public static Product[] getPriorProducts(String priorDir, boolean computeSnow) throws IOException {
 
-        String[] priorFiles = (new File(priorDir)).list();
-        List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
+        final String[] priorFiles = (new File(priorDir)).list();
+        final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
         Product[] priorProducts = new Product[snowFilteredPriorList.size()];
 
         int productIndex = 0;
-        for (Iterator<String> i = snowFilteredPriorList.iterator(); i.hasNext();) {
-            String sourceProductFileName = priorDir + File.separator + i.next();
+        for (String aSnowFilteredPriorList : snowFilteredPriorList) {
+            String sourceProductFileName = priorDir + File.separator + aSnowFilteredPriorList;
             Product product = ProductIO.readProduct(sourceProductFileName);
             priorProducts[productIndex] = product;
             productIndex++;
@@ -144,7 +148,7 @@ public class IOUtils {
                                                      int wings,
                                                      boolean computeSnow) throws IOException {
 
-        List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile, wings,
+        final List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile, wings,
                 computeSnow);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
@@ -152,12 +156,11 @@ public class IOUtils {
         int[] albedoInputProductYears = new int[albedoInputProductList.size()];
 
         int productIndex = 0;
-        for (Iterator<String> i = albedoInputProductList.iterator(); i.hasNext();) {
+        for (String anAlbedoInputProductList : albedoInputProductList) {
             String productYearRootDir;
-            final String thisProductName = i.next();
             // e.g. get '2006' from 'matrices_2006_xxx.dim'...
-            final String thisProductYear = thisProductName.substring(9, 13);
-            final String thisProductDoy = thisProductName.substring(14, 17);
+            final String thisProductYear = anAlbedoInputProductList.substring(9, 13);
+            final String thisProductDoy = anAlbedoInputProductList.substring(14, 17);
             if (computeSnow) {
                 productYearRootDir = accumulatorRootDir.concat(
                         File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
@@ -166,8 +169,7 @@ public class IOUtils {
                         File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
             }
 
-            String sourceProductFileName = productYearRootDir + File.separator + thisProductName;
-//            Product product = ProductIO.readProduct(sourceProductFileName);
+            String sourceProductFileName = productYearRootDir + File.separator + anAlbedoInputProductList;
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
             albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy) - (doy + 8);
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
@@ -186,6 +188,7 @@ public class IOUtils {
      * Returns the filename for an inversion output product
      *
      * @param year        - year
+     * @param doy         - day of interest
      * @param tile        - tile
      * @param computeSnow - boolean
      * @param usePrior    - boolean
@@ -217,7 +220,7 @@ public class IOUtils {
                                                    boolean computeSnow) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
-        FilenameFilter yearFilter = new FilenameFilter() {
+        final FilenameFilter yearFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only years between 1995 and 2010 (GA period)
                 int startYear = 1995;
@@ -231,14 +234,14 @@ public class IOUtils {
             }
         };
 
-        FilenameFilter inputProductNameFilter = new FilenameFilter() {
+        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005_123.dim'...
                 return (name.length() == 21 && name.startsWith("matrices") && name.endsWith("dim"));
             }
         };
 
-        String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
+        final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
 
         doy = doy + 8; // 'MODIS day'
 
@@ -252,36 +255,36 @@ public class IOUtils {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + thisYear + File.separator + tile + File.separator + "NoSnow");
             }
-            String[] thisYearAlbedoInputFiles = (new File(thisYearsRootDir)).list(inputProductNameFilter);
-            int[] daysOfThisYear = getDaysOfYear(thisYearAlbedoInputFiles);
+            final String[] thisYearAlbedoInputFiles = (new File(thisYearsRootDir)).list(inputProductNameFilter);
+            final int[] daysOfThisYear = getDaysOfYear(thisYearAlbedoInputFiles);
 
             for (String s : thisYearAlbedoInputFiles) {
                 if (s.startsWith("matrices_" + thisYear)) {
                     // check the 'wings' condition...
                     //    # Left wing
                     if (365 + (doy - wings) <= 366) {
-                        for (int i = 0; i < daysOfThisYear.length; i++) {
+                        for (int aDaysOfThisYear : daysOfThisYear) {
                             if (!albedoInputProductList.contains(s)) {
-                                if (daysOfThisYear[i] >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
+                                if (aDaysOfThisYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
                                     albedoInputProductList.add(s);
                                 }
                             }
                         }
                     }
                     //    # Center
-                    for (int i = 0; i < daysOfThisYear.length; i++) {
+                    for (int aDaysOfThisYear : daysOfThisYear) {
                         if (!albedoInputProductList.contains(s)) {
-                            if ((daysOfThisYear[i] < doy + wings) && (daysOfThisYear[i] >= doy - wings) &&
-                                    (Integer.parseInt(thisYear) == year)) {
+                            if ((aDaysOfThisYear < doy + wings) && (aDaysOfThisYear >= doy - wings) &&
+                                (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
                         }
                     }
                     //    # Right wing
                     if ((doy + wings) - 365 > 0) {
-                        for (int i = 0; i < daysOfThisYear.length; i++) {
+                        for (int aDaysOfThisYear : daysOfThisYear) {
                             if (!albedoInputProductList.contains(s)) {
-                                if (daysOfThisYear[i] <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
+                                if (aDaysOfThisYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
                                     albedoInputProductList.add(s);
                                 }
                             }

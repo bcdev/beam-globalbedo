@@ -33,6 +33,18 @@ public class AlbedoInversionConstants {
     public final static String BBDR_SNOW_MASK_NAME = "snow_mask";
     public final static String BBDR_VGT_SM_NAME = "SM"; // VGT only, should become a flag band!
 
+    public final static String ACC_E_NAME = "E";
+    public final static String ACC_MASK_NAME = "mask";
+    public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME = "Days_to_the_Closest_Sample";
+
+    public static final String PRIOR_NSAMPLES_NAME =  "N samples";
+    public static final String PRIOR_MASK_NAME =  "Mask";
+
+    public static final String INV_ENTROPY_BAND_NAME = "Entropy";
+    public static final String INV_REL_ENTROPY_BAND_NAME = "Relative_Entropy";
+    public static final String INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME = "Weighted_Number_of_Samples";
+    public static final String INV_GOODNESS_OF_FIT_BAND_NAME = "Goodness_of_Fit";
+
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
 
     public static final int numBBDRWaveBands = 3;

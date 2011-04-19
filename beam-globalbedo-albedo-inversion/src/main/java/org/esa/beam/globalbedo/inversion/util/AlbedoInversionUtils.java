@@ -173,9 +173,9 @@ public class AlbedoInversionUtils {
      * in the Globalbedo project. These values represent the easting/northing parameters.
      * // todo: apply this also in BBDR module, then easting/northing parameters will not be needed any more
      *
-     * @param modisTile
-     * @return
-     * @throws NumberFormatException
+     * @param modisTile - the MODIS tile name
+     * @return  double[] - the upper left corner coordinate
+     * @throws NumberFormatException -
      */
     public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
         double[] upperLeftPoint = new double[2];

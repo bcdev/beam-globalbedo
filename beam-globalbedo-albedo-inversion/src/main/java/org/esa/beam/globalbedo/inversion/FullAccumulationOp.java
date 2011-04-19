@@ -15,6 +15,8 @@ import org.esa.beam.framework.gpf.experimental.PointOperator;
  * Pixel operator implementing the full accumulation part of python breadboard.
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
  *
+ * // todo: Class will probably not be needed (replaced by FullAccumulationJAIOp) - remove later!
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */

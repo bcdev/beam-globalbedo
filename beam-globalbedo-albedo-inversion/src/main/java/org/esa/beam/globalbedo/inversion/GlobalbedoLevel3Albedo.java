@@ -1,10 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-/**
- * @author Olaf Danne
- * @version $Revision: $ $Date:  $
- */
-
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
@@ -17,7 +12,6 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
-import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
@@ -57,74 +51,63 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
-        String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
+        final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
                 "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
 
         Product[] priorProducts;
         try {
-            priorProducts = IOUtils.getPriorProducts(priorDir, tile, computeSnow);
+            priorProducts = IOUtils.getPriorProducts(priorDir, computeSnow);
         } catch (IOException e) {
             throw new OperatorException("Cannot load prior products: " + e.getMessage());
         }
 
         // STEP 2: get Daily Accumulator input files...
-//        String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles" +
-//                                File.separator + year + File.separator + tile;
-        String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
+        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
         AlbedoInput inputProduct = null;
-        Vector allDoysVector = new Vector();
+        Vector<int[]> allDoysVector = new Vector<int[]>();
         int priorIndex = 0;
         for (Product priorProduct : priorProducts) {
             if (priorIndex == 0) {   // test!!
-                int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
+                final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
                 allDoysVector.clear();
                 try {
                     inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
                             wings,
                             computeSnow);
-                    int[] allDoys = inputProduct.getProductDoys();
+                    final int[] allDoys = inputProduct.getProductDoys();
                     allDoysVector.add(allDoys);
                     priorIndex++;
                 } catch (IOException e) {
                     // todo: just skip product, but add appropriate logging here
                     System.out.println("Could not process DoY " + doy + " - skipping.");
-//                throw new OperatorException("Cannot load input products: " + e.getMessage());
                 }
             }
         }
 
         // STEP 3: we need to reproject the priors for further use...
-        Product[] reprojectedPriorProducts = new Product[0];
+        Product[] reprojectedPriorProducts;
         try {
-            reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
-                                                                           inputProduct.getProductFilenames()[0]);
+            if (inputProduct != null) {
+                reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
+                                                                               inputProduct.getProductFilenames()[0]);
+            } else {
+                throw new OperatorException("No accumulator input products available - cannot proceed.");
+            }
         } catch (IOException e) {
-            // todo
-            e.printStackTrace();
+            throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
         }
 
         // do the next steps per prior product:
         priorIndex = 0;
         for (Product priorProduct : reprojectedPriorProducts) {
 
-            // STEP 4: do the full accumulation (pixelwise matrix addition, so we need another pixel operator...
-            // --> FullAccumulationOp (pixel operator), implement breadboard method 'Accumulator'
+            // --> FullAccumulationOp (can be done imagewise --> use JAI methods)
             if (priorIndex == 0) {   // test!!
-//                FullAccumulationOp fullAccumulationOp = new FullAccumulationOp();
-//                // the following means that the source products corresponding to the LAST prior are used
-//                // this is ok since the input products are the same for all priors (checked with GL, 20110407)
-//                fullAccumulationOp.setSourceProducts(inputProduct.getProducts());
-//                fullAccumulationOp.setParameter("allDoys", allDoysVector.get(priorIndex));
-//                fullAccumulationOp.setParameter("weight", allWeights[priorIndex]);
-//                Product fullAccumulationProduct = fullAccumulationOp.getTargetProduct();
-
-                // test: JAI accumulator
                 FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
                 jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-                jaiOp.setParameter("allDoys", allDoysVector.get(priorIndex));
+                jaiOp.setParameter("allDoys", allDoysVector);
                 Product fullAccumulationProduct = jaiOp.getTargetProduct();
-                // end test
 
                 // STEP 5: compute pixelwise results (perform inversion) and write output
                 // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
@@ -133,20 +116,16 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 inversionOp.setSourceProduct("priorProduct", priorProduct);
                 inversionOp.setParameter("year", year);
                 inversionOp.setParameter("tile", tile);
-                inversionOp.setParameter("allDoys", allDoysVector.get(priorIndex));
                 inversionOp.setParameter("computeSnow", computeSnow);
                 inversionOp.setParameter("usePrior", usePrior);
                 inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
                 Product inversionProduct = inversionOp.getTargetProduct();
 
-//                setTargetProduct(fullAccumulationProduct);
-//                setTargetProduct(inversionProduct);
-
-                int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
-                String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+                final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
+                final String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
 
                 final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
-                File targetFile = new File(inversionTargetDir, targetFileName);
+                final File targetFile = new File(inversionTargetDir, targetFileName);
 //                final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
                 final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
 //                final WriteOp writeOp = new WriteOp(priorProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
@@ -155,10 +134,10 @@ public class GlobalbedoLevel3Albedo extends Operator {
             }
         }
 
-
         // test:
 //        setTargetProduct(priorProducts[0]);
         System.out.println("done");
+        // todo: how to avoid that either no target product is set, or 'result.dim' is written which is not needed ?
     }
 
     public static class Spi extends OperatorSpi {

@@ -14,17 +14,17 @@ public class InversionResult {
     private double entropy;
     private double relEntropy;
     private double weightedNumberOfSamples;
-    private int doyClosestSample;
+    private int dayToTheClosestSample;
     private double goodnessOfFit;
 
     public InversionResult(Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                           double weightedNumberOfSamples, int doyClosestSample, double goodnessOfFit) {
+                           double weightedNumberOfSamples, int dayToTheClosestSample, double goodnessOfFit) {
         this.parameters = parameters;
         this.uncertainties = uncertainties;
         this.entropy = entropy;
         this.relEntropy = relEntropy;
         this.weightedNumberOfSamples = weightedNumberOfSamples;
-        this.doyClosestSample = doyClosestSample;
+        this.dayToTheClosestSample = dayToTheClosestSample;
         this.goodnessOfFit = goodnessOfFit;
     }
 
@@ -49,7 +49,7 @@ public class InversionResult {
     }
 
     public int getDoyClosestSample() {
-        return doyClosestSample;
+        return dayToTheClosestSample;
     }
 
     public double getGoodnessOfFit() {

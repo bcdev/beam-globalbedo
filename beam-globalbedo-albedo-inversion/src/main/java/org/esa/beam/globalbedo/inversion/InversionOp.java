@@ -16,9 +16,6 @@ import org.esa.beam.framework.gpf.experimental.PointOperator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import static java.lang.Math.*;
 
 /**
@@ -35,12 +32,6 @@ import static java.lang.Math.*;
                   copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
-
-    // BB line 597:
-    private static final int xmin = 1;
-    private static final int xmax = 1;
-    private static final int ymin = 1;
-    private static final int ymax = 1;
 
     public static final int[][] SRC_ACCUM_M =
             new int[3 * AlbedoInversionConstants.numBBDRWaveBands]
@@ -91,18 +82,10 @@ public class InversionOp extends PixelOperator {
     private String[][] uncertaintyBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
             [3 * AlbedoInversionConstants.numBBDRWaveBands];
 
-    private static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
     private String entropyBandName;
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
-    private String daysToTheClosestSampleBandName;
     private String goodnessOfFitBandName;
-
-    static {
-        waveBandsOffsetMap.put(0, "VIS");
-        waveBandsOffsetMap.put(1, "NIR");
-        waveBandsOffsetMap.put(2, "SW");
-    }
 
     @SourceProduct(description = "Full accumulation product")
     private Product fullAccumulationProduct;
@@ -115,9 +98,6 @@ public class InversionOp extends PixelOperator {
 
     @Parameter(description = "Tile")
     private String tile;
-
-    @Parameter(description = "All DoYs for full accumulation")
-    private int[] allDoys;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -133,8 +113,8 @@ public class InversionOp extends PixelOperator {
     protected void configureTargetProduct(Product targetProduct) {
 
         parameterBandNames = IOUtils.getInversionParameterBandNames();
-        for (int i = 0; i < parameterBandNames.length; i++) {
-            Band band = targetProduct.addBand(parameterBandNames[i], ProductData.TYPE_FLOAT32);
+        for (String parameterBandName : parameterBandNames) {
+            Band band = targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
@@ -149,28 +129,28 @@ public class InversionOp extends PixelOperator {
             }
         }
 
-        entropyBandName = "Entropy";
+        entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
         Band entropyBand = targetProduct.addBand(entropyBandName, ProductData.TYPE_FLOAT32);
         entropyBand.setNoDataValue(Float.NaN);
         entropyBand.setNoDataValueUsed(true);
 
-        relEntropyBandName = "Relative_Entropy";
+        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
         relEntropyBand.setNoDataValue(Float.NaN);
         relEntropyBand.setNoDataValueUsed(true);
 
-        weightedNumberOfSamplesBandName = "Weighted_Number_of_Samples";
+        weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
                                                                  ProductData.TYPE_FLOAT32);
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
-        daysToTheClosestSampleBandName = "Days_to_the_Closest_Sample";
-        Band daysToTheClosestSampleBand = targetProduct.addBand(daysToTheClosestSampleBandName, ProductData.TYPE_INT16);
+        Band daysToTheClosestSampleBand = targetProduct.addBand(
+                AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_INT16);
         daysToTheClosestSampleBand.setNoDataValue(-1);
         daysToTheClosestSampleBand.setNoDataValueUsed(true);
 
-        goodnessOfFitBandName = "Goodness_of_Fit";
+        goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
         goodnessOfFitBand.setNoDataValue(Float.NaN);
         goodnessOfFitBand.setNoDataValueUsed(true);
@@ -192,10 +172,11 @@ public class InversionOp extends PixelOperator {
             SRC_ACCUM_V[i] = 3 * 3 * AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands + i;
             configurator.defineSample(SRC_ACCUM_V[i], vBandNames[i], fullAccumulationProduct);
         }
-        // todo: define constants for names
-        configurator.defineSample(SRC_ACCUM_E, "E", fullAccumulationProduct);
-        configurator.defineSample(SRC_ACCUM_MASK, "mask", fullAccumulationProduct);
-        configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE, "doy_closest_sample", fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_E, AlbedoInversionConstants.ACC_E_NAME, fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_MASK, AlbedoInversionConstants.ACC_MASK_NAME, fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE,
+                                  AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME,
+                                  fullAccumulationProduct);
 
         // prior product:
         // we have:
@@ -215,9 +196,8 @@ public class InversionOp extends PixelOperator {
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
-        // todo: define constants for names
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, "N samples", priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, "Mask", priorProduct);
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, AlbedoInversionConstants.PRIOR_NSAMPLES_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, AlbedoInversionConstants.PRIOR_MASK_NAME, priorProduct);
     }
 
     @Override
@@ -243,7 +223,7 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES,
                                   weightedNumberOfSamplesBandName);
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE,
-                                  daysToTheClosestSampleBandName);
+                                  AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT,
                                   goodnessOfFitBandName);
     }
@@ -254,20 +234,12 @@ public class InversionOp extends PixelOperator {
 
         Matrix parameters = new Matrix(AlbedoInversionConstants.numBBDRWaveBands *
                                        AlbedoInversionConstants.numAlbedoParameters, 1);
-        Matrix parametersNoPrior = new Matrix(AlbedoInversionConstants.numBBDRWaveBands *
-                                              AlbedoInversionConstants.numAlbedoParameters, 1);
 
         Matrix uncertainties = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                                           3 * AlbedoInversionConstants.numAlbedoParameters);
-        Matrix uncertaintiesNoPrior = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                 3 * AlbedoInversionConstants.numAlbedoParameters);
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
-
-        if ((x == 342 && y == 200) || (x == 427 && y == 383) || (x == 570 && y == 288) || (x == 727 && y == 291) || (x == 714 && y == 541)) {
-            System.out.println();
-        }
 
         final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
         final Prior prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
@@ -277,14 +249,13 @@ public class InversionOp extends PixelOperator {
         final Matrix eAcc = accumulator.getE();
         double maskAcc = accumulator.getMask();
 
-        double maskPrior = prior.getMask();
-
+        final double maskPrior = prior.getMask();
 
         if (maskAcc > 0 && maskPrior > 0) {
 
             if (usePrior) {
                 for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                    double m_ii_accum = mAcc.get(i, i);
+                    final double m_ii_accum = mAcc.get(i, i);
                     mAcc.set(i, i, m_ii_accum + prior.getM().get(i, i));
                 }
                 vAcc = vAcc.plus(prior.getV());
@@ -311,28 +282,10 @@ public class InversionOp extends PixelOperator {
             }
 
             if (maskAcc != 0.0) {
-                // do parameters estimation:
-
-//                # Compute least-squares solution to equation Ax = b
-//                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.lstsq.html
-//
-//                (P, rho_residuals, rank, svals) = lstsq(mAcc, vAcc)
-//                parameters[:,column,row] = P
                 parameters = mAcc.solve(vAcc);
-//
-//                # Compute singluar value decomposition
-//                # http://docs.scipy.org/doc/scipy/reference/generated/scipy.linalg.svd.html
-//                U, S, Vh = svd(mAcc)
-//                det[column,row] = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
-                entropy = getEntropy(mAcc);
 
-//                # This can be calculated earlier for the prior
-//                U, S, Vh = svd(numpy.matrix(M_p))
-                double entropyPrior = getEntropy(prior.getM());
-//                if UsePrior == 1:
-//                    RelativeEntropy[column,row] = PriorDet - det[column,row]
-//                else:
-//                    RelativeEntropy[column,row] = Invalid # As this has no meaning
+                entropy = getEntropy(mAcc);
+                final double entropyPrior = getEntropy(prior.getM());
                 if (usePrior) {
                     relEntropy = entropyPrior - entropy;
                 } else {
@@ -364,30 +317,14 @@ public class InversionOp extends PixelOperator {
             }
         }
 
-        // todo: compute doyClosestSample here?!
-        int doyClosestSample = 0;
-        for (int i = 0; i < allDoys.length; i++) {
-            final int bbdrDaysToDoY = Math.abs(allDoys[i]) + 1;
-            if (i == 0) {
-                if (maskAcc > 0.0) {
-                    doyClosestSample = bbdrDaysToDoY;
-                }
-            } else {
-                if (maskAcc > 0 && doyClosestSample == 0) {
-                    doyClosestSample = bbdrDaysToDoY;
-                }
-                if (maskAcc > 0 && doyClosestSample > 0) {
-                    doyClosestSample = Math.min(bbdrDaysToDoY, doyClosestSample);
-                }
-            }
-        }
+        final int dayToTheClosestSample = sourceSamples[SRC_ACCUM_DOY_CLOSEST_SAMPLE].getInt();
 
         // finally we need the 'Goodness of Fit'...
-        double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+        final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
 
         // we have the final result - fill target samples...
         InversionResult result = new InversionResult(parameters, uncertainties, entropy, relEntropy,
-                                                     maskAcc, doyClosestSample, goodnessOfFit);
+                                                     maskAcc, dayToTheClosestSample, goodnessOfFit);
         fillTargetSamples(targetSamples, result);
     }
 
@@ -439,8 +376,8 @@ public class InversionOp extends PixelOperator {
         final double[] svdMSingularValues = svdM.getSingularValues();
         // see python BB equivalent at http://nullege.com/codes/search/numpy.prod
         double productSvdMSRecip = 1.0;
-        for (int i = 0; i < svdMSingularValues.length; i++) {
-            productSvdMSRecip *= (1.0 / svdMSingularValues[i]);
+        for (double svdMSingularValue : svdMSingularValues) {
+            productSvdMSRecip *= (1.0 / svdMSingularValue);
         }
         double entropy = 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
 
