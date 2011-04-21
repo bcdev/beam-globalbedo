@@ -119,9 +119,13 @@ public class BbdrOp extends PixelOperator {
                 band.setNoDataValueUsed(true);
                 ProductUtils.copySpectralBandProperties(srcBand, band);
             }
-            Band sdrError = targetProduct.addBand("sdr_error", ProductData.TYPE_FLOAT32);
-            sdrError.setNoDataValue(Float.NaN);
-            sdrError.setNoDataValueUsed(true);
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
+                Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+                ProductUtils.copySpectralBandProperties(srcBand, band);
+            }
 
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
             ndvi.setNoDataValue(Float.NaN);
@@ -135,6 +139,7 @@ public class BbdrOp extends PixelOperator {
                     targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
                 }
             }
+            targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
             String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
                 "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW",
@@ -325,11 +330,14 @@ public class BbdrOp extends PixelOperator {
     @Override
     protected void configureTargetSamples(Configurator configurator) {
         if (sdrOnly) {
+            int index = 0;
             for (int i = 0; i < sensor.getNumBands(); i++) {
-                configurator.defineSample(i, "sdr_" + (i + 1));
+                configurator.defineSample(index++, "sdr_" + (i + 1));
             }
-            configurator.defineSample(sensor.getNumBands(), "sdr_error");
-            configurator.defineSample(sensor.getNumBands()+1, "ndvi");
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                configurator.defineSample(index++, "sdr_error_" + (i + 1));
+            }
+            configurator.defineSample(index, "ndvi");
         } else {
             configurator.defineSample(TRG_BBDR    , "BB_VIS");
             configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
@@ -471,7 +479,7 @@ public class BbdrOp extends PixelOperator {
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
         if (sdrOnly) {
-            targetSamples[sensor.getNumBands()+1].set(ndvi_land);
+            targetSamples[sensor.getNumBands() * 2].set(ndvi_land);
         } else {
             targetSamples[TRG_NDVI].set(ndvi_land);
         }
@@ -512,8 +520,9 @@ public class BbdrOp extends PixelOperator {
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(err_rad_cov).plusEquals(err_coreg_cov);
 
         if (sdrOnly) {
-            double sdrError = err2_tot_cov.trace();
-            targetSamples[sensor.getNumBands()].set(sdrError);
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                targetSamples[sensor.getNumBands() + i].set(err2_tot_cov.get(i, i));
+            }
             return;
         }
         // end of implementation needed for landcover cci
