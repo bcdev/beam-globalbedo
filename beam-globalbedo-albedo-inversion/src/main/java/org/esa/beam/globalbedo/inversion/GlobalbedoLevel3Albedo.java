@@ -11,10 +11,13 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Operator for the inversion and albedo retrieval part in Albedo Inversion
@@ -45,6 +48,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
     // todo: do we need this configurable?
     private boolean usePrior = true;
+    private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
@@ -52,7 +56,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 1: get Prior input files...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+                                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
 
         Product[] priorProducts;
         try {
@@ -73,14 +77,16 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 allDoysVector.clear();
                 try {
                     inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
-                            wings,
-                            computeSnow);
+                                                                  wings,
+                                                                  computeSnow);
                     final int[] allDoys = inputProduct.getProductDoys();
                     allDoysVector.add(allDoys);
                     priorIndex++;
                 } catch (IOException e) {
                     // todo: just skip product, but add appropriate logging here
-                    System.out.println("Could not process DoY " + doy + " - skipping.");
+                    logger = BeamLogManager.getSystemLogger();
+                    logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
+//                    System.out.println("Could not process DoY " + doy + " - skipping.");
                 }
             }
         }
@@ -122,7 +128,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 Product inversionProduct = inversionOp.getTargetProduct();
 
                 final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
-                final String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+                final String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow,
+                                                                                 usePrior);
 
                 final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
                 final File targetFile = new File(inversionTargetDir, targetFileName);
