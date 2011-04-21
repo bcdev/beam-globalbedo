@@ -80,6 +80,10 @@ public class GaMasterOp  extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+        if (sourceProduct.getSceneRasterWidth() < 9 || sourceProduct.getSceneRasterHeight() < 9) {
+            setTargetProduct(EMPTY_PRODUCT);
+            return;
+        }
         Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
         Dimension aotTS = new Dimension(targetTS.width/9, targetTS.height/9);
         RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
