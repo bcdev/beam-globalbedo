@@ -20,13 +20,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Operator for the inversion and albedo retrieval part in Albedo Inversion
+ * Operator for the creation of full accumulators in Albedo Inversion
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.albedo")
-public class GlobalbedoLevel3Albedo extends Operator {
+@OperatorMetadata(alias = "ga.inversion.fullaccumulation")
+public class GlobalbedoLevel3FullAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
@@ -104,43 +104,26 @@ public class GlobalbedoLevel3Albedo extends Operator {
             throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
         }
 
+        TestFullAccumulationJAIAllDoysOp jaiOp = new TestFullAccumulationJAIAllDoysOp();
+        jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
+        jaiOp.setParameter("gaRootDir", gaRootDir);
+        jaiOp.setParameter("year", year);
+        jaiOp.setParameter("tile", tile);
+        jaiOp.setParameter("allDoys", allDoysVector);
+        Product fullAccumulationProduct = jaiOp.getTargetProduct();
+
         // do the next steps per prior product:
-        priorIndex = 0;
-        for (Product priorProduct : reprojectedPriorProducts) {
-
-            // --> FullAccumulationOp (can be done imagewise --> use JAI methods)
-            if (priorIndex == 0) {   // test!!
-                FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
-                jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-                jaiOp.setParameter("allDoys", allDoysVector);
-                Product fullAccumulationProduct = jaiOp.getTargetProduct();
-
-                // STEP 5: compute pixelwise results (perform inversion) and write output
-                // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
-                InversionOp inversionOp = new InversionOp();
-                inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
-                inversionOp.setSourceProduct("priorProduct", priorProduct);
-                inversionOp.setParameter("year", year);
-                inversionOp.setParameter("tile", tile);
-                inversionOp.setParameter("computeSnow", computeSnow);
-                inversionOp.setParameter("usePrior", usePrior);
-                inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
-                Product inversionProduct = inversionOp.getTargetProduct();
-
-                final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
-                final String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow,
-                                                                                 usePrior);
-
-                final String inversionTargetDir = gaRootDir + File.separator + "inversion" + File.separator + tile;
-//                final File targetFile = new File(inversionTargetDir, targetFileName);
-                final File targetFile = new File(inversionTargetDir + File.separator + "muell", targetFileName);
-//                final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-                final WriteOp writeOp = new WriteOp(inversionProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-//                final WriteOp writeOp = new WriteOp(priorProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
-                writeOp.writeProduct(ProgressMonitor.NULL);
-                priorIndex++;
-            }
-        }
+//        priorIndex = 0;
+//        for (Product priorProduct : reprojectedPriorProducts) {
+//            final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), true);
+//            final String targetFileName = "fullacc_" + year + "_" + doy; // todo tile, snow
+//
+//            final String fullaccTargetDir = accumulatorDir + File.separator + "full";
+//            final File targetFile = new File(fullaccTargetDir, targetFileName);
+//            final WriteOp writeOp = new WriteOp(fullAccumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+//            writeOp.writeProduct(ProgressMonitor.NULL);
+//            priorIndex++;
+//        }
 
         // test:
 //        setTargetProduct(priorProducts[0]);
@@ -151,7 +134,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Albedo.class);
+            super(GlobalbedoLevel3FullAccumulation.class);
         }
     }
 }

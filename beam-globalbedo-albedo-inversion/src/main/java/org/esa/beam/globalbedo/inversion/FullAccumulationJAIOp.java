@@ -75,6 +75,7 @@ public class FullAccumulationJAIOp extends Operator {
             int[] allDoysPrior = (int[]) allDoys.elementAt(i);
             for (int j = 0; j < sourceFilenames.length; j++) {
                 weight[i][j] = Math.exp(-1.0 * Math.abs(allDoysPrior[j]) / HALFLIFE);
+                System.out.println("i, j, weight = " + i + ", " + j + ", " + weight[i][j]);
             }
         }
 
@@ -106,6 +107,7 @@ public class FullAccumulationJAIOp extends Operator {
         daysToTheClosestSample = new int[rasterWidth][rasterHeight];
         int[][] dayOfClosestSampleOld;
         for (String sourceFileName : sourceFilenames) {
+            System.out.println("sourceFileName = " + sourceFileName);
             Product product = null;
             try {
                 BeamLogManager.getSystemLogger().log(Level.ALL, "Accumulating file " + sourceFileName + " ...");
@@ -126,7 +128,7 @@ public class FullAccumulationJAIOp extends Operator {
 
                     // add weighted product to accumulation result...
                     for (int i = 0; i < allDoys.size(); i++) {
-                        RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image,
+                        final RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image,
                                                                                                  new double[]{weight[i][fileIndex]},
                                                                                                  null);
                         final RenderedOp result = AddDescriptor.create(accu[bandIndex], multipliedSourceImageToAccum,

@@ -26,7 +26,7 @@ import java.util.Map;
 public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
-            IOException {
+                                                                                                             IOException {
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -76,6 +76,7 @@ public class IOUtils {
      *
      * @param bbdrFilenames - the list of filenames
      * @param daystring     - the daystring
+     *
      * @return List<String> - the filtered list
      */
     static List<String> getDailyBBDRFilenames(String[] bbdrFilenames, String daystring) {
@@ -120,7 +121,7 @@ public class IOUtils {
             double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
             double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
             reprojectedProducts[i] = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-                    northing);
+                                                                                northing);
         }
         return reprojectedProducts;
     }
@@ -148,8 +149,9 @@ public class IOUtils {
                                                      int wings,
                                                      boolean computeSnow) throws IOException {
 
-        final List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile, wings,
-                computeSnow);
+        final List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile,
+                                                                               wings,
+                                                                               computeSnow);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
         int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
@@ -192,6 +194,7 @@ public class IOUtils {
      * @param tile        - tile
      * @param computeSnow - boolean
      * @param usePrior    - boolean
+     *
      * @return String
      */
     public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
@@ -256,38 +259,37 @@ public class IOUtils {
                         File.separator + thisYear + File.separator + tile + File.separator + "NoSnow");
             }
             final String[] thisYearAlbedoInputFiles = (new File(thisYearsRootDir)).list(inputProductNameFilter);
-            final int[] daysOfThisYear = getDaysOfYear(thisYearAlbedoInputFiles);
 
             for (String s : thisYearAlbedoInputFiles) {
                 if (s.startsWith("matrices_" + thisYear)) {
-                    // check the 'wings' condition...
-                    //    # Left wing
-                    if (365 + (doy - wings) <= 366) {
-                        for (int aDaysOfThisYear : daysOfThisYear) {
-                            if (!albedoInputProductList.contains(s)) {
-                                if (aDaysOfThisYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
-                                    albedoInputProductList.add(s);
+                    if (!albedoInputProductList.contains(s)) {
+                        // check the 'wings' condition...
+                        try {
+                            final int dayOfYear = Integer.parseInt(s.substring(14, 17));
+                            //    # Left wing
+                            if (365 + (doy - wings) <= 366) {
+                                if (!albedoInputProductList.contains(s)) {
+                                    if (dayOfYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
+                                        albedoInputProductList.add(s);
+                                    }
                                 }
                             }
-                        }
-                    }
-                    //    # Center
-                    for (int aDaysOfThisYear : daysOfThisYear) {
-                        if (!albedoInputProductList.contains(s)) {
-                            if ((aDaysOfThisYear < doy + wings) && (aDaysOfThisYear >= doy - wings) &&
+                            //    # Center
+                            if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
                                 (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
-                        }
-                    }
-                    //    # Right wing
-                    if ((doy + wings) - 365 > 0) {
-                        for (int aDaysOfThisYear : daysOfThisYear) {
-                            if (!albedoInputProductList.contains(s)) {
-                                if (aDaysOfThisYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
-                                    albedoInputProductList.add(s);
+                            //    # Right wing
+                            if ((doy + wings) - 365 > 0) {
+                                if (!albedoInputProductList.contains(s)) {
+                                    if (dayOfYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
+                                        albedoInputProductList.add(s);
+                                    }
                                 }
                             }
+                        } catch (NumberFormatException e) {
+                            // todo: logging
+                            System.out.println("Cannot determine wings for accumulator " + s + " - skipping.");
                         }
                     }
                 }
@@ -308,7 +310,7 @@ public class IOUtils {
 
     public static String[] getInversionParameterBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands *
-                AlbedoInversionConstants.numAlbedoParameters];
+                                        AlbedoInversionConstants.numAlbedoParameters];
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
@@ -320,20 +322,20 @@ public class IOUtils {
     }
 
     public static String[][] getInversionUncertaintyBandNames() {
-        String bandNames[][] = new String[3*AlbedoInversionConstants.numBBDRWaveBands]
-                [3*AlbedoInversionConstants.numAlbedoParameters];
+        String bandNames[][] = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
+                [3 * AlbedoInversionConstants.numAlbedoParameters];
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             // only UR triangle matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+                                  waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
         }
         return bandNames;
 
     }
 
-     private static int[] getDaysOfYear(String[] thisYearAlbedoInputFiles) {
+    private static int[] getDaysOfYear(String[] thisYearAlbedoInputFiles) {
         int[] daysOfYear = new int[thisYearAlbedoInputFiles.length];
         for (int i = 0; i < thisYearAlbedoInputFiles.length; i++) {
             final String s = thisYearAlbedoInputFiles[i];
