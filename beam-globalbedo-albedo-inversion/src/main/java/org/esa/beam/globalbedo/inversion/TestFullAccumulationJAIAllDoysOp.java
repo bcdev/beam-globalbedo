@@ -6,7 +6,6 @@ package org.esa.beam.globalbedo.inversion;
  */
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -21,13 +20,7 @@ import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.BorderExtender;
-import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.AddDescriptor;
-import javax.media.jai.operator.ConstantDescriptor;
-import javax.media.jai.operator.MultiplyConstDescriptor;
-import java.awt.*;
-import java.awt.image.BufferedImage;
-import java.awt.image.RenderedImage;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
@@ -45,15 +38,14 @@ import java.util.Vector;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.testfullaccjai",
-        description = "Provides full accumulation of daily accumulators",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+                  description = "Provides full accumulation of daily accumulators",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class TestFullAccumulationJAIAllDoysOp extends Operator {
 
-    private static final double HALFLIFE = 11.54;
-
-    private int[][] daysToTheClosestSample;
+    private int[][][] daysToTheClosestSample;
+    private double[][][][] sumMatrices;
 
     private int rasterWidth;
     private int rasterHeight;
@@ -68,13 +60,13 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
     private String tile;
 
     @Parameter(description = "Source filenames")
-    private String[] sourceFilenames;
+    private String[] dailyAccumulatorFilenames;
 
     // each element of this vector is an int array (related to a prior) holding the doy indices of
     // the accumulator files to be processed with proper weights for this prior day.
     // length of this vector is usually 45 (as we have 45 priors per year)
     @Parameter(description = "All DoYs for full accumulation")
-    private Vector allDoys;
+    private Vector allPriors;
 
 //    @Parameter(description = "Prior DoYs to process (45 each year)")
 //    private int[] doysToProcess;
@@ -84,7 +76,7 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
 
         Product sourceProduct0 = null;
         try {
-            sourceProduct0 = ProductIO.readProduct(new File(sourceFilenames[0]));
+            sourceProduct0 = ProductIO.readProduct(new File(dailyAccumulatorFilenames[0]));
         } catch (IOException e) {
             // todo
             e.printStackTrace();
@@ -93,11 +85,11 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
         final String[] bandNames = sourceProduct0.getBandNames();
 
         Vector<double[]> allWeights = new Vector<double[]>();
-        for (int i = 0; i < allDoys.size(); i++) {
-            int[] allDoysPrior = (int[]) allDoys.elementAt(i);
+        for (int i = 0; i < allPriors.size(); i++) {
+            int[] allDoysPrior = (int[]) allPriors.elementAt(i);
             double[] weight = new double[allDoysPrior.length];
             for (int j = 0; j < weight.length; j++) {
-                weight[j] = Math.exp(-1.0 * Math.abs(allDoysPrior[j]) / HALFLIFE);
+                weight[j] = Math.exp(-1.0 * Math.abs(allDoysPrior[j]) / AlbedoInversionConstants.HALFLIFE);
             }
             allWeights.add(weight);
         }
@@ -108,68 +100,37 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
         }
         rasterWidth = sourceProduct0.getSceneRasterWidth();
         rasterHeight = sourceProduct0.getSceneRasterHeight();
-        Product targetProduct = new Product(getId(),
-                getClass().getName(),
-                rasterWidth,
-                rasterHeight);
-        targetProduct.setStartTime(sourceProduct0.getStartTime());
-        targetProduct.setEndTime(sourceProduct0.getEndTime());
-        ProductUtils.copyTiePointGrids(sourceProduct0, targetProduct);
-        ProductUtils.copyGeoCoding(sourceProduct0, targetProduct);
+
         sourceProduct0.dispose();
 
-        BufferedImage[][] accu = new BufferedImage[allDoys.size()][bandNames.length];
-        for (int i = 0; i < allDoys.size(); i++) {
-            for (int j = 0; j < bandNames.length; j++) {
-                if (bandDataTypes[j] == ProductData.TYPE_FLOAT32) {
-                    accu[i][j] = ConstantDescriptor.create((float) rasterWidth, (float) rasterHeight, new Float[]{0f},
-                            null).getAsBufferedImage();
-                }
-            }
-        }
-
         int fileIndex = 0;
-        daysToTheClosestSample = new int[rasterWidth][rasterHeight];
-        int[][] dayOfClosestSampleOld;
+        daysToTheClosestSample = new int[allPriors.size()][rasterWidth][rasterHeight];
+        sumMatrices = new double[allPriors.size()][bandNames.length][rasterWidth][rasterHeight];
+        int[][][] dayOfClosestSampleOld;
 
-        for (String sourceFileName : sourceFilenames) {
+        for (String dailyAccFileName : dailyAccumulatorFilenames) {    // breadboard: for BBDR in AllFiles:
             Product product = null;
             try {
-                product = ProductIO.readProduct(sourceFileName);
-                System.out.println("sourceFileName = " + sourceFileName);
+                product = ProductIO.readProduct(dailyAccFileName);
+                System.out.println("dailyAccFileName = " + dailyAccFileName);
+                int bandIndex = 0;
                 for (Band band : product.getBands()) {
                     // The determination of the 'daysToTheClosestSample' successively requires the masks from ALL single accumulators.
                     // To avoid opening several accumulators at the same time, store 'daysToTheClosestSample' as
                     // array[rasterWidth][rasterHeight] and update every time a single product is added to accumulation result
-//                    if (band.getName().equals("mask")) {
-//                        RasterDataNode maskRaster = product.getRasterDataNode(band.getName());
-//                        dayOfClosestSampleOld = daysToTheClosestSample;
-//                        daysToTheClosestSample = updateDoYOfClosestSampleArray(maskRaster, dayOfClosestSampleOld,
-//                                fileIndex);
-//                    }
-                }
-
-                for (int k = 0; k < allDoys.size(); k++) {
-                    int bandIndex = 0;
-                    double[] weight = allWeights.elementAt(k);
-                    for (Band band : product.getBands()) {
-                        final MultiLevelImage geophysicalImage = band.getGeophysicalImage();
-                        final RenderedImage image = geophysicalImage.getImage(0);
-//                        System.out.println("band = " + band.getName());
-
-                        // add weighted product to accumulation result...
-                        for (int i = 0; i < weight.length; i++) {
-                            RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image,
-                                    new double[]{weight[i]},
-                                    null);
-                            final RenderedOp result = AddDescriptor.create(accu[k][bandIndex],
-                                    multipliedSourceImageToAccum,
-                                    null);
-                            accu[k][bandIndex] = result.getAsBufferedImage();
+                    for (int k = 0; k < allPriors.size(); k++) {
+                        if (band.getName().equals("mask")) {
+                            RasterDataNode maskRaster = product.getRasterDataNode(band.getName());
+                            dayOfClosestSampleOld = daysToTheClosestSample;
+                            daysToTheClosestSample[k] = updateDoYOfClosestSampleArray(maskRaster,
+                                                                                      dayOfClosestSampleOld[k],
+                                                                                      k, fileIndex);
                         }
 
-                        bandIndex++;
+                        RasterDataNode matrixElementRaster = product.getRasterDataNode(band.getName());
+                        accumulateMatrixElement(matrixElementRaster, k, bandIndex);
                     }
+                    bandIndex++;
                 }
             } catch (IOException e) {
                 // todo : logging
@@ -180,49 +141,25 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
             fileIndex++;
         }
 
-        // todo: do we need this: it is not supposed to be in final product, nor used in inversion code
-        // --> it is needed in MergeBRDF.py :-(
-        // todo: get as product from separate operator, copy the bands
-//        Band daysToTheClosestSampleBand = targetProduct.addBand(
-//                AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME,
-//                ProductData.TYPE_INT16);
-//        daysToTheClosestSampleBand.setNoDataValue(-1);
-//        daysToTheClosestSampleBand.setNoDataValueUsed(true);
-
-
         for (int k = 0; k < allWeights.size(); k++) {
             // write full accumulation product to disk for each doy to be processed (45 per year)...
-            for (int i = 0; i < bandNames.length; i++) {
-                Band targetBand = targetProduct.addBand(bandNames[i], bandDataTypes[i]);
-                targetBand.setSourceImage(accu[k][i]);
-            }
+            FullAccumulationWriteOp accumulationOp = new FullAccumulationWriteOp();
+            accumulationOp.setParameter("sumMatrices", sumMatrices);
+            accumulationOp.setParameter("daysToTheClosestSample", daysToTheClosestSample);
+            final Product accumulationProduct = accumulationOp.getTargetProduct();
+            setTargetProduct(accumulationProduct);
 
             final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles"
-                    + File.separator + "full" + File.separator + year;    // todo: distinguish computeSnow
-            final String targetFileName = "fullacc_test"; // todo
+                                          + File.separator + "full" + File.separator + year;    // todo: distinguish computeSnow
+            final String targetFileName = "fullacc_test_" + k; // todo: proper name
             final File targetFile = new File(accumulatorDir, targetFileName);
-            final WriteOp writeOp = new WriteOp(targetProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
+            final WriteOp writeOp = new WriteOp(accumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
             writeOp.writeProduct(ProgressMonitor.NULL);
-        }
-
-        setTargetProduct(targetProduct);
-    }
-
-    @Override
-    public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        // we need the computeTile only for the 'daysToTheClosestSample' band. All other bands are done imagewise
-        // using JAI in initialize().
-        if (targetBand.getName().equals(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME)) {
-            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
-                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    targetTile.setSample(x, y, daysToTheClosestSample[x][y]);
-                }
-            }
         }
     }
 
     private int[][] updateDoYOfClosestSampleArray(RasterDataNode maskRaster, int[][] doyOfClosestSampleOld,
-                                                  int productIndex) {
+                                                  int priorIndex, int productIndex) {
         // this is done at the end of 'Accumulator' routine in breadboard...
         int[][] doyOfClosestSample = new int[rasterWidth][rasterHeight];
         Rectangle rectangle = new Rectangle(0, 0, rasterWidth, rasterHeight);
@@ -232,31 +169,41 @@ public class TestFullAccumulationJAIAllDoysOp extends Operator {
             for (int j = 0; j < rasterHeight; j++) {
                 final double mask = maskTile.getSampleDouble(i, j);
                 int doy = 0;
-                for (int k = 0; k < allDoys.size(); k++) {
-                    int[] allDoysPrior = (int[]) allDoys.elementAt(k);
-                    final int bbdrDaysToDoY = Math.abs(allDoysPrior[productIndex]) + 1;
-                    if (productIndex == 0) {
-                        if (mask > 0.0) {
-                            doy = bbdrDaysToDoY;
-                        } else {
-                            doy = doyOfClosestSampleOld[i][j];
-                        }
+                int[] allDoysPrior = (int[]) allPriors.elementAt(priorIndex);
+                final int bbdrDaysToDoY = Math.abs(allDoysPrior[productIndex]) + 1;
+                if (productIndex == 0) {
+                    if (mask > 0.0) {
+                        doy = bbdrDaysToDoY;
                     } else {
-                        if (mask > 0 && doyOfClosestSampleOld[i][j] == 0) {
-                            doy = bbdrDaysToDoY;
-                        } else {
-                            doy = doyOfClosestSampleOld[i][j];
-                        }
-                        if (mask > 0 && doy > 0) {
-                            doy = Math.min(bbdrDaysToDoY, doy);
-                        } else {
-                            doy = doyOfClosestSampleOld[i][j];
-                        }
+                        doy = doyOfClosestSampleOld[i][j];
+                    }
+                } else {
+                    if (mask > 0 && doyOfClosestSampleOld[i][j] == 0) {
+                        doy = bbdrDaysToDoY;
+                    } else {
+                        doy = doyOfClosestSampleOld[i][j];
+                    }
+                    if (mask > 0 && doy > 0) {
+                        doy = Math.min(bbdrDaysToDoY, doy);
+                    } else {
+                        doy = doyOfClosestSampleOld[i][j];
                     }
                 }
                 doyOfClosestSample[i][j] = doy;
             }
         }
         return doyOfClosestSample;
+    }
+
+    private void accumulateMatrixElement(RasterDataNode maskRaster, int priorIndex, int bandIndex) {
+        Rectangle rectangle = new Rectangle(0, 0, rasterWidth, rasterHeight);
+        final Tile matrixTile = getSourceTile(maskRaster, rectangle, BorderExtender.createInstance(
+                BorderExtender.BORDER_COPY));
+        for (int i = 0; i < rasterWidth; i++) {
+            for (int j = 0; j < rasterHeight; j++) {
+                final double matrixElement = matrixTile.getSampleDouble(i, j);
+                sumMatrices[priorIndex][bandIndex][i][j] += matrixElement;
+            }
+        }
     }
 }

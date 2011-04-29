@@ -54,4 +54,6 @@ public class AlbedoInversionConstants {
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
 
     public static final double INVALID = -9999.0;
+
+    public static final double HALFLIFE = 11.54;
 }
