@@ -93,37 +93,39 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    public static Product[] getPriorProducts(String priorDir, boolean computeSnow) throws IOException {
+    public static Product getPriorProduct(String priorDir, int doy, boolean computeSnow) throws IOException {
 
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
         Product[] priorProducts = new Product[snowFilteredPriorList.size()];
-
-        int productIndex = 0;
-        for (String aSnowFilteredPriorList : snowFilteredPriorList) {
-            String sourceProductFileName = priorDir + File.separator + aSnowFilteredPriorList;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            priorProducts[productIndex] = product;
-            productIndex++;
+        String doyString = Integer.toString(doy);
+        if (doy < 10) {
+            doyString = "00" + doyString;
+        } else if (doy < 100) {
+            doyString = "0" + doyString;
         }
 
-        return priorProducts;
+        for (String aSnowFilteredPriorList : snowFilteredPriorList) {
+            if (aSnowFilteredPriorList.startsWith("Kernels_" + doyString)) {
+                String sourceProductFileName = priorDir + File.separator + aSnowFilteredPriorList;
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                return product;
+            }
+        }
+
+        return null;
     }
 
-    public static Product[] getReprojectedPriorProducts(Product[] priorProducts, String tile,
-                                                        String sourceProductFileName) throws IOException {
-        Product[] reprojectedProducts = new Product[priorProducts.length];
-        for (int i = 0; i < priorProducts.length; i++) {
-            Product priorProduct = priorProducts[i];
-            Product geoCodingReferenceProduct = ProductIO.readProduct(sourceProductFileName);
-            ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
-            double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
-            double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
-            reprojectedProducts[i] = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
+    public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
+                                                     String sourceProductFileName) throws IOException {
+        Product geoCodingReferenceProduct = ProductIO.readProduct(sourceProductFileName);
+        ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
+        double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
+        double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
+        Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
                                                                                 northing);
-        }
-        return reprojectedProducts;
+        return reprojectedProduct;
     }
 
     static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
@@ -145,9 +147,9 @@ public class IOUtils {
         return snowFilteredPriorList;
     }
 
-    public static AlbedoInput getAlbedoInputProducts(String accumulatorRootDir, int doy, int year, String tile,
-                                                     int wings,
-                                                     boolean computeSnow) throws IOException {
+    public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir, int doy, int year, String tile,
+                                                    int wings,
+                                                    boolean computeSnow) throws IOException {
 
         final List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile,
                                                                                wings,
@@ -173,7 +175,8 @@ public class IOUtils {
 
             String sourceProductFileName = productYearRootDir + File.separator + anAlbedoInputProductList;
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
-            albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy) - (doy + 8);
+            // todo: add leap year condition
+            albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy) - (doy + 8) - 365*(year - Integer.parseInt(thisProductYear));
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
             productIndex++;
         }
@@ -342,5 +345,21 @@ public class IOUtils {
             daysOfYear[i] = Integer.parseInt(s.substring(14, 17));
         }
         return daysOfYear;
+    }
+
+    private static boolean isLeapYear(int year) {
+        if (year < 0) {
+            return false;
+        }
+
+        if (year % 400 == 0) {
+            return true;
+        } else if (year % 100 == 0) {
+            return false;
+        } else if (year % 4 == 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

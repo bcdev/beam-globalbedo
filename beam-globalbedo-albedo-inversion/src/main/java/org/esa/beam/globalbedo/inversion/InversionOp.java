@@ -154,6 +154,7 @@ public class InversionOp extends PixelOperator {
         Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
         goodnessOfFitBand.setNoDataValue(Float.NaN);
         goodnessOfFitBand.setNoDataValueUsed(true);
+        targetProduct.setPreferredTileSize(100, 100);
     }
 
     @Override

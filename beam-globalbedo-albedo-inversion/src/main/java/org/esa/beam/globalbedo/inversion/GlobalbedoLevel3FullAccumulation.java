@@ -17,7 +17,7 @@ import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.BorderExtender;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Vector;
@@ -25,6 +25,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
+ * // todo: Class will probably not be needed (included in GlobalbedoLevel3Albedo) - remove later!
+ *
  * Operator for the creation of full accumulators in Albedo Inversion
  *
  * @author Olaf Danne
@@ -60,6 +62,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
     // todo: do we need this configurable?
     private boolean usePrior = true;
     private Logger logger;
+    private Vector<double[]> allWeights;
 
     @Override
     public void initialize() throws OperatorException {
@@ -67,155 +70,156 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
 
         // STEP 1: get Prior input files...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
 
+        Product[] allPriorProducts;
         Product[] priorProducts;
-        try {
-            priorProducts = IOUtils.getPriorProducts(priorDir, computeSnow);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot load prior products: " + e.getMessage());
-        }
+//        try {
+//            allPriorProducts = IOUtils.getPriorProduct(priorDir, computeSnow);
+            allPriorProducts = null;
+            priorProducts = new Product[]{allPriorProducts[0]};
+            System.out.println("priorProducts = " + priorProducts[0].getName());
+//        } catch (IOException e) {
+//            throw new OperatorException("Cannot load prior products: " + e.getMessage());
+//        }
 
         // STEP 2: get Daily Accumulator input files...
         final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
-        AlbedoInput inputProduct = null;
+        AlbedoInput[] inputProducts = new AlbedoInput[priorProducts.length];
         Vector<int[]> allDoysVector = new Vector<int[]>();
         int priorIndex = 0;
         for (Product priorProduct : priorProducts) {
-            if (priorIndex == 0) {   // test!!
-                final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
-                allDoysVector.clear();
-                try {
-                    inputProduct = IOUtils.getAlbedoInputProducts(accumulatorDir, doy, year, tile,
-                                                                  wings,
-                                                                  computeSnow);
-                    final int[] allDoys = inputProduct.getProductDoys();
-                    allDoysVector.add(allDoys);
-                    priorIndex++;
-                } catch (IOException e) {
-                    // todo: just skip product, but add appropriate logging here
-                    logger = BeamLogManager.getSystemLogger();
-                    logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
+            final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
+            try {
+                inputProducts[priorIndex] = IOUtils.getAlbedoInputProduct(accumulatorDir, doy, year, tile,
+                                                                          wings,
+                                                                          computeSnow);
+                final int[] allDoys = inputProducts[priorIndex].getProductDoys();
+                allDoysVector.add(allDoys);
+                priorIndex++;
+            } catch (IOException e) {
+                // todo: just skip product, but add appropriate logging here
+                logger = BeamLogManager.getSystemLogger();
+                logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
 //                    System.out.println("Could not process DoY " + doy + " - skipping.");
-                }
             }
         }
 
         // STEP 3: we need to reproject the priors for further use...
         Product[] reprojectedPriorProducts;
-        try {
-            if (inputProduct != null) {
-                reprojectedPriorProducts = IOUtils.getReprojectedPriorProducts(priorProducts, tile,
-                                                                               inputProduct.getProductFilenames()[0]);
-            } else {
-                throw new OperatorException("No accumulator input products available - cannot proceed.");
-            }
-        } catch (IOException e) {
-            throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
-        }
+//        try {
+//            if (inputProducts != null) {
+//                String somePriorProductFileName = inputProducts[0].getProductFilenames()[0]; // just its projection parms needed
+//                reprojectedPriorProducts = IOUtils.getReprojectedPriorProduct(priorProducts, tile,
+//                        somePriorProductFileName);
+//            } else {
+//                throw new OperatorException("No accumulator input products available - cannot proceed.");
+//            }
+//        } catch (IOException e) {
+//            throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
+//        }
 
         // STEP 4: full accumulation...
-        Product sourceProduct0 = null;
-        try {
-            sourceProduct0 = ProductIO.readProduct(new File(inputProduct.getProductFilenames()[0]));
-        } catch (IOException e) {
-            // todo
-            e.printStackTrace();
-        }
 
-        final String[] bandNames = sourceProduct0.getBandNames();
-
-        Vector<double[]> allWeights = new Vector<double[]>();
-        for (int i = 0; i < allDoysVector.size(); i++) {
-            int[] allDoysPrior = (int[]) allDoysVector.elementAt(i);
+        allWeights = new Vector<double[]>();
+        for (int i = 0; i < allDoysVector.size(); i++) {       //  allDoysVector.size() is the number of prior files!
+            // allDoysPrior are the BBDR doys to be processed for given prior. These doys are relative to given prior:
+            // [..., -3, -2, -1, 0, 1, 2, 3,...]
+            int[] allDoysPrior = allDoysVector.elementAt(i);
             double[] weight = new double[allDoysPrior.length];
             for (int j = 0; j < weight.length; j++) {
+                // weight = 1.0 for prior day, decreases with distance from prior day...
                 weight[j] = Math.exp(-1.0 * Math.abs(allDoysPrior[j]) / AlbedoInversionConstants.HALFLIFE);
             }
             allWeights.add(weight);
         }
 
-        int[] bandDataTypes = new int[bandNames.length];
-        for (int i = 0; i < bandDataTypes.length; i++) {
-            bandDataTypes[i] = sourceProduct0.getBand(bandNames[i]).getDataType();
-        }
-        rasterWidth = sourceProduct0.getSceneRasterWidth();
-        rasterHeight = sourceProduct0.getSceneRasterHeight();
 
-        sourceProduct0.dispose();
-
-        int fileIndex = 0;
-        daysToTheClosestSample = new int[allDoysVector.size()][rasterWidth][rasterHeight];
-        sumMatrices = new double[allDoysVector.size()][bandNames.length][rasterWidth][rasterHeight];
-        int[][][] dayOfClosestSampleOld;
-
-        for (String dailyAccFileName : inputProduct.getProductFilenames()) {    // breadboard: for BBDR in AllFiles:
-            Product product = null;
+        for (int k = 0; k < allWeights.size(); k++) {
+            Product sourceProduct0 = null;
             try {
-                product = ProductIO.readProduct(dailyAccFileName);
-                System.out.println("dailyAccFileName = " + dailyAccFileName);
-                int bandIndex = 0;
-                for (Band band : product.getBands()) {
-                    // The determination of the 'daysToTheClosestSample' successively requires the masks from ALL single accumulators.
-                    // To avoid opening several accumulators at the same time, store 'daysToTheClosestSample' as
-                    // array[rasterWidth][rasterHeight] and update every time a single product is added to accumulation result
-                    RasterDataNode rasterDataNode = product.getRasterDataNode(band.getName());
-                    Rectangle rectangle = new Rectangle(0, 0, rasterWidth, rasterHeight);
-                    final Tile tileToProcess = getSourceTile(rasterDataNode, rectangle, BorderExtender.createInstance(
-                            BorderExtender.BORDER_COPY));
-                    for (int k = 0; k < allDoysVector.size(); k++) {
-                        if (band.getName().equals("mask")) {
-                            dayOfClosestSampleOld = daysToTheClosestSample;
-                            int[] allDoysPrior = allDoysVector.elementAt(k);
-                            daysToTheClosestSample[k] = updateDoYOfClosestSampleArray(tileToProcess, allDoysPrior,
-                                                                                      dayOfClosestSampleOld[k],
-                                                                                      k, fileIndex);
-                        }
-
-                        accumulateMatrixElement(tileToProcess, k, bandIndex);
-                    }
-                    bandIndex++;
-                }
+                sourceProduct0 = ProductIO.readProduct(new File(inputProducts[k].getProductFilenames()[0]));
             } catch (IOException e) {
-                // todo : logging
-                System.out.println("Could not accumulate product '" + product.getName() + "' - skipping.");
+                // todo
+                e.printStackTrace();
             }
 
-            product.dispose();
-            fileIndex++;
-        }
+            System.out.println("inputProducts filenames = " + inputProducts[k].getProductFilenames());
 
-        final double[][][] testArray = new double[bandNames.length][rasterWidth][rasterHeight];
-        for (int k = 0; k < allWeights.size(); k++) {
+            final String[] bandNames = sourceProduct0.getBandNames();
+
+
+            int[] bandDataTypes = new int[bandNames.length];
+            for (int i = 0; i < bandDataTypes.length; i++) {
+                bandDataTypes[i] = sourceProduct0.getBand(bandNames[i]).getDataType();
+            }
+            rasterWidth = sourceProduct0.getSceneRasterWidth();
+            rasterHeight = sourceProduct0.getSceneRasterHeight();
+
+            sourceProduct0.dispose();
+
+            int fileIndex = 0;
+            daysToTheClosestSample = new int[allDoysVector.size()][rasterWidth][rasterHeight];
+            sumMatrices = new double[allDoysVector.size()][bandNames.length][rasterWidth][rasterHeight];
+            int[][][] dayOfClosestSampleOld;
+
+            for (String dailyAccFileName : inputProducts[k].getProductFilenames()) {    // breadboard: for BBDR in AllFiles:
+                Product product = null;
+                try {
+                    product = ProductIO.readProduct(dailyAccFileName);
+                    System.out.println("dailyAccFileName = " + dailyAccFileName);
+                    int bandIndex = 0;
+                    for (Band band : product.getBands()) {
+                        // The determination of the 'daysToTheClosestSample' successively requires the masks from ALL single accumulators.
+                        // To avoid opening several accumulators at the same time, store 'daysToTheClosestSample' as
+                        // array[rasterWidth][rasterHeight] and update every time a single product is added to accumulation result
+                        RasterDataNode rasterDataNode = product.getRasterDataNode(band.getName());
+                        Rectangle rectangle = new Rectangle(0, 0, rasterWidth, rasterHeight);
+                        final Tile tileToProcess = getSourceTile(rasterDataNode, rectangle, BorderExtender.createInstance(
+                                BorderExtender.BORDER_COPY));
+                        for (int m = 0; m < allDoysVector.size(); m++) {
+                            if (band.getName().equals("mask")) {
+                                dayOfClosestSampleOld = daysToTheClosestSample;
+                                int[] allDoysPrior = allDoysVector.elementAt(m);
+                                daysToTheClosestSample[m] = updateDoYOfClosestSampleArray(tileToProcess, allDoysPrior,
+                                        dayOfClosestSampleOld[m],
+                                        m, fileIndex);
+                            }
+
+                            accumulateMatrixElement(tileToProcess, m, fileIndex, bandIndex);
+                        }
+                        bandIndex++;
+                    }
+                } catch (IOException e) {
+                    // todo : logging
+                    System.out.println("Could not accumulate product '" + product.getName() + "' - skipping.");
+                }
+
+                product.dispose();
+                fileIndex++;
+            }
+
             // write full accumulation product to disk for each doy to be processed (45 per year)...
             FullAccumulationWriteOp accumulationOp = new FullAccumulationWriteOp();
-            accumulationOp.setSourceProduct(new Product("bla", "blubb", 1, 1)); // dummy
-//            accumulationOp.setParameter("sumMatrices", sumMatrices[k]);
-            accumulationOp.setParameter("sumMatrices", testArray);
+            accumulationOp.setSourceProduct(new Product("bla", "blubb", 1200, 1200)); // dummy
+
+            Vector<double[][][]> sumMatricesVector = new Vector<double[][][]>();
+            sumMatricesVector.addElement(sumMatrices[k]);
+
+            accumulationOp.setParameter("sumMatricesVector", sumMatricesVector);
             accumulationOp.setParameter("daysToTheClosestSample", daysToTheClosestSample[k]);
             final Product accumulationProduct = accumulationOp.getTargetProduct();
 //            setTargetProduct(accumulationProduct);
 
             final String fullAccumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles"
-                                              + File.separator + "full" + File.separator + year;    // todo: distinguish computeSnow
+                    + File.separator + "full" + File.separator + year;    // todo: distinguish computeSnow
             final String targetFileName = "fullacc_test_" + k; // todo: proper name
             final File targetFile = new File(fullAccumulatorDir, targetFileName);
             final WriteOp writeOp = new WriteOp(accumulationProduct, targetFile, ProductIO.DEFAULT_FORMAT_NAME);
             writeOp.writeProduct(ProgressMonitor.NULL);
         }
 
-
-//        TestFullAccumulationJAIAllDoysOp jaiOp = new TestFullAccumulationJAIAllDoysOp();
-//        jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-//        jaiOp.setParameter("gaRootDir", gaRootDir);
-//        jaiOp.setParameter("year", year);
-//        jaiOp.setParameter("tile", tile);
-//        jaiOp.setParameter("allDoys", allDoysVector);
-//        Product fullAccumulationProduct = jaiOp.getTargetProduct();
-
-        // test:
-//        setTargetProduct(priorProducts[0]);
         System.out.println("done");
         // todo: how to avoid that either no target product is set, or 'result.dim' is written which is not needed ?
     }
@@ -254,11 +258,11 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
         return doyOfClosestSample;
     }
 
-    private void accumulateMatrixElement(Tile matrixTile, int priorIndex, int bandIndex) {
+    private void accumulateMatrixElement(Tile matrixTile, int priorIndex, int fileIndex, int bandIndex) {
         for (int i = 0; i < rasterWidth; i++) {
             for (int j = 0; j < rasterHeight; j++) {
                 final double matrixElement = matrixTile.getSampleDouble(i, j);
-                sumMatrices[priorIndex][bandIndex][i][j] += matrixElement;
+                sumMatrices[priorIndex][bandIndex][i][j] += allWeights.elementAt(priorIndex)[fileIndex]*matrixElement;
             }
         }
     }

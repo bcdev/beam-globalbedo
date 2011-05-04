@@ -18,7 +18,7 @@ import java.io.IOException;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.accumulation")
-public class GlobalbedoLevel3Accumulation extends Operator {
+public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
@@ -65,7 +65,7 @@ public class GlobalbedoLevel3Accumulation extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Accumulation.class);
+            super(GlobalbedoLevel3DailyAccumulation.class);
         }
     }
 }

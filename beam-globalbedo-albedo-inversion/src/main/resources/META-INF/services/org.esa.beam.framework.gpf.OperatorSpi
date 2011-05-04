@@ -4,6 +4,7 @@ org.esa.beam.globalbedo.inversion.GlobalbedoLevel3FullAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationJAIOp$Spi
+org.esa.beam.globalbedo.inversion.FullAccumulationJAI2Op$Spi
 org.esa.beam.globalbedo.inversion.TestFullAccumulationJAIAllDoysOp$Spi
 org.esa.beam.globalbedo.inversion.DailyAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi

@@ -27,12 +27,8 @@ import java.util.Vector;
 
 
 /**
- * todo: implement. we need this class to avoid multiple I/O (reading of acc files) for each prior.
- * --> change implementation of FullAccumulationJAI: open acc file, do everything for ALL priors, dispose acc file !!
- * <p/>
- * Operator implementing the full accumulation part of python breadboard. Uses JAI image multiplication/addition.
- * <p/>
- * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
+ * todo: test class - remove later!!
+ * this class does accumulation 'manually on int[][] arrays (what JAI does on whole images)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
