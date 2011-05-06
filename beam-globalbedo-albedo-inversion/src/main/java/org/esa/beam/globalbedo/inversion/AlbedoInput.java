@@ -9,6 +9,7 @@ package org.esa.beam.globalbedo.inversion;
 public class AlbedoInput {
 
     private String[] productFilenames;
+    private String[] productBinaryFilenames;
     private int[] productDoys;
     private int[] productYears;
 
@@ -18,6 +19,14 @@ public class AlbedoInput {
 
     public void setProductFilenames(String[] productFilenames) {
         this.productFilenames = productFilenames;
+    }
+
+    public String[] getProductBinaryFilenames() {
+        return productBinaryFilenames;
+    }
+
+    public void setProductBinaryFilenames(String[] productBinaryFilenames) {
+        this.productBinaryFilenames = productBinaryFilenames;
     }
 
     public int[] getProductDoys() {

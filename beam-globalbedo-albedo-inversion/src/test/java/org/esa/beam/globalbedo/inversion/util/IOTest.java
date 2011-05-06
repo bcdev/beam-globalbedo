@@ -2,6 +2,10 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
 
+import java.io.File;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.util.List;
 
 /**
@@ -177,4 +181,57 @@ public class IOTest extends TestCase {
         assertNull(bandNames[5][4]);
         assertNull(bandNames[6][1]);
     }
+
+    private File setTestfile(String filename) throws UnsupportedEncodingException {
+        final URL url = IOUtils.class.getResource(filename);
+        assertNotNull(url);
+        assertEquals("file", url.getProtocol());
+
+        final String path = URLDecoder.decode(url.getPath(), "UTF-8");
+        assertTrue(path.endsWith(filename));
+
+        final File file = new File(path);
+        assertEquals(file.getName(), filename);
+        return file;
+    }
+
+
+    public void testWriteBinaryFileFast() throws Exception {
+
+        // write double array to binary file...
+        final int dim1 = 92;
+        final int dim2 = 120;
+        final int dim3 = 120;
+        double[][][] testArray = new double[dim1][dim2][dim3];
+
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++) {
+                for (int k = 0; k < dim3; k++) {
+                    testArray[i][j][k] = i * 1.0 + j * 2.0 + k * 3.0;
+                }
+            }
+        }
+
+        long time1 = System.currentTimeMillis();
+        final File file = setTestfile("testDailyAccBin.acc");
+        IOUtils.writeBinaryDoubleArray3D(file, testArray);
+        long time2 = System.currentTimeMillis();
+        System.out.println("time 1: " + (time2 - time1) / 1000.0);
+
+        // read binary array back from file...
+        long time3 = System.currentTimeMillis();
+        double[] result = IOUtils.readBinaryDoubleArray(file, dim1 * dim2 * dim3);
+        long time4 = System.currentTimeMillis();
+        System.out.println("time 2: " + (time4 - time3) / 1000.0);
+        assertEquals(dim1 * dim2 * dim3, result.length);
+        int index = 0;
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++) {
+                for (int k = 0; k < dim3; k++) {
+                    assertEquals(i * 1.0 + j * 2.0 + k * 3.0, result[index++]);
+                }
+            }
+        }
+    }
+
 }

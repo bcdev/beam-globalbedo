@@ -18,7 +18,7 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.dailyacc",
+@OperatorMetadata(alias = "ga.inversion.dailyaccumulation",
                   description = "Provides daily accumulation of single BBDR observations",
                   authors = "Olaf Danne",
                   version = "1.0",

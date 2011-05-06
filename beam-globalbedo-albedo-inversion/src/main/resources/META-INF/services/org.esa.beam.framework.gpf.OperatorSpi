@@ -1,5 +1,5 @@
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
-org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Accumulation$Spi
+org.esa.beam.globalbedo.inversion.GlobalbedoLevel3DailyAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3FullAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationOp$Spi

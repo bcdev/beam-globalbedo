@@ -6,7 +6,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -45,12 +44,16 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
+    @Parameter(defaultValue = "false", description = "Use binary accumulator files instead of dimap (to be decided)")
+    private boolean useBinaryAccumulators;
+
     // todo: do we need this configurable?
     private boolean usePrior = true;
     private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
+        logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input files...
@@ -64,51 +67,65 @@ public class GlobalbedoLevel3Albedo extends Operator {
             throw new OperatorException("Cannot load prior product: " + e.getMessage());
         }
 
-        // todo: what if priorProduct is null (i.e., priorFile of doy does not exist?)
+        if (priorProduct == null) {
+            logger.log(Level.ALL, "No prior file available for DoY " + doy + " - do inversion without prior...");
+            usePrior = false;
+        }
 
         // STEP 2: get Daily Accumulator input files...
         final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
         AlbedoInput inputProduct = null;
-        final int doy = AlbedoInversionUtils.getDoyFromPriorName(priorProduct.getName(), false);
         try {
-            inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, doy, year, tile,
-                                                         wings,
-                                                         computeSnow);
+            inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, useBinaryAccumulators, doy, year, tile,
+                    wings,
+                    computeSnow);
         } catch (IOException e) {
             // todo: just skip product, but add appropriate logging here
-            logger = BeamLogManager.getSystemLogger();
             logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
         }
 
         // STEP 3: we need to reproject the priors for further use...
-        Product reprojectedPriorProduct;
-        try {
-            if (inputProduct != null) {
-                reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                        inputProduct.getProductFilenames()[0]);
-            } else {
-                throw new OperatorException("No accumulator input products available - cannot proceed.");
+        Product reprojectedPriorProduct = null;
+        if (usePrior) {
+            try {
+                if (inputProduct != null) {
+                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
+                            inputProduct.getProductFilenames()[0]);
+                } else {
+                    throw new OperatorException("No accumulator input products available - cannot proceed.");
+                }
+            } catch (IOException e) {
+                throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
             }
-        } catch (IOException e) {
-            throw new OperatorException("Cannot reproject prior products: " + e.getMessage());
+        }
+
+        for (int i = 0; i < inputProduct.getProductDoys().length; i++) {
+            System.out.println("allDoys   = " + i + ", " + inputProduct.getProductDoys()[i]);
+            System.out.println("filenames = " + i + ", " + inputProduct.getProductFilenames()[i]);
         }
 
         // STEP 4: full accumulation
-//        FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
-        FullAccumulationJAI2Op jaiOp = new FullAccumulationJAI2Op();
-        jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-        for (int i=0; i<inputProduct.getProductDoys().length; i++) {
-            System.out.println("allDoys = " + i + ", " + inputProduct.getProductDoys()[i]);
+        Product fullAccumulationProduct = null;
+        // todo: make a final decision
+        if (useBinaryAccumulators) {
+            FullAccumulationJAI2Op jaiOp = new FullAccumulationJAI2Op();
+            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
+            jaiOp.setParameter("sourceBinaryFilenames", inputProduct.getProductBinaryFilenames());
+            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
+            fullAccumulationProduct = jaiOp.getTargetProduct();
+        } else {
+            FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
+            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
+            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
+            fullAccumulationProduct = jaiOp.getTargetProduct();
         }
-        jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
-        Product fullAccumulationProduct = jaiOp.getTargetProduct();
 
         // STEP 5: compute pixelwise results (perform inversion) and write output
         // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
         InversionOp inversionOp = new InversionOp();
         inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
-        inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);
+        inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
         inversionOp.setParameter("year", year);
         inversionOp.setParameter("tile", tile);
         inversionOp.setParameter("computeSnow", computeSnow);

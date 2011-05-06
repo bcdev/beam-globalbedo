@@ -8,14 +8,10 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
-import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.*;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
+import java.util.*;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -26,7 +22,7 @@ import java.util.Map;
 public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
-                                                                                                             IOException {
+            IOException {
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -76,7 +72,6 @@ public class IOUtils {
      *
      * @param bbdrFilenames - the list of filenames
      * @param daystring     - the daystring
-     *
      * @return List<String> - the filtered list
      */
     static List<String> getDailyBBDRFilenames(String[] bbdrFilenames, String daystring) {
@@ -124,7 +119,7 @@ public class IOUtils {
         double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
         double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
         Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-                                                                                northing);
+                northing);
         return reprojectedProduct;
     }
 
@@ -147,24 +142,28 @@ public class IOUtils {
         return snowFilteredPriorList;
     }
 
-    public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir, int doy, int year, String tile,
+    public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir,
+                                                    boolean useBinaryFiles,
+                                                    int doy, int year, String tile,
                                                     int wings,
                                                     boolean computeSnow) throws IOException {
 
-        final List<String> albedoInputProductList = getAlbedoInputProductNames(accumulatorRootDir, doy, year, tile,
-                                                                               wings,
-                                                                               computeSnow);
+        final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, false, doy, year, tile,
+                wings,
+                computeSnow);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
+
         int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
         int[] albedoInputProductYears = new int[albedoInputProductList.size()];
 
         int productIndex = 0;
-        for (String anAlbedoInputProductList : albedoInputProductList) {
+        for (String albedoInputProductName : albedoInputProductList) {
+
             String productYearRootDir;
             // e.g. get '2006' from 'matrices_2006_xxx.dim'...
-            final String thisProductYear = anAlbedoInputProductList.substring(9, 13);
-            final String thisProductDoy = anAlbedoInputProductList.substring(14, 17);
+            final String thisProductYear = albedoInputProductName.substring(9, 13);
+            final String thisProductDoy = albedoInputProductName.substring(14, 17);
             if (computeSnow) {
                 productYearRootDir = accumulatorRootDir.concat(
                         File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
@@ -173,10 +172,11 @@ public class IOUtils {
                         File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
             }
 
-            String sourceProductFileName = productYearRootDir + File.separator + anAlbedoInputProductList;
+            String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
             // todo: add leap year condition
-            albedoInputProductDoys[productIndex] = Integer.parseInt(thisProductDoy) - (doy + 8) - 365*(year - Integer.parseInt(thisProductYear));
+            albedoInputProductDoys[productIndex] = Integer.parseInt(
+                    thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
             productIndex++;
         }
@@ -185,6 +185,32 @@ public class IOUtils {
         inputProduct.setProductFilenames(albedoInputProductFilenames);
         inputProduct.setProductDoys(albedoInputProductDoys);
         inputProduct.setProductYears(albedoInputProductYears);
+
+        if (useBinaryFiles) {
+            final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
+                    true, doy, year, tile,
+                    wings,
+                    computeSnow);
+            String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
+            int binaryProductIndex = 0;
+            for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
+                String productYearRootDir;
+                // e.g. get '2006' from 'matrices_2006xxx.bin'...
+                final String thisProductYear = albedoInputProductBinaryName.substring(9, 13);
+                if (computeSnow) {
+                    productYearRootDir = accumulatorRootDir.concat(
+                            File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
+                } else {
+                    productYearRootDir = accumulatorRootDir.concat(
+                            File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
+                }
+
+                String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
+                albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
+                binaryProductIndex++;
+            }
+            inputProduct.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
+        }
 
         return inputProduct;
     }
@@ -197,7 +223,6 @@ public class IOUtils {
      * @param tile        - tile
      * @param computeSnow - boolean
      * @param usePrior    - boolean
-     *
      * @return String
      */
     public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
@@ -221,9 +246,9 @@ public class IOUtils {
         return targetFileName;
     }
 
-
-    static List<String> getAlbedoInputProductNames(String accumulatorRootDir, int doy, int year, String tile, int wings,
-                                                   boolean computeSnow) {
+    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy, int year, String tile,
+                                                       int wings,
+                                                       boolean computeSnow) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
@@ -243,12 +268,20 @@ public class IOUtils {
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005_123.dim'...
-                return (name.length() == 21 && name.startsWith("matrices") && name.endsWith("dim"));
+                if (isBinaryFiles) {
+                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
+                } else {
+                    return (name.length() == 21 && name.startsWith("matrices") && name.endsWith("dim"));
+                }
             }
         };
 
         final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
 
+        int filenameOffset = 0;
+        if (!isBinaryFiles) {
+            filenameOffset++;
+        }
         doy = doy + 8; // 'MODIS day'
 
         // fill the name list year by year...
@@ -268,7 +301,8 @@ public class IOUtils {
                     if (!albedoInputProductList.contains(s)) {
                         // check the 'wings' condition...
                         try {
-                            final int dayOfYear = Integer.parseInt(s.substring(14, 17));
+                            final int dayOfYear = Integer.parseInt(s.substring(13 + filenameOffset, 16 + filenameOffset));
+                            // todo: consider leap year condition (not done in the breadboard!!)
                             //    # Left wing
                             if (365 + (doy - wings) <= 366) {
                                 if (!albedoInputProductList.contains(s)) {
@@ -279,7 +313,7 @@ public class IOUtils {
                             }
                             //    # Center
                             if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
-                                (Integer.parseInt(thisYear) == year)) {
+                                    (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
                             //    # Right wing
@@ -313,7 +347,7 @@ public class IOUtils {
 
     public static String[] getInversionParameterBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands *
-                                        AlbedoInversionConstants.numAlbedoParameters];
+                AlbedoInversionConstants.numAlbedoParameters];
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
@@ -331,20 +365,67 @@ public class IOUtils {
             // only UR triangle matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                                  waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
         }
         return bandNames;
 
     }
 
-    private static int[] getDaysOfYear(String[] thisYearAlbedoInputFiles) {
-        int[] daysOfYear = new int[thisYearAlbedoInputFiles.length];
-        for (int i = 0; i < thisYearAlbedoInputFiles.length; i++) {
-            final String s = thisYearAlbedoInputFiles[i];
-            daysOfYear[i] = Integer.parseInt(s.substring(14, 17));
+    public static double[] readBinaryDoubleArray(File file, int size) {
+        FileInputStream f = null;
+        try {
+            f = new FileInputStream(file);
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
         }
-        return daysOfYear;
+        FileChannel ch = f.getChannel();
+        ByteBuffer bb = ByteBuffer.allocateDirect(size);
+        double[] darray = new double[size];
+        int nRead, nGet;
+        int index = 0;
+        try {
+            while ((nRead = ch.read(bb)) != -1) {
+                if (nRead == 0) {
+                    continue;
+                }
+                bb.position(0);
+                bb.limit(nRead);
+                while (bb.hasRemaining()) {
+                    nGet = Math.min(bb.remaining(), size);
+                    darray[index] = bb.getDouble();
+                    index++;
+                }
+                bb.clear();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+        }
+
+        return darray;
+    }
+
+    public static void writeBinaryDoubleArray3D(File file, double[][][] values) {
+        try {
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Wrap the FileOutputStream with a DataOutputStream
+            DataOutputStream data_out = new DataOutputStream(file_output);
+
+            // Write the data to the file in an integer/double pair
+            for (int i = 0; i < values.length; i++) {
+                for (int j = 0; j < values[i].length; j++) {
+                    for (int k = 0; k < values[i][j].length; k++) {
+                        data_out.writeDouble(values[i][j][k]);
+                    }
+                }
+            }
+
+            // Close file when finished with it..
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e);
+        }
     }
 
     private static boolean isLeapYear(int year) {
