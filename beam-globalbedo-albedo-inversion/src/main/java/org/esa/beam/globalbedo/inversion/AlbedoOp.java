@@ -9,36 +9,25 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
 /**
- * Operator for merging BRDF Snow/NoSnow contributions.
- * The breadboard file is 'MergseBRDF.py' provided by Gerardo López Saldaña.
- *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class MergeBrdfOp extends PixelOperator {
-
-    // todo: implement
+public class AlbedoOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
-    protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
+    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
-
-        final Product targetProduct = productConfigurer.getTargetProduct();
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        //To change body of implemented methods use File | Settings | File Templates.
     }
 }

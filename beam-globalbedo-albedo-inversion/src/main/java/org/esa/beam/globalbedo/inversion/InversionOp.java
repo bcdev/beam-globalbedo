@@ -13,6 +13,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.PointOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
@@ -111,10 +112,11 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
-
     @Override
-    protected void configureTargetProduct(Product targetProduct) {
+    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
+        super.configureTargetProduct( productConfigurer);
 
+        final Product targetProduct = productConfigurer.getTargetProduct();
         parameterBandNames = IOUtils.getInversionParameterBandNames();
         for (String parameterBandName : parameterBandNames) {
             Band band = targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);

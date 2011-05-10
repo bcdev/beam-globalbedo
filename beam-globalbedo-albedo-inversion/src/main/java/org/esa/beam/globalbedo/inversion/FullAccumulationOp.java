@@ -4,12 +4,13 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.PointOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
@@ -17,7 +18,7 @@ import org.esa.beam.framework.gpf.pointop.WritableSample;
 /**
  * Pixel operator implementing the full accumulation part of python breadboard.
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
- *
+ * <p/>
  * // todo: Class will probably not be needed (replaced by FullAccumulationJAIOp) - remove later!
  *
  * @author Olaf Danne
@@ -92,7 +93,10 @@ public class FullAccumulationOp extends PixelOperator {
     }
 
     @Override
-    protected void configureTargetProduct(Product targetProduct) {
+    protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
+        super.configureTargetProduct(productConfigurer);
+
+        final Product targetProduct = productConfigurer.getTargetProduct();
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 mBandNames[i][j] = "M_" + i + "" + j;

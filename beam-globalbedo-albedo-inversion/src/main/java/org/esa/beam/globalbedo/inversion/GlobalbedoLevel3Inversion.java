@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Operator for the inversion and albedo retrieval part in Albedo Inversion
+ * Operator for the BRDF retrieval part (full accumulation and inversion)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

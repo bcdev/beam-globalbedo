@@ -8,10 +8,20 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
-import java.io.*;
+import java.io.DataOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FilenameFilter;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -22,7 +32,7 @@ import java.util.*;
 public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
-            IOException {
+                                                                                                             IOException {
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -72,6 +82,7 @@ public class IOUtils {
      *
      * @param bbdrFilenames - the list of filenames
      * @param daystring     - the daystring
+     *
      * @return List<String> - the filtered list
      */
     static List<String> getDailyBBDRFilenames(String[] bbdrFilenames, String daystring) {
@@ -93,7 +104,6 @@ public class IOUtils {
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        Product[] priorProducts = new Product[snowFilteredPriorList.size()];
         String doyString = Integer.toString(doy);
         if (doy < 10) {
             doyString = "00" + doyString;
@@ -101,9 +111,9 @@ public class IOUtils {
             doyString = "0" + doyString;
         }
 
-        for (String aSnowFilteredPriorList : snowFilteredPriorList) {
-            if (aSnowFilteredPriorList.startsWith("Kernels_" + doyString)) {
-                String sourceProductFileName = priorDir + File.separator + aSnowFilteredPriorList;
+        for (String priorFileName : snowFilteredPriorList) {
+            if (priorFileName.startsWith("Kernels_" + doyString)) {
+                String sourceProductFileName = priorDir + File.separator + priorFileName;
                 Product product = ProductIO.readProduct(sourceProductFileName);
                 return product;
             }
@@ -119,27 +129,53 @@ public class IOUtils {
         double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
         double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
         Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-                northing);
+                                                                                northing);
         return reprojectedProduct;
+    }
+
+    public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
+        final String[] brdfFiles = (new File(brdfDir)).list();
+        final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);
+
+        String doyString = Integer.toString(doy);
+        if (doy < 10) {
+            doyString = "00" + doyString;
+        } else if (doy < 100) {
+            doyString = "0" + doyString;
+        }
+
+        for (String brdfFileName : brdfFileList) {
+            if (brdfFileName.startsWith("GlobAlbedo_" + Integer.toString(year) + doyString)) {
+                String sourceProductFileName = brdfDir + File.separator + brdfFileName;
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                return product;
+            }
+        }
+
+        return null;
     }
 
     static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
 
         List<String> snowFilteredPriorList = new ArrayList<String>();
         for (String s : priorFiles) {
-            if (computeSnow) {
-                if (s.endsWith("_Snow.hdr")) {
-                    // check if binary file is present:
+            if ((computeSnow && s.endsWith("_Snow.hdr")) || (!computeSnow && s.endsWith("_NoSnow.hdr"))) {
                     snowFilteredPriorList.add(s);
-                }
-            } else {
-                if (s.endsWith("_NoSnow.hdr")) {
-                    snowFilteredPriorList.add(s);
-                }
             }
         }
         Collections.sort(snowFilteredPriorList);
         return snowFilteredPriorList;
+    }
+
+    private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
+        List<String> brdfFileList = new ArrayList<String>();
+        for (String s : brdfFiles) {
+            if ((!snow && s.contains("_NoSnow")) || (snow && s.contains("_Snow"))) {
+                brdfFileList.add(s);
+            }
+        }
+        Collections.sort(brdfFileList);
+        return brdfFileList;
     }
 
     public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir,
@@ -148,9 +184,10 @@ public class IOUtils {
                                                     int wings,
                                                     boolean computeSnow) throws IOException {
 
-        final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, false, doy, year, tile,
-                wings,
-                computeSnow);
+        final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, false, doy, year,
+                                                                                   tile,
+                                                                                   wings,
+                                                                                   computeSnow);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
 
@@ -188,9 +225,9 @@ public class IOUtils {
 
         if (useBinaryFiles) {
             final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                    true, doy, year, tile,
-                    wings,
-                    computeSnow);
+                                                                                                 true, doy, year, tile,
+                                                                                                 wings,
+                                                                                                 computeSnow);
             String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
             int binaryProductIndex = 0;
             for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -223,6 +260,7 @@ public class IOUtils {
      * @param tile        - tile
      * @param computeSnow - boolean
      * @param usePrior    - boolean
+     *
      * @return String
      */
     public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
@@ -246,7 +284,8 @@ public class IOUtils {
         return targetFileName;
     }
 
-    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy, int year, String tile,
+    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
+                                                       int year, String tile,
                                                        int wings,
                                                        boolean computeSnow) {
         List<String> albedoInputProductList = new ArrayList<String>();
@@ -301,7 +340,8 @@ public class IOUtils {
                     if (!albedoInputProductList.contains(s)) {
                         // check the 'wings' condition...
                         try {
-                            final int dayOfYear = Integer.parseInt(s.substring(13 + filenameOffset, 16 + filenameOffset));
+                            final int dayOfYear = Integer.parseInt(
+                                    s.substring(13 + filenameOffset, 16 + filenameOffset));
                             // todo: consider leap year condition (not done in the breadboard!!)
                             //    # Left wing
                             if (365 + (doy - wings) <= 366) {
@@ -313,7 +353,7 @@ public class IOUtils {
                             }
                             //    # Center
                             if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
-                                    (Integer.parseInt(thisYear) == year)) {
+                                (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
                             //    # Right wing
@@ -347,7 +387,7 @@ public class IOUtils {
 
     public static String[] getInversionParameterBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands *
-                AlbedoInversionConstants.numAlbedoParameters];
+                                        AlbedoInversionConstants.numAlbedoParameters];
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
@@ -365,7 +405,7 @@ public class IOUtils {
             // only UR triangle matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+                                  waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
         }
         return bandNames;
@@ -443,4 +483,6 @@ public class IOUtils {
             return false;
         }
     }
+
+
 }

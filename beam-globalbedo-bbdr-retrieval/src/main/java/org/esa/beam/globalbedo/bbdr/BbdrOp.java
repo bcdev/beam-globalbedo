@@ -26,6 +26,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
@@ -122,7 +123,10 @@ public class BbdrOp extends PixelOperator {
     private double hsfMax;
 
     @Override
-    protected void configureTargetProduct(Product targetProduct) {
+    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
+        super.configureTargetProduct(productConfigurer);
+
+        final Product targetProduct = productConfigurer.getTargetProduct();
         if (sdrOnly) {
             for (int i = 0; i < sensor.getNumBands(); i++) {
                 Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
