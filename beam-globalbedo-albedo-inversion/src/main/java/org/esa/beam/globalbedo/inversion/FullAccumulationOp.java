@@ -8,8 +8,11 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
-import org.esa.beam.framework.gpf.experimental.PixelOperator;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.PointOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 
 /**
  * Pixel operator implementing the full accumulation part of python breadboard.
@@ -70,7 +73,7 @@ public class FullAccumulationOp extends PixelOperator {
 
 
     @Override
-    protected void configureSourceSamples(PointOperator.Configurator configurator) {
+    protected void configureSourceSamples(SampleConfigurer configurator) {
         for (int k = 0; k < sourceProducts.length; k++) {
             Product sourceProduct = sourceProducts[k];
             for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
@@ -86,7 +89,6 @@ public class FullAccumulationOp extends PixelOperator {
             configurator.defineSample((sourceSampleOffset * k) + SRC_E, "E", sourceProduct);
             configurator.defineSample((sourceSampleOffset * k) + SRC_MASK, "mask", sourceProduct);
         }
-        System.out.println();
     }
 
     @Override
@@ -119,7 +121,7 @@ public class FullAccumulationOp extends PixelOperator {
     }
 
     @Override
-    protected void configureTargetSamples(PointOperator.Configurator configurator) {
+    protected void configureTargetSamples(SampleConfigurer configurator) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 TRG_M[i][j] = 3 * AlbedoInversionConstants.numBBDRWaveBands * i + j;
@@ -136,8 +138,8 @@ public class FullAccumulationOp extends PixelOperator {
     }
 
     @Override
-    protected void computePixel(int x, int y, PointOperator.Sample[] sourceSamples,
-                                PointOperator.WritableSample[] targetSamples) {
+    protected void computePixel(int x, int y, Sample[] sourceSamples,
+                                WritableSample[] targetSamples) {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                               3 * AlbedoInversionConstants.numBBDRWaveBands);
@@ -184,7 +186,7 @@ public class FullAccumulationOp extends PixelOperator {
         fillTargetSamples(targetSamples, accumulator);
     }
 
-    private void fillTargetSamples(PointOperator.WritableSample[] targetSamples, Accumulator accumulator) {
+    private void fillTargetSamples(WritableSample[] targetSamples, Accumulator accumulator) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i, j));

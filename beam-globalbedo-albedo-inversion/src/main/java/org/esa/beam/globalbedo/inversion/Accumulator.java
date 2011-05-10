@@ -1,7 +1,7 @@
 package org.esa.beam.globalbedo.inversion;
 
 import Jama.Matrix;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
 
 /**
  * Container object holding the M, V, E estimation matrices and mask value
@@ -30,7 +30,7 @@ public class Accumulator {
      *
      * @return Accumulator
      */
-    public static Accumulator createForInversion(PointOperator.Sample[] sourceSamples) {
+    public static Accumulator createForInversion(Sample[] sourceSamples) {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                               3 * AlbedoInversionConstants.numBBDRWaveBands);

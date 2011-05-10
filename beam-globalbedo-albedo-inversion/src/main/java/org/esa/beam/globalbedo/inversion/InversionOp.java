@@ -11,8 +11,11 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.experimental.PixelOperator;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.PointOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
@@ -158,7 +161,7 @@ public class InversionOp extends PixelOperator {
     }
 
     @Override
-    protected void configureSourceSamples(Configurator configurator) {
+    protected void configureSourceSamples(SampleConfigurer configurator) {
 
         // accumulation product:
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
@@ -202,7 +205,7 @@ public class InversionOp extends PixelOperator {
     }
 
     @Override
-    protected void configureTargetSamples(Configurator configurator) {
+    protected void configureTargetSamples(SampleConfigurer configurator) {
 
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             TRG_PARAMETERS[i] = i;
@@ -341,7 +344,7 @@ public class InversionOp extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
-    private void fillTargetSamples(PointOperator.WritableSample[] targetSamples, InversionResult result) {
+    private void fillTargetSamples(WritableSample[] targetSamples, InversionResult result) {
 
         // parameters
         int index = 0;

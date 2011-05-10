@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import javax.media.jai.BorderExtender;
+import javax.media.jai.JAI;
 import java.awt.*;
 import java.io.*;
 
@@ -21,7 +22,7 @@ import java.io.*;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.dailyacc")
+@OperatorMetadata(alias = "ga.l3.dailyacc")
 public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
@@ -45,7 +46,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose  // todo: change back
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose  // todo: change back
 
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
@@ -119,9 +120,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             try {
                 for (int w = 0; w < rasterWidth / tileSize; w++) {
                     for (int h = 0; h < rasterHeight / tileSize; h++) {
-                        final Rectangle rect = new Rectangle(w * rasterWidth, h * rasterHeight, tileSize, tileSize);
-//                        final Tile tileToProcess = getSourceTile(rasterDataNode, rect, BorderExtender.createInstance(
-//                                BorderExtender.BORDER_COPY));     // this is the expensive call... :-((
+                        final Rectangle rect = new Rectangle(w * tileSize, h * tileSize, tileSize, tileSize);
                         // this is the expensive call... :-((
                         final Tile tileToProcess = getSourceTile(rasterDataNode, rect, (BorderExtender) null);
                         for (int i = rect.x; i < rect.x + rect.width; i++) {

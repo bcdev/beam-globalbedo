@@ -2,7 +2,8 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.framework.gpf.pointop.PointOperator;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
@@ -42,7 +43,7 @@ public class AlbedoInversionUtils {
      * @param index         - the sample index
      * @param sourceProduct - the source product
      */
-    public static void setLandMaskSourceSample(PointOperator.Configurator configurator, int index,
+    public static void setLandMaskSourceSample(SampleConfigurer configurator, int index,
                                                Product sourceProduct) {
         if (sourceProduct.getProductType().startsWith("MER")) {
             BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand

@@ -2,7 +2,7 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
-import org.esa.beam.framework.gpf.experimental.PointOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
 
 /**
  * Object holding the prior data elements M, V, Mask and Parameters
@@ -33,7 +33,7 @@ public class Prior {
      *
      * @return Prior
      */
-    public static Prior createForInversion(PointOperator.Sample[] sourceSamples, double priorScaleFactor) {
+    public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor) {
 
         Matrix C = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
                               3 * AlbedoInversionConstants.numBBDRWaveBands);              // 9x9

@@ -1,10 +1,12 @@
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3DailyAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3FullAccumulation$Spi
+org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Inversion$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationJAIOp$Spi
 org.esa.beam.globalbedo.inversion.FullAccumulationJAI2Op$Spi
-org.esa.beam.globalbedo.inversion.TestFullAccumulationJAIAllDoysOp$Spi
+org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
+org.esa.beam.globalbedo.inversion.AlbedoOp$Spi
 org.esa.beam.globalbedo.inversion.DailyAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi

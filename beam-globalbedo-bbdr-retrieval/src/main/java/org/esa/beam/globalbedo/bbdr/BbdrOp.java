@@ -25,14 +25,26 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
 
 import java.io.IOException;
 
-import static java.lang.Math.*;
+import static java.lang.Math.PI;
+import static java.lang.Math.abs;
+import static java.lang.Math.acos;
+import static java.lang.Math.cos;
+import static java.lang.Math.max;
+import static java.lang.Math.min;
+import static java.lang.Math.pow;
+import static java.lang.Math.sin;
+import static java.lang.Math.sqrt;
+import static java.lang.Math.tan;
 import static java.lang.StrictMath.toRadians;
 
 /**
@@ -58,7 +70,7 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_OZO = 9;
     private static final int SRC_WVP = 10;
     private static final int SRC_TOA_RFL = 11;
-//    private static final int SRC_TOA_VAR = 10 + 15;
+    //    private static final int SRC_TOA_VAR = 10 + 15;
     private int SRC_TOA_VAR;
 
     private static final int TRG_BBDR = 0;
@@ -141,14 +153,15 @@ public class BbdrOp extends PixelOperator {
             }
             targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
-            String[] bandNames = {"BB_VIS", "BB_NIR", "BB_SW",
-                "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW",
-                "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
-                "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
-                "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
-                "AOD550",
-                "NDVI", "sig_NDVI",
-                "VZA", "SZA", "RAA", "DEM",
+            String[] bandNames = {
+                    "BB_VIS", "BB_NIR", "BB_SW",
+                    "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW",
+                    "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
+                    "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
+                    "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
+                    "AOD550",
+                    "NDVI", "sig_NDVI",
+                    "VZA", "SZA", "RAA", "DEM",
             };
             for (String bandName : bandNames) {
                 Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
@@ -174,7 +187,7 @@ public class BbdrOp extends PixelOperator {
     }
 
     void readAuxdata() {
-         N2Bconversion n2Bconversion = new N2Bconversion(sensor, 3);
+        N2Bconversion n2Bconversion = new N2Bconversion(sensor, 3);
         try {
             n2Bconversion.load();
             rmse_arr_all = n2Bconversion.getRmse_arr_all();
@@ -222,7 +235,7 @@ public class BbdrOp extends PixelOperator {
     }
 
     @Override
-    protected void configureSourceSamples(Configurator configurator) {
+    protected void configureSourceSamples(SampleConfigurer configurator) {
         String[] toaBandNames = null;
 
         String landExpr = null;
@@ -328,7 +341,7 @@ public class BbdrOp extends PixelOperator {
     }
 
     @Override
-    protected void configureTargetSamples(Configurator configurator) {
+    protected void configureTargetSamples(SampleConfigurer configurator) {
         if (sdrOnly) {
             int index = 0;
             for (int i = 0; i < sensor.getNumBands(); i++) {
@@ -339,18 +352,18 @@ public class BbdrOp extends PixelOperator {
             }
             configurator.defineSample(index, "ndvi");
         } else {
-            configurator.defineSample(TRG_BBDR    , "BB_VIS");
+            configurator.defineSample(TRG_BBDR, "BB_VIS");
             configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
             configurator.defineSample(TRG_BBDR + 2, "BB_SW");
 
-            configurator.defineSample(TRG_ERRORS    , "sig_BB_VIS_VIS");
+            configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS");
             configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
             configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW");
             configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR");
             configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW");
             configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW");
 
-            configurator.defineSample(TRG_KERN    , "Kvol_BRDF_VIS");
+            configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
             configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
             configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
             configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
@@ -386,9 +399,9 @@ public class BbdrOp extends PixelOperator {
         hsf = max(hsf, -0.45); // elevation up to -450m ASL
 
         if (vza < vzaMin || vza > vzaMax ||
-                sza < szaMin || sza > szaMax ||
-                aot < aotMin || aot > aotMax ||
-                hsf < hsfMin || hsf > hsfMax) {
+            sza < szaMin || sza > szaMax ||
+            aot < aotMin || aot > aotMax ||
+            hsf < hsfMin || hsf > hsfMax) {
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
@@ -517,7 +530,8 @@ public class BbdrOp extends PixelOperator {
             err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
         }
 
-        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(err_rad_cov).plusEquals(err_coreg_cov);
+        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
+                err_rad_cov).plusEquals(err_coreg_cov);
 
         if (sdrOnly) {
             for (int i = 0; i < sensor.getNumBands(); i++) {
@@ -529,10 +543,12 @@ public class BbdrOp extends PixelOperator {
 
         double ndviSum = sensor.getAndvi() + sensor.getBndvi();
         double sig_ndvi_land = pow(
-                (pow(ndviSum * rfl_nir * sqrt(err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
-                        pow(ndviSum * rfl_red * sqrt(err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+                (pow(ndviSum * rfl_nir * sqrt(
+                        err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
+                 pow(ndviSum * rfl_red * sqrt(
+                         err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
                 ), 0.5);
-        targetSamples[TRG_NDVI+1].set(sig_ndvi_land);
+        targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
 
         // BB conversion and error var-cov calculation
 
@@ -609,9 +625,9 @@ public class BbdrOp extends PixelOperator {
             double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
             double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
             double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol;
-            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1]+ t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
-            targetSamples[TRG_KERN + (i_bb*2)].set(kernel_land_0);
-            targetSamples[TRG_KERN + (i_bb*2) + 1].set(kernel_land_1);
+            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1] + t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
+            targetSamples[TRG_KERN + (i_bb * 2)].set(kernel_land_0);
+            targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kernel_land_1);
         }
     }
 
@@ -701,9 +717,9 @@ public class BbdrOp extends PixelOperator {
 
         Matrix matrix = new Matrix(doubles.length, doubles.length);
         for (int i = 0; i < doubles.length; i++) {
-           for (int j = 0; j < doubles.length; j++) {
-              matrix.set(i, j, doubles[i] * doubles[j]);
-           }
+            for (int j = 0; j < doubles.length; j++) {
+                matrix.set(i, j, doubles[i] * doubles[j]);
+            }
         }
         return matrix;
     }

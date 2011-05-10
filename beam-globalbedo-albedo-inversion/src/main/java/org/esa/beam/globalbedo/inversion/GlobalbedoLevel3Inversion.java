@@ -20,8 +20,8 @@ import java.util.logging.Logger;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.albedo")
-public class GlobalbedoLevel3Albedo extends Operator {
+@OperatorMetadata(alias = "ga.l3.inversion")
+public class GlobalbedoLevel3Inversion extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
@@ -141,7 +141,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Albedo.class);
+            super(GlobalbedoLevel3Inversion.class);
         }
     }
 }

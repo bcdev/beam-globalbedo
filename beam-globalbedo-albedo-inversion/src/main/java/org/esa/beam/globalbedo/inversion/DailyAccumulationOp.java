@@ -8,7 +8,10 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
-import org.esa.beam.framework.gpf.experimental.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.PixelOperator;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
@@ -75,7 +78,7 @@ public class DailyAccumulationOp extends PixelOperator {
 
 
     @Override
-    protected void configureSourceSamples(Configurator configurator) {
+    protected void configureSourceSamples(SampleConfigurer configurator) {
         for (int i = 0; i < sourceProducts.length; i++) {
             Product sourceProduct = sourceProducts[i];
 
@@ -161,7 +164,7 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     @Override
-    protected void configureTargetSamples(Configurator configurator) {
+    protected void configureTargetSamples(SampleConfigurer configurator) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 TRG_M[i][j] = 3 * AlbedoInversionConstants.numBBDRWaveBands * i + j;
