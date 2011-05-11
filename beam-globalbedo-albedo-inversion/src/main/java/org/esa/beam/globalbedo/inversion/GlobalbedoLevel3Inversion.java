@@ -56,7 +56,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
-        // STEP 1: get Prior input files...
+        // STEP 1: get Prior input file...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
                 "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
 
@@ -100,10 +100,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
         }
 
-        for (int i = 0; i < inputProduct.getProductDoys().length; i++) {
-            System.out.println("allDoys   = " + i + ", " + inputProduct.getProductDoys()[i]);
-            System.out.println("filenames = " + i + ", " + inputProduct.getProductFilenames()[i]);
-        }
+//        for (int i = 0; i < inputProduct.getProductDoys().length; i++) {
+//            System.out.println("allDoys   = " + i + ", " + inputProduct.getProductDoys()[i]);
+//            System.out.println("filenames = " + i + ", " + inputProduct.getProductFilenames()[i]);
+//        }
 
         // STEP 4: full accumulation
         Product fullAccumulationProduct = null;

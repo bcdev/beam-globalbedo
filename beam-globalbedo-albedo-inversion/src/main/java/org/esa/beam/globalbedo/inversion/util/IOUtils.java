@@ -145,7 +145,7 @@ public class IOUtils {
         }
 
         for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo_" + Integer.toString(year) + doyString)) {
+            if (brdfFileName.startsWith("GlobAlbedo." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
                 Product product = ProductIO.readProduct(sourceProductFileName);
                 return product;
@@ -170,7 +170,7 @@ public class IOUtils {
     private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
         List<String> brdfFileList = new ArrayList<String>();
         for (String s : brdfFiles) {
-            if ((!snow && s.contains("_NoSnow")) || (snow && s.contains("_Snow"))) {
+            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
                 brdfFileList.add(s);
             }
         }

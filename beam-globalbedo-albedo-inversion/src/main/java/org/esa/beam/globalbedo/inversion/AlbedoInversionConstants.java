@@ -45,6 +45,8 @@ public class AlbedoInversionConstants {
     public static final String INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME = "Weighted_Number_of_Samples";
     public static final String INV_GOODNESS_OF_FIT_BAND_NAME = "Goodness_of_Fit";
 
+    public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
+
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
 
     public static final int numBBDRWaveBands = 3;

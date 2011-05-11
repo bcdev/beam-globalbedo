@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -20,7 +21,7 @@ import java.util.logging.Logger;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.inversion")
+@OperatorMetadata(alias = "ga.l3.albedo")
 public class GlobalbedoLevel3Albedo extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
@@ -41,9 +42,24 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Override
     public void initialize() throws OperatorException {
         logger = BeamLogManager.getSystemLogger();
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
-        // STEP 1: get BRDF Snow/NoSnow input files...
+        // STEP 1: we need the SNOW Prior file for given DoY...
+        final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+
+        Product priorProduct;
+        try {
+            priorProduct = IOUtils.getPriorProduct(priorDir, doy, true);
+        } catch (IOException e) {
+            throw new OperatorException("Cannot load prior product: " + e.getMessage());
+        }
+
+        if (priorProduct == null) {
+            logger.log(Level.ALL, "No prior file available for DoY " + doy + " - do inversion without prior...");
+        }
+
+        // STEP 2: get BRDF Snow/NoSnow input files...
         final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + tile + File.separator;
 
         Product brdfSnowProduct;
@@ -53,15 +69,15 @@ public class GlobalbedoLevel3Albedo extends Operator {
             brdfSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, true);
             brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, false);
         } catch (IOException e) {
-            throw new OperatorException("Cannot load prior product: " + e.getMessage());
+            throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
         }
 
         if (brdfSnowProduct != null && brdfNoSnowProduct != null) {
             // merge Snow/NoSnow products...
-            // todo: implement
             MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
             mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
             mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
+            mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
             brdfMergedProduct = mergeBrdfOp.getTargetProduct();
         } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
             logger.log(Level.WARNING, "Found only 'Snow' BRDF product for Year/Doy: " +
@@ -79,10 +95,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: compute albedo from merged BRDF product...
-        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
-        AlbedoOp albedoOp = new AlbedoOp();
-        albedoOp.setSourceProduct(brdfMergedProduct);
-        setTargetProduct(albedoOp.getTargetProduct());
+//        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
+//        AlbedoOp albedoOp = new AlbedoOp();
+//        albedoOp.setSourceProduct(brdfMergedProduct);
+//        setTargetProduct(albedoOp.getTargetProduct());
+        setTargetProduct(brdfMergedProduct);
 
         System.out.println("done");
     }
