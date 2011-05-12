@@ -95,9 +95,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: compute albedo from merged BRDF product...
+        Product anglesProduct; // todo: define and generate
 //        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
 //        AlbedoOp albedoOp = new AlbedoOp();
 //        albedoOp.setSourceProduct(brdfMergedProduct);
+//        albedoOp.setSourceProduct(anglesProduct);
 //        setTargetProduct(albedoOp.getTargetProduct());
         setTargetProduct(brdfMergedProduct);
 

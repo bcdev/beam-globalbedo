@@ -412,12 +412,45 @@ public class IOUtils {
 
     }
 
+    public static String[] getAlbedoDhrBandNames() {
+        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+                bandNames[i] = "DHR_" + waveBandsOffsetMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getAlbedoBhrBandNames() {
+        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+                bandNames[i] = "BHR_" + waveBandsOffsetMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getAlbedoDhrSigmaBandNames() {
+        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+                bandNames[i] = "DHR_sigma" + waveBandsOffsetMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getAlbedoBhrSigmaBandNames() {
+        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+                bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
+        }
+        return bandNames;
+    }
+
     public static double[] readBinaryDoubleArray(File file, int size) {
         FileInputStream f = null;
         try {
             f = new FileInputStream(file);
         } catch (FileNotFoundException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            // todo
+            e.printStackTrace();
         }
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
@@ -439,7 +472,8 @@ public class IOUtils {
                 bb.clear();
             }
         } catch (IOException e) {
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            // todo
+            e.printStackTrace();
         }
 
         return darray;

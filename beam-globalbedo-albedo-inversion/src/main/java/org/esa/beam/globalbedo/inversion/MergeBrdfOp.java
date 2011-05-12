@@ -83,6 +83,7 @@ public class MergeBrdfOp extends PixelOperator {
     private String entropyBandName;
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
+    private String daysToTheClosestSampleBandName;
     private String goodnessOfFitBandName;
     private String proportionNsamplesBandName;
 
@@ -214,7 +215,7 @@ public class MergeBrdfOp extends PixelOperator {
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double resultDoyClosestSample = sampleDoyClosestSampleSnow * proportionNsamplesSnow +
                                      sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(resultDoyClosestSample);
+        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(resultDoyClosestSample);
 
 
         final double sampleGoodnessOfFitSnow =
@@ -223,7 +224,7 @@ public class MergeBrdfOp extends PixelOperator {
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_GOODNESS_OF_FIT].getDouble();
         final double resultGoodnessOfFit = sampleGoodnessOfFitSnow * proportionNsamplesSnow +
                                      sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(resultGoodnessOfFit);
+        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(resultGoodnessOfFit);
 
     }
 
@@ -234,9 +235,8 @@ public class MergeBrdfOp extends PixelOperator {
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
         super.configureTargetProduct(productConfigurer);
-
         final Product targetProduct = productConfigurer.getTargetProduct();
-        //To change body of implemented methods use File | Settings | File Templates.
+
         parameterBandNames = IOUtils.getInversionParameterBandNames();
         for (String parameterBandName : parameterBandNames) {
             Band band = targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);
@@ -270,8 +270,9 @@ public class MergeBrdfOp extends PixelOperator {
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
+        daysToTheClosestSampleBandName = AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
         Band daysToTheClosestSampleBand = targetProduct.addBand(
-                AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32);
+                daysToTheClosestSampleBandName, ProductData.TYPE_FLOAT32);
         daysToTheClosestSampleBand.setNoDataValue(Float.NaN);
         daysToTheClosestSampleBand.setNoDataValueUsed(true);
 
@@ -395,7 +396,7 @@ public class MergeBrdfOp extends PixelOperator {
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES,
                                   weightedNumberOfSamplesBandName);
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE,
-                                  AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+                                  daysToTheClosestSampleBandName);
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT,
                                   goodnessOfFitBandName);
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES,
