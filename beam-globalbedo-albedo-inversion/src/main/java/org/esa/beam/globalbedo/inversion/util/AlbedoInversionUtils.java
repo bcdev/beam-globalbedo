@@ -1,12 +1,13 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.pointop.PointOperator;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.beam.util.math.MathUtils;
 
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -24,6 +25,7 @@ public class AlbedoInversionUtils {
      *
      * @param year - the year
      * @param doy  - the day of year
+     *
      * @return String - the datestring
      */
     public static String getDateFromDoy(int year, int doy) {
@@ -62,6 +64,7 @@ public class AlbedoInversionUtils {
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
+     *
      * @return Matrix - the filtered matrix
      */
     public static Matrix getRectangularDiagonalMatrix(Matrix m) {
@@ -80,6 +83,7 @@ public class AlbedoInversionUtils {
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix
+     *
      * @return Matrix - the nx1 result matrix
      */
     public static Matrix getRectangularDiagonalFlatMatrix(Matrix m) {
@@ -98,6 +102,7 @@ public class AlbedoInversionUtils {
      * Returns a rows x columns matrix with reciprocal elements
      *
      * @param m - the input matrix
+     *
      * @return Matrix - the result matrix
      */
     public static Matrix getReciprocalMatrix(Matrix m) {
@@ -121,6 +126,7 @@ public class AlbedoInversionUtils {
      * (equivalent to Python's numpy.product(m))
      *
      * @param m - the input matrix
+     *
      * @return double - the result
      */
     public static double getMatrixAllElementsProduct(Matrix m) {
@@ -139,6 +145,7 @@ public class AlbedoInversionUtils {
      * Checks if a matrix contains NaN elements
      *
      * @param m - original matrix
+     *
      * @return boolean
      */
     public static boolean matrixHasNanElements(Matrix m) {
@@ -157,6 +164,7 @@ public class AlbedoInversionUtils {
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
+     *
      * @return boolean
      */
     public static boolean matrixHasZerosInDiagonale(Matrix m) {
@@ -175,7 +183,9 @@ public class AlbedoInversionUtils {
      * // todo: apply this also in BBDR module, then easting/northing parameters will not be needed any more
      *
      * @param modisTile - the MODIS tile name
-     * @return  double[] - the upper left corner coordinate
+     *
+     * @return double[] - the upper left corner coordinate
+     *
      * @throws NumberFormatException -
      */
     public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
@@ -190,28 +200,37 @@ public class AlbedoInversionUtils {
         return upperLeftPoint;
     }
 
+    /**
+     * This method applies sinusoidal projection on a source product.
+     *
+     * @param sourceProduct - the source product
+     * @param easting - easting value
+     * @param northing - northing value
+     *
+     * @return reprojected product
+     */
     public static Product reprojectToSinusoidal(Product sourceProduct, double easting, double northing) {
         ReprojectionOp repro = new ReprojectionOp();
         repro.setParameter("easting", easting);
         repro.setParameter("northing", northing);
 
         repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                "GEOGCS[\"WGS 84\"," +
-                "  DATUM[\"WGS_1984\"," +
-                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                "PROJECTION[\"Sinusoidal\"]," +
-                "PARAMETER[\"false_easting\",0.0]," +
-                "PARAMETER[\"false_northing\",0.0]," +
-                "PARAMETER[\"central_meridian\",0.0]," +
-                "PARAMETER[\"semi_major\",6371007.181]," +
-                "PARAMETER[\"semi_minor\",6371007.181]," +
-                "UNIT[\"m\",1.0]," +
-                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
+                                  "GEOGCS[\"WGS 84\"," +
+                                  "  DATUM[\"WGS_1984\"," +
+                                  "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+                                  "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+                                  "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+                                  "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+                                  "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+                                  "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+                                  "PROJECTION[\"Sinusoidal\"]," +
+                                  "PARAMETER[\"false_easting\",0.0]," +
+                                  "PARAMETER[\"false_northing\",0.0]," +
+                                  "PARAMETER[\"central_meridian\",0.0]," +
+                                  "PARAMETER[\"semi_major\",6371007.181]," +
+                                  "PARAMETER[\"semi_minor\",6371007.181]," +
+                                  "UNIT[\"m\",1.0]," +
+                                  "AUTHORITY[\"SR-ORG\",\"6974\"]]");
 
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", false);
@@ -228,24 +247,27 @@ public class AlbedoInversionUtils {
         return repro.getTargetProduct();
     }
 
-    public static int getDoyFromPriorName(String priorName, boolean reprojected) {
-        int doy;
-        String prefix;
-        if (reprojected) {
-           prefix = "projected_Kernels_";
-        } else {
-            prefix = "Kernels_";
-        }
-        if (priorName.startsWith(prefix)) {
-            doy = Integer.parseInt(priorName.substring(prefix.length(), prefix.length()+3));
-            if (Math.abs(doy) > 366) {
-                throw new IllegalArgumentException("Invalid doy " + doy + " retrieved from prior name " + priorName);
-            }
-            return doy;
-        } else {
-            throw new IllegalArgumentException("Invalid prior name " + priorName);
-        }
+    /**
+     * Computes solar zenith angle at local noon as function of Geoposition and DoY
+     *
+     * @param geoPos - geoposition
+     * @param doy - day of year
+     * @return  sza
+     */
+    public static double computeSza(GeoPos geoPos, int doy) {
+
+        final double latitude = geoPos.getLat() * MathUtils.DTOR;
+        double longitude = geoPos.getLon();
+
+        // # To emulate MODIS products, set fixed LST = 12.00
+        final double LST = 12.0;
+        longitude *= MathUtils.DTOR;
+        // # Now we can calculate the Sun Zenith Angle (SZA):
+        final double h = (12.0 - (LST)) / 12.0 * Math.PI;
+        final double delta = -23.45 * (Math.PI/180.0) * Math.cos (2 * Math.PI/365.0 * (doy+10));
+        double SZA = Math.acos(Math.sin(latitude) * Math.sin(delta) + Math.cos(latitude) * Math.cos(delta) * Math.cos(h));
+
+        final double SZArad = SZA * MathUtils.RTOD;
+        return SZArad;
     }
-
-
 }

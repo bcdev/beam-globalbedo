@@ -4,6 +4,8 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
@@ -15,12 +17,17 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import static java.lang.Math.*;
 
 /**
- * Operator for merging BRDF Snow/NoSnow contributions.
+ * Operator for merging BRDF Snow/NoSnow products.
  * The breadboard file is 'MergseBRDF.py' provided by Gerardo López Saldaña.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@OperatorMetadata(alias = "ga.albedo.mergebrdf",
+                  description = "Provides daily accumulation of single BBDR observations",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class MergeBrdfOp extends PixelOperator {
 
     // source samples:
@@ -198,7 +205,7 @@ public class MergeBrdfOp extends PixelOperator {
         final double sampleRelEntropyNoSnow =
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_REL_ENTROPY].getDouble();
         final double resultRelEntropy = sampleRelEntropySnow * proportionNsamplesSnow +
-                                     sampleRelEntropyNoSnow * proportionNsamplesNoSnow;
+                                        sampleRelEntropyNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY].set(resultRelEntropy);
 
         final double sampleWeightedNumSamplesSnow =
@@ -206,16 +213,18 @@ public class MergeBrdfOp extends PixelOperator {
         final double sampleWeightedNumSamplesNoSnow =
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double resultWeightedNumSamples = sampleWeightedNumSamplesSnow * proportionNsamplesSnow +
-                                     sampleWeightedNumSamplesNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(resultWeightedNumSamples);
+                                                sampleWeightedNumSamplesNoSnow * proportionNsamplesNoSnow;
+        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(
+                resultWeightedNumSamples);
 
         final double sampleDoyClosestSampleSnow =
                 sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double sampleDoyClosestSampleNoSnow =
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double resultDoyClosestSample = sampleDoyClosestSampleSnow * proportionNsamplesSnow +
-                                     sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(resultDoyClosestSample);
+                                              sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
+        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(
+                resultDoyClosestSample);
 
 
         final double sampleGoodnessOfFitSnow =
@@ -223,7 +232,7 @@ public class MergeBrdfOp extends PixelOperator {
         final double sampleGoodnessOfFitNoSnow =
                 sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_GOODNESS_OF_FIT].getDouble();
         final double resultGoodnessOfFit = sampleGoodnessOfFitSnow * proportionNsamplesSnow +
-                                     sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
+                                           sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(resultGoodnessOfFit);
 
     }
@@ -402,4 +411,12 @@ public class MergeBrdfOp extends PixelOperator {
         configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES,
                                   proportionNsamplesBandName);
     }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(MergeBrdfOp.class);
+        }
+    }
+
 }

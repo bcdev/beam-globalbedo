@@ -3,7 +3,7 @@ package org.esa.beam.globalbedo.inversion;
 import Jama.Matrix;
 
 /**
- * Object holding all results of an inversion computation
+ * Container holding all results of an inversion computation (--> BRDF product)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

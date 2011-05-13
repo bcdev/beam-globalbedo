@@ -15,7 +15,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Operator for the BRDF retrieval part (full accumulation and inversion)
+ * 'Master' operator for the BRDF retrieval part (full accumulation and inversion)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

@@ -16,7 +16,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Operator for the final albedo retrieval part
+ * 'Master' operator for the final albedo retrieval part
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -60,7 +60,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: get BRDF Snow/NoSnow input files...
-        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + tile + File.separator;
+        final String brdfDir = gaRootDir + File.separator + "inversion" + File.separator + tile + File.separator;
 
         Product brdfSnowProduct;
         Product brdfNoSnowProduct;
@@ -95,13 +95,10 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: compute albedo from merged BRDF product...
-        Product anglesProduct; // todo: define and generate
-//        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
-//        AlbedoOp albedoOp = new AlbedoOp();
-//        albedoOp.setSourceProduct(brdfMergedProduct);
-//        albedoOp.setSourceProduct(anglesProduct);
-//        setTargetProduct(albedoOp.getTargetProduct());
-        setTargetProduct(brdfMergedProduct);
+        AlbedoOp albedoOp = new AlbedoOp();
+        albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
+        albedoOp.setParameter("doy", doy);
+        setTargetProduct(albedoOp.getTargetProduct());
 
         System.out.println("done");
     }

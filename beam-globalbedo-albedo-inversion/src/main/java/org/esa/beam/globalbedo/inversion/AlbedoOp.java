@@ -3,23 +3,37 @@ package org.esa.beam.globalbedo.inversion;
 import Jama.LUDecomposition;
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import static java.lang.Math.*;
 
 /**
+ * Operator for retrieval of albedo from BRDF model parameters.
+ * The breadboard file is 'Albedo.py' provided by Gerardo López Saldaña.
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@OperatorMetadata(alias = "ga.albedo.albedo",
+                  description = "Provides final albedo retrieval from merged BRDF files",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class AlbedoOp extends PixelOperator {
 
     // source samples:
@@ -65,14 +79,19 @@ public class AlbedoOp extends PixelOperator {
     private static final int[] TRG_BHR = new int[AlbedoInversionConstants.numBBDRWaveBands];
     private static final int[] TRG_SIGMA_DHR = new int[AlbedoInversionConstants.numBBDRWaveBands];
     private static final int[] TRG_SIGMA_BHR = new int[AlbedoInversionConstants.numBBDRWaveBands];
+    private static final int TRG_WEIGHTED_NUM_SAMPLES = 0;
+    private static final int TRG_REL_ENTROPY = 1;
+    private static final int TRG_GOODNESS_OF_FIT = 2;
+    private static final int TRG_SNOW_FRACTION = 3;
+    private static final int TRG_DATA_MASK = 4;
+    private static final int TRG_SZA = 5;
 
 
     @SourceProduct(description = "BRDF merged product")
     private Product brdfMergedProduct;
 
-    @SourceProduct(description = "Angles product")
-    private Product anglesProduct;
-
+    @Parameter(description = "doy")
+    private int doy;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -90,7 +109,9 @@ public class AlbedoOp extends PixelOperator {
         Uncertainties = U^T C^-1 U , U is stored as a 1X9 vector (transpose), so, actually U^T is the regulat 9x1 vector
         */
 
-        final double SZA = 0.25 * Math.PI; // 45deg just for testing, todo: clarify with GL how to get SZA
+        final PixelPos pixelPos = new PixelPos(x, y);
+        final GeoPos geoPos = brdfMergedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+        final double SZA = AlbedoInversionUtils.computeSza(geoPos, doy);
 
         Matrix F = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numAlbedoParameters,
                               1);
@@ -99,15 +120,14 @@ public class AlbedoOp extends PixelOperator {
 
         final Matrix C = getCMatrixFromInversionProduct(sourceSamples);
 
-//            WSA_sigma = numpy.zeros((nWaveBands, columns, rows), numpy.float32)
-//            BSA_sigma = numpy.zeros((nWaveBands, columns, rows), numpy.float32)
-//            U_WSA_VIS = numpy.array([1.0, 0.189184, -1.377622, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
-//            U_WSA_NIR = numpy.array([0.0, 0.0, 0.0, 1.0, 0.189184, -1.377622, 0.0, 0.0, 0.0,])
-//            U_WSA_SW =  numpy.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.189184, -1.377622])
+        Matrix[] wsaSigma = new Matrix[AlbedoInversionConstants.numBBDRWaveBands];
+        Matrix[] bsaSigma = new Matrix[AlbedoInversionConstants.numBBDRWaveBands];
 
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            wsaSigma[i] = new Matrix(1, 1, Double.NaN);
+            bsaSigma[i] = new Matrix(1, 1, Double.NaN);
+        }
 
-        Matrix[] wsaSigma = null;
-        Matrix[] bsaSigma = null;
         Matrix uWsaVis = new Matrix(1, 3 * AlbedoInversionConstants.numBBDRWaveBands);
         Matrix uWsaNir = new Matrix(1, 3 * AlbedoInversionConstants.numBBDRWaveBands);
         Matrix uWsaSw = new Matrix(1, 3 * AlbedoInversionConstants.numBBDRWaveBands);
@@ -121,10 +141,10 @@ public class AlbedoOp extends PixelOperator {
         }
 
         // # Calculate uncertainties...
-        // Breadboard uses relative entropy as mask here
+        // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        final double mask = sourceSamples[SRC_REL_ENTROPY].getDouble();
-        if (mask > 0.0) {
+        final double maskRelEntropy = sourceSamples[SRC_REL_ENTROPY].getDouble();
+        if (maskRelEntropy > 0.0) {
             final LUDecomposition cLUD = new LUDecomposition(C);
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
@@ -200,7 +220,50 @@ public class AlbedoOp extends PixelOperator {
             }
         }
 
+        // todo: simplify rel. entr.
+        double relEntropy = sourceSamples[SRC_REL_ENTROPY].getDouble();
+        relEntropy = Math.exp(relEntropy / 9.0);
 
+        // write results to target product...
+        double weightedNumberOfSamples = sourceSamples[SRC_WEIGHTED_NUM_SAMPLES].getDouble();
+        double goodnessOfFit = sourceSamples[SRC_GOODNESS_OF_FIT].getDouble();
+        double snowFraction = sourceSamples[SRC_PROPORTION_NSAMPLE].getDouble();
+        double mask = sourceSamples[SRC_ENTROPY].getDouble();
+        AlbedoResult result = new AlbedoResult(blackSkyAlbedo, whiteSkyAlbedo, bsaSigma, wsaSigma,
+                                               weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
+                                               mask, SZA);
+
+        fillTargetSamples(targetSamples, result);
+    }
+
+    private void fillTargetSamples(WritableSample[] targetSamples, AlbedoResult result) {
+        // DHR (black sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            targetSamples[TRG_DHR[i]].set(result.getBsa()[i]);
+        }
+
+        // BHR (white sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            targetSamples[TRG_BHR[i]].set(result.getWsa()[i]);
+        }
+
+        // DHR_sigma (black sky albedo uncertainty)
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            targetSamples[TRG_SIGMA_DHR[i]].set(result.getBsaSigma()[i].get(0, 0));
+        }
+
+        // BHR_sigma (white sky albedo uncertainty)
+        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            targetSamples[TRG_SIGMA_BHR[i]].set(result.getWsaSigma()[i].get(0, 0));
+        }
+
+        int index = 4 * AlbedoInversionConstants.numBBDRWaveBands;
+        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
+        targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
+        targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
+        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
+        targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
+        targetSamples[index + TRG_SZA].set(result.getSza());
     }
 
     private Matrix getCMatrixFromInversionProduct(Sample[] sourceSamples) {
@@ -227,7 +290,8 @@ public class AlbedoOp extends PixelOperator {
                 index2 = index2 + k;
             }
 
-            for (int i = 0; i <= k; i++) {
+            for (int i = 0; i < k; i++) {
+//                System.out.println("i, k, n, index1 = " + i + "," + k + "," + n + "," + index1);
                 C.set(n - k, n - k + i, cTmp[index1 - n + i]);
                 C.set(n - k + i, n - k, cTmp[index1 - n + i]);
             }
@@ -250,14 +314,14 @@ public class AlbedoOp extends PixelOperator {
 
         bhrBandNames = IOUtils.getAlbedoBhrBandNames();
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            Band band = targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
+            Band band = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
 
         dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            Band band = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
+            Band band = targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
@@ -381,4 +445,12 @@ public class AlbedoOp extends PixelOperator {
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index++, szaBandName);
     }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(AlbedoOp.class);
+        }
+    }
+
 }

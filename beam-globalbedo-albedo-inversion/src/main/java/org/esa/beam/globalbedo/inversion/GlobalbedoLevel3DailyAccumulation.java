@@ -17,7 +17,7 @@ import java.awt.*;
 import java.io.*;
 
 /**
- * Operator for the daily accumulation part in Albedo Inversion
+ * 'Master' operator for the daily accumulation part in Albedo Inversion
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

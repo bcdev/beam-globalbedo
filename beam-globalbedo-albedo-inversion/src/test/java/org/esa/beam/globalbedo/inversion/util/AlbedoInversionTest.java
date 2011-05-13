@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
 import junit.framework.TestCase;
+import org.esa.beam.framework.datamodel.GeoPos;
 
 /**
  * @author Olaf Danne
@@ -23,29 +24,6 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals("20040508", AlbedoInversionUtils.getDateFromDoy(year, doy));
         doy = 366;
         assertEquals("20041231", AlbedoInversionUtils.getDateFromDoy(year, doy));
-    }
-
-    public void testGetDoyFromPriorName() throws Exception {
-        String priorName = "Kernels_105_005_h18v04_backGround_NoSnow.hdr";
-        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName, false));
-
-        priorName = "projected_Kernels_105_005_h18v04_backGround_NoSnow.hdr";
-        assertEquals(105, AlbedoInversionUtils.getDoyFromPriorName(priorName, true));
-
-        priorName = "bla.hdr";
-        try {
-            AlbedoInversionUtils.getDoyFromPriorName(priorName, false);
-        } catch (IllegalArgumentException e) {
-            assertEquals("Invalid prior name bla.hdr", e.getMessage());
-        }
-
-        priorName = "Kernels_999_005_h18v04_backGround_Snow.hdr";
-        try {
-            AlbedoInversionUtils.getDoyFromPriorName(priorName, false);
-        } catch (IllegalArgumentException e) {
-            assertEquals("Invalid doy 999 retrieved from prior name Kernels_999_005_h18v04_backGround_Snow.hdr",
-                         e.getMessage());
-        }
     }
 
     public void testGetDiagonalMatrix() {
@@ -118,21 +96,20 @@ public class AlbedoInversionTest extends TestCase {
     }
 
     public void testGetMatrixAllElementsProduct() {
-           Matrix m = new Matrix(3, 3);
-           m.set(0, 0, 2.0);
-           m.set(1, 0, 4.0);
-           m.set(2, 0, 6.0);
-           m.set(0, 1, 8.0);
-           m.set(1, 1, 3.0);
-           m.set(2, 1, 5.0);
-           m.set(0, 2, 7.0);
-           m.set(1, 2, 9.0);
-           m.set(2, 2, 12.0);
+        Matrix m = new Matrix(3, 3);
+        m.set(0, 0, 2.0);
+        m.set(1, 0, 4.0);
+        m.set(2, 0, 6.0);
+        m.set(0, 1, 8.0);
+        m.set(1, 1, 3.0);
+        m.set(2, 1, 5.0);
+        m.set(0, 2, 7.0);
+        m.set(1, 2, 9.0);
+        m.set(2, 2, 12.0);
 
-           double product = AlbedoInversionUtils.getMatrixAllElementsProduct(m);
-           assertEquals(4354560.0, product);
-       }
-
+        double product = AlbedoInversionUtils.getMatrixAllElementsProduct(m);
+        assertEquals(4354560.0, product);
+    }
 
 
     public void testMatrixHasNaNElements() throws Exception {
@@ -148,7 +125,7 @@ public class AlbedoInversionTest extends TestCase {
         m.set(2, 2, 12.0);
 
         assertFalse(AlbedoInversionUtils.matrixHasNanElements(m));
-        m.set(1,2, Double.NaN);
+        m.set(1, 2, Double.NaN);
         assertTrue(AlbedoInversionUtils.matrixHasNanElements(m));
     }
 
@@ -183,6 +160,25 @@ public class AlbedoInversionTest extends TestCase {
         tile = "h13v14";
         assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
         assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+    }
+
+    public void testGetSunZenith() {
+        // run some test data with CreateLatLonGrid_v2_work.py and compare...
+
+        int doy = 001;
+        GeoPos geoPos = new GeoPos(47.3958f, 30.0f);
+        double sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
+        assertEquals(70.426647, sunZenith, 0.3);
+
+        doy = 129;
+        geoPos = new GeoPos(35.3958f, 76.0f);
+        sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
+        assertEquals(18.2188, sunZenith, 0.3);
+
+        doy = 289;
+        geoPos = new GeoPos(85.3958f, -178.5f);
+        sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
+        assertEquals(95.2706, sunZenith, 0.3);
     }
 
 }
