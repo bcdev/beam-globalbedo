@@ -47,6 +47,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Use binary accumulator files instead of dimap (to be decided)")
     private boolean useBinaryAccumulators;
 
+    @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
+    private boolean accumulationOnly;
+
     // todo: do we need this configurable?
     private boolean usePrior = true;
     private Logger logger;
@@ -123,18 +126,20 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         // STEP 5: compute pixelwise results (perform inversion) and write output
         // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
-        InversionOp inversionOp = new InversionOp();
-        inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
-        inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
-        inversionOp.setParameter("year", year);
-        inversionOp.setParameter("tile", tile);
-        inversionOp.setParameter("computeSnow", computeSnow);
-        inversionOp.setParameter("usePrior", usePrior);
-        inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
-        Product inversionProduct = inversionOp.getTargetProduct();
-
-        setTargetProduct(inversionProduct);
-//        setTargetProduct(fullAccumulationProduct);
+        if (accumulationOnly) {
+            setTargetProduct(fullAccumulationProduct);
+        } else {
+            InversionOp inversionOp = new InversionOp();
+            inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
+            inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+            inversionOp.setParameter("year", year);
+            inversionOp.setParameter("tile", tile);
+            inversionOp.setParameter("computeSnow", computeSnow);
+            inversionOp.setParameter("usePrior", usePrior);
+            inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
+            Product inversionProduct = inversionOp.getTargetProduct();
+            setTargetProduct(inversionProduct);
+        }
         System.out.println("done");
     }
 

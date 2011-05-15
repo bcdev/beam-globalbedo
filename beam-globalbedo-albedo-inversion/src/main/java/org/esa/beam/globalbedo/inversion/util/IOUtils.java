@@ -8,20 +8,11 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
-import java.io.DataOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FilenameFilter;
-import java.io.IOException;
+import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.nio.channels.ReadableByteChannel;
+import java.util.*;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -32,7 +23,7 @@ import java.util.Map;
 public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
-                                                                                                             IOException {
+            IOException {
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -82,7 +73,6 @@ public class IOUtils {
      *
      * @param bbdrFilenames - the list of filenames
      * @param daystring     - the daystring
-     *
      * @return List<String> - the filtered list
      */
     static List<String> getDailyBBDRFilenames(String[] bbdrFilenames, String daystring) {
@@ -129,7 +119,7 @@ public class IOUtils {
         double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
         double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
         Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-                                                                                northing);
+                northing);
         return reprojectedProduct;
     }
 
@@ -160,7 +150,7 @@ public class IOUtils {
         List<String> snowFilteredPriorList = new ArrayList<String>();
         for (String s : priorFiles) {
             if ((computeSnow && s.endsWith("_Snow.hdr")) || (!computeSnow && s.endsWith("_NoSnow.hdr"))) {
-                    snowFilteredPriorList.add(s);
+                snowFilteredPriorList.add(s);
             }
         }
         Collections.sort(snowFilteredPriorList);
@@ -185,9 +175,9 @@ public class IOUtils {
                                                     boolean computeSnow) throws IOException {
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, false, doy, year,
-                                                                                   tile,
-                                                                                   wings,
-                                                                                   computeSnow);
+                tile,
+                wings,
+                computeSnow);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
 
@@ -225,9 +215,9 @@ public class IOUtils {
 
         if (useBinaryFiles) {
             final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                                                                                                 true, doy, year, tile,
-                                                                                                 wings,
-                                                                                                 computeSnow);
+                    true, doy, year, tile,
+                    wings,
+                    computeSnow);
             String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
             int binaryProductIndex = 0;
             for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -260,7 +250,6 @@ public class IOUtils {
      * @param tile        - tile
      * @param computeSnow - boolean
      * @param usePrior    - boolean
-     *
      * @return String
      */
     public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
@@ -353,7 +342,7 @@ public class IOUtils {
                             }
                             //    # Center
                             if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
-                                (Integer.parseInt(thisYear) == year)) {
+                                    (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
                             //    # Right wing
@@ -385,9 +374,31 @@ public class IOUtils {
         waveBandsOffsetMap.put(2, "SW");
     }
 
+    public static String[] getDailyAccumulatorBandNames() {
+        String[] bandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands *
+                3 * AlbedoInversionConstants.numAlbedoParameters +
+                3 * AlbedoInversionConstants.numBBDRWaveBands + 2];
+
+        int index = 0;
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                bandNames[index++] = "M_" + i + "" + j;
+            }
+        }
+
+        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+            bandNames[index++] = "V_" + i;
+        }
+
+        bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
+        bandNames[index++] = AlbedoInversionConstants.ACC_MASK_NAME;
+
+        return bandNames;
+    }
+
     public static String[] getInversionParameterBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands *
-                                        AlbedoInversionConstants.numAlbedoParameters];
+                AlbedoInversionConstants.numAlbedoParameters];
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
@@ -405,7 +416,7 @@ public class IOUtils {
             // only UR triangle matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                                  waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
         }
         return bandNames;
@@ -415,7 +426,7 @@ public class IOUtils {
     public static String[] getAlbedoDhrBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                bandNames[i] = "DHR_" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "DHR_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
@@ -423,7 +434,7 @@ public class IOUtils {
     public static String[] getAlbedoBhrBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                bandNames[i] = "BHR_" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "BHR_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
@@ -431,7 +442,7 @@ public class IOUtils {
     public static String[] getAlbedoDhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                bandNames[i] = "DHR_sigma" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "DHR_sigma" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
@@ -439,7 +450,7 @@ public class IOUtils {
     public static String[] getAlbedoBhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
         for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
@@ -502,6 +513,149 @@ public class IOUtils {
         }
     }
 
+    public static void writeDoubleArrayToFileWithByteBuffer(File file, double[][][] values) {
+        int index = 0;
+        try {
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Create a writable file channel
+            FileChannel wChannel = file_output.getChannel();
+
+            final int dim1 = values.length;
+            final int dim2 = values[0].length;
+            final int dim3 = values[0][0].length;
+            final int size = 8 * dim1 * dim2 * dim3;
+            System.out.println("size, dims = " + size + ", " + dim1 + ", " + dim2 + ", " + dim3);
+//            final int size = 8 * 92*1200*1200;
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            for (int i = 0; i < dim1; i++) {
+                for (int j = 0; j < dim2; j++) {
+                    for (int k = 0; k < dim3; k++) {
+                        bb.putDouble(index, values[i][j][k]);
+                        index += 8;
+                    }
+                }
+            }
+
+            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+            // position and the limit is written to the file
+            wChannel.write(bb);
+
+            // Close file when finished with it..
+            wChannel.close();
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e + " // buffer index =  " + index);
+        }
+    }
+
+    public static void writeFloatArrayToFileWithByteBuffer(File file, float[][][] values) {
+        int index = 0;
+        try {
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Create a writable file channel
+            FileChannel wChannel = file_output.getChannel();
+
+            final int dim1 = values.length;
+            final int dim2 = values[0].length;
+            final int dim3 = values[0][0].length;
+            final int size = 4 * dim1 * dim2 * dim3;
+            System.out.println("size, dims = " + size + ", " + dim1 + ", " + dim2 + ", " + dim3);
+//            final int size = 8 * 92*1200*1200;
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            System.out.println("values[0][146][223] = " + values[0][146][223]);
+            for (int i = 0; i < dim1; i++) {
+                for (int j = 0; j < dim2; j++) {
+                    for (int k = 0; k < dim3; k++) {
+                        bb.putFloat(index, values[i][j][k]);
+                        index += 4;
+                    }
+                }
+            }
+
+            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+            // position and the limit is written to the file
+            wChannel.write(bb);
+
+            // Close file when finished with it..
+            wChannel.close();
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e + " // buffer index =  " + index);
+        }
+    }
+
+
+    public static double[] readDoubleArrayFromFileWithByteBuffer(File file, int dim1, int dim2, int dim3) {
+        final int size = dim1 * dim2 * dim3;
+        double[] result = new double[dim1 * dim2 * dim3];
+        try {
+            // Obtain a channel
+            ReadableByteChannel channel = new FileInputStream(file).getChannel();
+
+            // Create a direct ByteBuffer; see also Creating a ByteBuffer
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            int nRead;
+            int index = 0;
+            while ((nRead = channel.read(bb)) != -1) {
+                if (nRead == 0) {
+                    continue;
+                }
+                bb.position(0);
+                bb.limit(nRead);
+                while (bb.hasRemaining()) {
+                    int nGet = Math.min(bb.remaining(), size);
+                    result[index] = bb.getDouble();
+                    index++;
+                }
+                bb.clear();
+            }
+            channel.close();
+        } catch (Exception e) {
+            // todo
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+    public static float[] readFloatArrayFromFileWithByteBuffer(File file, int dim1, int dim2, int dim3) {
+        final int size = dim1 * dim2 * dim3;
+        float[] result = new float[dim1 * dim2 * dim3];
+        try {
+            // Obtain a channel
+            ReadableByteChannel channel = new FileInputStream(file).getChannel();
+
+            // Create a direct ByteBuffer; see also Creating a ByteBuffer
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            int nRead;
+            int index = 0;
+            while ((nRead = channel.read(bb)) != -1) {
+                if (nRead == 0) {
+                    continue;
+                }
+                bb.position(0);
+                bb.limit(nRead);
+                while (bb.hasRemaining()) {
+                    int nGet = Math.min(bb.remaining(), size);
+                    result[index] = bb.getFloat();
+                    index++;
+                }
+                bb.clear();
+            }
+            channel.close();
+        } catch (Exception e) {
+            // todo
+            e.printStackTrace();
+        }
+        return result;
+    }
+
+
     private static boolean isLeapYear(int year) {
         if (year < 0) {
             return false;
@@ -517,6 +671,4 @@ public class IOUtils {
             return false;
         }
     }
-
-
 }

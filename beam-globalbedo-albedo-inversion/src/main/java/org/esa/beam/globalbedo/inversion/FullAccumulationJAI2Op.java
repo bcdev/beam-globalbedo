@@ -7,9 +7,11 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -55,9 +57,9 @@ public class FullAccumulationJAI2Op extends Operator {
     @Parameter(description = "All DoYs for full accumulation")
     private int[] allDoys;
 
-    private double[][][] sumMatrices;
-    private double[][] mask;
-    private double[] weight;
+    private float[][][] sumMatrices;
+    private float[][] mask;
+    private float[] weight;
 
     private Map<String, Integer> sourceBandMap = new HashMap();
     private String[] bandNames;
@@ -77,17 +79,16 @@ public class FullAccumulationJAI2Op extends Operator {
             e.printStackTrace();
         }
 
-        bandNames = sourceProduct0.getBandNames();
+        bandNames = IOUtils.getDailyAccumulatorBandNames();
 
-        weight = new double[sourceFilenames.length];
+        weight = new float[sourceFilenames.length];
         for (int j = 0; j < sourceFilenames.length; j++) {
-            weight[j] = Math.exp(-1.0 * Math.abs(allDoys[j]) / HALFLIFE);
-//            System.out.println("i, j, weight = " + j + ", " + weight[j]);
+            weight[j] = (float) Math.exp(-1.0 * Math.abs(allDoys[j]) / HALFLIFE);
         }
 
         int[] bandDataTypes = new int[bandNames.length];
         for (int i = 0; i < bandDataTypes.length; i++) {
-            bandDataTypes[i] = sourceProduct0.getBand(bandNames[i]).getDataType();
+            bandDataTypes[i] = ProductData.TYPE_FLOAT32;
         }
         rasterWidth = sourceProduct0.getSceneRasterWidth();
         rasterHeight = sourceProduct0.getSceneRasterHeight();
@@ -106,8 +107,8 @@ public class FullAccumulationJAI2Op extends Operator {
         daysToTheClosestSample = new int[rasterWidth][rasterHeight];
         int[][] dayOfClosestSampleOld;
 
-        sumMatrices = new double[bandNames.length][rasterWidth][rasterHeight];
-        mask = new double[rasterWidth][rasterHeight];
+        sumMatrices = new float[bandNames.length][rasterWidth][rasterHeight];
+        mask = new float[rasterWidth][rasterHeight];
 
         for (String sourceFileName : sourceBinaryFilenames) {
             System.out.println("sourceFileName = " + sourceFileName);
@@ -136,12 +137,16 @@ public class FullAccumulationJAI2Op extends Operator {
 
     @Override
     public void computeTile(Band targetBand, Tile targetTile, ProgressMonitor pm) throws OperatorException {
-        // we need the computeTile only for the 'daysToTheClosestSample' band. All other bands are done imagewise
-        // using JAI in initialize().
         if (targetBand.getName().equals(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME)) {
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
                 for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
                     targetTile.setSample(x, y, daysToTheClosestSample[x][y]);
+                }
+            }
+        } else if (targetBand.getName().equals(AlbedoInversionConstants.ACC_MASK_NAME)) {
+            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
+                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
+                    targetTile.setSample(x, y, mask[x][y]);
                 }
             }
         } else {
@@ -202,6 +207,9 @@ public class FullAccumulationJAI2Op extends Operator {
         int nRead, nGet;
         try {
             int index = 0;
+            int ii = 0;
+            int jj = 0;
+            int kk = 0;
             while ((nRead = ch.read(bb)) != -1) {
                 if (nRead == 0) {
                     continue;
@@ -210,11 +218,25 @@ public class FullAccumulationJAI2Op extends Operator {
                 bb.limit(nRead);
                 while (bb.hasRemaining()) {
                     nGet = Math.min(bb.remaining(), size);
-                    // todo: find the right indices for sumMatrices array. Depends on tile size when product was written!
-                    sumMatrices[0][0][0] += weight[fileIndex] * bb.getDouble();
-                    // todo: last band is the mask. extract array mask[i][j] for determination of doyOfClosestSample
-                    mask[0][0] = 1.0;
-                    index++;
+                    // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...
+//                    if (ii == bandNames.length - 1) {
+//                        mask[jj][kk] += weight[fileIndex] * bb.getFloat();
+//                    } else {
+//                        sumMatrices[ii][jj][kk] += weight[fileIndex] * bb.getFloat();
+//                    }
+                    sumMatrices[ii][jj][kk] += weight[fileIndex] * bb.getFloat();
+                    mask[jj][kk] = sumMatrices[bandNames.length - 1][jj][kk];
+                    // find the right indices for sumMatrices array...
+                    kk++;
+                    if (kk == rasterHeight) {
+                        jj++;
+                        kk = 0;
+                        if (jj == rasterWidth) {
+                            ii++;
+                            jj = 0;
+                        }
+                    }
+
                 }
                 bb.clear();
             }
@@ -223,6 +245,13 @@ public class FullAccumulationJAI2Op extends Operator {
         } catch (IOException e) {
             // todo
             e.printStackTrace();
+        }
+    }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(FullAccumulationJAI2Op.class);
         }
     }
 
