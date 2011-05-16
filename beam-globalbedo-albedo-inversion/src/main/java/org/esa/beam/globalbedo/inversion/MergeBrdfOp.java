@@ -18,7 +18,7 @@ import static java.lang.Math.*;
 
 /**
  * Operator for merging BRDF Snow/NoSnow products.
- * The breadboard file is 'MergseBRDF.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'MergeBRDF.py' provided by Gerardo López Saldaña.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -31,12 +31,12 @@ import static java.lang.Math.*;
 public class MergeBrdfOp extends PixelOperator {
 
     // source samples:
-    private static final int[] SRC_SNOW_PARAMETERS = new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
-    private static final int[] SRC_NOSNOW_PARAMETERS = new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private static final int[] SRC_SNOW_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    private static final int[] SRC_NOSNOW_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
-    private static final int urMatrixOffset = ((int) pow(3 * AlbedoInversionConstants.numBBDRWaveBands, 2.0)
-                                               + 3 * AlbedoInversionConstants.numBBDRWaveBands) / 2;
+    private static final int urMatrixOffset = ((int) pow(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 2.0)
+                                               + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
 
     private static final int[] SRC_SNOW_UNCERTAINTIES = new int[urMatrixOffset];
     private static final int[] SRC_NOSNOW_UNCERTAINTIES = new int[urMatrixOffset];
@@ -56,21 +56,21 @@ public class MergeBrdfOp extends PixelOperator {
     private static final int sourceSampleOffset = 100;
 
     public static final int[][] SRC_PRIOR_MEAN =
-            new int[AlbedoInversionConstants.numAlbedoParameters]
-                    [AlbedoInversionConstants.numAlbedoParameters];
+            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
+                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
 
     public static final int[][] SRC_PRIOR_SD =
-            new int[AlbedoInversionConstants.numAlbedoParameters]
-                    [AlbedoInversionConstants.numAlbedoParameters];
+            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
+                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
 
-    public static final int priorOffset = (int) pow(AlbedoInversionConstants.numAlbedoParameters, 2.0);
+    public static final int priorOffset = (int) pow(AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 2.0);
     public static final int SRC_PRIOR_NSAMPLES = 2 * sourceSampleOffset + 2 * priorOffset;
 
     public static final int SRC_PRIOR_MASK = 2 * sourceSampleOffset + 2 * priorOffset + 1;
 
 
     // target samples
-    private static final int[] TRG_PARAMETERS = new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private static final int[] TRG_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
 
     private static final int[] TRG_UNCERTAINTIES = new int[urMatrixOffset];
@@ -82,10 +82,10 @@ public class MergeBrdfOp extends PixelOperator {
     private static final int TRG_GOODNESS_OF_FIT = 4;
     private static final int TRG_PROPORTION_NSAMPLES = 5;
 
-    private String[] parameterBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private String[] parameterBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
-    private String[][] uncertaintyBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
-            [3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private String[][] uncertaintyBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     private String entropyBandName;
     private String relEntropyBandName;
@@ -168,8 +168,8 @@ public class MergeBrdfOp extends PixelOperator {
 
         // parameters
         int index = 0;
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 final double sampleParameterSnow = sourceSamples[index].getDouble();
                 final double sampleParameterNoSnow = sourceSamples[sourceSampleOffset + index].getDouble();
                 final double resultParameters = sampleParameterSnow * proportionNsamplesSnow +
@@ -181,8 +181,8 @@ public class MergeBrdfOp extends PixelOperator {
 
         // uncertainties
         index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 final double sampleUncertaintySnow = sourceSamples[SRC_SNOW_PARAMETERS.length + index].getDouble();
                 final double sampleUncertaintyNoSnow = sourceSamples[sourceSampleOffset + SRC_SNOW_PARAMETERS.length + index].getDouble();
                 final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
@@ -254,9 +254,9 @@ public class MergeBrdfOp extends PixelOperator {
         }
 
         uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             // add bands only for UR triangular matrix
-            for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
@@ -301,14 +301,14 @@ public class MergeBrdfOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) throws OperatorException {
         // BRDF parameters Snow product:
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             SRC_SNOW_PARAMETERS[i] = i;
             configurator.defineSample(SRC_SNOW_PARAMETERS[i], parameterBandNames[i], snowProduct);
         }
 
         int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_SNOW_UNCERTAINTIES[index] = index;
                 configurator.defineSample(SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES[index],
                                           uncertaintyBandNames[i][j], snowProduct);
@@ -330,14 +330,14 @@ public class MergeBrdfOp extends PixelOperator {
                                   goodnessOfFitBandName, snowProduct);
 
         // BRDF parameters NoSnow product:
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             SRC_NOSNOW_PARAMETERS[i] = sourceSampleOffset + i;
             configurator.defineSample(SRC_NOSNOW_PARAMETERS[i], parameterBandNames[i], noSnowProduct);
         }
 
         index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_NOSNOW_UNCERTAINTIES[index] = sourceSampleOffset + index;
                 configurator.defineSample(SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES[index],
                                           uncertaintyBandNames[i][j], noSnowProduct);
@@ -364,18 +364,18 @@ public class MergeBrdfOp extends PixelOperator {
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_MEAN[i][j] = 2 * sourceSampleOffset + AlbedoInversionConstants.numAlbedoParameters * i + j;
+                SRC_PRIOR_MEAN[i][j] = 2 * sourceSampleOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
                 configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
             }
         }
 
-        for (int i = 0; i < AlbedoInversionConstants.numAlbedoParameters; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = 2 * sourceSampleOffset + priorOffset + AlbedoInversionConstants.numAlbedoParameters * i + j;
+                SRC_PRIOR_SD[i][j] = 2 * sourceSampleOffset + priorOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
@@ -385,14 +385,14 @@ public class MergeBrdfOp extends PixelOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) throws OperatorException {
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             TRG_PARAMETERS[i] = i;
             configurator.defineSample(TRG_PARAMETERS[i], parameterBandNames[i]);
         }
 
         int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 TRG_UNCERTAINTIES[index] = index;
                 configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index], uncertaintyBandNames[i][j]);
                 index++;

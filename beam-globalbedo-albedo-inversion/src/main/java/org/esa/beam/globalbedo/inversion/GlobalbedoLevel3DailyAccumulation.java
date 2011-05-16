@@ -1,19 +1,14 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
-import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
-import javax.media.jai.BorderExtender;
 import javax.media.jai.JAI;
-import java.awt.*;
 import java.io.*;
 
 /**
@@ -72,16 +67,17 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         Product accumulationProduct;
         // todo: make final decision
         if (writeBinaryAccumulators) {
+            // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
             String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-            DailyAccumulation2Op accumulationOp = new DailyAccumulation2Op();
+            DailyAccumulationToBinaryOp accumulationOp = new DailyAccumulationToBinaryOp();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();
         } else {
-            DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+            DailyAccumulationToDimapOp accumulationOp = new DailyAccumulationToDimapOp();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationProduct = accumulationOp.getTargetProduct();

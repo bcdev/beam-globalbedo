@@ -32,13 +32,13 @@ public class Accumulator {
      */
     public static Accumulator createForInversion(Sample[] sourceSamples) {
 
-        Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                              3 * AlbedoInversionConstants.numBBDRWaveBands);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
+        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix E = new Matrix(1, 1);
 
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 final int srcIndexMij = InversionOp.SRC_ACCUM_M[i][j];
                 M.set(i, j, sourceSamples[srcIndexMij].getDouble());
             }

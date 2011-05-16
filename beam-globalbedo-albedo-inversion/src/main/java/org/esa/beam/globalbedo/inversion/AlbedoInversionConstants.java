@@ -52,13 +52,16 @@ public class AlbedoInversionConstants {
 
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
 
-    public static final int numBBDRWaveBands = 3;
-    public static final int numAlbedoParameters= 3;  // f0, f1, f2
+    public static final int NUM_BBDR_WAVE_BANDS = 3;
+    public static final int NUM_ALBEDO_PARAMETERS = 3;  // f0, f1, f2
+
+    public static final int NUM_ACCUMULATOR_BANDS = 92;
+
+    public static final int MODIS_TILE_WIDTH = 1200;
+    public static final int MODIS_TILE_HEIGHT = 1200;
 
     // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
 
     public static final double INVALID = -9999.0;
-
-    public static final double HALFLIFE = 11.54;
 }

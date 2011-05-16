@@ -112,13 +112,13 @@ public class GlobalbedoLevel3Inversion extends Operator {
         Product fullAccumulationProduct = null;
         // todo: make a final decision
         if (useBinaryAccumulators) {
-            FullAccumulationJAI2Op jaiOp = new FullAccumulationJAI2Op();
+            FullAccumulationFromBinaryOp jaiOp = new FullAccumulationFromBinaryOp();
             jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
             jaiOp.setParameter("sourceBinaryFilenames", inputProduct.getProductBinaryFilenames());
             jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
             fullAccumulationProduct = jaiOp.getTargetProduct();
         } else {
-            FullAccumulationJAIOp jaiOp = new FullAccumulationJAIOp();
+            FullAccumulationFromDimapOp jaiOp = new FullAccumulationFromDimapOp();
             jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
             jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
             fullAccumulationProduct = jaiOp.getTargetProduct();

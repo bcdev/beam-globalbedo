@@ -18,6 +18,11 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
+ * The daily accumulations are saved as Dimap products.
+ *
+ * todo: for performance reasons, we will probably use binary accumulator files instead od Dimaps in the final version.
+ * Then this class is not needed any more!
+ *
  * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo López Saldaña.
  *
  * @author Olaf Danne
@@ -28,7 +33,7 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
-public class DailyAccumulationOp extends PixelOperator {
+public class DailyAccumulationToDimapOp extends PixelOperator {
 
     private static final int SRC_BB_VIS = 0;
     private static final int SRC_BB_NIR = 1;
@@ -56,21 +61,21 @@ public class DailyAccumulationOp extends PixelOperator {
     private static final int SRC_LAND_MASK = 23;
 
     private static final int[][] TRG_M =
-            new int[3 * AlbedoInversionConstants.numBBDRWaveBands]
-                    [3 * AlbedoInversionConstants.numBBDRWaveBands];
+            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+                    [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     private static final int[] TRG_V =
-            new int[3 * AlbedoInversionConstants.numBBDRWaveBands];
+            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     private static final int TRG_E = 90;
     private static final int TRG_MASK = 91;
 
     private static final int sourceSampleOffset = 30;  // this value must be >= number of bands in a source product
 
-    private String[][] mBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
-            [3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private String[][] mBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
-    private String[] vBandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands];
+    private String[] vBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     @SourceProducts(description = "BBDR source product")
     private Product[] sourceProducts;
@@ -142,8 +147,8 @@ public class DailyAccumulationOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         final Product targetProduct = productConfigurer.getTargetProduct();
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 mBandNames[i][j] = "M_" + i + "" + j;
                 Band band = targetProduct.addBand(mBandNames[i][j], ProductData.TYPE_FLOAT32);
                 band.setNoDataValue(Float.NaN);
@@ -151,7 +156,7 @@ public class DailyAccumulationOp extends PixelOperator {
             }
         }
 
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             vBandNames[i] = "V_" + i;
             Band band = targetProduct.addBand(vBandNames[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
@@ -170,14 +175,14 @@ public class DailyAccumulationOp extends PixelOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) {
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
-                TRG_M[i][j] = 3 * AlbedoInversionConstants.numBBDRWaveBands * i + j;
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                TRG_M[i][j] = 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * i + j;
                 configurator.defineSample(TRG_M[i][j], mBandNames[i][j]);
             }
         }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            TRG_V[i] = 3 * 3 * AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands + i;
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            TRG_V[i] = 3 * 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + i;
             configurator.defineSample(TRG_V[i], vBandNames[i]);
         }
         configurator.defineSample(TRG_E, AlbedoInversionConstants.ACC_E_NAME);
@@ -188,9 +193,9 @@ public class DailyAccumulationOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples,
                                 WritableSample[] targetSamples) {
 
-        Matrix M = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                              3 * AlbedoInversionConstants.numBBDRWaveBands);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
+        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
@@ -213,9 +218,9 @@ public class DailyAccumulationOp extends PixelOperator {
         // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
         if (isLandFilter(sourceSamples, sourceProductIndex) || isSnowFilter(sourceSamples, sourceProductIndex) ||
             isBBDRFilter(sourceSamples, sourceProductIndex) || isSDFilter(sourceSamples, sourceProductIndex)) {
-            final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                            3 * AlbedoInversionConstants.numBBDRWaveBands);
-            final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);
+            final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                            3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+            final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
             final Matrix zeroE = new Matrix(1, 1);
 
             return new Accumulator(zeroM, zeroV, zeroE, 0);
@@ -227,13 +232,13 @@ public class DailyAccumulationOp extends PixelOperator {
         // compute C matrix...
         final double[] correlation = getCorrelation(sourceSamples, sourceProductIndex);
         final double[] SD = getSD(sourceSamples, sourceProductIndex);
-        Matrix C = new Matrix(AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
-        Matrix thisC = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix C = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         int count = 0;
         int cCount = 0;
-        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-            for (int k = j + 1; k < AlbedoInversionConstants.numBBDRWaveBands; k++) {
+        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+            for (int k = j + 1; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
                 if (k == j + 1) {
                     cCount++;
                 }
@@ -244,14 +249,14 @@ public class DailyAccumulationOp extends PixelOperator {
         }
 
         cCount = 0;
-        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
             C.set(cCount, 0, SD[j] * SD[j]);
-            cCount = cCount + AlbedoInversionConstants.numBBDRWaveBands - j;
+            cCount = cCount + AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS - j;
         }
 
         count = 0;
-        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
-            for (int k = j; k < AlbedoInversionConstants.numBBDRWaveBands; k++) {
+        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+            for (int k = j; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
                 thisC.set(j, k, C.get(count, 0));
                 thisC.set(k, j, thisC.get(j, k));
                 count++;
@@ -272,7 +277,7 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private Matrix getBBDR(Sample[] sourceSamples, int sourceProductIndex) {
-        Matrix bbdr = new Matrix(AlbedoInversionConstants.numBBDRWaveBands, 1);
+        Matrix bbdr = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         final double bbVis = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble();
         bbdr.set(0, 0, bbVis);
         final double bbNir = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble();
@@ -291,7 +296,7 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private double[] getCorrelation(Sample[] sourceSamples, int sourceProductIndex) {
-        double[] correlation = new double[AlbedoInversionConstants.numBBDRWaveBands];
+        double[] correlation = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         correlation[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
         correlation[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
         correlation[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
@@ -299,12 +304,12 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, Accumulator accumulator) {
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i, j));
             }
         }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             targetSamples[TRG_V[i]].set(accumulator.getV().get(i, 0));
         }
         targetSamples[TRG_E].set(accumulator.getE().get(0, 0));
@@ -312,8 +317,8 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {
-        Matrix kernels = new Matrix(AlbedoInversionConstants.numBBDRWaveBands,
-                                    3 * AlbedoInversionConstants.numBBDRWaveBands);
+        Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                    3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
@@ -367,7 +372,7 @@ public class DailyAccumulationOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(DailyAccumulationOp.class);
+            super(DailyAccumulationToDimapOp.class);
         }
     }
 

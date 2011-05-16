@@ -103,5 +103,7 @@ public class BbdrConstants {
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
                     "B0", "B2", "B3", "MIR"};
 
+    public static final int MODIS_TILE_WIDTH = 1200;
+    public static final int MODIS_TILE_HEIGHT = 1200;
 }
 

@@ -35,24 +35,24 @@ public class Prior {
      */
     public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor) {
 
-        Matrix C = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                              3 * AlbedoInversionConstants.numBBDRWaveBands);              // 9x9
-        Matrix inverseC = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                     3 * AlbedoInversionConstants.numBBDRWaveBands);       // 9x9
-        Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.numBBDRWaveBands, 1);  // 9x1
+        Matrix C = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);              // 9x9
+        Matrix inverseC = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                     3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);       // 9x9
+        Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);  // 9x1
 
         double mask = 0.0;
         final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;
         double nSamples = sourceSamples[priorIndexNsamples].getDouble();
 
         Matrix priorMean = new Matrix(
-                AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
+                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix priorSD = new Matrix(
-                AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numBBDRWaveBands, 1);
+                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
 
         int index = 0;
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 final int priorIndexMij = InversionOp.SRC_PRIOR_MEAN[i][j];
                 final double m_ij = sourceSamples[priorIndexMij].getDouble();
                 priorMean.set(index, 0, m_ij);
@@ -73,7 +73,7 @@ public class Prior {
             }
         }
 
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands * AlbedoInversionConstants.numAlbedoParameters; i++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
             priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor));
             C.set(i, i, priorSD.get(i, 0) * priorSD.get(i, 0));
         }
@@ -88,8 +88,8 @@ public class Prior {
             } else {
                 index = 0;
                 boolean processPixel = true;
-                for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                    for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                    for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                         if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
                             priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
                             processPixel = false;
@@ -99,12 +99,12 @@ public class Prior {
                     }
                 }
                 if (processPixel) {
-                    final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.numBBDRWaveBands,
-                                                             3 * AlbedoInversionConstants.numBBDRWaveBands);    // 9x9
+                    final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                                             3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);    // 9x9
                     inverseC = cIdentity.inverse();
                     index = 0;
-                    for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                        for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+                    for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                             inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(index, 0));
                             index++;
                         }
@@ -114,8 +114,8 @@ public class Prior {
                 }
             }
             index = 0;
-            for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-                for (int j = 0; j < AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                     inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(index, 0));
                     index++;
                 }

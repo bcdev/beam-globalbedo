@@ -35,11 +35,11 @@ import java.util.logging.Level;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.fullaccjai2",
-        description = "Provides full accumulation of daily accumulators",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
-public class FullAccumulationJAI2Op extends Operator {
+                  description = "Provides full accumulation of daily accumulators",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
+public class FullAccumulationFromBinaryOp extends Operator {
 
     private static final double HALFLIFE = 11.54;
 
@@ -93,9 +93,9 @@ public class FullAccumulationJAI2Op extends Operator {
         rasterWidth = sourceProduct0.getSceneRasterWidth();
         rasterHeight = sourceProduct0.getSceneRasterHeight();
         Product targetProduct = new Product(getId(),
-                getClass().getName(),
-                rasterWidth,
-                rasterHeight);
+                                            getClass().getName(),
+                                            rasterWidth,
+                                            rasterHeight);
         targetProduct.setStartTime(sourceProduct0.getStartTime());
         targetProduct.setEndTime(sourceProduct0.getEndTime());
         targetProduct.setPreferredTileSize(100, 100);
@@ -105,7 +105,7 @@ public class FullAccumulationJAI2Op extends Operator {
 
         int fileIndex = 0;
         daysToTheClosestSample = new int[rasterWidth][rasterHeight];
-        int[][] dayOfClosestSampleOld;
+//        int[][] dayOfClosestSampleOld;
 
         sumMatrices = new float[bandNames.length][rasterWidth][rasterHeight];
         mask = new float[rasterWidth][rasterHeight];
@@ -113,10 +113,9 @@ public class FullAccumulationJAI2Op extends Operator {
         for (String sourceFileName : sourceBinaryFilenames) {
             System.out.println("sourceFileName = " + sourceFileName);
 
-            getDailyAccFromBinaryFileAndAccumulate(sourceFileName, fileIndex); // accumulates matrices and extracts mask array
+            getDailyAccFromBinaryFileAndAccumulate(sourceFileName,
+                                                   fileIndex); // accumulates matrices and extracts mask array
             BeamLogManager.getSystemLogger().log(Level.ALL, "Accumulating file " + sourceFileName + " ...");
-            dayOfClosestSampleOld = daysToTheClosestSample;
-            daysToTheClosestSample = updateDoYOfClosestSampleArray(dayOfClosestSampleOld, fileIndex);
 
             fileIndex++;
         }
@@ -143,12 +142,6 @@ public class FullAccumulationJAI2Op extends Operator {
                     targetTile.setSample(x, y, daysToTheClosestSample[x][y]);
                 }
             }
-        } else if (targetBand.getName().equals(AlbedoInversionConstants.ACC_MASK_NAME)) {
-            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
-                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    targetTile.setSample(x, y, mask[x][y]);
-                }
-            }
         } else {
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
                 for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
@@ -165,7 +158,7 @@ public class FullAccumulationJAI2Op extends Operator {
         int[][] doyOfClosestSample = new int[rasterWidth][rasterHeight];
         for (int i = 0; i < rasterWidth; i++) {
             for (int j = 0; j < rasterHeight; j++) {
-                int doy = 0;
+                int doy;
                 final int bbdrDaysToDoY = Math.abs(allDoys[productIndex]) + 1;
                 if (productIndex == 0) {
                     if (mask[i][j] > 0.0) {
@@ -204,9 +197,8 @@ public class FullAccumulationJAI2Op extends Operator {
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-        int nRead, nGet;
+        int nRead;
         try {
-            int index = 0;
             int ii = 0;
             int jj = 0;
             int kk = 0;
@@ -217,15 +209,12 @@ public class FullAccumulationJAI2Op extends Operator {
                 bb.position(0);
                 bb.limit(nRead);
                 while (bb.hasRemaining()) {
-                    nGet = Math.min(bb.remaining(), size);
+                    final float value = bb.getFloat();
                     // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...
-//                    if (ii == bandNames.length - 1) {
-//                        mask[jj][kk] += weight[fileIndex] * bb.getFloat();
-//                    } else {
-//                        sumMatrices[ii][jj][kk] += weight[fileIndex] * bb.getFloat();
-//                    }
-                    sumMatrices[ii][jj][kk] += weight[fileIndex] * bb.getFloat();
-                    mask[jj][kk] = sumMatrices[bandNames.length - 1][jj][kk];
+                    if (ii == bandNames.length - 1) {
+                        mask[jj][kk] = value;
+                    }
+                    sumMatrices[ii][jj][kk] += weight[fileIndex] * value;
                     // find the right indices for sumMatrices array...
                     kk++;
                     if (kk == rasterHeight) {
@@ -236,12 +225,16 @@ public class FullAccumulationJAI2Op extends Operator {
                             jj = 0;
                         }
                     }
-
                 }
                 bb.clear();
             }
             ch.close();
             f.close();
+
+            // now update doy of closest sample...
+            int[][] dayOfClosestSampleOld = daysToTheClosestSample;
+            daysToTheClosestSample = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
+                                                                   fileIndex);
         } catch (IOException e) {
             // todo
             e.printStackTrace();
@@ -251,7 +244,7 @@ public class FullAccumulationJAI2Op extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(FullAccumulationJAI2Op.class);
+            super(FullAccumulationFromBinaryOp.class);
         }
     }
 

@@ -95,7 +95,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: compute albedo from merged BRDF product...
-        AlbedoOp albedoOp = new AlbedoOp();
+        BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
         albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
         albedoOp.setParameter("doy", doy);
         setTargetProduct(albedoOp.getTargetProduct());

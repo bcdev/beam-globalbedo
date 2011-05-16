@@ -30,6 +30,10 @@ import java.util.logging.Level;
 /**
  * Operator implementing the full accumulation part of python breadboard. Uses JAI image multiplication/addition.
  * <p/>
+ *
+ * todo: for performance reasons, we will probably use binary accumulator files instead od Dimaps in the final version.
+ * Then this class is not needed any more!
+ *
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
  *
  * @author Olaf Danne
@@ -40,7 +44,7 @@ import java.util.logging.Level;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")
-public class FullAccumulationJAIOp extends Operator {
+public class FullAccumulationFromDimapOp extends Operator {
 
     private static final double HALFLIFE = 11.54;
 
@@ -71,7 +75,6 @@ public class FullAccumulationJAIOp extends Operator {
         double[] weight = new double[sourceFilenames.length];
         for (int j = 0; j < sourceFilenames.length; j++) {
             weight[j] = Math.exp(-1.0 * Math.abs(allDoys[j]) / HALFLIFE);
-            System.out.println("i, j, weight = " + j + ", " + weight[j]);
         }
 
         int[] bandDataTypes = new int[bandNames.length];
@@ -101,7 +104,7 @@ public class FullAccumulationJAIOp extends Operator {
 
         int fileIndex = 0;
         daysToTheClosestSample = new int[rasterWidth][rasterHeight];
-        int[][] dayOfClosestSampleOld;
+        int[][] dayOfClosestSampleOld = new int[rasterWidth][rasterHeight];
         for (String sourceFileName : sourceFilenames) {
             System.out.println("sourceFileName = " + sourceFileName);
             Product product = null;

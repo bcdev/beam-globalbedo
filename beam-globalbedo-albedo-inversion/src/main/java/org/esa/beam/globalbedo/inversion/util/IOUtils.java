@@ -201,7 +201,7 @@ public class IOUtils {
 
             String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
-            // todo: add leap year condition
+            // todo: add leap year condition  (missing in breadboard!)
             albedoInputProductDoys[productIndex] = Integer.parseInt(
                     thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
@@ -375,18 +375,18 @@ public class IOUtils {
     }
 
     public static String[] getDailyAccumulatorBandNames() {
-        String[] bandNames = new String[3 * AlbedoInversionConstants.numBBDRWaveBands *
-                3 * AlbedoInversionConstants.numAlbedoParameters +
-                3 * AlbedoInversionConstants.numBBDRWaveBands + 2];
+        String[] bandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
+                3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS +
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + 2];
 
         int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 bandNames[index++] = "M_" + i + "" + j;
             }
         }
 
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[index++] = "V_" + i;
         }
 
@@ -397,11 +397,11 @@ public class IOUtils {
     }
 
     public static String[] getInversionParameterBandNames() {
-        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands *
-                AlbedoInversionConstants.numAlbedoParameters];
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
+                AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         int index = 0;
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.numAlbedoParameters; j++) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 bandNames[index] = "mean_" + waveBandsOffsetMap.get(i) + "_f" + j;
                 index++;
             }
@@ -410,11 +410,11 @@ public class IOUtils {
     }
 
     public static String[][] getInversionUncertaintyBandNames() {
-        String bandNames[][] = new String[3 * AlbedoInversionConstants.numBBDRWaveBands]
-                [3 * AlbedoInversionConstants.numAlbedoParameters];
-        for (int i = 0; i < 3 * AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             // only UR triangle matrix
-            for (int j = i; j < 3 * AlbedoInversionConstants.numBBDRWaveBands; j++) {
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
                         waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
@@ -424,96 +424,38 @@ public class IOUtils {
     }
 
     public static String[] getAlbedoDhrBandNames() {
-        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[i] = "DHR_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
 
     public static String[] getAlbedoBhrBandNames() {
-        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[i] = "BHR_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
 
     public static String[] getAlbedoDhrSigmaBandNames() {
-        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[i] = "DHR_sigma" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
 
     public static String[] getAlbedoBhrSigmaBandNames() {
-        String bandNames[] = new String[AlbedoInversionConstants.numBBDRWaveBands];
-        for (int i = 0; i < AlbedoInversionConstants.numBBDRWaveBands; i++) {
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
 
-    public static double[] readBinaryDoubleArray(File file, int size) {
-        FileInputStream f = null;
-        try {
-            f = new FileInputStream(file);
-        } catch (FileNotFoundException e) {
-            // todo
-            e.printStackTrace();
-        }
-        FileChannel ch = f.getChannel();
-        ByteBuffer bb = ByteBuffer.allocateDirect(size);
-        double[] darray = new double[size];
-        int nRead, nGet;
-        int index = 0;
-        try {
-            while ((nRead = ch.read(bb)) != -1) {
-                if (nRead == 0) {
-                    continue;
-                }
-                bb.position(0);
-                bb.limit(nRead);
-                while (bb.hasRemaining()) {
-                    nGet = Math.min(bb.remaining(), size);
-                    darray[index] = bb.getDouble();
-                    index++;
-                }
-                bb.clear();
-            }
-        } catch (IOException e) {
-            // todo
-            e.printStackTrace();
-        }
-
-        return darray;
-    }
-
-    public static void writeBinaryDoubleArray3D(File file, double[][][] values) {
-        try {
-            // Create an output stream to the file.
-            FileOutputStream file_output = new FileOutputStream(file);
-            // Wrap the FileOutputStream with a DataOutputStream
-            DataOutputStream data_out = new DataOutputStream(file_output);
-
-            // Write the data to the file in an integer/double pair
-            for (int i = 0; i < values.length; i++) {
-                for (int j = 0; j < values[i].length; j++) {
-                    for (int k = 0; k < values[i][j].length; k++) {
-                        data_out.writeDouble(values[i][j][k]);
-                    }
-                }
-            }
-
-            // Close file when finished with it..
-            file_output.close();
-        } catch (IOException e) {
-            System.out.println("IO exception = " + e);
-        }
-    }
-
-    public static void writeDoubleArrayToFileWithByteBuffer(File file, double[][][] values) {
+    public static void writeDoubleArrayToFile(File file, double[][][] values) {
         int index = 0;
         try {
             // Create an output stream to the file.
@@ -548,7 +490,7 @@ public class IOUtils {
         }
     }
 
-    public static void writeFloatArrayToFileWithByteBuffer(File file, float[][][] values) {
+    public static void writeFloatArrayToFile(File file, float[][][] values) {
         int index = 0;
         try {
             // Create an output stream to the file.
@@ -559,7 +501,7 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
-            final int size = dim1 * dim2 * dim3 * Float.SIZE/8;
+            final int size = dim1 * dim2 * dim3 * 4;
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
             for (int i = 0; i < dim1; i++) {
@@ -584,7 +526,7 @@ public class IOUtils {
     }
 
 
-    public static double[] readDoubleArrayFromFileWithByteBuffer(File file, int dim1, int dim2, int dim3) {
+    public static double[] readDoubleArrayFromFile(File file, int dim1, int dim2, int dim3) {
         final int size = dim1 * dim2 * dim3;
         double[] result = new double[dim1 * dim2 * dim3];
         try {
@@ -617,7 +559,7 @@ public class IOUtils {
         return result;
     }
 
-    public static float[] readFloatArrayFromFileWithByteBuffer(File file, int dim1, int dim2, int dim3) {
+    public static float[] readFloatArrayFromFile(File file, int dim1, int dim2, int dim3) {
         final int size = dim1 * dim2 * dim3;
         float[] result = new float[dim1 * dim2 * dim3];
         try {
@@ -636,7 +578,6 @@ public class IOUtils {
                 bb.position(0);
                 bb.limit(nRead);
                 while (bb.hasRemaining()) {
-                    int nGet = Math.min(bb.remaining(), size);
                     result[index] = bb.getFloat();
                     index++;
                 }
@@ -649,7 +590,6 @@ public class IOUtils {
         }
         return result;
     }
-
 
     private static boolean isLeapYear(int year) {
         if (year < 0) {

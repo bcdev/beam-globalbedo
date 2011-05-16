@@ -151,8 +151,8 @@ public class GlobalbedoLevel2 extends Operator {
         repro.setParameter("orientation", 0.0);
         repro.setParameter("pixelSizeX", 926.6254330558);
         repro.setParameter("pixelSizeY", 926.6254330558);
-        repro.setParameter("width", 1200);
-        repro.setParameter("height", 1200);
+        repro.setParameter("width", BbdrConstants.MODIS_TILE_WIDTH);
+        repro.setParameter("height", BbdrConstants.MODIS_TILE_HEIGHT);
         repro.setParameter("orthorectify", true);
         repro.setParameter("noDataValue", 0.0);
         repro.setSourceProduct(bbdrProduct);

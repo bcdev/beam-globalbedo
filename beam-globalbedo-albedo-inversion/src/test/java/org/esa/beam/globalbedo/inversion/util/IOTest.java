@@ -196,48 +196,8 @@ public class IOTest extends TestCase {
         return file;
     }
 
-
-//    public void testWriteBinaryFileFast() throws Exception {
-//
-//        // write double array to binary file...
-//        final int dim1 = 92;
-//        final int dim2 = 1200;
-//        final int dim3 = 1200;
-//        double[][][] testArray = new double[dim1][dim2][dim3];
-//
-//        for (int i = 0; i < dim1; i++) {
-//            for (int j = 0; j < dim2; j++) {
-//                for (int k = 0; k < dim3; k++) {
-//                    testArray[i][j][k] = i * 1.0 + j * 2.0 + k * 3.0;
-//                }
-//            }
-//        }
-//
-//        long time1 = System.currentTimeMillis();
-//        final File file = setTestfile("testDailyAccBin.acc");
-//        IOUtils.writeBinaryDoubleArray3D(file, testArray);
-//        long time2 = System.currentTimeMillis();
-//        System.out.println("time 1: " + (time2 - time1) / 1000.0);
-//
-//        // read binary array back from file...
-//        long time3 = System.currentTimeMillis();
-//        double[] result = IOUtils.readBinaryDoubleArray(file, dim1 * dim2 * dim3);
-//        long time4 = System.currentTimeMillis();
-//        System.out.println("time 2: " + (time4 - time3) / 1000.0);
-//        assertEquals(dim1 * dim2 * dim3, result.length);
-//        int index = 0;
-//        for (int i = 0; i < dim1; i++) {
-//            for (int j = 0; j < dim2; j++) {
-//                for (int k = 0; k < dim3; k++) {
-//                    assertEquals(i * 1.0 + j * 2.0 + k * 3.0, result[index++]);
-//                }
-//            }
-//        }
-//    }
-
     public void testByteBufferWriteRead() throws Exception {
 
-//        final File file = new File("C:/Users/olafd/temp/testDailyAccBin.acc");
         final File file = setTestfile("testDailyAccBin.acc");
         if (!file.exists()) {
             file.createNewFile();
@@ -258,13 +218,13 @@ public class IOTest extends TestCase {
 
         long time1 = System.currentTimeMillis();
 
-        IOUtils.writeDoubleArrayToFileWithByteBuffer(file, testArray);
+        IOUtils.writeDoubleArrayToFile(file, testArray);
         long time2 = System.currentTimeMillis();
         System.out.println("time for writing doubles: " + (time2 - time1) / 1000.0);
 
         // read 3D binary array back from file...
         long time3 = System.currentTimeMillis();
-        double[] result = IOUtils.readDoubleArrayFromFileWithByteBuffer(file, dim1, dim2, dim3);
+        double[] result = IOUtils.readDoubleArrayFromFile(file, dim1, dim2, dim3);
         long time4 = System.currentTimeMillis();
         System.out.println("time for reading doubles: " + (time4 - time3) / 1000.0);
         assertEquals(dim1 * dim2 * dim3, result.length);
@@ -300,13 +260,13 @@ public class IOTest extends TestCase {
 
         long time1 = System.currentTimeMillis();
 
-        IOUtils.writeFloatArrayToFileWithByteBuffer(file, testArray);
+        IOUtils.writeFloatArrayToFile(file, testArray);
         long time2 = System.currentTimeMillis();
         System.out.println("time for writing floats: " + (time2 - time1) / 1000.0);
 
         // read 3D binary array back from file...
         long time3 = System.currentTimeMillis();
-        float[] result = IOUtils.readFloatArrayFromFileWithByteBuffer(file, dim1, dim2, dim3);
+        float[] result = IOUtils.readFloatArrayFromFile(file, dim1, dim2, dim3);
         long time4 = System.currentTimeMillis();
         System.out.println("time for reading floats: " + (time4 - time3) / 1000.0);
         assertEquals(dim1 * dim2 * dim3, result.length);
