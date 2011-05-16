@@ -237,14 +237,15 @@ public class IOTest extends TestCase {
 
     public void testByteBufferWriteRead() throws Exception {
 
-        final File file = new File("C:/Users/olafd/temp/testDailyAccBin.acc");
+//        final File file = new File("C:/Users/olafd/temp/testDailyAccBin.acc");
+        final File file = setTestfile("testDailyAccBin.acc");
         if (!file.exists()) {
             file.createNewFile();
         }
 //        // write double array to binary file...
         final int dim1 = 92;
-        final int dim2 = 600;
-        final int dim3 = 600;
+        final int dim2 = 120;
+        final int dim3 = 120;
         double[][][] testArray = new double[dim1][dim2][dim3];
 
         for (int i = 0; i < dim1; i++) {
@@ -279,14 +280,14 @@ public class IOTest extends TestCase {
 
     public void testByteBufferWriteReadFloats() throws Exception {
 
-        final File file = new File("C:/Users/olafd/temp/testDailyAccBinFloats.acc");
+        final File file = setTestfile("testDailyAccBinFloats.acc");
         if (!file.exists()) {
             file.createNewFile();
         }
 //        // write double array to binary file...
         final int dim1 = 92;
-        final int dim2 = 600;
-        final int dim3 = 600;
+        final int dim2 = 120;
+        final int dim3 = 120;
         float[][][] testArray = new float[dim1][dim2][dim3];
 
         for (int i = 0; i < dim1; i++) {

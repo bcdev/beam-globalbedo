@@ -524,9 +524,7 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
-            final int size = 8 * dim1 * dim2 * dim3;
-            System.out.println("size, dims = " + size + ", " + dim1 + ", " + dim2 + ", " + dim3);
-//            final int size = 8 * 92*1200*1200;
+            final int size =  dim1 * dim2 * dim3 * Double.SIZE/8;
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
             for (int i = 0; i < dim1; i++) {
@@ -561,12 +559,9 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
-            final int size = 4 * dim1 * dim2 * dim3;
-            System.out.println("size, dims = " + size + ", " + dim1 + ", " + dim2 + ", " + dim3);
-//            final int size = 8 * 92*1200*1200;
+            final int size = dim1 * dim2 * dim3 * Float.SIZE/8;
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-            System.out.println("values[0][146][223] = " + values[0][146][223]);
             for (int i = 0; i < dim1; i++) {
                 for (int j = 0; j < dim2; j++) {
                     for (int k = 0; k < dim3; k++) {
