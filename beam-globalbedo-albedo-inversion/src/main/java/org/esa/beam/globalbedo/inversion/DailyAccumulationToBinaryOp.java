@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
@@ -25,6 +26,11 @@ import java.io.File;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@OperatorMetadata(alias = "ga.inversion.dailyaccbinary",
+                  description = "Provides daily accumulation of single BBDR observations",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class DailyAccumulationToBinaryOp extends PixelOperator {
 
     private static final int SRC_BB_VIS = 0;

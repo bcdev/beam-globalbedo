@@ -9,6 +9,7 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -39,7 +40,7 @@ import java.util.logging.Level;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.fullaccjai",
+@OperatorMetadata(alias = "ga.inversion.fullaccdimap",
         description = "Provides full accumulation of daily accumulators",
         authors = "Olaf Danne",
         version = "1.0",
@@ -203,5 +204,12 @@ public class FullAccumulationFromDimapOp extends Operator {
             }
         }
         return doyOfClosestSample;
+    }
+
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(FullAccumulationFromDimapOp.class);
+        }
     }
 }

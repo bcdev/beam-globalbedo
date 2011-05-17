@@ -34,7 +34,7 @@ import java.util.logging.Level;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.fullaccjai2",
+@OperatorMetadata(alias = "ga.inversion.fullaccbinary",
                   description = "Provides full accumulation of daily accumulators",
                   authors = "Olaf Danne",
                   version = "1.0",
