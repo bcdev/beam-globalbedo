@@ -46,7 +46,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 1: we need the SNOW Prior file for given DoY...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct;
         try {

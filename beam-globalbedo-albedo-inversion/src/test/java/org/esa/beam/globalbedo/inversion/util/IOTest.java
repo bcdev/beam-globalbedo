@@ -53,17 +53,17 @@ public class IOTest extends TestCase {
 
     public void testGetPriorProductNames() throws Exception {
         String[] priorDirContent = new String[]{
-                "Kernels_105_005_h18v04_backGround_NoSnow.bin",
-                "Kernels_105_005_h18v04_backGround_NoSnow.hdr",
-                "Kernels_117_005_h18v04_backGround_NoSnow.bin",
-                "Kernels_117_005_h18v04_backGround_NoSnow.hdr",
-                "Kernels_129_005_h18v04_backGround_NoSnow.bin",
-                "Kernels_129_005_h18v04_backGround_NoSnow.hdr",
-                "Kernels_136_005_h18v04_backGround_Snow.bin",
-                "Kernels_148_005_h18v04_backGround_Snow.bin",
-                "Kernels_160_005_h18v04_backGround_Snow.bin",
-                "Kernels_136_005_h18v04_backGround_Snow.hdr",
-                "Kernels_148_005_h18v04_backGround_Snow.hdr",
+                "Kernels.105.005.h18v04.backGround.NoSnow.bin",
+                "Kernels.105.005.h18v04.backGround.NoSnow.hdr",
+                "Kernels.117.005.h18v04.backGround.NoSnow.bin",
+                "Kernels.117.005.h18v04.backGround.NoSnow.hdr",
+                "Kernels.129.005.h18v04.backGround.NoSnow.bin",
+                "Kernels.129.005.h18v04.backGround.NoSnow.hdr",
+                "Kernels.136.005.h18v04.backGround.Snow.bin",
+                "Kernels.148.005.h18v04.backGround.Snow.bin",
+                "Kernels.160.005.h18v04.backGround.Snow.bin",
+                "Kernels.136.005.h18v04.backGround.Snow.hdr",
+                "Kernels.148.005.h18v04.backGround.Snow.hdr",
                 "blubb.txt",
                 "bla.dat"
         };
@@ -71,9 +71,9 @@ public class IOTest extends TestCase {
         List<String> priorProductNames = IOUtils.getPriorProductNames(priorDirContent, false);
         assertNotNull(priorProductNames);
         assertEquals(3, priorProductNames.size());
-        assertEquals("Kernels_105_005_h18v04_backGround_NoSnow.hdr", priorProductNames.get(0));
-        assertEquals("Kernels_117_005_h18v04_backGround_NoSnow.hdr", priorProductNames.get(1));
-        assertEquals("Kernels_129_005_h18v04_backGround_NoSnow.hdr", priorProductNames.get(2));
+        assertEquals("Kernels.105.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(0));
+        assertEquals("Kernels.117.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(1));
+        assertEquals("Kernels.129.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(2));
     }
 
     public void testGetInversionTargetFileName() throws Exception {

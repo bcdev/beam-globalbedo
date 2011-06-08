@@ -59,9 +59,9 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator + "java" + File.separator);
         } else {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator + "java" + File.separator);
         }
 
         Product accumulationProduct;

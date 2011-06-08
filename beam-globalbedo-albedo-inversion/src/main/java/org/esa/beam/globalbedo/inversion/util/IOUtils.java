@@ -102,7 +102,7 @@ public class IOUtils {
         }
 
         for (String priorFileName : snowFilteredPriorList) {
-            if (priorFileName.startsWith("Kernels_" + doyString)) {
+            if (priorFileName.startsWith("Kernels." + doyString)) {
                 String sourceProductFileName = priorDir + File.separator + priorFileName;
                 Product product = ProductIO.readProduct(sourceProductFileName);
                 return product;
@@ -149,7 +149,7 @@ public class IOUtils {
 
         List<String> snowFilteredPriorList = new ArrayList<String>();
         for (String s : priorFiles) {
-            if ((computeSnow && s.endsWith("_Snow.hdr")) || (!computeSnow && s.endsWith("_NoSnow.hdr"))) {
+            if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr"))) {
                 snowFilteredPriorList.add(s);
             }
         }

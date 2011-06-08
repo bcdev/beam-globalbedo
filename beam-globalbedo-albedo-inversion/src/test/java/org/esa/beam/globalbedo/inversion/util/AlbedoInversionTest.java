@@ -175,6 +175,11 @@ public class AlbedoInversionTest extends TestCase {
         sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
         assertEquals(18.2188, sunZenith, 0.3);
 
+        doy = 129;
+        geoPos = new GeoPos(50.0f, 0.0f);
+        sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
+        assertEquals(32.823, sunZenith, 0.3);
+
         doy = 289;
         geoPos = new GeoPos(85.3958f, -178.5f);
         sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);

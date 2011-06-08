@@ -44,7 +44,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
-    @Parameter(defaultValue = "false", description = "Use binary accumulator files instead of dimap (to be decided)")
+    @Parameter(defaultValue = "true", description = "Use binary accumulator files instead of dimap (to be decided)")
     private boolean useBinaryAccumulators;
 
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
@@ -61,7 +61,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         // STEP 1: get Prior input file...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000_java";
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct;
         try {
