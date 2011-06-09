@@ -36,6 +36,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "001", description = "DoY")
     private int doy;
 
+    @Parameter(defaultValue = "false", description = "Write merged BRDF product only (no albedo compuation)")
+    private boolean mergedProductOnly;
+
 
     private Logger logger;
 
@@ -46,7 +49,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 1: we need the SNOW Prior file for given DoY...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+                                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct;
         try {
@@ -81,12 +84,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
             brdfMergedProduct = mergeBrdfOp.getTargetProduct();
         } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
             logger.log(Level.WARNING, "Found only 'Snow' BRDF product for Year/Doy: " +
-                                        Integer.toString(year) + "/" + Integer.toString(doy));
+                                      Integer.toString(year) + "/" + Integer.toString(doy));
             // only use Snow product...
             brdfMergedProduct = brdfSnowProduct;
         } else if (brdfSnowProduct == null && brdfNoSnowProduct != null) {
             logger.log(Level.WARNING, "Found only 'Snow' BRDF product for Year/Doy: " +
-                                        Integer.toString(year) + "/" + Integer.toString(doy));
+                                      Integer.toString(year) + "/" + Integer.toString(doy));
             // only use NoSnow product...
             brdfMergedProduct = brdfNoSnowProduct;
         } else {
@@ -94,11 +97,15 @@ public class GlobalbedoLevel3Albedo extends Operator {
                                         Integer.toString(year) + "/" + Integer.toString(doy));
         }
 
-        // STEP 2: compute albedo from merged BRDF product...
-        BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
-        albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
-        albedoOp.setParameter("doy", doy);
-        setTargetProduct(albedoOp.getTargetProduct());
+        if (mergedProductOnly) {
+            setTargetProduct(brdfMergedProduct);
+        } else {
+            // STEP 2: compute albedo from merged BRDF product...
+            BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
+            albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
+            albedoOp.setParameter("doy", doy);
+            setTargetProduct(albedoOp.getTargetProduct());
+        }
 
         System.out.println("done");
     }

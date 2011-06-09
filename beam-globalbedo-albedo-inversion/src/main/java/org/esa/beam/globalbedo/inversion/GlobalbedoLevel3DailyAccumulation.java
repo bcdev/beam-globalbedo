@@ -51,19 +51,15 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
-        // STEP 2: accumulate all optimal estimations M, V, E as obtained from single observation files:
-        // M_tot(DoY) = sum(M(obs[i]))
-        // V_tot(DoY) = sum(V(obs[i]))
-        // E_tot(DoY) = sum(E(obs[i]))
-
         String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator + "java" + File.separator);
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
         } else {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator + "java" + File.separator);
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
 
+        // STEP 2: do accumulation, write either to binary or dimap file
         Product accumulationProduct;
         // todo: make final decision
         if (writeBinaryAccumulators) {

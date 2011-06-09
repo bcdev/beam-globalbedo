@@ -113,8 +113,8 @@ public class IOUtils {
     }
 
     public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
-                                                     String sourceProductFileName) throws IOException {
-        Product geoCodingReferenceProduct = ProductIO.readProduct(sourceProductFileName);
+                                                     Product bbdrProduct) throws IOException {
+        Product geoCodingReferenceProduct = bbdrProduct;
         ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
         double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
         double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
@@ -174,7 +174,7 @@ public class IOUtils {
                                                     int wings,
                                                     boolean computeSnow) throws IOException {
 
-        final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, false, doy, year,
+        final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
                 tile,
                 wings,
                 computeSnow);
@@ -185,12 +185,14 @@ public class IOUtils {
         int[] albedoInputProductYears = new int[albedoInputProductList.size()];
 
         int productIndex = 0;
+
         for (String albedoInputProductName : albedoInputProductList) {
 
             String productYearRootDir;
-            // e.g. get '2006' from 'matrices_2006_xxx.dim'...
+            // e.g. get '2006' from 'matrices_2006_doy.dim'...
             final String thisProductYear = albedoInputProductName.substring(9, 13);
-            final String thisProductDoy = albedoInputProductName.substring(14, 17);
+//            final String thisProductDoy = albedoInputProductName.substring(14, 17);
+            final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
             if (computeSnow) {
                 productYearRootDir = accumulatorRootDir.concat(
                         File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
@@ -295,21 +297,17 @@ public class IOUtils {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only filenames like 'matrices_2005_123.dim'...
+                // accept only filenames like 'matrices_2005123.dim', 'matrices_2005123.bin'...
                 if (isBinaryFiles) {
                     return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
                 } else {
-                    return (name.length() == 21 && name.startsWith("matrices") && name.endsWith("dim"));
+                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("dim"));
                 }
             }
         };
 
         final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
 
-        int filenameOffset = 0;
-        if (!isBinaryFiles) {
-            filenameOffset++;
-        }
         doy = doy + 8; // 'MODIS day'
 
         // fill the name list year by year...
@@ -330,7 +328,7 @@ public class IOUtils {
                         // check the 'wings' condition...
                         try {
                             final int dayOfYear = Integer.parseInt(
-                                    s.substring(13 + filenameOffset, 16 + filenameOffset));
+                                    s.substring(13, 16));
                             // todo: consider leap year condition (not done in the breadboard!!)
                             //    # Left wing
                             if (365 + (doy - wings) <= 366) {

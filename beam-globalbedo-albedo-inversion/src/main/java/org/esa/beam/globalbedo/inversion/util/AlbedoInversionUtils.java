@@ -252,7 +252,7 @@ public class AlbedoInversionUtils {
      *
      * @param geoPos - geoposition
      * @param doy - day of year
-     * @return  sza
+     * @return  sza - in degrees!!
      */
     public static double computeSza(GeoPos geoPos, int doy) {
 
@@ -262,12 +262,12 @@ public class AlbedoInversionUtils {
         // # To emulate MODIS products, set fixed LST = 12.00
         final double LST = 12.0;
         longitude *= MathUtils.DTOR;
-        // # Now we can calculate the Sun Zenith Angle (SZA):
+        // # Now we can calculate the Sun Zenith Angle (SZArad):
         final double h = (12.0 - (LST)) / 12.0 * Math.PI;
         final double delta = -23.45 * (Math.PI/180.0) * Math.cos (2 * Math.PI/365.0 * (doy+10));
-        double SZA = Math.acos(Math.sin(latitude) * Math.sin(delta) + Math.cos(latitude) * Math.cos(delta) * Math.cos(h));
+        double SZArad = Math.acos(Math.sin(latitude) * Math.sin(delta) + Math.cos(latitude) * Math.cos(delta) * Math.cos(h));
 
-        final double SZArad = SZA * MathUtils.RTOD;
-        return SZArad;
+        final double SZAdeg = SZArad * MathUtils.RTOD;
+        return SZAdeg;
     }
 }

@@ -88,13 +88,22 @@ public class GlobalbedoLevel3Inversion extends Operator {
             logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
         }
 
-        // STEP 3: we need to reproject the priors for further use...
+        // STEP 3: get BBDR product list...
+        Product[] bbdrProducts;
+        final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
+        try {
+            bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
+        } catch (IOException e) {
+            throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
+        }
+
+        // STEP 4: we need to reproject the priors for further use...
         Product reprojectedPriorProduct = null;
         if (usePrior) {
             try {
                 if (inputProduct != null) {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            inputProduct.getProductFilenames()[0]);
+                            bbdrProducts[0]);
                 } else {
                     throw new OperatorException("No accumulator input products available - cannot proceed.");
                 }
@@ -103,16 +112,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
         }
 
-//        for (int i = 0; i < inputProduct.getProductDoys().length; i++) {
-//            System.out.println("allDoys   = " + i + ", " + inputProduct.getProductDoys()[i]);
-//            System.out.println("filenames = " + i + ", " + inputProduct.getProductFilenames()[i]);
-//        }
-
         // STEP 4: full accumulation
         Product fullAccumulationProduct = null;
         // todo: make a final decision
         if (useBinaryAccumulators) {
             FullAccumulationFromBinaryOp jaiOp = new FullAccumulationFromBinaryOp();
+            jaiOp.setSourceProduct("bbdrReferenceProduct", bbdrProducts[0]);
             jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
             jaiOp.setParameter("sourceBinaryFilenames", inputProduct.getProductBinaryFilenames());
             jaiOp.setParameter("allDoys", inputProduct.getProductDoys());

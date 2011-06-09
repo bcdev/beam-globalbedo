@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -48,8 +49,11 @@ public class FullAccumulationFromBinaryOp extends Operator {
     private int rasterWidth;
     private int rasterHeight;
 
-    @Parameter(description = "Source filenames")
-    private String[] sourceFilenames;
+    @SourceProduct(description = "BBDR reference product")
+    private Product bbdrReferenceProduct;
+
+//    @Parameter(description = "Source filenames")
+//    private String[] sourceFilenames;
 
     @Parameter(description = "Source binary filenames")
     private String[] sourceBinaryFilenames;
@@ -71,18 +75,18 @@ public class FullAccumulationFromBinaryOp extends Operator {
         // todo: if we get the data from the binary files, we do not need the dimap source products any more.
         // --> set band names etc. as constants
         // -- BUT where to get TPG and geocoding from?? maybe from first BBDR file of that day, or sth.
-        Product sourceProduct0 = null;
-        try {
-            sourceProduct0 = ProductIO.readProduct(new File(sourceFilenames[0]));
-        } catch (IOException e) {
-            // todo
-            e.printStackTrace();
-        }
+//        Product sourceProduct0 = null;
+//        try {
+//            sourceProduct0 = ProductIO.readProduct(new File(sourceFilenames[0]));
+//        } catch (IOException e) {
+//            // todo
+//            e.printStackTrace();
+//        }
 
         bandNames = IOUtils.getDailyAccumulatorBandNames();
 
-        weight = new float[sourceFilenames.length];
-        for (int j = 0; j < sourceFilenames.length; j++) {
+        weight = new float[sourceBinaryFilenames.length];
+        for (int j = 0; j < sourceBinaryFilenames.length; j++) {
             weight[j] = (float) Math.exp(-1.0 * Math.abs(allDoys[j]) / HALFLIFE);
         }
 
@@ -90,18 +94,18 @@ public class FullAccumulationFromBinaryOp extends Operator {
         for (int i = 0; i < bandDataTypes.length; i++) {
             bandDataTypes[i] = ProductData.TYPE_FLOAT32;
         }
-        rasterWidth = sourceProduct0.getSceneRasterWidth();
-        rasterHeight = sourceProduct0.getSceneRasterHeight();
+        rasterWidth = bbdrReferenceProduct.getSceneRasterWidth();
+        rasterHeight = bbdrReferenceProduct.getSceneRasterHeight();
         Product targetProduct = new Product(getId(),
                                             getClass().getName(),
                                             rasterWidth,
                                             rasterHeight);
-        targetProduct.setStartTime(sourceProduct0.getStartTime());
-        targetProduct.setEndTime(sourceProduct0.getEndTime());
+        targetProduct.setStartTime(bbdrReferenceProduct.getStartTime());
+        targetProduct.setEndTime(bbdrReferenceProduct.getEndTime());
         targetProduct.setPreferredTileSize(100, 100);
-        ProductUtils.copyTiePointGrids(sourceProduct0, targetProduct);
-        ProductUtils.copyGeoCoding(sourceProduct0, targetProduct);
-        sourceProduct0.dispose();
+        ProductUtils.copyTiePointGrids(bbdrReferenceProduct, targetProduct);
+        ProductUtils.copyGeoCoding(bbdrReferenceProduct, targetProduct);
+        bbdrReferenceProduct.dispose();
 
         int fileIndex = 0;
         daysToTheClosestSample = new int[rasterWidth][rasterHeight];

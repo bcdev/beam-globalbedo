@@ -124,29 +124,34 @@ public class MergeBrdfOp extends PixelOperator {
             if (nSamplesNoSnow == 0.0 && priorMask == 3.0) {
                 // Inland water bodies
                 setMergedBandsToZero(sourceSamples, targetSamples);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
             } else if (priorMask == 0.0 || priorMask == 2.0) {
                 // Shoreline
                 setMergedBandsToSnowBands(sourceSamples, targetSamples);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
             } else {
                 proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
                 proportionNsamplesSnow = nSamplesSnow / totalNSamples;
                 setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
-                targetSamples[TRG_PROPORTION_NSAMPLES].set(proportionNsamplesSnow);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(proportionNsamplesSnow);
             }
         } else if (priorMaskOk(priorMask) && entropySnow != 0.0 && entropyNoSnow != 0.0) {
             if (entropySnow < entropyNoSnow) {
                 setMergedBandsToSnowBands(sourceSamples, targetSamples);
-                targetSamples[TRG_PROPORTION_NSAMPLES].set(1.0);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(1.0);
             } else {
                 setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
             }
         } else if (priorMaskOk(priorMask) && entropySnow != 0.0) {
             setMergedBandsToSnowBands(sourceSamples, targetSamples);
-            targetSamples[TRG_PROPORTION_NSAMPLES].set(1.0);
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(1.0);
         } else if (priorMaskOk(priorMask) && entropyNoSnow != 0.0) {
             setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
         } else {
             setMergedBandsToZero(sourceSamples, targetSamples);
+            targetSamples[TRG_PROPORTION_NSAMPLES].set(0.0);
         }
     }
 

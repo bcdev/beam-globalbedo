@@ -19,6 +19,7 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.math.MathUtils;
 
 import static java.lang.Math.*;
 
@@ -106,7 +107,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         final PixelPos pixelPos = new PixelPos(x, y);
         final GeoPos geoPos = brdfMergedProduct.getGeoCoding().getGeoPos(pixelPos, null);
-        final double SZA = AlbedoInversionUtils.computeSza(geoPos, doy);
+        final double SZAdeg = AlbedoInversionUtils.computeSza(geoPos, doy);
+        final double SZA = SZAdeg * MathUtils.DTOR;
 
         final Matrix C = getCMatrixFromInversionProduct(sourceSamples);
 
@@ -128,6 +130,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             uWsaNir.set(0, i + 3, uWsaVis.get(0, i));
             uWsaSw.set(0, i + 6, uWsaVis.get(0, i));
+        }
+
+        if ((x == 400 && y == 400)) {
+            System.out.println("x,y = " + x + "," + y);
         }
 
         // # Calculate uncertainties...
@@ -192,11 +198,15 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         // # Calculate White-Sky Albedo...
         double[] whiteSkyAlbedo = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        for (int i = 0; i < whiteSkyAlbedo.length; i++) {
-            whiteSkyAlbedo[i] = fParams[(3 * i)] + (fParams[1 + 3 * i] * uWsaVis.get(0,
-                                                                                       1 + 3 * i)) + (fParams[2 + 3 * i] * uWsaVis.get(
-                    0, 2 + 3 * i));
-        }
+        whiteSkyAlbedo[0] = fParams[(3 * 0)] +
+                                (fParams[1 + 3 * 0] * uWsaVis.get(0, 1 + 3 * 0)) +
+                                (fParams[2 + 3 * 0] * uWsaVis.get(0, 2 + 3 * 0));
+        whiteSkyAlbedo[1] = fParams[(3 * 1)] +
+                                (fParams[1 + 3 * 1] * uWsaNir.get(0, 1 + 3 * 1)) +
+                                (fParams[2 + 3 * 1] * uWsaNir.get(0, 2 + 3 * 1));
+        whiteSkyAlbedo[2] = fParams[(3 * 2)] +
+                                (fParams[1 + 3 * 2] * uWsaSw.get(0, 1 + 3 * 2)) +
+                                (fParams[2 + 3 * 2] * uWsaSw.get(0, 2 + 3 * 2));
 
         // # Cap uncertainties and calculate sqrt
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -210,17 +220,17 @@ public class BrdfToAlbedoOp extends PixelOperator {
             }
         }
 
-        double relEntropy = sourceSamples[SRC_REL_ENTROPY].getDouble();
+        double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
         relEntropy = Math.exp(relEntropy / 9.0);
 
         // write results to target product...
-        double weightedNumberOfSamples = sourceSamples[SRC_WEIGHTED_NUM_SAMPLES].getDouble();
-        double goodnessOfFit = sourceSamples[SRC_GOODNESS_OF_FIT].getDouble();
-        double snowFraction = sourceSamples[SRC_PROPORTION_NSAMPLE].getDouble();
-        double mask = sourceSamples[SRC_ENTROPY].getDouble();
+        double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
+        double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
+        double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
+        double mask = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
         AlbedoResult result = new AlbedoResult(blackSkyAlbedo, whiteSkyAlbedo, bsaSigma, wsaSigma,
                                                weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
-                                               mask, SZA);
+                                               mask, SZAdeg);
 
         fillTargetSamples(targetSamples, result);
     }
