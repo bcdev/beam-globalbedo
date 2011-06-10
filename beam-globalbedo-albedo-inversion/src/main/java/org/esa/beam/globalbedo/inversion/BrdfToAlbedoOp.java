@@ -132,21 +132,17 @@ public class BrdfToAlbedoOp extends PixelOperator {
             uWsaSw.set(0, i + 6, uWsaVis.get(0, i));
         }
 
-        if ((x == 400 && y == 400)) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        final double maskRelEntropy = sourceSamples[SRC_REL_ENTROPY].getDouble();
+        final double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
         if (maskRelEntropy > 0.0) {
-            final LUDecomposition cLUD = new LUDecomposition(C);
+            final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
-                wsaSigma[0] = uWsaVis.times(C).times(uWsaVis.transpose());
-                wsaSigma[1] = uWsaNir.times(C).times(uWsaNir.transpose());
-                wsaSigma[2] = uWsaSw.times(C).times(uWsaSw.transpose());
+                wsaSigma[0] = uWsaVis.times(C.transpose()).times(uWsaVis.transpose());
+                wsaSigma[1] = uWsaNir.times(C.transpose()).times(uWsaNir.transpose());
+                wsaSigma[2] = uWsaSw.times(C.transpose()).times(uWsaSw.transpose());
 
                 // # Calculate Black-Sky sigma
                 Matrix uBsaVis = new Matrix(1, 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
@@ -165,9 +161,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
                     uBsaSw.set(0, i + 6, uBsaArray[i]);
                 }
 
-                bsaSigma[0] = uBsaVis.times(C).times(uBsaVis.transpose());
-                bsaSigma[1] = uBsaNir.times(C).times(uBsaNir.transpose());
-                bsaSigma[2] = uBsaSw.times(C).times(uBsaSw.transpose());
+                bsaSigma[0] = uBsaVis.times(C.transpose()).times(uBsaVis.transpose());
+                bsaSigma[1] = uBsaNir.times(C.transpose()).times(uBsaNir.transpose());
+                bsaSigma[2] = uBsaSw.times(C.transpose()).times(uBsaSw.transpose());
             } else {
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                     wsaSigma[i].set(0, 0, Double.NaN);
@@ -224,13 +220,14 @@ public class BrdfToAlbedoOp extends PixelOperator {
         relEntropy = Math.exp(relEntropy / 9.0);
 
         // write results to target product...
-        double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
-        double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
-        double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
-        double mask = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+        final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
+        final double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
+        final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+        final double maskEntropy = (entropy != 0.0) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(blackSkyAlbedo, whiteSkyAlbedo, bsaSigma, wsaSigma,
                                                weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
-                                               mask, SZAdeg);
+                                               maskEntropy, SZAdeg);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -290,7 +287,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
             }
 
             for (int i = 0; i < k; i++) {
-//                System.out.println("i, k, n, index1 = " + i + "," + k + "," + n + "," + index1);
                 C.set(n - k, n - k + i, cTmp[index1 - n + i]);
                 C.set(n - k + i, n - k, cTmp[index1 - n + i]);
             }

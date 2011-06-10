@@ -116,10 +116,6 @@ public class MergeBrdfOp extends PixelOperator {
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
 
-        if ((x == 346 && y == 422) || (x == 591 && y == 591) || (x == 832 && y == 376) || (x == 842 && y == 369)) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-
         if (totalNSamples > 0.0) {
             if (nSamplesNoSnow == 0.0 && priorMask == 3.0) {
                 // Inland water bodies
@@ -127,16 +123,17 @@ public class MergeBrdfOp extends PixelOperator {
                 targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
             } else if (priorMask == 0.0 || priorMask == 2.0) {
                 // Shoreline
-                setMergedBandsToSnowBands(sourceSamples, targetSamples);
+                setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
                 targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
             } else {
                 proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
                 proportionNsamplesSnow = nSamplesSnow / totalNSamples;
                 setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
-                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(proportionNsamplesSnow);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(
+                        proportionNsamplesSnow);
             }
         } else if (priorMaskOk(priorMask) && entropySnow != 0.0 && entropyNoSnow != 0.0) {
-            if (entropySnow < entropyNoSnow) {
+            if (entropySnow <= entropyNoSnow) {
                 setMergedBandsToSnowBands(sourceSamples, targetSamples);
                 targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(1.0);
             } else {
