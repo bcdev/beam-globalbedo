@@ -13,9 +13,9 @@
     <packaging>jar</packaging>
 
     <groupId>org.esa.beam.globalbedo</groupId>
-    <artifactId>beam-globalbedo-mosaic-reader</artifactId>
-    <name>Globalbedo Mosaic Reader</name>
-    <description>Reads tiled Albedo product as a mosaic.</description>
+    <artifactId>beam-globalbedo-upscaling</artifactId>
+    <name>Globalbedo Albedo Upscaling</name>
+    <description>Reprojection and upscaling of the final product.</description>
 
     <dependencies>
         <dependency>
@@ -24,7 +24,23 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-albedo-inversion</artifactId>
+            <version>0.1-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-mosaic-reader</artifactId>
+            <version>0.1-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>
