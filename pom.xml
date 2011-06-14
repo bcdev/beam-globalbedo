@@ -69,6 +69,7 @@
         <module>beam-globalbedo-bootstrap</module>
         <module>beam-globalbedo-bbdr-retrieval</module>
         <module>beam-globalbedo-albedo-inversion</module>
+        <module>beam-globalbedo-mosaic-reader</module>
     </modules>
 
     <properties>
@@ -114,6 +115,11 @@
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
+                <artifactId>beam-core</artifactId>
+                <version>${beam.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
                 <version>${beam.version}</version>
             </dependency>
@@ -134,7 +140,7 @@
             <dependency>
                 <groupId>junit</groupId>
                 <artifactId>junit</artifactId>
-                <version>4.4</version>
+                <version>4.8.2</version>
                 <scope>test</scope>
             </dependency>
         </dependencies>
