@@ -68,6 +68,7 @@ class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         Product firstMosaicProduct = mosaicTiles.iterator().next().getProduct();
 
         final Product product = new Product(getProductName(inputFile), PRODUCT_TYPE, width, height);
+        product.setPreferredTileSize(mosaicDefinition.getTileSize() / 4, mosaicDefinition.getTileSize() / 4);
         product.setFileLocation(inputFile);
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
