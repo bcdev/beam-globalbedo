@@ -42,7 +42,6 @@ public class InversionOp extends PixelOperator {
 
     public static final int SRC_ACCUM_E = 90;
     public static final int SRC_ACCUM_MASK = 91;
-    public static final int SRC_ACCUM_DOY_CLOSEST_SAMPLE = 92;
 
     public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
@@ -62,8 +61,7 @@ public class InversionOp extends PixelOperator {
     private static final int TRG_ENTROPY = 0;
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
-    private static final int TRG_DAYS_CLOSEST_SAMPLE = 3;
-    private static final int TRG_GOODNESS_OF_FIT = 4;
+    private static final int TRG_GOODNESS_OF_FIT = 3;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
@@ -122,7 +120,7 @@ public class InversionOp extends PixelOperator {
         productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_INT16, -1);
+        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
 
         productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
@@ -140,9 +138,6 @@ public class InversionOp extends PixelOperator {
         }
         configurator.defineSample(SRC_ACCUM_E, ACC_E_NAME, fullAccumulationProduct);
         configurator.defineSample(SRC_ACCUM_MASK, ACC_MASK_NAME, fullAccumulationProduct);
-        configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE,
-                                  ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME,
-                                  fullAccumulationProduct);
 
         // prior product:
         // we have:
@@ -179,7 +174,6 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_ENTROPY, INV_ENTROPY_BAND_NAME);
         configurator.defineSample(offset + TRG_REL_ENTROPY, INV_REL_ENTROPY_BAND_NAME);
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
-        configurator.defineSample(offset + TRG_DAYS_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
     }
 
@@ -268,15 +262,13 @@ public class InversionOp extends PixelOperator {
             }
         }
 
-        final int dayToTheClosestSample = sourceSamples[SRC_ACCUM_DOY_CLOSEST_SAMPLE].getInt();
-
         // finally we need the 'Goodness of Fit'...
         final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
 
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, dayToTheClosestSample, goodnessOfFit);
+                          maskAcc, goodnessOfFit);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -293,7 +285,7 @@ public class InversionOp extends PixelOperator {
 
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties,  double entropy, double relEntropy,
-                                   double weightedNumberOfSamples, int dayToTheClosestSample, double goodnessOfFit) {
+                                   double weightedNumberOfSamples, double goodnessOfFit) {
 
         // parameters
         int index = 0;
@@ -315,7 +307,6 @@ public class InversionOp extends PixelOperator {
         targetSamples[offset + TRG_ENTROPY].set(entropy);
         targetSamples[offset + TRG_REL_ENTROPY].set(relEntropy);
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
-        targetSamples[offset + TRG_DAYS_CLOSEST_SAMPLE].set(dayToTheClosestSample);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
 
     }
