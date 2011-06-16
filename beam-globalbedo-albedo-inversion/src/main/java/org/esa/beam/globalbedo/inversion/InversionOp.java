@@ -4,7 +4,6 @@ package org.esa.beam.globalbedo.inversion;
 import Jama.LUDecomposition;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -20,6 +19,7 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import static java.lang.Math.*;
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
 /**
  * Pixel operator implementing the inversion part of python breadboard.
@@ -36,43 +36,28 @@ import static java.lang.Math.*;
 
 public class InversionOp extends PixelOperator {
 
-    public static final int[][] SRC_ACCUM_M =
-            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-                    [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    public static final int[][] SRC_ACCUM_M = new int[3 * NUM_BBDR_WAVE_BANDS][3 * NUM_BBDR_WAVE_BANDS];
 
-    public static final int[] SRC_ACCUM_V =
-            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    public static final int[] SRC_ACCUM_V = new int[3 * NUM_BBDR_WAVE_BANDS];
 
     public static final int SRC_ACCUM_E = 90;
     public static final int SRC_ACCUM_MASK = 91;
     public static final int SRC_ACCUM_DOY_CLOSEST_SAMPLE = 92;
 
-    public static final int[][] SRC_PRIOR_MEAN =
-            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
-                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+    public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
-    public static final int[][] SRC_PRIOR_SD =
-            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
-                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+    public static final int[][] SRC_PRIOR_SD = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
-    public static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
-    public static final int priorOffset = (int) pow(AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 2.0);
-    public static final int SRC_PRIOR_NSAMPLES = sourceSampleOffset + 2 * priorOffset;
+    public static final int SOURCE_SAMPLE_OFFSET = 100;  // this value must be >= number of bands in a source product
+    public static final int PRIOR_OFFSET = (int) pow(NUM_ALBEDO_PARAMETERS, 2.0);
+    public static final int SRC_PRIOR_NSAMPLES = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET;
 
-    public static final int SRC_PRIOR_MASK = sourceSampleOffset + 2 * priorOffset + 1;
+    public static final int SRC_PRIOR_MASK = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET + 1;
 
-    private String[][] mBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private String[] vBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private static final int[] TRG_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    private static final int NUM_TRG_PARAMETERS = 3 * NUM_BBDR_WAVE_BANDS;
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
-    private static final int targetOffset = ((int) pow(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 2.0)
-                                             + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
-
-    private static final int[] TRG_UNCERTAINTIES = new int[targetOffset];
+    private static final int NUM_TRG_UNCERTAINTIES = ((int) pow(3 * NUM_BBDR_WAVE_BANDS, 2.0) + 3 * NUM_BBDR_WAVE_BANDS) / 2;
 
     private static final int TRG_ENTROPY = 0;
     private static final int TRG_REL_ENTROPY = 1;
@@ -80,15 +65,23 @@ public class InversionOp extends PixelOperator {
     private static final int TRG_DAYS_CLOSEST_SAMPLE = 3;
     private static final int TRG_GOODNESS_OF_FIT = 4;
 
-    private String[] parameterBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
+    private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
 
-    private String[][] uncertaintyBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private String entropyBandName;
-    private String relEntropyBandName;
-    private String weightedNumberOfSamplesBandName;
-    private String goodnessOfFitBandName;
+    static {
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
+                SRC_ACCUM_M[i][j] = 3 * NUM_BBDR_WAVE_BANDS * i + j;
+            }
+            SRC_ACCUM_V[i] = 3 * 3 * NUM_BBDR_WAVE_BANDS * NUM_BBDR_WAVE_BANDS + i;
+        }
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                SRC_PRIOR_MEAN[i][j] = SOURCE_SAMPLE_OFFSET + NUM_ALBEDO_PARAMETERS * i + j;
+                SRC_PRIOR_SD[i][j] = SOURCE_SAMPLE_OFFSET + PRIOR_OFFSET + NUM_ALBEDO_PARAMETERS * i + j;
+            }
+        }
+    }
 
     @SourceProduct(description = "Full accumulation product")
     private Product fullAccumulationProduct;
@@ -115,133 +108,86 @@ public class InversionOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct( productConfigurer);
 
-        final Product targetProduct = productConfigurer.getTargetProduct();
-        parameterBandNames = IOUtils.getInversionParameterBandNames();
-        for (String parameterBandName : parameterBandNames) {
-            Band band = targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
+        for (String parameterBandName : PARAMETER_BAND_NAMES) {
+            productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, Float.NaN);
         }
 
-        uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             // add bands only for UR triangular matrix
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
+            for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
+                productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, Float.NaN);
             }
         }
 
-        entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
-        Band entropyBand = targetProduct.addBand(entropyBandName, ProductData.TYPE_FLOAT32);
-        entropyBand.setNoDataValue(Float.NaN);
-        entropyBand.setNoDataValueUsed(true);
+        productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_INT16, -1);
+        productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
 
-        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
-        Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
-        relEntropyBand.setNoDataValue(Float.NaN);
-        relEntropyBand.setNoDataValueUsed(true);
-
-        weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
-        Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                                                                 ProductData.TYPE_FLOAT32);
-        weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
-        weightedNumberOfSamplesBand.setNoDataValueUsed(true);
-
-        Band daysToTheClosestSampleBand = targetProduct.addBand(
-                AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_INT16);
-        daysToTheClosestSampleBand.setNoDataValue(-1);
-        daysToTheClosestSampleBand.setNoDataValueUsed(true);
-
-        goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
-        Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
-        goodnessOfFitBand.setNoDataValue(Float.NaN);
-        goodnessOfFitBand.setNoDataValueUsed(true);
-        targetProduct.setPreferredTileSize(100, 100);
+        productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
     }
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
 
         // accumulation product:
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                mBandNames[i][j] = "M_" + i + "" + j;
-                SRC_ACCUM_M[i][j] = 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * i + j;
-                configurator.defineSample(SRC_ACCUM_M[i][j], mBandNames[i][j], fullAccumulationProduct);
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
+                configurator.defineSample(SRC_ACCUM_M[i][j], "M_" + i + "" + j, fullAccumulationProduct);
             }
+            configurator.defineSample(SRC_ACCUM_V[i], "V_" + i, fullAccumulationProduct);
         }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            vBandNames[i] = "V_" + i;
-            SRC_ACCUM_V[i] = 3 * 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + i;
-            configurator.defineSample(SRC_ACCUM_V[i], vBandNames[i], fullAccumulationProduct);
-        }
-        configurator.defineSample(SRC_ACCUM_E, AlbedoInversionConstants.ACC_E_NAME, fullAccumulationProduct);
-        configurator.defineSample(SRC_ACCUM_MASK, AlbedoInversionConstants.ACC_MASK_NAME, fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_E, ACC_E_NAME, fullAccumulationProduct);
+        configurator.defineSample(SRC_ACCUM_MASK, ACC_MASK_NAME, fullAccumulationProduct);
         configurator.defineSample(SRC_ACCUM_DOY_CLOSEST_SAMPLE,
-                                  AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME,
+                                  ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME,
                                   fullAccumulationProduct);
 
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                 final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_MEAN[i][j] = sourceSampleOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
                 configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
-            }
-        }
 
-        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = sourceSampleOffset + priorOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, AlbedoInversionConstants.PRIOR_NSAMPLES_NAME, priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, AlbedoInversionConstants.PRIOR_MASK_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
     }
 
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) {
 
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            TRG_PARAMETERS[i] = i;
-            configurator.defineSample(TRG_PARAMETERS[i], parameterBandNames[i]);
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            configurator.defineSample(i, PARAMETER_BAND_NAMES[i]);
         }
 
         int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                TRG_UNCERTAINTIES[index] = index;
-                configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index], uncertaintyBandNames[i][j]);
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * NUM_ALBEDO_PARAMETERS; j++) {
+                configurator.defineSample(NUM_TRG_PARAMETERS + index, UNCERTAINTY_BAND_NAMES[i][j]);
                 index++;
             }
         }
 
-        configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY, entropyBandName);
-        configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY,
-                                  relEntropyBandName);
-        configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES,
-                                  weightedNumberOfSamplesBandName);
-        configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE,
-                                  AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-        configurator.defineSample(TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT,
-                                  goodnessOfFitBandName);
+        int offset = NUM_TRG_PARAMETERS + NUM_TRG_UNCERTAINTIES;
+        configurator.defineSample(offset + TRG_ENTROPY, INV_ENTROPY_BAND_NAME);
+        configurator.defineSample(offset + TRG_REL_ENTROPY, INV_REL_ENTROPY_BAND_NAME);
+        configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
+        configurator.defineSample(offset + TRG_DAYS_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
     }
 
     @Override
-    protected void computePixel(int x, int y, Sample[] sourceSamples,
-                                WritableSample[] targetSamples) {
+    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        Matrix parameters = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
-                                       AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1);
-
-        Matrix uncertainties = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                          3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS);
+        Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1);
+        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
@@ -259,7 +205,7 @@ public class InversionOp extends PixelOperator {
         if (maskAcc > 0 && maskPrior > 0) {
 
             if (usePrior) {
-                for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     final double m_ii_accum = mAcc.get(i, i);
                     mAcc.set(i, i, m_ii_accum + prior.getM().get(i, i));
                 }
@@ -271,18 +217,18 @@ public class InversionOp extends PixelOperator {
                 Matrix tmpM = mAcc.inverse();
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
                         tmpM)) {
-                    tmpM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                      3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
-                                      AlbedoInversionConstants.INVALID);
+                    tmpM = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
+                                      3 * NUM_ALBEDO_PARAMETERS,
+                                      INVALID);
                 }
                 uncertainties = tmpM;
             } else {
-                parameters = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
-                                        AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
-                                        AlbedoInversionConstants.INVALID);
-                uncertainties = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                           3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
-                                           AlbedoInversionConstants.INVALID);
+                parameters = new Matrix(NUM_BBDR_WAVE_BANDS *
+                                        NUM_ALBEDO_PARAMETERS, 1,
+                                        INVALID);
+                uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
+                                           3 * NUM_ALBEDO_PARAMETERS,
+                                           INVALID);
                 maskAcc = 0.0;
             }
 
@@ -294,7 +240,7 @@ public class InversionOp extends PixelOperator {
                 if (usePrior) {
                     relEntropy = entropyPrior - entropy;
                 } else {
-                    relEntropy = AlbedoInversionConstants.INVALID;
+                    relEntropy = INVALID;
                 }
             }
         } else {
@@ -307,17 +253,17 @@ public class InversionOp extends PixelOperator {
                         entropy = getEntropy(prior.getM());
                     } else {
                         uncertainties = new Matrix(
-                                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.INVALID);
-                        entropy = AlbedoInversionConstants.INVALID;
+                                3 * NUM_BBDR_WAVE_BANDS,
+                                3 * NUM_ALBEDO_PARAMETERS, INVALID);
+                        entropy = INVALID;
                     }
                     relEntropy = 0.0;
                 } else {
                     uncertainties = new Matrix(
-                            3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                            3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.INVALID);
-                    entropy = AlbedoInversionConstants.INVALID;
-                    relEntropy = AlbedoInversionConstants.INVALID;
+                            3 * NUM_BBDR_WAVE_BANDS,
+                            3 * NUM_ALBEDO_PARAMETERS, INVALID);
+                    entropy = INVALID;
+                    relEntropy = INVALID;
                 }
             }
         }
@@ -328,9 +274,9 @@ public class InversionOp extends PixelOperator {
         final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
 
         // we have the final result - fill target samples...
-        InversionResult result = new InversionResult(parameters, uncertainties, entropy, relEntropy,
-                                                     maskAcc, dayToTheClosestSample, goodnessOfFit);
-        fillTargetSamples(targetSamples, result);
+        fillTargetSamples(targetSamples,
+                          parameters, uncertainties, entropy, relEntropy,
+                          maskAcc, dayToTheClosestSample, goodnessOfFit);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -345,34 +291,32 @@ public class InversionOp extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
-    private void fillTargetSamples(WritableSample[] targetSamples, InversionResult result) {
+    private void fillTargetSamples(WritableSample[] targetSamples,
+                                   Matrix parameters, Matrix uncertainties,  double entropy, double relEntropy,
+                                   double weightedNumberOfSamples, int dayToTheClosestSample, double goodnessOfFit) {
 
         // parameters
         int index = 0;
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                targetSamples[TRG_PARAMETERS[index]].set(result.getParameters().get(index, 0));
+        for (int i = 0; i < NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < NUM_BBDR_WAVE_BANDS; j++) {
+                targetSamples[index].set(parameters.get(index, 0));
                 index++;
             }
         }
 
-        index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(
-                        result.getUncertainties().get(i, j));
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
+                targetSamples[index].set(uncertainties.get(i, j));
                 index++;
             }
         }
 
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY].set(result.getEntropy());
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + +TRG_REL_ENTROPY].set(result.getRelEntropy());
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + +TRG_WEIGHTED_NUM_SAMPLES].set(
-                result.getWeightedNumberOfSamples());
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + +TRG_DAYS_CLOSEST_SAMPLE].set(
-                result.getDoyClosestSample());
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + +TRG_GOODNESS_OF_FIT].set(
-                result.getGoodnessOfFit());
+        int offset = NUM_TRG_PARAMETERS + NUM_TRG_UNCERTAINTIES;
+        targetSamples[offset + TRG_ENTROPY].set(entropy);
+        targetSamples[offset + TRG_REL_ENTROPY].set(relEntropy);
+        targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
+        targetSamples[offset + TRG_DAYS_CLOSEST_SAMPLE].set(dayToTheClosestSample);
+        targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
 
     }
 
@@ -384,9 +328,7 @@ public class InversionOp extends PixelOperator {
         for (double svdMSingularValue : svdMSingularValues) {
             productSvdMSRecip *= (1.0 / svdMSingularValue);
         }
-        double entropy = 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
-
-        return entropy;
+        return 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
     }
 
     public static class Spi extends OperatorSpi {
