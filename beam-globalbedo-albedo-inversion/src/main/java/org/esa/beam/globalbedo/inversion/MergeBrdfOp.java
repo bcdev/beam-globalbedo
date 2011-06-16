@@ -18,7 +18,7 @@ import static java.lang.Math.*;
 
 /**
  * Operator for merging BRDF Snow/NoSnow products.
- * The breadboard file is 'MergeBRDF.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'MergeBRDF.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

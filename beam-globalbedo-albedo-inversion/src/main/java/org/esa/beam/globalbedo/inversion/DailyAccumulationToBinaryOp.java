@@ -21,7 +21,7 @@ import java.io.File;
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
  * For performance reasons, the daily accumulations are written to simple binary files and NOT saved as Dimap products.
- * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

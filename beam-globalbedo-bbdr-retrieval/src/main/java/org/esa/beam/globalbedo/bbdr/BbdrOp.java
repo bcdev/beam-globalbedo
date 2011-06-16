@@ -387,6 +387,16 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+
+        if (x == 600 && y == 400) {
+            // good
+            System.out.println("x = " + x + "," + y);
+        }
+        if (x == 800 && y == 450) {
+            // bad
+            System.out.println("x = " + x + "," + y);
+        }
+
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
             // only compute over land
             fillTargetSampleWithNoDataValue(targetSamples);

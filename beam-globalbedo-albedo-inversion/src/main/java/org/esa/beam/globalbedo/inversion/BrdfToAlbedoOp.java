@@ -25,7 +25,7 @@ import static java.lang.Math.*;
 
 /**
  * Operator for retrieval of albedo from BRDF model parameters.
- * The breadboard file is 'Albedo.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'Albedo.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

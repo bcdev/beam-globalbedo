@@ -100,7 +100,7 @@ public class Upscale extends Operator {
         /////////////////////////////////////////////////////////////////////////////////////////////////
         SubsetOp subsetOp = new SubsetOp();
         subsetOp.setSourceProduct(reprojectedProduct);
-        subsetOp.setRegion(new Rectangle(17* TILE_SIZE, 3* TILE_SIZE, 3* TILE_SIZE, 3* TILE_SIZE));
+        subsetOp.setRegion(new Rectangle(18* TILE_SIZE, 4* TILE_SIZE, 2* TILE_SIZE, 1* TILE_SIZE));
         reprojectedProduct = subsetOp.getTargetProduct();
         /////////////////////////////////////////////////////////////////////////////////////////////////
 

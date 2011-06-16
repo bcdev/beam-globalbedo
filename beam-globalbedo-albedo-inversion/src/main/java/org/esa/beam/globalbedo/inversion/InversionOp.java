@@ -23,7 +23,7 @@ import static java.lang.Math.*;
 
 /**
  * Pixel operator implementing the inversion part of python breadboard.
- * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

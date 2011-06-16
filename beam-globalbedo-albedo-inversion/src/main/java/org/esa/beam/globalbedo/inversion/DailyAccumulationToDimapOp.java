@@ -23,7 +23,7 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
  * todo: for performance reasons, we will probably use binary accumulator files instead od Dimaps in the final version.
  * Then this class is not needed any more!
  *
- * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

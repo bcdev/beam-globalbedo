@@ -30,7 +30,7 @@ import java.util.logging.Level;
  * Alternative operator implementing the full accumulation part of python breadboard:
  * Reads from daily accumulator binary file since reading so many (540?) dimap products seems too slow...
  * <p/>
- * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo López Saldaña.
+ * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

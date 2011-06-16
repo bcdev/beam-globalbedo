@@ -48,7 +48,7 @@ public class VgtPrepOp extends Operator {
         final boolean needElevation = (!sourceProduct.containsBand(instrC.getElevationBandName()));
         final boolean needSurfacePres = (!sourceProduct.containsBand(instrC.getSurfPressureName("VGT")));
 
-        //general SzaSubset to less 70°
+        //general SzaSubset to less
         // doesn't work so easy with this projected data set! :(
 
         //Map<String,Object> szaSubParam = new HashMap<String, Object>(3);
