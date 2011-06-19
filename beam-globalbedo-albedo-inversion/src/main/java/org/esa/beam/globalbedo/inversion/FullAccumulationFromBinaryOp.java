@@ -61,6 +61,7 @@ public class FullAccumulationFromBinaryOp extends Operator {
     @Parameter(description = "All DoYs for full accumulation")
     private int[] allDoys;
 
+//    private final float[][][][] sumMatricesTest = new float[45][81][1200][1200];
     private float[][][] sumMatrices;
     private float[][] mask;
     private float[] weight;

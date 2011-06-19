@@ -115,6 +115,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
         // STEP 4: full accumulation
         Product fullAccumulationProduct = null;
         // todo: make a final decision
+        // the final approach will likely be to take a ready, 'full' accumulator file as
+        // created with GlobAlbedoFullAccumulation. This should be read with
+        // 'IOUtils.getFullAccumulatorFromBinaryFile' and passed as parameter to InversionOp
         if (useBinaryAccumulators) {
             FullAccumulationFromBinaryOp jaiOp = new FullAccumulationFromBinaryOp();
             jaiOp.setSourceProduct("bbdrReferenceProduct", bbdrProducts[0]);

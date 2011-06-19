@@ -253,7 +253,7 @@ public class IOTest extends TestCase {
         for (int i = 0; i < dim1; i++) {
             for (int j = 0; j < dim2; j++) {
                 for (int k = 0; k < dim3; k++) {
-                    testArray[i][j][k] = (i * 1.0f + j * 2.0f + k * 3.0f)*1.E-10f;
+                    testArray[i][j][k] = (i * 1.0f + j * 2.0f + k * 3.0f) * 1.E-10f;
                 }
             }
         }
@@ -274,9 +274,33 @@ public class IOTest extends TestCase {
         for (int i = 0; i < dim1; i++) {
             for (int j = 0; j < dim2; j++) {
                 for (int k = 0; k < dim3; k++) {
-                    assertEquals((i * 1.0f + j * 2.0f + k * 3.0f)*1.E-10f, result[index++]);
+                    assertEquals((i * 1.0f + j * 2.0f + k * 3.0f) * 1.E-10f, result[index++]);
                 }
             }
         }
+    }
+
+    public void testIsLeapYear() throws Exception {
+        int year = 1999;
+        assertEquals(false, IOUtils.isLeapYear(year));
+        year = 2004;
+        assertEquals(true, IOUtils.isLeapYear(year));
+        year = 2000;
+        assertEquals(true, IOUtils.isLeapYear(year));
+        year = 1900;
+        assertEquals(false, IOUtils.isLeapYear(year));
+    }
+
+    public void testGetDayDifference() throws Exception {
+        int year = 2005;
+        int refYear = 2005;
+        int doy = 129;
+        int refDoy = 123;
+        assertEquals(6, IOUtils.getDayDifference(doy, year, refDoy, refYear));
+        doy = 119;
+        refDoy = 139;
+        assertEquals(20, IOUtils.getDayDifference(doy, year, refDoy, refYear));
+        refYear = 2003;
+        assertEquals(710, IOUtils.getDayDifference(doy, year, refDoy, refYear));
     }
 }

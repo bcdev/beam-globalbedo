@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 
@@ -214,6 +215,8 @@ public class IOUtils {
         inputProduct.setProductFilenames(albedoInputProductFilenames);
         inputProduct.setProductDoys(albedoInputProductDoys);
         inputProduct.setProductYears(albedoInputProductYears);
+        inputProduct.setReferenceYear(year);
+        inputProduct.setReferenceDoy(doy);
 
         if (useBinaryFiles) {
             final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
@@ -453,6 +456,71 @@ public class IOUtils {
         return bandNames;
     }
 
+    public FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
+        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+        int size = (numBands+1) * rasterWidth * rasterHeight;
+        final File fullAccumulatorBinaryFile = new File(filename);
+        FileInputStream f = null;
+        try {
+            f = new FileInputStream(fullAccumulatorBinaryFile);
+        } catch (FileNotFoundException e) {
+            // todo
+            e.printStackTrace();
+        }
+        FileChannel ch = f.getChannel();
+        ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+        int[][] daysToTheClosestSample = new int[rasterWidth][rasterHeight];
+        float[][][] sumMatrices = new float[numBands][rasterWidth][rasterHeight];
+
+        FullAccumulator accumulator = null;
+
+        int nRead;
+        try {
+            int ii = 0;
+            int jj = 0;
+            int kk = 0;
+            while ((nRead = ch.read(bb)) != -1) {
+                if (nRead == 0) {
+                    continue;
+                }
+                bb.position(0);
+                bb.limit(nRead);
+                while (bb.hasRemaining()) {
+                    final float value = bb.getFloat();
+                    // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
+                    if (ii == numBands) {
+                        daysToTheClosestSample[jj][kk] = (int) value;
+                    } else {
+                        sumMatrices[ii][jj][kk] = value;
+                    }
+                    // find the right indices for sumMatrices array...
+                    kk++;
+                    if (kk == rasterHeight) {
+                        jj++;
+                        kk = 0;
+                        if (jj == rasterWidth) {
+                            ii++;
+                            jj = 0;
+                        }
+                    }
+                }
+                bb.clear();
+            }
+            ch.close();
+            f.close();
+
+            accumulator = new FullAccumulator(year, doy, sumMatrices, daysToTheClosestSample);
+
+        } catch (IOException e) {
+            // todo
+            e.printStackTrace();
+        }
+        return accumulator;
+    }
+
+
     public static void writeDoubleArrayToFile(File file, double[][][] values) {
         int index = 0;
         try {
@@ -464,7 +532,7 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
-            final int size =  dim1 * dim2 * dim3 * Double.SIZE/8;
+            final int size = dim1 * dim2 * dim3 * Double.SIZE / 8;
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
             for (int i = 0; i < dim1; i++) {
@@ -589,7 +657,7 @@ public class IOUtils {
         return result;
     }
 
-    private static boolean isLeapYear(int year) {
+    public static boolean isLeapYear(int year) {
         if (year < 0) {
             return false;
         }
@@ -604,4 +672,11 @@ public class IOUtils {
             return false;
         }
     }
+
+    public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
+        final int difference = 365 * (year - referenceYear) + (doy - referenceDoy);
+        // todo: consider leap years
+        return Math.abs(difference);
+    }
+
 }
