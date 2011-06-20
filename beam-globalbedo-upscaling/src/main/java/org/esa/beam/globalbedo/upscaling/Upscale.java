@@ -29,7 +29,6 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
@@ -42,6 +41,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
 /**
  * Reprojects and upscales the GlobAlbedo product
@@ -75,6 +76,7 @@ public class Upscale extends Operator {
     private String[] brdfModelBandNames;
     private String[][] uncertaintyBandNames;
     private double matrixNodataValue;
+    private Band entropyBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -100,13 +102,13 @@ public class Upscale extends Operator {
         /////////////////////////////////////////////////////////////////////////////////////////////////
         SubsetOp subsetOp = new SubsetOp();
         subsetOp.setSourceProduct(reprojectedProduct);
-        subsetOp.setRegion(new Rectangle(18* TILE_SIZE, 4* TILE_SIZE, 2* TILE_SIZE, 1* TILE_SIZE));
+        subsetOp.setRegion(new Rectangle(17 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE));
         reprojectedProduct = subsetOp.getTargetProduct();
         /////////////////////////////////////////////////////////////////////////////////////////////////
 
         int width = reprojectedProduct.getSceneRasterWidth() / scaling;
         int height = reprojectedProduct.getSceneRasterHeight() / scaling;
-        Product upscaledProduct = new Product(mosaicProduct.getName()+"_upscaled", "GA_UPSCALED", width, height);
+        Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
@@ -133,34 +135,73 @@ public class Upscale extends Operator {
         brdfModelBandNames = IOUtils.getInversionParameterBandNames();
         matrixNodataValue = upscaledProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
         uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
+        entropyBand = reprojectedProduct.getBand(INV_ENTROPY_BAND_NAME);
 
         targetProduct = upscaledProduct;
     }
 
     @Override
-    public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRectangle, ProgressMonitor pm) throws OperatorException {
-        System.out.println("targetRectangle = " + targetRectangle);
-        Rectangle srcRect = new Rectangle(targetRectangle.x * scaling,
-                                          targetRectangle.y * scaling,
-                                          targetRectangle.width * scaling,
-                                          targetRectangle.height * scaling);
+    public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
+        System.out.println("targetRectangle = " + targetRect);
+        Rectangle srcRect = new Rectangle(targetRect.x * scaling,
+                                          targetRect.y * scaling,
+                                          targetRect.width * scaling,
+                                          targetRect.height * scaling);
+        Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
+        if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
+            Map<String, Tile> srcTiles = getSourceTiles(srcRect);
+
+            computeUncertainty(srcTiles, targetTiles, targetRect);
+            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME));
+            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME));
+            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME));
+        } else {
+            for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
+                checkForCancellation();
+
+                Tile targetTile = tileEntry.getValue();
+                String bandName = tileEntry.getKey();
+                double noDataValue = getTargetProduct().getBand(bandName).getNoDataValue();
+                for (int y = targetRect.y; y < targetRect.y + targetRect.height; y++) {
+                    for (int x = targetRect.x; x < targetRect.x + targetRect.width; x++) {
+                        targetTile.setSample(x, y, noDataValue);
+                    }
+                }
+            }
+        }
+    }
+
+    private Map<String, Tile> getSourceTiles(Rectangle srcRect) {
         Band[] srcBands = reprojectedProduct.getBands();
         Map<String, Tile> srcTiles = new HashMap<String, Tile>(srcBands.length);
         for (Band band : srcBands) {
             srcTiles.put(band.getName(), getSourceTile(band, srcRect));
         }
-        Map<String, Tile> targetTiles = new HashMap<String, Tile>(srcBands.length);
+        return srcTiles;
+    }
+
+    private Map<String, Tile> getTargetTiles(Map<Band, Tile> targetBandTiles) {
+        Map<String, Tile> targetTiles = new HashMap<String, Tile>();
         for (Map.Entry<Band, Tile> entry : targetBandTiles.entrySet()) {
             targetTiles.put(entry.getKey().getName(), entry.getValue());
         }
-        computeUncertainty(srcTiles, targetTiles, targetRectangle);
+        return targetTiles;
+    }
 
-        computeMajority(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, srcTiles, targetTiles);
-
-        computeNearest(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME, srcTiles, targetTiles);
-        computeNearest(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME, srcTiles, targetTiles);
-        computeNearest(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, srcTiles, targetTiles);
-        computeNearest(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME, srcTiles, targetTiles);
+    private boolean hasValidPixel(Tile entropy) {
+        double noDataValue = entropyBand.getNoDataValue();
+        Rectangle rect = entropy.getRectangle();
+        for (int y = rect.y; y < rect.y + rect.height; y++) {
+            for (int x = rect.x; x < rect.x + rect.width; x++) {
+                double sample = entropy.getSampleDouble(x, y);
+                if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
+                    return  true;
+                }
+            }
+        }
+        return false;
     }
 
     private void computeUncertainty(Map<String, Tile> srcTiles, Map<String, Tile> targetTiles, Rectangle targetRectangle) {
@@ -180,7 +221,7 @@ public class Upscale extends Operator {
                         Matrix m = getM(mSrcTiles, sx, sy);
                         if (containsData(m)) {
                             Matrix mInv = m.inverse();
-                            Matrix f = getF(fSrcTiles, sx ,sy);
+                            Matrix f = getF(fSrcTiles, sx, sy);
                             Matrix fmInv = f.times(mInv);
                             fmInvsum.plusEquals(fmInv);
                             mInvSum.plusEquals(mInv);
@@ -193,8 +234,8 @@ public class Upscale extends Operator {
                     Matrix ft = fmInvsum.times(mt);
                     setF(ft, fTargetTiles, x, y);
                 } else {
-                   setMNodata(mTargetTiles, x, y);
-                   setFNodata(fTargetTiles, x, y);
+                    setMNodata(mTargetTiles, x, y);
+                    setFNodata(fTargetTiles, x, y);
                 }
             }
         }
@@ -283,23 +324,18 @@ public class Upscale extends Operator {
         }
     }
 
-    private void computeNearest(String bandName, Map<String, Tile> srcTiles, Map<String, Tile> targetTiles) {
-        computeNearest(srcTiles.get(bandName), targetTiles.get(bandName));
-    }
-
     private void computeNearest(Tile src, Tile target) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sample == 0.0 || Float.isNaN(sample)) {
+                    sample = Float.NaN;
+                }
                 target.setSample(x, y, sample);
             }
         }
-    }
-
-    private void computeMajority(String bandName, Map<String, Tile> srcTiles, Map<String, Tile> targetTiles) {
-        computeMajority(srcTiles.get(bandName), targetTiles.get(bandName));
     }
 
     private void computeMajority(Tile src, Tile target) {
