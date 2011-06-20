@@ -135,7 +135,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        final double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        maskRelEntropy = Math.exp(maskRelEntropy / 9.0);
         if (maskRelEntropy > 0.0) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {

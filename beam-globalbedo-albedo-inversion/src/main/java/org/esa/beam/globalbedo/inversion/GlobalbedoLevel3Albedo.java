@@ -63,7 +63,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         // STEP 2: get BRDF Snow/NoSnow input files...
-        final String brdfDir = gaRootDir + File.separator + "inversion" + File.separator + tile + File.separator;
+        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + tile + File.separator;
 
         Product brdfSnowProduct;
         Product brdfNoSnowProduct;
