@@ -23,10 +23,10 @@ import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
  */
 enum Sensor {
 
-    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 2, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
-    AATSR_NADIR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
-    AATSR_FWARD("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 2, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4),
-    SPOT_VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 1, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1);
+    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
+    AATSR_NADIR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
+    AATSR_FWARD("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4),
+    SPOT_VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1);
 
     private final String instrument;
     private final int numBands;
@@ -35,7 +35,6 @@ enum Sensor {
     private final int indexNIR;
     private final double aNDVI;
     private final double bNDVI;
-    private final int cwv_ozo_flag;
     private final double cwvError;
     private final double ozoError;
     private final float[] cal2Meris;
@@ -43,7 +42,7 @@ enum Sensor {
     private final double errCoregScale;
 
     private Sensor(String instrument, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI,
-                   double bNDVI, int cwv_ozo_flag, double cwvError, double ozoError, float[] cal2Meris, float[] wavelength, double errCoregScale) {
+                   double bNDVI, double cwvError, double ozoError, float[] cal2Meris, float[] wavelength, double errCoregScale) {
         this.instrument = instrument;
         this.numBands = numBands;
         this.radiometricError = radiometricError;
@@ -51,7 +50,6 @@ enum Sensor {
         this.indexNIR = indexNIR;
         this.aNDVI = aNDVI;
         this.bNDVI = bNDVI;
-        this.cwv_ozo_flag = cwv_ozo_flag;
         this.cwvError = cwvError;
         this.ozoError = ozoError;
         this.cal2Meris = cal2Meris;
@@ -88,10 +86,6 @@ enum Sensor {
 
     public double getBndvi() {
         return bNDVI;
-    }
-
-    public int getCwv_ozo_flag() {
-        return cwv_ozo_flag;
     }
 
     public double getCwvError() {
