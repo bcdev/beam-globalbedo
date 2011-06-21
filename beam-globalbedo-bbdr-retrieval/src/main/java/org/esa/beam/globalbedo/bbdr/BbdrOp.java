@@ -405,6 +405,10 @@ public class BbdrOp extends PixelOperator {
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
+        if (sensor == Sensor.AATSR_FWARD || sensor == Sensor.AATSR_NADIR) {
+            sza = 90.0 - sza;
+            vza = 90.0 - vza;
+        }
         double aot = sourceSamples[SRC_AOT].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
         hsf *= 0.001;
@@ -450,10 +454,19 @@ public class BbdrOp extends PixelOperator {
             throw new IllegalArgumentException("Sensor '" + sensor.toString() + "' not supported.");
         }
 
+        double vza_r = toRadians(vza);
+        double sza_r = toRadians(sza);
+        double muv = cos(vza_r);
+        double mus = cos(sza_r);
+        double amf = 1.0 / muv + 1.0 / mus;
+
         double[] toa_rfl = new double[sensor.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
             toa_rfl[i] = sourceSamples[SRC_TOA_RFL + i].getDouble();
             toa_rfl[i] /= sensor.getCal2Meris()[i];
+            if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+                toa_rfl[i] = toa_rfl[i] * 0.01 / mus;
+            }
         }
 
         double phi = abs(saa - vaa);
@@ -465,13 +478,6 @@ public class BbdrOp extends PixelOperator {
         if (!sdrOnly) {
             targetSamples[TRG_RAA].set(phi);
         }
-
-        double vza_r = toRadians(vza);
-        double sza_r = toRadians(sza);
-        double muv = cos(vza_r);
-        double mus = cos(sza_r);
-        double amf = 1.0 / muv + 1.0 / mus;
-
 
         float[] tg = gasLookupTable.getTg((float) amf, (float) gas);
         float[][][] kx_tg = gasLookupTable.getKxTg((float) amf, (float) gas);
