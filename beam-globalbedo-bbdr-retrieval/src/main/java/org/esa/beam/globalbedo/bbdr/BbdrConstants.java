@@ -86,10 +86,10 @@ public class BbdrConstants {
     public final static String AATSR_AOTERR_BAND_NAME = "aot_err";
 
     public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
-                    "reflec_nadir_550", "reflec_nadir_670", "reflec_nadir_870", "reflec_nadir_1600"};
+                    "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
 
     public final static String[] AATSR_TOA_BAND_NAMES_FWARD = new String[]{
-                    "reflec_fward_550", "reflec_fward_670", "reflec_fward_870", "reflec_fward_1600"};
+                    "reflec_fward_0550", "reflec_fward_0670", "reflec_fward_0870", "reflec_fward_1600"};
 
     public final static String VGT_VZA_BAND_NAME = "VZA";
     public final static String VGT_VAA_BAND_NAME = "VAA";
