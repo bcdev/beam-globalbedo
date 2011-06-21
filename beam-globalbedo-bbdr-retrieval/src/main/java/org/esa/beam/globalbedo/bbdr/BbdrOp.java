@@ -83,6 +83,7 @@ public class BbdrOp extends PixelOperator {
     private static final int TRG_RAA = 19;
     private static final int TRG_DEM = 20;
     private static final int TRG_SNOW = 21;
+    private static final int TRG_AOD = 22;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
     private static final int n_kernel = 2; //(geo & vol)
@@ -173,10 +174,6 @@ public class BbdrOp extends PixelOperator {
                 band.setNoDataValueUsed(true);
             }
             targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
-            Band targetAOT = targetProduct.getBand("AOD550");
-            Band sourceAOT = sourceProduct.getBand("aot");
-            ProductUtils.copyRasterDataNodeProperties(sourceAOT, targetAOT);
-            targetAOT.setSourceImage(sourceAOT.getSourceImage());
 
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
@@ -382,6 +379,7 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(TRG_RAA, "RAA");
             configurator.defineSample(TRG_DEM, "DEM");
             configurator.defineSample(TRG_SNOW, "snow_mask");
+            configurator.defineSample(TRG_AOD, "AOD550");
         }
     }
 
@@ -424,6 +422,7 @@ public class BbdrOp extends PixelOperator {
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);
             targetSamples[TRG_DEM].set(hsf);
+            targetSamples[TRG_AOD].set(aot);
         }
 
         double ozo;
