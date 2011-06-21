@@ -106,14 +106,6 @@ enum Sensor {
         return wavelength;
     }
 
-    public double getaNDVI() {
-        return aNDVI;
-    }
-
-    public double getbNDVI() {
-        return bNDVI;
-    }
-
     public float[] getCal2Meris() {
         return cal2Meris;
     }
