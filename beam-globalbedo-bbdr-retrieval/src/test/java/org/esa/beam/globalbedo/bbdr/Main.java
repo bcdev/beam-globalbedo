@@ -69,7 +69,7 @@ public class Main {
         repro.setParameter("noDataValue", 0.0);
         repro.setSourceProduct(targetProduct);
 
-        targetProduct = repro.getTargetProduct();
+//        targetProduct = repro.getTargetProduct();
 
         final WriteOp writeOp = new WriteOp(targetProduct, new File(targetProductFileName),
                                             ProductIO.DEFAULT_FORMAT_NAME);

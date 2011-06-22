@@ -53,10 +53,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr",
-                  description = "Computes BBDRs and kernel parameters",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -227,7 +227,8 @@ public class BbdrOp extends PixelOperator {
         szaMax = szaArray[szaArray.length - 1];
 
         final double[] hsfArray = aotLut.getDimension(2).getSequence();
-        hsfMin = hsfArray[0];
+//        hsfMin = hsfArray[0];
+        hsfMin = 0.001;
         hsfMax = hsfArray[hsfArray.length - 1];
 
         final double[] aotArray = aotLut.getDimension(1).getSequence();
@@ -244,7 +245,11 @@ public class BbdrOp extends PixelOperator {
         if (landExpression != null && !landExpression.isEmpty()) {
             commonLandExpr = landExpression;
         } else {
-            commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+            if (sensor == Sensor.AATSR_FWARD) {
+                commonLandExpr = "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
+            } else {
+                commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+            }
         }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
 
@@ -267,7 +272,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.MERIS_TOA_BAND_NAMES.length);
+                    BbdrConstants.MERIS_TOA_BAND_NAMES.length);
         } else if (sensor == Sensor.AATSR_NADIR) {
             landExpr = commonLandExpr;
 
@@ -283,7 +288,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
 
         } else if (sensor == Sensor.AATSR_FWARD) {
             landExpr = commonLandExpr;
@@ -300,7 +305,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         } else if (sensor == Sensor.SPOT_VGT) {
 
             landExpr =
@@ -318,7 +323,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.VGT_TOA_BAND_NAMES.length);
+                    BbdrConstants.VGT_TOA_BAND_NAMES.length);
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
@@ -386,15 +391,6 @@ public class BbdrOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (x == 600 && y == 400) {
-            // good
-            System.out.println("x = " + x + "," + y);
-        }
-        if (x == 800 && y == 450) {
-            // bad
-            System.out.println("x = " + x + "," + y);
-        }
-
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
             // only compute over land
             fillTargetSampleWithNoDataValue(targetSamples);
@@ -412,12 +408,17 @@ public class BbdrOp extends PixelOperator {
         double aot = sourceSamples[SRC_AOT].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
         hsf *= 0.001;
-        hsf = max(hsf, -0.45); // elevation up to -450m ASL
+//        hsf = max(hsf, -0.45); // elevation up to -450m ASL
+        // CORRECTION, LG 2011/06/17:
+        if (hsf < 0.0 && hsf >= -0.45) {
+            hsf = 0.0;
+        }
+
 
         if (vza < vzaMin || vza > vzaMax ||
-            sza < szaMin || sza > szaMax ||
-            aot < aotMin || aot > aotMax ||
-            hsf < hsfMin || hsf > hsfMax) {
+                sza < szaMin || sza > szaMax ||
+                aot < aotMin || aot > aotMax ||
+                hsf < hsfMin || hsf > hsfMax) {
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
@@ -564,8 +565,8 @@ public class BbdrOp extends PixelOperator {
         double sig_ndvi_land = pow(
                 (pow(ndviSum * rfl_nir * sqrt(
                         err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
-                 pow(ndviSum * rfl_red * sqrt(
-                         err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+                        pow(ndviSum * rfl_red * sqrt(
+                                err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
                 ), 0.5);
         targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
 
