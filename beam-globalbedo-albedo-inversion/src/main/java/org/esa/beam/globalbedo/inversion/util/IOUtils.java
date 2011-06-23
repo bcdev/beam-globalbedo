@@ -456,10 +456,10 @@ public class IOUtils {
         return bandNames;
     }
 
-    public FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
+    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
         int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
         int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        int size = (numBands+1) * rasterWidth * rasterHeight;
+        int size = (numBands + 1) * rasterWidth * rasterHeight;
         final File fullAccumulatorBinaryFile = new File(filename);
         FileInputStream f = null;
         try {
@@ -471,7 +471,7 @@ public class IOUtils {
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-        int[][] daysToTheClosestSample = new int[rasterWidth][rasterHeight];
+        float[][] daysToTheClosestSample = new float[rasterWidth][rasterHeight];
         float[][][] sumMatrices = new float[numBands][rasterWidth][rasterHeight];
 
         FullAccumulator accumulator = null;
@@ -491,7 +491,7 @@ public class IOUtils {
                     final float value = bb.getFloat();
                     // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
                     if (ii == numBands) {
-                        daysToTheClosestSample[jj][kk] = (int) value;
+                        daysToTheClosestSample[jj][kk] = value;
                     } else {
                         sumMatrices[ii][jj][kk] = value;
                     }
@@ -576,6 +576,48 @@ public class IOUtils {
                         bb.putFloat(index, values[i][j][k]);
                         index += 4;
                     }
+                }
+            }
+
+            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+            // position and the limit is written to the file
+            wChannel.write(bb);
+
+            // Close file when finished with it..
+            wChannel.close();
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e + " // buffer index =  " + index);
+        }
+    }
+
+    public static void writeFullAccumulatorToFile(File file, float[][][] sumMatrices, float[][] daysClosestSample) {
+        int index = 0;
+        try {
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Create a writable file channel
+            FileChannel wChannel = file_output.getChannel();
+
+            final int dim1 = sumMatrices.length;
+            final int dim2 = sumMatrices[0].length;
+            final int dim3 = sumMatrices[0][0].length;
+            final int size = (dim1 + 1) * dim2 * dim3 * 4;
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            for (int i = 0; i < dim1; i++) {
+                for (int j = 0; j < dim2; j++) {
+                    for (int k = 0; k < dim3; k++) {
+                        bb.putFloat(index, sumMatrices[i][j][k]);
+                        index += 4;
+                    }
+                }
+            }
+
+            for (int j = 0; j < dim2; j++) {
+                for (int k = 0; k < dim3; k++) {
+                    bb.putFloat(index, daysClosestSample[j][k]);
+                    index += 4;
                 }
             }
 

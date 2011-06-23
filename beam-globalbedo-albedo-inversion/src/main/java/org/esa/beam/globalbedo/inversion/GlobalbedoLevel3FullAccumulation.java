@@ -49,14 +49,14 @@ public class GlobalbedoLevel3FullAccumulation {
 
         final int numDoys = (endDoy - startDoy) / 8 + 1;
         int[] doys = new int[numDoys];
-        for (int i = startDoy; i <= endDoy; i++) {
+        for (int i = 0; i < doys.length; i++) {
             doys[i] = startDoy + 8 * i;
         }
 
         // STEP 1: get Daily Accumulator input files...
         final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
-        AlbedoInput[] inputProducts = null;
+        AlbedoInput[] inputProducts = new AlbedoInput[doys.length];
         for (int i = 0; i < doys.length; i++) {
             try {
                 inputProducts[i] = IOUtils.getAlbedoInputProduct(accumulatorDir, true, doys[i], year, tile,
@@ -68,7 +68,7 @@ public class GlobalbedoLevel3FullAccumulation {
             }
         }
 
-        // todo: merge input products to single object...
+        // merge input products to single object...
         final String[] sourceBinaryFilenames = mergeInputProductsFilenameLists(inputProducts);
 
         final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
@@ -78,7 +78,7 @@ public class GlobalbedoLevel3FullAccumulation {
                 doys,
                 bandNames.length); // accumulates matrices and extracts mask array
 
-        //todo: write accs to files...
+        // write accs to files...
         String fullAccumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
@@ -89,7 +89,7 @@ public class GlobalbedoLevel3FullAccumulation {
         for (FullAccumulator acc : accsToWrite) {
             String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + acc.getDoy() + ".bin";
             final File fullAccumulatorBinaryFile = new File(fullAccumulatorDir + fullAccumulatorBinaryFilename);
-            IOUtils.writeFloatArrayToFile(fullAccumulatorBinaryFile, acc.getResultArray());
+            IOUtils.writeFullAccumulatorToFile(fullAccumulatorBinaryFile, acc.getSumMatrices(), acc.getDaysToTheClosestSample());
         }
 
         System.out.println("done");
@@ -100,24 +100,26 @@ public class GlobalbedoLevel3FullAccumulation {
         List<String> filenameList = new ArrayList<String>();
         for (AlbedoInput input : inputProducts) {
             final String[] thisInputFilenames = input.getProductBinaryFilenames();
-            int index = thisInputFilenames.length - 1;
-            while (index >= 0 && !filenameList.contains(thisInputFilenames[index])) {
-                filenameList.add(thisInputFilenames[index]);
-                index--;
+            int index = 0;
+            while (index < thisInputFilenames.length) {
+                if (!filenameList.contains(thisInputFilenames[index])) {
+                    filenameList.add(thisInputFilenames[index]);
+                }
+                index++;
             }
         }
 
-        return (String[]) filenameList.toArray();
+        return filenameList.toArray(new String[filenameList.size()]);
     }
 
     private static FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
-                                                                              AlbedoInput[] inputProducts,
-                                                                              int[] doys,
-                                                                              int numBands) {
+                                                                            AlbedoInput[] inputProducts,
+                                                                            int[] doys,
+                                                                            int numBands) {
         final int numDoys = doys.length;
         final int numFiles = sourceBinaryFilenames.length;
 
-        int[][][] daysToTheClosestSample = new int[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+        float[][][] daysToTheClosestSample = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
         float[][][][] sumMatrices = new float[numDoys][numBands][RASTER_WIDTH][RASTER_HEIGHT];
         float[][][] mask = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
 
@@ -142,10 +144,10 @@ public class GlobalbedoLevel3FullAccumulation {
             FileChannel ch = f.getChannel();
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-            for (int i = 0; i <= doys.length; i++) {
-                accumulate[fileIndex][i] = doAccumulation(filename, inputProducts[i].getProductBinaryFilenames(), i);
-                dayDifference[fileIndex][i] = getDayDifference(filename, inputProducts[i]);
-                weight[fileIndex][i] = getWeight(filename, inputProducts[i]);
+            for (int i = 0; i < doys.length; i++) {
+                accumulate[fileIndex][i] = doAccumulation(filename, inputProducts[i].getProductBinaryFilenames());
+                dayDifference[fileIndex][i] = getDayDifference(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
+                weight[fileIndex][i] = getWeight(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
             }
 
             int nRead;
@@ -161,7 +163,7 @@ public class GlobalbedoLevel3FullAccumulation {
                     bb.limit(nRead);
                     while (bb.hasRemaining()) {
                         final float value = bb.getFloat();
-                        for (int doyIndex = 0; doyIndex <= doys.length; doyIndex++) {
+                        for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
                             if (accumulate[fileIndex][doyIndex]) {
                                 // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...
                                 if (ii == numBands - 1) {
@@ -187,16 +189,16 @@ public class GlobalbedoLevel3FullAccumulation {
                 f.close();
 
                 // now update doy of closest sample...
-                for (int doyIndex = 0; doyIndex <= doys.length; doyIndex++) {
+                for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
                     if (accumulate[fileIndex][doyIndex]) {
-                        int[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
+                        float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
                         daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
                                 mask[doyIndex],
                                 dayDifference[fileIndex][doyIndex],
                                 fileIndex);
-                        fileIndex++;
                     }
                 }
+                fileIndex++;
             } catch (IOException e) {
                 // todo
                 e.printStackTrace();
@@ -204,7 +206,7 @@ public class GlobalbedoLevel3FullAccumulation {
         }
 
         FullAccumulator[] accumulators = new FullAccumulator[numDoys];
-        for (int i = 0; i <= numDoys; i++) {
+        for (int i = 0; i < numDoys; i++) {
             accumulators[i] = new FullAccumulator(inputProducts[i].getReferenceYear(),
                     inputProducts[i].getReferenceDoy(),
                     sumMatrices[i], daysToTheClosestSample[i]);
@@ -227,7 +229,7 @@ public class GlobalbedoLevel3FullAccumulation {
     }
 
 
-    private static boolean doAccumulation(String filename, String[] doyFilenames, int doyIndex) {
+    private static boolean doAccumulation(String filename, String[] doyFilenames) {
         for (String doyFilename : doyFilenames) {
             if (filename.equals(doyFilename)) {
                 return true;
@@ -236,16 +238,16 @@ public class GlobalbedoLevel3FullAccumulation {
         return false;
     }
 
-    private static int[][] updateDoYOfClosestSampleArray(int[][] doyOfClosestSampleOld,
+    private static float[][] updateDoYOfClosestSampleArray(float[][] doyOfClosestSampleOld,
                                                          float[][] mask,
                                                          int dayDifference,
                                                          int productIndex) {
         // this is done at the end of 'Accumulator' routine in breadboard...
-        int[][] doyOfClosestSample = new int[RASTER_WIDTH][RASTER_HEIGHT];
+        float[][] doyOfClosestSample = new float[RASTER_WIDTH][RASTER_HEIGHT];
         for (int i = 0; i < RASTER_WIDTH; i++) {
             for (int j = 0; j < RASTER_HEIGHT; j++) {
-                int doy;
-                final int bbdrDaysToDoY = Math.abs(dayDifference) + 1;
+                float doy;
+                final float bbdrDaysToDoY = (float) (Math.abs(dayDifference) + 1);
                 if (productIndex == 0) {
                     if (mask[i][j] > 0.0) {
                         doy = bbdrDaysToDoY;
@@ -253,7 +255,7 @@ public class GlobalbedoLevel3FullAccumulation {
                         doy = doyOfClosestSampleOld[i][j];
                     }
                 } else {
-                    if (mask[i][j] > 0 && doyOfClosestSampleOld[i][j] == 0) {
+                    if (mask[i][j] > 0 && doyOfClosestSampleOld[i][j] == 0.0f) {
                         doy = bbdrDaysToDoY;
                     } else {
                         doy = doyOfClosestSampleOld[i][j];

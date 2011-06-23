@@ -7,4 +7,5 @@ org.esa.beam.globalbedo.inversion.GlobalbedoLevel3DailyAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Inversion$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
+org.esa.beam.globalbedo.inversion.InversionOp_2$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi

@@ -118,36 +118,62 @@ public class GlobalbedoLevel3Inversion extends Operator {
         // the final approach will likely be to take a ready, 'full' accumulator file as
         // created with GlobAlbedoFullAccumulation. This should be read with
         // 'IOUtils.getFullAccumulatorFromBinaryFile' and passed as parameter to InversionOp
-        if (useBinaryAccumulators) {
-            FullAccumulationFromBinaryOp jaiOp = new FullAccumulationFromBinaryOp();
-            jaiOp.setSourceProduct("bbdrReferenceProduct", bbdrProducts[0]);
-            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-            jaiOp.setParameter("sourceBinaryFilenames", inputProduct.getProductBinaryFilenames());
-            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
-            fullAccumulationProduct = jaiOp.getTargetProduct();
+
+//        if (useBinaryAccumulators) {
+//            FullAccumulationFromBinaryOp jaiOp = new FullAccumulationFromBinaryOp();
+//            jaiOp.setSourceProduct("bbdrReferenceProduct", bbdrProducts[0]);
+//            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
+//            jaiOp.setParameter("sourceBinaryFilenames", inputProduct.getProductBinaryFilenames());
+//            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
+//            fullAccumulationProduct = jaiOp.getTargetProduct();
+//        } else {
+//            FullAccumulationFromDimapOp jaiOp = new FullAccumulationFromDimapOp();
+//            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
+//            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
+//            fullAccumulationProduct = jaiOp.getTargetProduct();
+//        }
+//
+//        // STEP 5: compute pixelwise results (perform inversion) and write output
+//        // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
+//        if (accumulationOnly) {
+//            setTargetProduct(fullAccumulationProduct);
+//        } else {
+//            InversionOp inversionOp = new InversionOp();
+//            inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
+//            inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+//            inversionOp.setParameter("year", year);
+//            inversionOp.setParameter("tile", tile);
+//            inversionOp.setParameter("computeSnow", computeSnow);
+//            inversionOp.setParameter("usePrior", usePrior);
+//            inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
+//            Product inversionProduct = inversionOp.getTargetProduct();
+//            setTargetProduct(inversionProduct);
+//        }
+
+        String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+                + File.separator + year + File.separator + tile;
+        String fullAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
+        if (computeSnow) {
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
         } else {
-            FullAccumulationFromDimapOp jaiOp = new FullAccumulationFromDimapOp();
-            jaiOp.setParameter("sourceFilenames", inputProduct.getProductFilenames());
-            jaiOp.setParameter("allDoys", inputProduct.getProductDoys());
-            fullAccumulationProduct = jaiOp.getTargetProduct();
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
 
-        // STEP 5: compute pixelwise results (perform inversion) and write output
-        // --> InversionOp (pixel operator), implement breadboard method 'Inversion'
-        if (accumulationOnly) {
-            setTargetProduct(fullAccumulationProduct);
-        } else {
-            InversionOp inversionOp = new InversionOp();
-            inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
-            inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
-            inversionOp.setParameter("year", year);
-            inversionOp.setParameter("tile", tile);
-            inversionOp.setParameter("computeSnow", computeSnow);
-            inversionOp.setParameter("usePrior", usePrior);
-            inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
-            Product inversionProduct = inversionOp.getTargetProduct();
-            setTargetProduct(inversionProduct);
-        }
+        FullAccumulator accumulator = IOUtils.getFullAccumulatorFromBinaryFile(year, doy, fullAccumulatorBinaryFilename,
+                IOUtils.getDailyAccumulatorBandNames().length + 1);
+
+        InversionOp_2 inversionOp = new InversionOp_2();
+//        inversionOp.setSourceProduct("fullAccumulationProduct", fullAccumulationProduct);
+        inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+        inversionOp.setParameter("fullAccumulator", accumulator);
+        inversionOp.setParameter("year", year);
+        inversionOp.setParameter("tile", tile);
+        inversionOp.setParameter("computeSnow", computeSnow);
+        inversionOp.setParameter("usePrior", usePrior);
+        inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
+        Product inversionProduct = inversionOp.getTargetProduct();
+        setTargetProduct(inversionProduct);
+
         System.out.println("done");
     }
 
