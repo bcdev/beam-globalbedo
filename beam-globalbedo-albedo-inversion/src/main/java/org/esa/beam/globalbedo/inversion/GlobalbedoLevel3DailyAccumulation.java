@@ -35,9 +35,6 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Write also binary accumulator files besides dimap (to be decided)")
-    private boolean writeBinaryAccumulators;
-
     @Override
     public void initialize() throws OperatorException {
 
@@ -59,25 +56,17 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
 
-        // STEP 2: do accumulation, write either to binary or dimap file
+        // STEP 2: do accumulation, write to binary file
         Product accumulationProduct;
-        // todo: make final decision
-        if (writeBinaryAccumulators) {
-            // make sure that binary output is written sequentially
-            JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-            String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
-            final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-            DailyAccumulationToBinaryOp accumulationOp = new DailyAccumulationToBinaryOp();
-            accumulationOp.setSourceProducts(inputProducts);
-            accumulationOp.setParameter("computeSnow", computeSnow);
-            accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
-            accumulationProduct = accumulationOp.getTargetProduct();
-        } else {
-            DailyAccumulationToDimapOp accumulationOp = new DailyAccumulationToDimapOp();
-            accumulationOp.setSourceProducts(inputProducts);
-            accumulationOp.setParameter("computeSnow", computeSnow);
-            accumulationProduct = accumulationOp.getTargetProduct();
-        }
+        // make sure that binary output is written sequentially
+        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
+        String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
+        final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
+        DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+        accumulationOp.setSourceProducts(inputProducts);
+        accumulationOp.setParameter("computeSnow", computeSnow);
+        accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
+        accumulationProduct = accumulationOp.getTargetProduct();
 
         setTargetProduct(accumulationProduct);
     }

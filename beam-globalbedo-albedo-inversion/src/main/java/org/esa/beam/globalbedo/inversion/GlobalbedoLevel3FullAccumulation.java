@@ -20,7 +20,6 @@ import java.util.logging.Logger;
  * with reading the dailies only once!! However, this requires a lot of memory.
  * It seems that not more than 1/2 year (23 DoYs) can be properly processed.
  * Also, final setup will depend on final concept tp be provided by GL.
- * Therefore, this class is not yet used.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -217,7 +216,7 @@ public class GlobalbedoLevel3FullAccumulation {
     private static int getDayDifference(String filename, AlbedoInput inputProduct) {
         final int year = inputProduct.getReferenceYear();
         final int fileYear = Integer.parseInt(filename.substring(9, 13));  // 'matrices_yyyydoy.bin'
-        final int doy = inputProduct.getReferenceDoy();
+        final int doy = inputProduct.getReferenceDoy() + 8;
         final int fileDoy = Integer.parseInt(filename.substring(13, 16)); // 'matrices_yyyydoy.bin'
 
         return IOUtils.getDayDifference(fileDoy, fileYear, doy, year);

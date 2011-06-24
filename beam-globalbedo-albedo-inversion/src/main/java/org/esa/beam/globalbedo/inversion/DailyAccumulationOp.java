@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
 import Jama.Matrix;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -15,25 +14,24 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
+
+import java.io.File;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
- * The daily accumulations are saved as Dimap products.
- *
- * todo: for performance reasons, we will probably use binary accumulator files instead od Dimaps in the final version.
- * Then this class is not needed any more!
- *
+ * For performance reasons, the daily accumulations are written to simple binary files and NOT saved as Dimap products.
  * The breadboard file is 'AlbedoInversionDailyAccumulator.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.dailyaccdimap",
+@OperatorMetadata(alias = "ga.inversion.dailyaccbinary",
                   description = "Provides daily accumulation of single BBDR observations",
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
-public class DailyAccumulationToDimapOp extends PixelOperator {
+public class DailyAccumulationOp extends PixelOperator {
 
     private static final int SRC_BB_VIS = 0;
     private static final int SRC_BB_NIR = 1;
@@ -72,17 +70,21 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
 
     private static final int sourceSampleOffset = 30;  // this value must be >= number of bands in a source product
 
-    private String[][] mBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private String[] vBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
     @SourceProducts(description = "BBDR source product")
     private Product[] sourceProducts;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(description = "Daily accumulator binary file")
+    private File dailyAccumulatorBinaryFile;
+
+
+    private float[][][] resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
+            [AlbedoInversionConstants.MODIS_TILE_WIDTH]
+            [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
+
+    private int numPixelsProcessed = 0;
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
@@ -139,6 +141,7 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
             // get land mask (sensor dependent)
             AlbedoInversionUtils.setLandMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_LAND_MASK,
                                                          sourceProduct);
+
         }
     }
 
@@ -147,27 +150,10 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         final Product targetProduct = productConfigurer.getTargetProduct();
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                mBandNames[i][j] = "M_" + i + "" + j;
-                Band band = targetProduct.addBand(mBandNames[i][j], ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
-            }
-        }
 
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            vBandNames[i] = "V_" + i;
-            Band band = targetProduct.addBand(vBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-        }
-
-        final String eBandName = AlbedoInversionConstants.ACC_E_NAME;
-        Band band = targetProduct.addBand(eBandName, ProductData.TYPE_FLOAT32);
-        band.setNoDataValue(Float.NaN);
-        band.setNoDataValueUsed(true);
-
+        // the target product is not really needed later on, but
+        // we need one target band to make sure that computePixel is processed
+        // and the binary outout is written after all 1200x1200 pixels are done
         final String maskBandName = AlbedoInversionConstants.ACC_MASK_NAME;
         targetProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
         targetProduct.setPreferredTileSize(100, 100);
@@ -178,14 +164,11 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 TRG_M[i][j] = 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * i + j;
-                configurator.defineSample(TRG_M[i][j], mBandNames[i][j]);
             }
         }
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             TRG_V[i] = 3 * 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + i;
-            configurator.defineSample(TRG_V[i], vBandNames[i]);
         }
-        configurator.defineSample(TRG_E, AlbedoInversionConstants.ACC_E_NAME);
         configurator.defineSample(TRG_MASK, AlbedoInversionConstants.ACC_MASK_NAME);
     }
 
@@ -211,6 +194,16 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
         // fill target samples...
         Accumulator accumulator = new Accumulator(M, V, E, mask);
         fillTargetSamples(targetSamples, accumulator);
+        fillBinaryResultArray(accumulator, x, y);
+        numPixelsProcessed++;
+
+        if (numPixelsProcessed == sourceProducts[0].getSceneRasterWidth() *
+                                  sourceProducts[0].getSceneRasterHeight()) {
+            System.out.println("all pixels processed - writing accumulator result array...");
+            IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
+            System.out.println("accumulator result array written.");
+
+        }
     }
 
     private Accumulator getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
@@ -232,8 +225,10 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
         // compute C matrix...
         final double[] correlation = getCorrelation(sourceSamples, sourceProductIndex);
         final double[] SD = getSD(sourceSamples, sourceProductIndex);
-        Matrix C = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        Matrix C = new Matrix(
+                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                  AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         int count = 0;
         int cCount = 0;
@@ -304,17 +299,23 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, Accumulator accumulator) {
+        // just one target band...
+        targetSamples[TRG_MASK].set(accumulator.getMask());
+    }
+
+    private void fillBinaryResultArray(Accumulator accumulator, int x, int y) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i, j));
+                resultArray[TRG_M[i][j]][x][y] = (float) accumulator.getM().get(i, j);
             }
         }
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_V[i]].set(accumulator.getV().get(i, 0));
+            resultArray[TRG_V[i]][x][y] = (float) accumulator.getV().get(i, 0);
         }
-        targetSamples[TRG_E].set(accumulator.getE().get(0, 0));
-        targetSamples[TRG_MASK].set(accumulator.getMask());
+        resultArray[TRG_E][x][y] = (float) accumulator.getE().get(0, 0);
+        resultArray[TRG_MASK][x][y] = (float) accumulator.getMask();
     }
+
 
     private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {
         Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
@@ -372,8 +373,7 @@ public class DailyAccumulationToDimapOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(DailyAccumulationToDimapOp.class);
+            super(DailyAccumulationOp.class);
         }
     }
-
 }

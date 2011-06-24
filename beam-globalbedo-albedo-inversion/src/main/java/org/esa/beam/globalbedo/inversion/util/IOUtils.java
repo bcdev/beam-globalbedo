@@ -192,7 +192,6 @@ public class IOUtils {
             String productYearRootDir;
             // e.g. get '2006' from 'matrices_2006_doy.dim'...
             final String thisProductYear = albedoInputProductName.substring(9, 13);
-//            final String thisProductDoy = albedoInputProductName.substring(14, 17);
             final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
             if (computeSnow) {
                 productYearRootDir = accumulatorRootDir.concat(
@@ -204,7 +203,6 @@ public class IOUtils {
 
             String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
             albedoInputProductFilenames[productIndex] = sourceProductFileName;
-            // todo: add leap year condition  (missing in breadboard!)
             albedoInputProductDoys[productIndex] = Integer.parseInt(
                     thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
             albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
@@ -332,7 +330,6 @@ public class IOUtils {
                         try {
                             final int dayOfYear = Integer.parseInt(
                                     s.substring(13, 16));
-                            // todo: consider leap year condition (not done in the breadboard!!)
                             //    # Left wing
                             if (365 + (doy - wings) <= 366) {
                                 if (!albedoInputProductList.contains(s)) {
@@ -459,7 +456,7 @@ public class IOUtils {
     public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
         int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
         int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        int size = (numBands + 1) * rasterWidth * rasterHeight;
+        int size = numBands * rasterWidth * rasterHeight;
         final File fullAccumulatorBinaryFile = new File(filename);
         FileInputStream f = null;
         try {
@@ -490,7 +487,7 @@ public class IOUtils {
                 while (bb.hasRemaining()) {
                     final float value = bb.getFloat();
                     // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
-                    if (ii == numBands) {
+                    if (ii == numBands-1) {
                         daysToTheClosestSample[jj][kk] = value;
                     } else {
                         sumMatrices[ii][jj][kk] = value;

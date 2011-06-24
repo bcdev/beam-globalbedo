@@ -10,11 +10,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
@@ -29,25 +25,18 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-                  description = "Performs final inversion from fully accumulated optimal estimation matrices",
-                  authors = "Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Performs final inversion from fully accumulated optimal estimation matrices",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
-
-    public static final int[][] SRC_ACCUM_M = new int[3 * NUM_BBDR_WAVE_BANDS][3 * NUM_BBDR_WAVE_BANDS];
-
-    public static final int[] SRC_ACCUM_V = new int[3 * NUM_BBDR_WAVE_BANDS];
-
-    public static final int SRC_ACCUM_E = 90;
-    public static final int SRC_ACCUM_MASK = 91;
 
     public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
     public static final int[][] SRC_PRIOR_SD = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
-    public static final int SOURCE_SAMPLE_OFFSET = 100;  // this value must be >= number of bands in a source product
+    public static final int SOURCE_SAMPLE_OFFSET = 0;  // this value must be >= number of bands in a source product
     public static final int PRIOR_OFFSET = (int) pow(NUM_ALBEDO_PARAMETERS, 2.0);
     public static final int SRC_PRIOR_NSAMPLES = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET;
 
@@ -62,17 +51,12 @@ public class InversionOp extends PixelOperator {
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
+    private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
 
     static {
-        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                SRC_ACCUM_M[i][j] = 3 * NUM_BBDR_WAVE_BANDS * i + j;
-            }
-            SRC_ACCUM_V[i] = 3 * 3 * NUM_BBDR_WAVE_BANDS * NUM_BBDR_WAVE_BANDS + i;
-        }
         for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
             for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_PRIOR_MEAN[i][j] = SOURCE_SAMPLE_OFFSET + NUM_ALBEDO_PARAMETERS * i + j;
@@ -80,9 +64,6 @@ public class InversionOp extends PixelOperator {
             }
         }
     }
-
-    @SourceProduct(description = "Full accumulation product")
-    private Product fullAccumulationProduct;
 
     @SourceProduct(description = "Prior product")
     private Product priorProduct;
@@ -93,6 +74,12 @@ public class InversionOp extends PixelOperator {
     @Parameter(description = "Tile")
     private String tile;
 
+    @Parameter(description = "Day of year")
+    private int doy;
+
+    @Parameter(description = "Full accumulator filename (full path)")
+    private String fullAccumulatorFilePath;
+
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
@@ -102,9 +89,11 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
+    private FullAccumulator fullAccumulator;
+
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
-        super.configureTargetProduct( productConfigurer);
+        super.configureTargetProduct(productConfigurer);
 
         for (String parameterBandName : PARAMETER_BAND_NAMES) {
             productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, Float.NaN);
@@ -120,7 +109,8 @@ public class InversionOp extends PixelOperator {
         productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+        productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+//        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
 
         productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
@@ -129,15 +119,9 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
 
-        // accumulation product:
-        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                configurator.defineSample(SRC_ACCUM_M[i][j], "M_" + i + "" + j, fullAccumulationProduct);
-            }
-            configurator.defineSample(SRC_ACCUM_V[i], "V_" + i, fullAccumulationProduct);
-        }
-        configurator.defineSample(SRC_ACCUM_E, ACC_E_NAME, fullAccumulationProduct);
-        configurator.defineSample(SRC_ACCUM_MASK, ACC_MASK_NAME, fullAccumulationProduct);
+        fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
+                (year, doy, fullAccumulatorFilePath,
+                        IOUtils.getDailyAccumulatorBandNames().length + 1);
 
         // prior product:
         // we have:
@@ -175,6 +159,7 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_REL_ENTROPY, INV_REL_ENTROPY_BAND_NAME);
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
+        configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
     }
 
     @Override
@@ -186,7 +171,9 @@ public class InversionOp extends PixelOperator {
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 
-        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
+//        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
+//        final FullAccumulator accumulator = fullAccumulator;
+        final Accumulator accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
         final Prior prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
 
         final Matrix mAcc = accumulator.getM();
@@ -212,17 +199,17 @@ public class InversionOp extends PixelOperator {
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
                         tmpM)) {
                     tmpM = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
-                                      3 * NUM_ALBEDO_PARAMETERS,
-                                      INVALID);
+                            3 * NUM_ALBEDO_PARAMETERS,
+                            INVALID);
                 }
                 uncertainties = tmpM;
             } else {
                 parameters = new Matrix(NUM_BBDR_WAVE_BANDS *
-                                        NUM_ALBEDO_PARAMETERS, 1,
-                                        INVALID);
+                        NUM_ALBEDO_PARAMETERS, 1,
+                        INVALID);
                 uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
-                                           3 * NUM_ALBEDO_PARAMETERS,
-                                           INVALID);
+                        3 * NUM_ALBEDO_PARAMETERS,
+                        INVALID);
                 maskAcc = 0.0;
             }
 
@@ -262,13 +249,16 @@ public class InversionOp extends PixelOperator {
             }
         }
 
-        // finally we need the 'Goodness of Fit'...
+        // 'Goodness of Fit'...
         final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+
+        // finally we need the 'Days to the closest sample'...
+        final float daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
 
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
-                          parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit);
+                parameters, uncertainties, entropy, relEntropy,
+                maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -284,8 +274,8 @@ public class InversionOp extends PixelOperator {
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples,
-                                   Matrix parameters, Matrix uncertainties,  double entropy, double relEntropy,
-                                   double weightedNumberOfSamples, double goodnessOfFit) {
+                                   Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
+                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample) {
 
         // parameters
         int index = 0;
@@ -308,6 +298,7 @@ public class InversionOp extends PixelOperator {
         targetSamples[offset + TRG_REL_ENTROPY].set(relEntropy);
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
+        targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
 
     }
 

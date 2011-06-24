@@ -24,60 +24,37 @@ public class Accumulator {
     }
 
     /**
-     * Returns an accumulator object built from source samples of an accumulator product to be used for inversion in {@link InversionOp}}.
+     * Returns an accumulator object built from matrix array of a full accumulator product to be used
+     * for inversion in {@link InversionOp}}.
      *
-     * @param sourceSamples - the source samples as defined in {@link InversionOp}}.
+     * @param sumMatrices - array holding M, V, E, mask
+     * @param x - pixel_x
+     * @param y - pixel_y
      *
      * @return Accumulator
      */
-    public static Accumulator createForInversion(Sample[] sourceSamples) {
+    public static Accumulator createForInversion(float[][][] sumMatrices, int x, int y) {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
         Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix E = new Matrix(1, 1);
 
+        int index = 0;
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                final int srcIndexMij = InversionOp.SRC_ACCUM_M[i][j];
-                M.set(i, j, sourceSamples[srcIndexMij].getDouble());
+                M.set(i, j, sumMatrices[index++][x][y]);
             }
-            final int srcIndexVi = InversionOp.SRC_ACCUM_V[i];
-            V.set(i, 0, sourceSamples[srcIndexVi].getDouble());
         }
-        final int srcIndexE = InversionOp.SRC_ACCUM_E;
-        E.set(0, 0, sourceSamples[srcIndexE].getDouble());
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            V.set(i, 0, sumMatrices[index++][x][y]);
+        }
+        E.set(0, 0, sumMatrices[index++][x][y]);
 
-        final int srcIndexMask = InversionOp.SRC_ACCUM_MASK;
-        final double mask = sourceSamples[srcIndexMask].getDouble();
+        final double mask = sumMatrices[index++][x][y];
 
         return new Accumulator(M, V, E, mask);
     }
-
-    public static Accumulator createForInversion(float[][][] sumMatrices, int x, int y) {
-
-           Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-           Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-           Matrix E = new Matrix(1, 1);
-
-           for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-               for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                   final int srcIndexMij = InversionOp.SRC_ACCUM_M[i][j];
-                   M.set(i, j, sumMatrices[srcIndexMij][x][y]);
-               }
-               final int srcIndexVi = InversionOp.SRC_ACCUM_V[i];
-               V.set(i, 0, sumMatrices[srcIndexVi][x][y]);
-           }
-           final int srcIndexE = InversionOp.SRC_ACCUM_E;
-           E.set(0, 0, sumMatrices[srcIndexE][x][y]);
-
-           final int srcIndexMask = InversionOp.SRC_ACCUM_MASK;
-           final double mask = sumMatrices[srcIndexMask][x][y];
-
-           return new Accumulator(M, V, E, mask);
-       }
-
 
 
     // getters and setters...
