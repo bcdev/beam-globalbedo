@@ -1,5 +1,10 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -15,7 +20,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Main class for the full accumulation for a period of DoYs
+ * 'Master' operator for the full accumulation for a period of DoYs
  * --> basically makes 'full' (8-day) binary accumulator files from all the dailies, now
  * with reading the dailies only once!! However, this requires a lot of memory.
  * It seems that not more than 1/2 year (23 DoYs) can be properly processed.
@@ -24,27 +29,38 @@ import java.util.logging.Logger;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class GlobalbedoLevel3FullAccumulation {
+@OperatorMetadata(alias = "ga.l3.fullacc")
+public class GlobalbedoLevel3FullAccumulation extends Operator {
 
     private static final double HALFLIFE = 11.54;
     private static final int RASTER_WIDTH = AlbedoInversionConstants.MODIS_TILE_WIDTH;
     private static final int RASTER_HEIGHT = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
 
-    public static void main(String[] args) throws IOException {
+    @Parameter(defaultValue = "", description = "GA root directory")
+    private String gaRootDir;
+
+    @Parameter(defaultValue = "h18v04", description = "MODIS tile")
+    private String tile;
+
+    @Parameter(defaultValue = "2005", description = "Year")
+    private int year;
+
+    @Parameter(defaultValue = "121", description = "Start Day of Year", interval = "[1,366]")
+    private int startDoy;
+
+    @Parameter(defaultValue = "129", description = "End Day of Year", interval = "[1,366]")
+    private int endDoy;
+
+    @Parameter(defaultValue = "540", description = "Wings")
+    private int wings;
+
+    @Parameter(defaultValue = "false", description = "Compute only snow pixels")
+    private boolean computeSnow;
+
+    @Override
+    public void initialize() throws OperatorException {
         //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         final Logger logger = BeamLogManager.getSystemLogger();
-
-        final String tile = args[0];
-        final int year = Integer.parseInt(args[1]);
-        final int startDoy = Integer.parseInt(args[2]);
-        final int endDoy = Integer.parseInt(args[3]);
-        final int wings = Integer.parseInt(args[4]);
-        final int snowIndex = Integer.parseInt(args[5]);
-        final String gaRootDir = args[6];
-
-        // todo: validate input
-
-        final boolean computeSnow = (snowIndex == 1) ? true : false;
 
         final int numDoys = (endDoy - startDoy) / 8 + 1;
         int[] doys = new int[numDoys];
@@ -271,4 +287,10 @@ public class GlobalbedoLevel3FullAccumulation {
         return doyOfClosestSample;
     }
 
+     public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(GlobalbedoLevel3FullAccumulation.class);
+        }
+    }
 }

@@ -15,8 +15,10 @@ import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.ProductUtils;
 
 import java.io.File;
+import java.lang.annotation.Target;
 
 /**
  * Pixel operator implementing the daily accumulation part of python breadboard.
@@ -88,6 +90,7 @@ public class DailyAccumulationOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
+
         for (int i = 0; i < sourceProducts.length; i++) {
             Product sourceProduct = sourceProducts[i];
 
@@ -150,6 +153,7 @@ public class DailyAccumulationOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         final Product targetProduct = productConfigurer.getTargetProduct();
+        ProductUtils.copyGeoCoding(sourceProducts[0], targetProduct);
 
         // the target product is not really needed later on, but
         // we need one target band to make sure that computePixel is processed

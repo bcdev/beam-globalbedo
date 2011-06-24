@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -28,6 +29,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
     @Parameter(defaultValue = "h18v04", description = "MODIS tile")
     private String tile;
+
+    @Parameter(defaultValue = "tileInfo.dim", description = "Name of tile info filename providing the geocoding")
+    private String tileInfoFilename;
 
     @Parameter(defaultValue = "2005", description = "Year")
     private int year;
@@ -89,22 +93,20 @@ public class GlobalbedoLevel3Inversion extends Operator {
             logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
         }
 
-        // STEP 3: get BBDR product list...
-        Product[] bbdrProducts;
+        // STEP 3: set paths...
         final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
-        try {
-            bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
-        } catch (IOException e) {
-            throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
-        }
+        String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+                + File.separator + year + File.separator + tile;
 
         // STEP 4: we need to reproject the priors for further use...
         Product reprojectedPriorProduct = null;
         if (usePrior) {
             try {
+                String tileInfoFilePath = dailyAccumulatorDir + File.separator + tileInfoFilename;
+                Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
                 if (inputProduct != null) {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            bbdrProducts[0]);
+                            tileInfoProduct);
                 } else {
                     throw new OperatorException("No accumulator input products available - cannot proceed.");
                 }
@@ -113,8 +115,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
         }
 
-        String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
-                + File.separator + year + File.separator + tile;
+        // STEP 5: do inversion...
         String fullAccumulatorBinaryFilename = "matrices_full_" + year + doy + ".bin";
         if (computeSnow) {
             dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
