@@ -76,7 +76,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         }
 
         if (priorProduct == null) {
-            logger.log(Level.ALL, "No prior file available for DoY " + doy + " - do inversion without prior...");
+            logger.log(Level.ALL, "No prior file available for DoY " + IOUtils.getDoyString(doy) + " - do inversion without prior...");
             usePrior = false;
         }
 
@@ -116,7 +116,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         }
 
         // STEP 5: do inversion...
-        String fullAccumulatorBinaryFilename = "matrices_full_" + year + doy + ".bin";
+        String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
         if (computeSnow) {
             dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
         } else {

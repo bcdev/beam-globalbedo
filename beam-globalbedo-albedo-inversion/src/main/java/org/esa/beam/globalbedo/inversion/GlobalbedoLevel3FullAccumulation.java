@@ -102,7 +102,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
         for (FullAccumulator acc : accsToWrite) {
-            String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + acc.getDoy() + ".bin";
+            String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + IOUtils.getDoyString(acc.getDoy()) + ".bin";
             final File fullAccumulatorBinaryFile = new File(fullAccumulatorDir + fullAccumulatorBinaryFilename);
             IOUtils.writeFullAccumulatorToFile(fullAccumulatorBinaryFile, acc.getSumMatrices(), acc.getDaysToTheClosestSample());
         }

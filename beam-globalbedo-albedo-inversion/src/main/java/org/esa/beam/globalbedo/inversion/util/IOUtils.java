@@ -95,12 +95,7 @@ public class IOUtils {
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        String doyString = Integer.toString(doy);
-        if (doy < 10) {
-            doyString = "00" + doyString;
-        } else if (doy < 100) {
-            doyString = "0" + doyString;
-        }
+        String doyString = getDoyString(doy);
 
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith("Kernels." + doyString)) {
@@ -128,12 +123,7 @@ public class IOUtils {
         final String[] brdfFiles = (new File(brdfDir)).list();
         final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);
 
-        String doyString = Integer.toString(doy);
-        if (doy < 10) {
-            doyString = "00" + doyString;
-        } else if (doy < 100) {
-            doyString = "0" + doyString;
-        }
+        String doyString = getDoyString(doy);
 
         for (String brdfFileName : brdfFileList) {
             if (brdfFileName.startsWith("GlobAlbedo." + Integer.toString(year) + doyString)) {
@@ -144,6 +134,19 @@ public class IOUtils {
         }
 
         return null;
+    }
+
+    public static String getDoyString(int doy) {
+        String doyString = Integer.toString(doy);
+        if (doy < 0 || doy > 366) {
+            return null;
+        }
+        if (doy < 10) {
+            doyString = "00" + doyString;
+        } else if (doy < 100) {
+            doyString = "0" + doyString;
+        }
+        return doyString;
     }
 
     static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
@@ -262,15 +265,15 @@ public class IOUtils {
         //  build up a name like this: GlobAlbedo.2005129.h18v04.NoSnow.bin
         if (computeSnow) {
             if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.bin";
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.bin";
             } else {
-                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.NoPrior.bin";
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.NoPrior.bin";
             }
         } else {
             if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.bin";
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.bin";
             } else {
-                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.NoPrior.bin";
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.NoPrior.bin";
             }
         }
         return targetFileName;
