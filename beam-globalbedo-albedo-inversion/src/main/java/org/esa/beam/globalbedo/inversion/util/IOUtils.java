@@ -95,7 +95,12 @@ public class IOUtils {
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        String doyString = getDoyString(doy);
+        String doyString = Integer.toString(doy);
+        if (doy < 10) {
+            doyString = "00" + doyString;
+        } else if (doy < 100) {
+            doyString = "0" + doyString;
+        }
 
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith("Kernels." + doyString)) {
@@ -225,6 +230,7 @@ public class IOUtils {
                     wings,
                     computeSnow);
             String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
+            String[] albedoInputProductBinaryFilepaths = new String[albedoInputProductBinaryFileList.size()];
             int binaryProductIndex = 0;
             for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
                 String productYearRootDir;
@@ -238,11 +244,14 @@ public class IOUtils {
                             File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
                 }
 
-                String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
+                String sourceProductBinaryFileName = albedoInputProductBinaryName;
+                String sourceProductBinaryFilePath = productYearRootDir + File.separator + albedoInputProductBinaryName;
                 albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
+                albedoInputProductBinaryFilepaths[binaryProductIndex] = sourceProductBinaryFilePath;
                 binaryProductIndex++;
             }
             inputProduct.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
+            inputProduct.setProductBinaryFilePaths(albedoInputProductBinaryFilepaths);
         }
 
         return inputProduct;
@@ -265,15 +274,15 @@ public class IOUtils {
         //  build up a name like this: GlobAlbedo.2005129.h18v04.NoSnow.bin
         if (computeSnow) {
             if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.bin";
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.bin";
             } else {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.NoPrior.bin";
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".Snow.NoPrior.bin";
             }
         } else {
             if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.bin";
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.bin";
             } else {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.NoPrior.bin";
+                targetFileName = "GlobAlbedo." + year + doy + "." + tile + ".NoSnow.NoPrior.bin";
             }
         }
         return targetFileName;
@@ -373,6 +382,17 @@ public class IOUtils {
         waveBandsOffsetMap.put(0, "VIS");
         waveBandsOffsetMap.put(1, "NIR");
         waveBandsOffsetMap.put(2, "SW");
+    }
+
+    public static File[] getDailyAccumulatorFiles(String dailyAccumulatorDir, int year, int doy) {
+        File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS];
+        final String[] bandnames = getDailyAccumulatorBandNames();
+        for (int i=0; i<filesPerMatrixElement.length; i++) {
+            final String thisFilename = "matrices_" + year + doy + "_" + bandnames[i];
+            filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator +  thisFilename);
+        }
+
+        return filesPerMatrixElement;
     }
 
     public static String[] getDailyAccumulatorBandNames() {
@@ -490,7 +510,7 @@ public class IOUtils {
                 while (bb.hasRemaining()) {
                     final float value = bb.getFloat();
                     // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
-                    if (ii == numBands-1) {
+                    if (ii == numBands - 1) {
                         daysToTheClosestSample[jj][kk] = value;
                     } else {
                         sumMatrices[ii][jj][kk] = value;
@@ -556,7 +576,39 @@ public class IOUtils {
         }
     }
 
-    public static void writeFloatArrayToFile(File file, float[][][] values) {
+    public static void write2DFloatArrayToFile(File file, float[][] values) {
+        int index = 0;
+        try {
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Create a writable file channel
+            FileChannel wChannel = file_output.getChannel();
+
+            final int dim1 = values.length;
+            final int dim2 = values[0].length;
+            final int size = dim1 * dim2 * 4;
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+
+            for (int i = 0; i < dim1; i++) {
+                for (int j = 0; j < dim2; j++) {
+                        bb.putFloat(index, values[i][j]);
+                        index += 4;
+                }
+            }
+
+            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+            // position and the limit is written to the file
+            wChannel.write(bb);
+
+            // Close file when finished with it..
+            wChannel.close();
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e + " // buffer index =  " + index);
+        }
+    }
+
+    public static void write3DFloatArrayToFile(File file, float[][][] values) {
         int index = 0;
         try {
             // Create an output stream to the file.
@@ -590,6 +642,7 @@ public class IOUtils {
             System.out.println("IO exception = " + e + " // buffer index =  " + index);
         }
     }
+
 
     public static void writeFullAccumulatorToFile(File file, float[][][] sumMatrices, float[][] daysClosestSample) {
         int index = 0;

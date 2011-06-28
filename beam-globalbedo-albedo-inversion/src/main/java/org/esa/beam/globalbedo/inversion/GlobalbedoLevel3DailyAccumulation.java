@@ -1,7 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -9,7 +7,6 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.media.jai.JAI;
 import java.io.*;
@@ -63,12 +60,15 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         Product accumulationProduct;
         // make sure that binary output is written sequentially
         JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-        String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
+        String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
+        System.out.println("dailyAccumulatorDir = " + dailyAccumulatorDir);
         final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
+        final File[] dailyAccumulatorBinaryFilesPerMatrixElement = IOUtils.getDailyAccumulatorFiles(dailyAccumulatorDir, year, doy);
         DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
         accumulationOp.setSourceProducts(inputProducts);
         accumulationOp.setParameter("computeSnow", computeSnow);
         accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
+        accumulationOp.setParameter("dailyAccumulatorBinaryFiles", dailyAccumulatorBinaryFilesPerMatrixElement);
         accumulationProduct = accumulationOp.getTargetProduct();
 
         setTargetProduct(accumulationProduct);

@@ -260,7 +260,7 @@ public class IOTest extends TestCase {
 
         long time1 = System.currentTimeMillis();
 
-        IOUtils.writeFloatArrayToFile(file, testArray);
+        IOUtils.write3DFloatArrayToFile(file, testArray);
         long time2 = System.currentTimeMillis();
         System.out.println("time for writing floats: " + (time2 - time1) / 1000.0);
 
@@ -302,18 +302,5 @@ public class IOTest extends TestCase {
         assertEquals(20, IOUtils.getDayDifference(doy, year, refDoy, refYear));
         refYear = 2003;
         assertEquals(710, IOUtils.getDayDifference(doy, year, refDoy, refYear));
-    }
-
-    public void testGetDoyString() throws Exception {
-        int doy = 1;
-        assertEquals("001", IOUtils.getDoyString(doy));
-        doy = 22;
-        assertEquals("022", IOUtils.getDoyString(doy));
-        doy = 345;
-        assertEquals("345", IOUtils.getDoyString(doy));
-        doy = -1;
-        assertNull(IOUtils.getDoyString(doy));
-        doy = 400;
-        assertNull(IOUtils.getDoyString(doy));
     }
 }
