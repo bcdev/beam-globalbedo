@@ -774,4 +774,18 @@ public class IOUtils {
         return Math.abs(difference);
     }
 
+    public static Product[] getAlbedo8DayProducts(String albedoDir, int year, int doy) throws IOException {
+        // todo implement
+        return new Product[0];  //To change body of created methods use File | Settings | File Templates.
+    }
+
+    public static int getDoyFromAlbedoProductName(String productName) {
+        String doyString = productName.substring(15, 18);
+        int doy = Integer.parseInt(doyString);
+        if (doy < 0 || doy > 366) {
+            return -1;
+        }
+        return doy;
+    }
+
 }

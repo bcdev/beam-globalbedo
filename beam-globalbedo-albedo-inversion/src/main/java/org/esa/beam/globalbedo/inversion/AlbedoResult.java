@@ -13,7 +13,9 @@ public class AlbedoResult {
     private double[] bsa;
     private double[] wsa;
     private Matrix[] bsaSigma;
+    private double[] bsaSigmaArray;
     private Matrix[] wsaSigma;
+    private double[] wsaSigmaArray;
     private double weightedNumberOfSamples;
     private double relEntropy;
     private double goodnessOfFit;
@@ -34,6 +36,20 @@ public class AlbedoResult {
         this.dataMask = dataMask;
         this.sza = sza;
     }
+
+    public AlbedoResult(double[] bsa, double[] wsa, double[] bsaSigma, double[] wsaSigma, double weightedNumberOfSamples,
+                        double relEntropy, double goodnessOfFit, double snowFraction, double dataMask) {
+        this.bsa = bsa;
+        this.wsa = wsa;
+        this.bsaSigmaArray = bsaSigma;
+        this.wsaSigmaArray = wsaSigma;
+        this.weightedNumberOfSamples = weightedNumberOfSamples;
+        this.relEntropy = relEntropy;
+        this.goodnessOfFit = goodnessOfFit;
+        this.snowFraction = snowFraction;
+        this.dataMask = dataMask;
+    }
+
 
     public double[] getBsa() {
         return bsa;
@@ -113,5 +129,13 @@ public class AlbedoResult {
 
     public void setSza(double sza) {
         this.sza = sza;
+    }
+
+    public double[] getBsaSigmaArray() {
+        return bsaSigmaArray;
+    }
+
+    public double[] getWsaSigmaArray() {
+        return wsaSigmaArray;
     }
 }
