@@ -1,0 +1,26 @@
+<?xml version="1.0"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <artifactId>beam-globalbedo</artifactId>
+        <groupId>org.esa.beam.globalbedo</groupId>
+        <version>0.1-SNAPSHOT</version>
+    </parent>
+
+    <packaging>jar</packaging>
+
+    <groupId>org.esa.beam.globalbedo</groupId>
+    <artifactId>beam-globalbedo-gmted2010</artifactId>
+    <name>GMTED2010 Elevation Support</name>
+    <description>Support for the  GMTED2010 Elevation Model</description>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-core</artifactId>
+        </dependency>
+    </dependencies>
+</project>

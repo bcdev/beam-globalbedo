@@ -71,6 +71,7 @@
         <module>beam-globalbedo-albedo-inversion</module>
         <module>beam-globalbedo-mosaic-reader</module>
         <module>beam-globalbedo-upscaling</module>
+        <module>beam-globalbedo-gmted2010</module>
     </modules>
 
     <properties>
