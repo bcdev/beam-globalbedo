@@ -156,8 +156,8 @@ public class DailyAccumulationOp extends PixelOperator {
         // we need one target band to make sure that computePixel is processed
         // and the binary outout is written after all 1200x1200 pixels are done
         final String maskBandName = AlbedoInversionConstants.ACC_MASK_NAME;
-        targetProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
-        targetProduct.setPreferredTileSize(100, 100);
+        targetProduct.addBand(maskBandName, ProductData.TYPE_INT8);
+//        targetProduct.setPreferredTileSize(100, 100);
     }
 
     @Override
@@ -193,19 +193,23 @@ public class DailyAccumulationOp extends PixelOperator {
         }
 
         // fill target samples...
-        Accumulator accumulator = new Accumulator(M, V, E, mask);
-        fillTargetSamples(targetSamples, accumulator);
-        fillBinaryResultArray(accumulator, x, y);
-        numPixelsProcessed++;
+//        Accumulator accumulator = new Accumulator(M, V, E, mask);
+//        fillTargetSamples(targetSamples, accumulator);
+//        fillBinaryResultArray(accumulator, x, y);
+        fillBinaryResultArray(M, V, E, mask, x, y);
+//        numPixelsProcessed++;
+        countPixel();
 
         if (numPixelsProcessed == sourceProducts[0].getSceneRasterWidth() *
                 sourceProducts[0].getSceneRasterHeight()) {
             System.out.println("all pixels processed - writing accumulator result array...");
+            long t1 = System.currentTimeMillis();
 //            IOUtils.write3DFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
             for (int i=0; i<dailyAccumulatorBinaryFiles.length; i++) {
                 IOUtils.write2DFloatArrayToFile(dailyAccumulatorBinaryFiles[i], resultArray[i]);
             }
-            System.out.println("accumulator result array written.");
+            long t2 = System.currentTimeMillis();
+            System.out.println("accumulator result array written. " + (t2-t1));
 
         }
     }
@@ -307,7 +311,7 @@ public class DailyAccumulationOp extends PixelOperator {
         targetSamples[TRG_MASK].set(accumulator.getMask());
     }
 
-    private void fillBinaryResultArray(Accumulator accumulator, int x, int y) {
+    private void fillBinaryResultArray_old(Accumulator accumulator, int x, int y) {
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 resultArray[TRG_M[i][j]][x][y] = (float) accumulator.getM().get(i, j);
@@ -319,6 +323,20 @@ public class DailyAccumulationOp extends PixelOperator {
         resultArray[TRG_E][x][y] = (float) accumulator.getE().get(0, 0);
         resultArray[TRG_MASK][x][y] = (float) accumulator.getMask();
     }
+
+    private void fillBinaryResultArray(Matrix M, Matrix V, Matrix E, double mask, int x, int y) {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                resultArray[TRG_M[i][j]][x][y] = (float) M.get(i, j);
+            }
+        }
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            resultArray[TRG_V[i]][x][y] = (float) V.get(i, 0);
+        }
+        resultArray[TRG_E][x][y] = (float) E.get(0, 0);
+        resultArray[TRG_MASK][x][y] = (float) mask;
+    }
+
 
 
     private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {
@@ -372,6 +390,10 @@ public class DailyAccumulationOp extends PixelOperator {
         return (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble() == 0.0 &&
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble() == 0.0 &&
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble() == 0.0);
+    }
+
+    private synchronized void countPixel() {
+        numPixelsProcessed++;
     }
 
     public static class Spi extends OperatorSpi {

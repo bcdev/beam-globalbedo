@@ -59,7 +59,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         // STEP 2: do accumulation, write to binary file
         Product accumulationProduct;
         // make sure that binary output is written sequentially
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
         String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
         System.out.println("dailyAccumulatorDir = " + dailyAccumulatorDir);
         final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);

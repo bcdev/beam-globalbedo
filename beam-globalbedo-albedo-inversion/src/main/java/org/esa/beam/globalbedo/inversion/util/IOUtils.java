@@ -8,12 +8,17 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
+import org.opengis.geometry.coordinate.OffsetCurve;
 
 import java.io.*;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
+import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -288,8 +293,9 @@ public class IOUtils {
         return targetFileName;
     }
 
-    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
-                                                       int year, String tile,
+    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles,
+                                                       final int doy,
+                                                       final int year, String tile,
                                                        int wings,
                                                        boolean computeSnow) {
         List<String> albedoInputProductList = new ArrayList<String>();
@@ -312,7 +318,10 @@ public class IOUtils {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005123.dim', 'matrices_2005123.bin'...
                 if (isBinaryFiles) {
-                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
+//                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
+                    String prefix = "matrices_" + year + doy + "_";
+                    return (name.startsWith(prefix + "M") || name.startsWith(prefix + "V") ||
+                    name.startsWith(prefix + "E") || name.startsWith(prefix + "mask"));
                 } else {
                     return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("dim"));
                 }
@@ -321,7 +330,7 @@ public class IOUtils {
 
         final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
 
-        doy = doy + 8; // 'MODIS day'
+        final int modisDoy = doy + 8; // 'MODIS day'
 
         // fill the name list year by year...
         for (String thisYear : allYears) {
@@ -343,22 +352,22 @@ public class IOUtils {
                             final int dayOfYear = Integer.parseInt(
                                     s.substring(13, 16));
                             //    # Left wing
-                            if (365 + (doy - wings) <= 366) {
+                            if (365 + (modisDoy - wings) <= 366) {
                                 if (!albedoInputProductList.contains(s)) {
-                                    if (dayOfYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
+                                    if (dayOfYear >= 366 + (modisDoy - wings) && Integer.parseInt(thisYear) < year) {
                                         albedoInputProductList.add(s);
                                     }
                                 }
                             }
                             //    # Center
-                            if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
+                            if ((dayOfYear < modisDoy + wings) && (dayOfYear >= modisDoy - wings) &&
                                     (Integer.parseInt(thisYear) == year)) {
                                 albedoInputProductList.add(s);
                             }
                             //    # Right wing
-                            if ((doy + wings) - 365 > 0) {
+                            if ((modisDoy + wings) - 365 > 0) {
                                 if (!albedoInputProductList.contains(s)) {
-                                    if (dayOfYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
+                                    if (dayOfYear <= (modisDoy + wings - 365) && Integer.parseInt(thisYear) > year) {
                                         albedoInputProductList.add(s);
                                     }
                                 }
@@ -390,6 +399,7 @@ public class IOUtils {
         for (int i=0; i<filesPerMatrixElement.length; i++) {
             final String thisFilename = "matrices_" + year + doy + "_" + bandnames[i];
             filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator +  thisFilename);
+//            filesPerMatrixElement[i] = new File("/home/uwe/ga_processing/tmp" + File.separator +  thisFilename);
         }
 
         return filesPerMatrixElement;
@@ -587,18 +597,24 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int size = dim1 * dim2 * 4;
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//            FloatBuffer floatBuffer = bb.asFloatBuffer();
 
+            ByteBuffer bb = ByteBuffer.allocateDirect(dim1*4);
+            FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
-                for (int j = 0; j < dim2; j++) {
-                        bb.putFloat(index, values[i][j]);
-                        index += 4;
-                }
+//                for (int j = 0; j < dim2; j++) {
+//                    bb.putFloat(index, values[i][j]);
+                    floatBuffer.put(values[i], 0, dim2);
+                wChannel.write(bb);
+                floatBuffer.clear();
+//                    index += 4;
+//                }
             }
 
             // Write the ByteBuffer contents; the bytes between the ByteBuffer's
             // position and the limit is written to the file
-            wChannel.write(bb);
+//            wChannel.write(bb);
 
             // Close file when finished with it..
             wChannel.close();

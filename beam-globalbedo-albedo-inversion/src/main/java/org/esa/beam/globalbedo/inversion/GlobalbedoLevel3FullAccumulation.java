@@ -142,6 +142,16 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
 
         FullAccumulator[] accumulators = new FullAccumulator[numDoys];
         for (int i = 0; i < numDoys; i++) {
+            System.out.println("doy = " + i);
+            long freemem = Runtime.getRuntime().freeMemory();
+            System.out.println("freemem  = " + freemem);
+            long maxMem = Runtime.getRuntime().maxMemory();
+            System.out.println("maxMem   = " + maxMem);
+            long totalMem = Runtime.getRuntime().totalMemory();
+            System.out.println("totalMem = " + totalMem);
+            long used = totalMem - freemem;
+            System.out.println("used     = " + used);
+
             accumulators[i] = new FullAccumulator(inputProducts[i].getReferenceYear(),
                     inputProducts[i].getReferenceDoy(),
                     new float[numBands][RASTER_WIDTH][RASTER_HEIGHT], new float[RASTER_WIDTH][RASTER_HEIGHT]);
