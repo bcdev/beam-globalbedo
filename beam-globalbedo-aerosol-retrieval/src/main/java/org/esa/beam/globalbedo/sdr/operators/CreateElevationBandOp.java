@@ -15,27 +15,26 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.dataop.dem.ElevationModel;
+import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
+import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
+import org.esa.beam.framework.dataop.resamp.Resampling;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.gpf.operators.standard.MergeOp.BandDesc;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-import org.esa.beam.framework.dataop.dem.ElevationModel;
-import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
-import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
-import org.esa.beam.framework.dataop.resamp.Resampling;
-import org.esa.beam.framework.gpf.GPF;
-import org.esa.beam.gpf.operators.standard.MergeOp;
+import java.awt.Rectangle;
 
 /**
  * Operator that creates the one and only elevation band
@@ -69,7 +68,7 @@ public class CreateElevationBandOp extends Operator {
      * Initializes this operator and sets the one and only target product.
      * <p>The target product can be either defined by a field of type {@link org.esa.beam.framework.datamodel.Product} annotated with the
      * {@link org.esa.beam.framework.gpf.annotations.TargetProduct TargetProduct} annotation or
-     * by calling {@link #setTargetProduct} method.</p>
+     * by calling {@link #setTargetProduct(org.esa.beam.framework.datamodel.Product)} method.</p>
      * <p>The framework calls this method after it has created this operator.
      * Any client code that must be performed before computation of tile data
      * should be placed here.</p>
@@ -83,17 +82,21 @@ public class CreateElevationBandOp extends Operator {
         final int rasterWidth = sourceProduct.getSceneRasterWidth();
         final int rasterHeight = sourceProduct.getSceneRasterHeight();
         geoCoding = sourceProduct.getGeoCoding();
-        targetProduct = new Product("Elevation Product", "ELEV_GETASSE", rasterWidth, rasterHeight);
+        targetProduct = new Product("Elevation Product", "Elevation", rasterWidth, rasterHeight);
         targetProduct.setDescription("Elevation for "+sourceProduct.getName());
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
         targetProduct.setPointingFactory(sourceProduct.getPointingFactory());
 
         final ElevationModelRegistry elevationModelRegistry = ElevationModelRegistry.getInstance();
-        final ElevationModelDescriptor demDescriptor = elevationModelRegistry.getDescriptor("GETASSE30");
+        ElevationModelDescriptor demDescriptor = elevationModelRegistry.getDescriptor("GMTED2010_30");
         if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
-            throw new OperatorException(demDescriptor.getName() + "not installed");
+            demDescriptor = elevationModelRegistry.getDescriptor("GETASSE30");
+            if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
+                throw new OperatorException(" No DEM installed (neither GETASSE30 nor GMTED2010_30).");
+            }
         }
+        getLogger().info("Dsing DEM: " + demDescriptor.getName());
         dem = demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
         noDataValue = dem.getDescriptor().getNoDataValue();
         String elevName = "elevation";
