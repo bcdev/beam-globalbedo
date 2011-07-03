@@ -31,7 +31,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "h18v04", description = "MODIS tile")
     private String tile;
 
-    @Parameter(defaultValue = "tileInfo.dim", description = "Name of tile info filename providing the geocoding")
+    @Parameter(defaultValue = "tileInfo_0.dim", description = "Name of tile info filename providing the geocoding")
     private String tileInfoFilename;
 
     @Parameter(defaultValue = "2005", description = "Year")

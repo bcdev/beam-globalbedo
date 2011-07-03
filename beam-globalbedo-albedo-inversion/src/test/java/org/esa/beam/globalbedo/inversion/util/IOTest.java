@@ -2,10 +2,7 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.net.URL;
 import java.net.URLDecoder;
 import java.nio.ByteBuffer;
@@ -225,53 +222,175 @@ public class IOTest extends TestCase {
         assertEquals(-1, IOUtils.getDoyFromAlbedoProductName(productName));
     }
 
-//    public void testWriteFloatArray() throws Exception {
-//        final float[][] fArray = new float[][]{{2.5f, 3.7f, 8.9f}, {1.2f, 5.3f, 9.6f}};
-//        int dim1 = fArray.length;
-//        int dim2 = fArray[0].length;
-//        ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
-//        FloatBuffer floatBuffer = bb.asFloatBuffer();
-//
-//        // Create an output stream to the file.
-//        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
-//        testfile.createNewFile();
-//        FileOutputStream file_output = new FileOutputStream(testfile);
-//        // Create a writable file channel
-//        FileChannel ch = file_output.getChannel();
-//        for (int i = 0; i < dim1; i++) {
-//            floatBuffer.put(fArray[i], 0, dim2);
-//            ch.write(bb);
-//            floatBuffer.clear();
-//        }
-//    }
+    public void testWriteFloatArray() throws Exception {
+        final float[][] fArray = new float[][]{{2.5f, 3.7f, 8.9f}, {1.2f, 5.3f, 9.6f}};
+        int dim1 = fArray.length;
+        int dim2 = fArray[0].length;
+        ByteBuffer bb = ByteBuffer.allocate(dim1 * dim2 * 4);
+        FloatBuffer floatBuffer = bb.asFloatBuffer();
 
-//    public void testReadFloatArray() throws Exception {
+        // Create an output stream to the file.
+        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
+        testfile.createNewFile();
+        FileOutputStream file_output = new FileOutputStream(testfile);
+        // Create a writable file channel
+        FileChannel ch = file_output.getChannel();
+        for (int i = 0; i < dim1; i++) {
+            floatBuffer.put(fArray[i], 0, dim2);
+//            floatBuffer.clear();
+        }
+        ch.write(bb);
+    }
+
+    public void testWriteFloatArray2() throws Exception {
+        float[][] fArray = new float[1200][1200];
+        int dim1 = fArray.length;
+        int dim2 = fArray[0].length;
+
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++) {
+                fArray[i][j] = i * j * 1.0f;
+            }
+        }
+
+        long t1 = System.currentTimeMillis();
+        ByteBuffer bb = ByteBuffer.allocate(dim1 * dim2 * 4);
+        FloatBuffer floatBuffer = bb.asFloatBuffer();
+
+        // Create an output stream to the file.
+        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
+        testfile.createNewFile();
+        FileOutputStream file_output = new FileOutputStream(testfile);
+        // Create a writable file channel
+        FileChannel ch = file_output.getChannel();
+        for (int i = 0; i < dim1; i++) {
+            floatBuffer.put(fArray[i], 0, dim2);
+//            floatBuffer.clear();
+        }
+        ch.write(bb);
+        long t2 = System.currentTimeMillis();
+        System.out.println("test 2 time: = " + (t2 - t1));
+        file_output.close();
+        ch.close();
+    }
+
+    public void testWriteFloatArray3() throws Exception {
+        float[][] fArray = new float[1200][1200];
+        int dim1 = fArray.length;
+        int dim2 = fArray[0].length;
+
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++) {
+                fArray[i][j] = i * j * 1.0f;
+            }
+        }
+
+        long t1 = System.currentTimeMillis();
+        // Create an output stream to the file.
+        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
+        testfile.createNewFile();
+        FileOutputStream file_output = new FileOutputStream(testfile);
+        // Create a writable file channel
+        FileChannel ch = file_output.getChannel();
+        ByteBuffer bb = ByteBuffer.allocate(dim1 * dim2 * 4);
+
+        int index = 0;
+        for (int i = 0; i < dim1; i++) {
+            for (int j = 0; j < dim2; j++) {
+                bb.putFloat(index, fArray[i][j]);
+                index += 4;
+            }
+        }
+
+        // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+        // position and the limit is written to the file
+        ch.write(bb);
+
+        long t2 = System.currentTimeMillis();
+        file_output.close();
+        ch.close();
+        System.out.println("test 3 time: = " + (t2 - t1));
+    }
+
+
+//    public void testReadFloatArray_1() throws Exception {
 //        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
-//        FileInputStream finStream = new FileInputStream(testfile);
-//        FileChannel ch = finStream.getChannel();
-//        ByteBuffer bb = ByteBuffer.allocateDirect(2 * 3 * 4);
+//        try {
+//            FileInputStream file_input = new FileInputStream(testfile);
+//            DataInputStream data_in = new DataInputStream(file_input);
 //
-//        float[][] fArray = new float[2][3];
-//        int jj = 0;
-//        int kk = 0;
+//            while (true) {
+//                try {
+//                    float fl = data_in.readFloat();
+////                    System.out.printf("Data read = " + fl);
+//                } catch (EOFException eof) {
+//                    System.out.println("End of File");
+//                    break;
+//                }
+//                // Print out the integer, double data pairs.
 //
-//        int nRead;
-//        while ((nRead = ch.read(bb)) != -1) {
-//            if (nRead == 0) {
-//                continue;
 //            }
-//            bb.position(0);
-//            bb.limit(nRead);
-//            while (bb.hasRemaining()) {
-//                final float value = bb.getFloat();
-//                fArray[jj][kk] = value;
-//            }
-//            kk++;
-//            if (kk == 2) {
-//                jj++;
-//                kk = 0;
-//            }
+//            data_in.close();
+//        } catch (IOException e) {
+//            System.out.println("IO Exception =: " + e);
 //        }
-//        System.out.println("bla");
 //    }
+//
+    public void testReadFloatArray_2() throws Exception {
+        long t1 = System.currentTimeMillis();
+        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
+        FileInputStream finStream = new FileInputStream(testfile);
+        FileChannel ch = finStream.getChannel();
+        ByteBuffer bb = ByteBuffer.allocate(2 * 3 * 4);
+
+        float[][] fArray = new float[1200][1200];
+        int jj = 0;
+        int kk = 0;
+
+        int nRead;
+        while ((nRead = ch.read(bb)) != -1) {
+            if (nRead == 0) {
+                continue;
+            }
+            bb.position(0);
+            bb.limit(nRead);
+            while (bb.hasRemaining()) {
+                final float value = bb.getFloat();
+//                System.out.printf("Data read (2) = " + value);
+                fArray[jj][kk] = value;
+            }
+            bb.clear();
+            kk++;
+            if (kk == 1200) {
+                jj++;
+                kk = 0;
+            }
+        }
+        System.out.println("bla");
+        long t2 = System.currentTimeMillis();
+        System.out.println("read test 2 time: = " + (t2 - t1));
+    }
+
+    public void testReadFloatArray_3() throws Exception {
+        long t1 = System.currentTimeMillis();
+        File testfile = new File("C:" + File.separator + "Temp" + File.separator + "muell.txt");
+        FileInputStream finStream = new FileInputStream(testfile);
+        FileChannel ch = finStream.getChannel();
+        ByteBuffer bb = ByteBuffer.allocate(1200 * 1200 * 4);
+        FloatBuffer floatBuffer = bb.asFloatBuffer();
+
+        int nRead = ch.read(bb);
+
+        int dim1 = 1200;
+        int dim2 = 1200;
+        float[][] fArray = new float[dim1][dim2];
+
+        for (int i = 0; i < dim1; i++) {
+            floatBuffer.get(fArray[i]);
+        }
+
+        System.out.println("bla");
+        long t2 = System.currentTimeMillis();
+        System.out.println("read test 3 time: = " + (t2 - t1));
+    }
 }

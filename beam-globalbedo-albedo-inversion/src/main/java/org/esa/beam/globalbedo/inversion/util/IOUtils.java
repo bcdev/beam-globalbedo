@@ -649,13 +649,14 @@ public class IOUtils {
 //            for (int i = 0; i < dim1; i++) {
 //                floatBuffer.put(sumMatrixElement[i], 0, dim2);
 //                wChannel.write(bb);
-//                floatBuffer.clear();
+//                floatBuffer.clear();     // REMOVE THIS LINE!! see IOTest
 //            }
             // END NEW
 
             // Close file when finished with it..
             wChannel.close();
             file_output.close();
+            System.out.println("file " + file.getAbsolutePath() + " written.");
         } catch (IOException e) {
             System.out.println("IO exception = " + e + " // buffer index =  " + index);
         }
