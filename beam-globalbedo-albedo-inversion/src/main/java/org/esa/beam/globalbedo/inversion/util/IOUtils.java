@@ -6,19 +6,16 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
+import org.esa.beam.globalbedo.inversion.MatrixElementFullAccumulator;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
-import org.opengis.geometry.coordinate.OffsetCurve;
 
 import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
-import java.nio.channels.Channels;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -314,14 +311,18 @@ public class IOUtils {
             }
         };
 
+        final int modisDoy = doy + 8; // 'MODIS day'
+
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005123.dim', 'matrices_2005123.bin'...
                 if (isBinaryFiles) {
 //                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
-                    String prefix = "matrices_" + year + doy + "_";
-                    return (name.startsWith(prefix + "M") || name.startsWith(prefix + "V") ||
-                    name.startsWith(prefix + "E") || name.startsWith(prefix + "mask"));
+//                    String prefix = "matrices_" + year + modisDoy + "_";
+                    String prefix = "matrices_" + year;
+                    return (name.startsWith(prefix) &&
+                            (name.contains("_M_") || name.contains("_V_") ||
+                            name.contains("_E_") || name.contains("_mask_")));
                 } else {
                     return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("dim"));
                 }
@@ -329,8 +330,6 @@ public class IOUtils {
         };
 
         final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
-
-        final int modisDoy = doy + 8; // 'MODIS day'
 
         // fill the name list year by year...
         for (String thisYear : allYears) {
@@ -396,14 +395,26 @@ public class IOUtils {
     public static File[] getDailyAccumulatorFiles(String dailyAccumulatorDir, int year, int doy) {
         File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS];
         final String[] bandnames = getDailyAccumulatorBandNames();
-        for (int i=0; i<filesPerMatrixElement.length; i++) {
+        for (int i = 0; i < filesPerMatrixElement.length; i++) {
             final String thisFilename = "matrices_" + year + doy + "_" + bandnames[i];
-            filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator +  thisFilename);
+            filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator + thisFilename);
 //            filesPerMatrixElement[i] = new File("/home/uwe/ga_processing/tmp" + File.separator +  thisFilename);
         }
 
         return filesPerMatrixElement;
     }
+
+    public static File[] getFullAccumulatorFiles(String dailyAccumulatorDir, int year, int doy) {
+        File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS+1];
+        final String[] bandnames = getFullAccumulatorBandNames();
+        for (int i = 0; i < filesPerMatrixElement.length; i++) {
+            final String thisFilename = "matrices_full_" + year + doy + "_" + bandnames[i];
+            filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator + thisFilename);
+        }
+
+        return filesPerMatrixElement;
+    }
+
 
     public static String[] getDailyAccumulatorBandNames() {
         String[] bandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
@@ -423,6 +434,29 @@ public class IOUtils {
 
         bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
         bandNames[index++] = AlbedoInversionConstants.ACC_MASK_NAME;
+
+        return bandNames;
+    }
+
+    public static String[] getFullAccumulatorBandNames() {
+        String[] bandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
+                3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS +
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + 3];
+
+        int index = 0;
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                bandNames[index++] = "M_" + i + "" + j;
+            }
+        }
+
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            bandNames[index++] = "V_" + i;
+        }
+
+        bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
+        bandNames[index++] = AlbedoInversionConstants.ACC_MASK_NAME;
+        bandNames[index++] = AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
 
         return bandNames;
     }
@@ -486,10 +520,10 @@ public class IOUtils {
         return bandNames;
     }
 
-    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
+    public static MatrixElementFullAccumulator getMatrixElementFullAccumulatorFromBinaryFile(int year, int doy, String filename) {
         int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
         int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        int size = numBands * rasterWidth * rasterHeight;
+        int size = rasterWidth * rasterHeight;
         final File fullAccumulatorBinaryFile = new File(filename);
         FileInputStream f = null;
         try {
@@ -501,16 +535,14 @@ public class IOUtils {
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-        float[][] daysToTheClosestSample = new float[rasterWidth][rasterHeight];
-        float[][][] sumMatrices = new float[numBands][rasterWidth][rasterHeight];
+        float[][] sumMatrix = new float[rasterWidth][rasterHeight];
 
-        FullAccumulator accumulator = null;
+        MatrixElementFullAccumulator accumulator = null;
 
         int nRead;
         try {
             int ii = 0;
             int jj = 0;
-            int kk = 0;
             while ((nRead = ch.read(bb)) != -1) {
                 if (nRead == 0) {
                     continue;
@@ -519,21 +551,12 @@ public class IOUtils {
                 bb.limit(nRead);
                 while (bb.hasRemaining()) {
                     final float value = bb.getFloat();
-                    // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
-                    if (ii == numBands - 1) {
-                        daysToTheClosestSample[jj][kk] = value;
-                    } else {
-                        sumMatrices[ii][jj][kk] = value;
-                    }
-                    // find the right indices for sumMatrices array...
-                    kk++;
-                    if (kk == rasterHeight) {
-                        jj++;
-                        kk = 0;
-                        if (jj == rasterWidth) {
-                            ii++;
-                            jj = 0;
-                        }
+
+                    sumMatrix[ii][jj] = value;
+                    jj++;
+                    if (jj == rasterWidth) {
+                        ii++;
+                        jj = 0;
                     }
                 }
                 bb.clear();
@@ -541,49 +564,13 @@ public class IOUtils {
             ch.close();
             f.close();
 
-            accumulator = new FullAccumulator(year, doy, sumMatrices, daysToTheClosestSample);
+            accumulator = new MatrixElementFullAccumulator(year, doy, sumMatrix);
 
         } catch (IOException e) {
             // todo
             e.printStackTrace();
         }
         return accumulator;
-    }
-
-
-    public static void writeDoubleArrayToFile(File file, double[][][] values) {
-        int index = 0;
-        try {
-            // Create an output stream to the file.
-            FileOutputStream file_output = new FileOutputStream(file);
-            // Create a writable file channel
-            FileChannel wChannel = file_output.getChannel();
-
-            final int dim1 = values.length;
-            final int dim2 = values[0].length;
-            final int dim3 = values[0][0].length;
-            final int size = dim1 * dim2 * dim3 * Double.SIZE / 8;
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-            for (int i = 0; i < dim1; i++) {
-                for (int j = 0; j < dim2; j++) {
-                    for (int k = 0; k < dim3; k++) {
-                        bb.putDouble(index, values[i][j][k]);
-                        index += 8;
-                    }
-                }
-            }
-
-            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-            // position and the limit is written to the file
-            wChannel.write(bb);
-
-            // Close file when finished with it..
-            wChannel.close();
-            file_output.close();
-        } catch (IOException e) {
-            System.out.println("IO exception = " + e + " // buffer index =  " + index);
-        }
     }
 
     public static void write2DFloatArrayToFile(File file, float[][] values) {
@@ -597,95 +584,13 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int size = dim1 * dim2 * 4;
-//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-//            FloatBuffer floatBuffer = bb.asFloatBuffer();
 
-            ByteBuffer bb = ByteBuffer.allocateDirect(dim1*4);
-            FloatBuffer floatBuffer = bb.asFloatBuffer();
-            for (int i = 0; i < dim1; i++) {
-//                for (int j = 0; j < dim2; j++) {
-//                    bb.putFloat(index, values[i][j]);
-                    floatBuffer.put(values[i], 0, dim2);
-                wChannel.write(bb);
-                floatBuffer.clear();
-//                    index += 4;
-//                }
-            }
-
-            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-            // position and the limit is written to the file
-//            wChannel.write(bb);
-
-            // Close file when finished with it..
-            wChannel.close();
-            file_output.close();
-        } catch (IOException e) {
-            System.out.println("IO exception = " + e + " // buffer index =  " + index);
-        }
-    }
-
-    public static void write3DFloatArrayToFile(File file, float[][][] values) {
-        int index = 0;
-        try {
-            // Create an output stream to the file.
-            FileOutputStream file_output = new FileOutputStream(file);
-            // Create a writable file channel
-            FileChannel wChannel = file_output.getChannel();
-
-            final int dim1 = values.length;
-            final int dim2 = values[0].length;
-            final int dim3 = values[0][0].length;
-            final int size = dim1 * dim2 * dim3 * 4;
+            // OLD:
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
             for (int i = 0; i < dim1; i++) {
                 for (int j = 0; j < dim2; j++) {
-                    for (int k = 0; k < dim3; k++) {
-                        bb.putFloat(index, values[i][j][k]);
-                        index += 4;
-                    }
-                }
-            }
-
-            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-            // position and the limit is written to the file
-            wChannel.write(bb);
-
-            // Close file when finished with it..
-            wChannel.close();
-            file_output.close();
-        } catch (IOException e) {
-            System.out.println("IO exception = " + e + " // buffer index =  " + index);
-        }
-    }
-
-
-    public static void writeFullAccumulatorToFile(File file, float[][][] sumMatrices, float[][] daysClosestSample) {
-        int index = 0;
-        try {
-            // Create an output stream to the file.
-            FileOutputStream file_output = new FileOutputStream(file);
-            // Create a writable file channel
-            FileChannel wChannel = file_output.getChannel();
-
-            final int dim1 = sumMatrices.length;
-            final int dim2 = sumMatrices[0].length;
-            final int dim3 = sumMatrices[0][0].length;
-            final int size = (dim1 + 1) * dim2 * dim3 * 4;
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-            for (int i = 0; i < dim1; i++) {
-                for (int j = 0; j < dim2; j++) {
-                    for (int k = 0; k < dim3; k++) {
-                        bb.putFloat(index, sumMatrices[i][j][k]);
-                        index += 4;
-                    }
-                }
-            }
-
-            for (int j = 0; j < dim2; j++) {
-                for (int k = 0; k < dim3; k++) {
-                    bb.putFloat(index, daysClosestSample[j][k]);
+                    bb.putFloat(index, values[i][j]);
                     index += 4;
                 }
             }
@@ -693,6 +598,18 @@ public class IOUtils {
             // Write the ByteBuffer contents; the bytes between the ByteBuffer's
             // position and the limit is written to the file
             wChannel.write(bb);
+            // END OLD
+
+            // NEW:
+//            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * 4);
+//            FloatBuffer floatBuffer = bb.asFloatBuffer();
+//            for (int i = 0; i < dim1; i++) {
+//                floatBuffer.put(values[i], 0, dim2);
+//                wChannel.write(bb);
+//                floatBuffer.clear();
+//            }
+            // END NEW
+
 
             // Close file when finished with it..
             wChannel.close();
@@ -702,70 +619,46 @@ public class IOUtils {
         }
     }
 
-
-    public static double[] readDoubleArrayFromFile(File file, int dim1, int dim2, int dim3) {
-        final int size = dim1 * dim2 * dim3;
-        double[] result = new double[dim1 * dim2 * dim3];
+    public static void writeFullAccumulatorMatrixElementToFile(File file, float[][] sumMatrixElement) {
+        int index = 0;
         try {
-            // Obtain a channel
-            ReadableByteChannel channel = new FileInputStream(file).getChannel();
+            // Create an output stream to the file.
+            FileOutputStream file_output = new FileOutputStream(file);
+            // Create a writable file channel
+            FileChannel wChannel = file_output.getChannel();
 
-            // Create a direct ByteBuffer; see also Creating a ByteBuffer
+            final int dim1 = sumMatrixElement.length;
+            final int dim2 = sumMatrixElement[0].length;
+            final int size = dim1 * dim2 * 4;
+            // OLD:
             ByteBuffer bb = ByteBuffer.allocateDirect(size);
 
-            int nRead;
-            int index = 0;
-            while ((nRead = channel.read(bb)) != -1) {
-                if (nRead == 0) {
-                    continue;
+            for (int i = 0; i < dim1; i++) {
+                for (int j = 0; j < dim2; j++) {
+                    bb.putFloat(index, sumMatrixElement[i][j]);
+                    index += 4;
                 }
-                bb.position(0);
-                bb.limit(nRead);
-                while (bb.hasRemaining()) {
-                    int nGet = Math.min(bb.remaining(), size);
-                    result[index] = bb.getDouble();
-                    index++;
-                }
-                bb.clear();
             }
-            channel.close();
-        } catch (Exception e) {
-            // todo
-            e.printStackTrace();
+            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+            // position and the limit is written to the file
+            wChannel.write(bb);
+
+            // NEW:
+//            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * 4);
+//            FloatBuffer floatBuffer = bb.asFloatBuffer();
+//            for (int i = 0; i < dim1; i++) {
+//                floatBuffer.put(sumMatrixElement[i], 0, dim2);
+//                wChannel.write(bb);
+//                floatBuffer.clear();
+//            }
+            // END NEW
+
+            // Close file when finished with it..
+            wChannel.close();
+            file_output.close();
+        } catch (IOException e) {
+            System.out.println("IO exception = " + e + " // buffer index =  " + index);
         }
-        return result;
-    }
-
-    public static float[] readFloatArrayFromFile(File file, int dim1, int dim2, int dim3) {
-        final int size = dim1 * dim2 * dim3;
-        float[] result = new float[dim1 * dim2 * dim3];
-        try {
-            // Obtain a channel
-            ReadableByteChannel channel = new FileInputStream(file).getChannel();
-
-            // Create a direct ByteBuffer; see also Creating a ByteBuffer
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-            int nRead;
-            int index = 0;
-            while ((nRead = channel.read(bb)) != -1) {
-                if (nRead == 0) {
-                    continue;
-                }
-                bb.position(0);
-                bb.limit(nRead);
-                while (bb.hasRemaining()) {
-                    result[index] = bb.getFloat();
-                    index++;
-                }
-                bb.clear();
-            }
-            channel.close();
-        } catch (Exception e) {
-            // todo
-            e.printStackTrace();
-        }
-        return result;
     }
 
     public static boolean isLeapYear(int year) {

@@ -10,6 +10,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -54,8 +55,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
     private boolean accumulationOnly;
 
-    // todo: do we need this configurable?
-    private boolean usePrior = true;
+    @Parameter(defaultValue = "true", description = "Use MODIS priors for inversion")
+    private boolean usePrior;
 
     private Logger logger;
 
@@ -68,16 +69,18 @@ public class GlobalbedoLevel3Inversion extends Operator {
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
                 "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
-        Product priorProduct;
-        try {
-            priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot load prior product: " + e.getMessage());
-        }
+        Product priorProduct = null;
+        if (usePrior) {
+            try {
+                priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
+            } catch (IOException e) {
+                throw new OperatorException("Cannot load prior product: " + e.getMessage());
+            }
 
-        if (priorProduct == null) {
-            logger.log(Level.ALL, "No prior file available for DoY " + IOUtils.getDoyString(doy) + " - do inversion without prior...");
-            usePrior = false;
+            if (priorProduct == null) {
+                logger.log(Level.ALL, "No prior file available for DoY " + IOUtils.getDoyString(doy) + " - do inversion without prior...");
+                usePrior = false;
+            }
         }
 
         // STEP 2: get Daily Accumulator input files...
@@ -114,6 +117,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
             } catch (IOException e) {
                 throw new OperatorException("Cannot reproject prior products: " + e.getMessage(), e);
             }
+        } else {
+            reprojectedPriorProduct = new Product("dummy", "dummy", AlbedoInversionConstants.MODIS_TILE_WIDTH,
+                    AlbedoInversionConstants.MODIS_TILE_HEIGHT);
         }
 
         // STEP 5: do inversion...
@@ -124,7 +130,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
             dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
 
-        String fullAccumulatorFilePath = dailyAccumulatorDir + fullAccumulatorBinaryFilename;
+//        String fullAccumulatorFilePath = dailyAccumulatorDir + fullAccumulatorBinaryFilename;
+        String fullAccumulatorFilePath = dailyAccumulatorDir;
 
         InversionOp inversionOp = new InversionOp();
         inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
