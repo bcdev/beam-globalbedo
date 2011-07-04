@@ -408,7 +408,7 @@ public class IOUtils {
         File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS+1];
         final String[] bandnames = getFullAccumulatorBandNames();
         for (int i = 0; i < filesPerMatrixElement.length; i++) {
-            final String thisFilename = "matrices_full_" + year + doy + "_" + bandnames[i];
+            final String thisFilename = "matrices_full_" + year + getDoyString(doy) + "_" + bandnames[i];
             filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator + thisFilename);
         }
 
