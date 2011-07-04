@@ -13,6 +13,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.management.GarbageCollectorMXBean;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
@@ -133,6 +134,139 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
 
         float[][][] daysToTheClosestSample = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
 
+//        int size = numBands * RASTER_WIDTH * RASTER_HEIGHT;
+        int size = 4 * RASTER_WIDTH * RASTER_HEIGHT;
+
+        MatrixElementFullAccumulator[] accumulators = new MatrixElementFullAccumulator[numDoys];
+        final File[][] fullAccumulatorBinaryFilesPerMatrixElement = new File[numDoys][numBands + 1];
+        for (int i = 0; i < numDoys; i++) {
+            accumulators[i] = new MatrixElementFullAccumulator(inputProducts[i].getReferenceYear(),
+                    inputProducts[i].getReferenceDoy(), new float[RASTER_WIDTH][RASTER_HEIGHT]);
+            fullAccumulatorBinaryFilesPerMatrixElement[i] =
+                    IOUtils.getFullAccumulatorFiles(dailyAccumulatorDir, inputProducts[i].getReferenceYear(),
+                            inputProducts[i].getReferenceDoy());
+        }
+
+        File[][] matrixFiles = new File[sourceBinaryFileDoys.length][AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS];
+        for (int i = 0; i < sourceBinaryFileDoys.length; i++) {
+            // todo: this works only if we process within the same 'year'
+            matrixFiles[i] = IOUtils.getDailyAccumulatorFiles(dailyAccumulatorDir, year, sourceBinaryFileDoys[i]);
+        }
+
+        final float[][][] weight = new float[numBands][numFiles][numDoys];
+
+//        ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//        FloatBuffer floatBuffer = bb.asFloatBuffer();
+
+        for (int bandIndex = 0; bandIndex < AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS; bandIndex++) {
+
+            System.out.println("Processing band " + (bandIndex + 1) + " of " +
+                    AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS + " ...");
+
+            float[][][] sumMatrices = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+            float[][][] mask = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+
+            final boolean[][] accumulate = new boolean[numFiles][numDoys];
+            final int[][] dayDifference = new int[numFiles][numDoys];
+
+            // re-use the accumulator object, set the sum to back to zero
+            for (int i = 0; i < numDoys; i++) {
+                accumulators[i].resetSumMatrix();
+            }
+
+            for (int fileIndex = 0; fileIndex < sourceBinaryFileDoys.length; fileIndex++) {
+                final String filename = matrixFiles[fileIndex][bandIndex].getName();
+                final String filePath = matrixFiles[fileIndex][bandIndex].getAbsolutePath();
+//                System.out.println("sourceFileName = " + filePath);
+
+                final File dailyAccumulatorBinaryFile = new File(filePath);
+                FileInputStream f = null;
+                try {
+                    f = new FileInputStream(dailyAccumulatorBinaryFile);
+                } catch (FileNotFoundException e) {
+                    // todo
+                    e.printStackTrace();
+                }
+                long t1 = System.currentTimeMillis();
+                FileChannel ch = f.getChannel();
+                ByteBuffer bb = ByteBuffer.allocateDirect(size);
+                FloatBuffer floatBuffer = bb.asFloatBuffer();
+
+                for (int i = 0; i < doys.length; i++) {
+                    accumulate[fileIndex][i] = doAccumulation(filename, inputProducts[i].getProductBinaryFilenames());
+                    dayDifference[fileIndex][i] = getDayDifference(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
+                    weight[bandIndex][fileIndex][i] = getWeight(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
+                }
+
+                try {
+
+                    int nRead = ch.read(bb);
+
+                    float[][] values = new float[RASTER_WIDTH][RASTER_HEIGHT];
+
+                    for (int jj = 0; jj < RASTER_WIDTH; jj++) {
+                        floatBuffer.get(values[jj]);
+                        for (int kk = 0; kk < RASTER_WIDTH; kk++) {
+                            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+                                if (accumulate[fileIndex][doyIndex]) {
+                                    mask[doyIndex][jj][kk] = values[jj][kk];
+                                    sumMatrices[doyIndex][jj][kk] += weight[bandIndex][fileIndex][doyIndex] * values[jj][kk];
+                                }
+                            }
+                        }
+                    }
+
+                    bb.clear();
+                    floatBuffer.clear();
+                    ch.close();
+                    f.close();
+
+                    long t2 = System.currentTimeMillis();
+//                    System.out.println("read file " + filename + "in : " + (t2 - t1) + " ms");
+
+                } catch (IOException e) {
+                    // todo
+                    e.printStackTrace();
+                }
+
+                if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
+                    for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+                        if (accumulate[fileIndex][doyIndex]) {
+                            float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
+                            daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
+                                    mask[doyIndex],   // for last band index, this is the mask
+                                    dayDifference[fileIndex][doyIndex],
+                                    fileIndex);
+                        }
+                    }
+                }
+            } // fileIndex
+            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+                accumulators[doyIndex].accumulateSumMatrixElement(sumMatrices[doyIndex]);
+                IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
+                        accumulators[doyIndex].getSumMatrix());
+                if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
+                    IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
+                            daysToTheClosestSample[doyIndex]);
+                }
+
+            }
+        } // bandIndex
+    }
+
+
+    private void getDailyAccFromBinaryFileAndAccumulate_old(String dailyAccumulatorDir, AlbedoInput[] inputProducts,
+                                                            int[] doys) {
+        // merge input products to single object...
+        final Integer[] sourceBinaryFileDoys = mergeInputProductsFilenameDoys(inputProducts);
+        final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
+        int numBands = bandNames.length;
+
+        final int numDoys = doys.length;
+        final int numFiles = sourceBinaryFileDoys.length;
+
+        float[][][] daysToTheClosestSample = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+
         int size = numBands * RASTER_WIDTH * RASTER_HEIGHT;
 
         MatrixElementFullAccumulator[] accumulators = new MatrixElementFullAccumulator[numDoys];
@@ -203,7 +337,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
                         bb.limit(nRead);
                         while (bb.hasRemaining()) {
 
-                           // todo: optimize as for binary writing
+                            // todo: optimize as for binary writing
 //                            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * 4);
 //                            FloatBuffer floatBuffer = bb.asFloatBuffer();
 //                            for (int i = 0; i < dim1; i++) {
@@ -213,7 +347,6 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
 //                            }
 
                             // end optimize
-
 
 
                             final float value = bb.getFloat();
@@ -264,6 +397,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             }
         } // bandIndex
     }
+
 
     private static int getDayDifference(String filename, AlbedoInput inputProduct) {
         final int year = inputProduct.getReferenceYear();

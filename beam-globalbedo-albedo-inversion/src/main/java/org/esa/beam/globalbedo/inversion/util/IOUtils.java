@@ -322,7 +322,7 @@ public class IOUtils {
                     String prefix = "matrices_" + year;
                     return (name.startsWith(prefix) &&
                             (name.contains("_M_") || name.contains("_V_") ||
-                            name.contains("_E_") || name.contains("_mask_")));
+                                    name.contains("_E_") || name.contains("_mask_")));
                 } else {
                     return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("dim"));
                 }
@@ -405,7 +405,7 @@ public class IOUtils {
     }
 
     public static File[] getFullAccumulatorFiles(String dailyAccumulatorDir, int year, int doy) {
-        File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS+1];
+        File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS + 1];
         final String[] bandnames = getFullAccumulatorBandNames();
         for (int i = 0; i < filesPerMatrixElement.length; i++) {
             final String thisFilename = "matrices_full_" + year + getDoyString(doy) + "_" + bandnames[i];
@@ -523,7 +523,8 @@ public class IOUtils {
     public static MatrixElementFullAccumulator getMatrixElementFullAccumulatorFromBinaryFile(int year, int doy, String filename) {
         int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
         int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        int size = rasterWidth * rasterHeight;
+//        int size = rasterWidth * rasterHeight;
+        int size = rasterWidth * rasterHeight * 4;
         final File fullAccumulatorBinaryFile = new File(filename);
         FileInputStream f = null;
         try {
@@ -534,33 +535,45 @@ public class IOUtils {
         }
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
+        FloatBuffer floatBuffer = bb.asFloatBuffer();
 
         float[][] sumMatrix = new float[rasterWidth][rasterHeight];
 
         MatrixElementFullAccumulator accumulator = null;
 
-        int nRead;
         try {
-            int ii = 0;
-            int jj = 0;
-            while ((nRead = ch.read(bb)) != -1) {
-                if (nRead == 0) {
-                    continue;
-                }
-                bb.position(0);
-                bb.limit(nRead);
-                while (bb.hasRemaining()) {
-                    final float value = bb.getFloat();
+            // OLD:
+//        int nRead;
+//            int ii = 0;
+//            int jj = 0;
+//            while ((nRead = ch.read(bb)) != -1) {
+//                if (nRead == 0) {
+//                    continue;
+//                }
+//                bb.position(0);
+//                bb.limit(nRead);
+//                while (bb.hasRemaining()) {
+//                    final float value = bb.getFloat();
+//
+//                    sumMatrix[ii][jj] = value;
+//                    jj++;
+//                    if (jj == rasterWidth) {
+//                        ii++;
+//                        jj = 0;
+//                    }
+//                }
+//                bb.clear();
+//            }
+//            ch.close();
+//            f.close();
 
-                    sumMatrix[ii][jj] = value;
-                    jj++;
-                    if (jj == rasterWidth) {
-                        ii++;
-                        jj = 0;
-                    }
-                }
-                bb.clear();
+            // NEW
+            int nRead = ch.read(bb);
+            for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
+                floatBuffer.get(sumMatrix[jj]);
             }
+            bb.clear();
+            floatBuffer.clear();
             ch.close();
             f.close();
 
@@ -631,32 +644,30 @@ public class IOUtils {
             final int dim2 = sumMatrixElement[0].length;
             final int size = dim1 * dim2 * 4;
             // OLD:
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-            for (int i = 0; i < dim1; i++) {
-                for (int j = 0; j < dim2; j++) {
-                    bb.putFloat(index, sumMatrixElement[i][j]);
-                    index += 4;
-                }
-            }
-            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-            // position and the limit is written to the file
-            wChannel.write(bb);
+//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//
+//            for (int i = 0; i < dim1; i++) {
+//                for (int j = 0; j < dim2; j++) {
+//                    bb.putFloat(index, sumMatrixElement[i][j]);
+//                    index += 4;
+//                }
+//            }
+//            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+//            // position and the limit is written to the file
+//            wChannel.write(bb);
 
             // NEW:
-//            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * 4);
-//            FloatBuffer floatBuffer = bb.asFloatBuffer();
-//            for (int i = 0; i < dim1; i++) {
-//                floatBuffer.put(sumMatrixElement[i], 0, dim2);
-//                wChannel.write(bb);
-//                floatBuffer.clear();     // REMOVE THIS LINE!! see IOTest
-//            }
+            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 *dim2 * 4);
+            FloatBuffer floatBuffer = bb.asFloatBuffer();
+            for (int i = 0; i < dim1; i++) {
+                floatBuffer.put(sumMatrixElement[i], 0, dim2);
+            }
+            wChannel.write(bb);
             // END NEW
 
             // Close file when finished with it..
             wChannel.close();
             file_output.close();
-            System.out.println("file " + file.getAbsolutePath() + " written.");
         } catch (IOException e) {
             System.out.println("IO exception = " + e + " // buffer index =  " + index);
         }
