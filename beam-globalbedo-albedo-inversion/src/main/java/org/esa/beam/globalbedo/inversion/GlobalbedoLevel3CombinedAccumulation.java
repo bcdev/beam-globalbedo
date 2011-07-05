@@ -1,7 +1,9 @@
 package org.esa.beam.globalbedo.inversion;
 
+import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -11,7 +13,13 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.RenderedOp;
+import javax.media.jai.operator.AddDescriptor;
+import javax.media.jai.operator.ConstantDescriptor;
+import javax.media.jai.operator.MultiplyConstDescriptor;
 import java.awt.*;
+import java.awt.image.BufferedImage;
+import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -171,6 +179,18 @@ public class GlobalbedoLevel3CombinedAccumulation extends Operator {
             matrixFiles[i] = IOUtils.getDailyAccumulatorFiles(dailyAccumulatorDir, year, dailyAccDoys[i]);
         }
 
+        BufferedImage[] accu = new BufferedImage[bandNames.length];
+        for (int i = 0; i < accu.length; i++) {
+            accu[i] = ConstantDescriptor.create((float) RASTER_WIDTH, (float) RASTER_HEIGHT, new Float[]{0f},
+                    null).getAsBufferedImage();
+        }
+
+        Product targetProduct = new Product(getId(),
+                getClass().getName(),
+                RASTER_WIDTH,
+                RASTER_HEIGHT);
+        targetProduct.setPreferredTileSize(100, 100);
+
         // loop over merged daily acc doys...
         float[][][] dailyAccResultArray = new float[numDailyAccs][RASTER_WIDTH][RASTER_HEIGHT];
         for (int dailyAccIndex = 0; dailyAccIndex < numDailyAccs; dailyAccIndex++) {
@@ -181,49 +201,67 @@ public class GlobalbedoLevel3CombinedAccumulation extends Operator {
             if (dailyAccumulationProduct != null) {
                 // loop over all bands...
                 for (int bandIndex = 0; bandIndex < numBands; bandIndex++) {
-//                    System.out.println("bandIndex = " + bandIndex);
-                    dailyAccResultArray[dailyAccIndex] = getDailyAccResultArray(dailyAccumulationProduct, bandIndex);
-                    for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
-                        final String filename = matrixFiles[dailyAccIndex][bandIndex].getName();
-                        accumulate[dailyAccIndex][doyIndex] = doAccumulation(filename, inputProducts[doyIndex].getProductBinaryFilenames());
-                        dayDifference[dailyAccIndex][doyIndex] = getDayDifference(filename, inputProducts[doyIndex]);
-                        final float weight = getWeight(filename, inputProducts[doyIndex]);
-                        if (accumulate[dailyAccIndex][doyIndex]) {
-                            for (int jj = 0; jj < RASTER_WIDTH; jj++) {
-                                for (int kk = 0; kk < RASTER_WIDTH; kk++) {
-                                    mask[doyIndex][jj][kk] = dailyAccResultArray[dailyAccIndex][jj][kk];
-                                    sumMatrices[doyIndex][bandIndex][jj][kk] += weight * dailyAccResultArray[dailyAccIndex][jj][kk];
-                                }
-                            }
-                        }
-                    }
+                    System.out.println("bandIndex = " + bandIndex);
+                    // TOO SLOW :-(
+//                    dailyAccResultArray[dailyAccIndex] = getDailyAccResultArray(dailyAccumulationProduct, bandIndex);
+//                    for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+//                        final String filename = matrixFiles[dailyAccIndex][bandIndex].getName();
+//                        accumulate[dailyAccIndex][doyIndex] = doAccumulation(filename, inputProducts[doyIndex].getProductBinaryFilenames());
+//                        dayDifference[dailyAccIndex][doyIndex] = getDayDifference(filename, inputProducts[doyIndex]);
+//                        final float weight = getWeight(filename, inputProducts[doyIndex]);
+//                        if (accumulate[dailyAccIndex][doyIndex]) {
+//                            for (int jj = 0; jj < RASTER_WIDTH; jj++) {
+//                                for (int kk = 0; kk < RASTER_WIDTH; kk++) {
+//                                    mask[doyIndex][jj][kk] = dailyAccResultArray[dailyAccIndex][jj][kk];
+//                                    sumMatrices[doyIndex][bandIndex][jj][kk] += weight * dailyAccResultArray[dailyAccIndex][jj][kk];
+//                                }
+//                            }
+//                        }
+//                    }
+
+                    Band band = dailyAccumulationProduct.getBandAt(bandIndex);
+                    final MultiLevelImage geophysicalImage = band.getGeophysicalImage();
+                    final RenderedImage image = geophysicalImage.getImage(0);
+
+                    // add weighted product to accumulation result...
+                    final RenderedOp multipliedSourceImageToAccum = MultiplyConstDescriptor.create(image,
+                            new double[]{1.0},
+                            null);
+                    final RenderedOp result = AddDescriptor.create(accu[bandIndex], multipliedSourceImageToAccum,
+                            null);
+                    accu[bandIndex] = result.getAsBufferedImage();        // TOOOOOO SLOW
                 }
 
                 dailyAccumulationProduct.dispose();
 
-                for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
-                    if (accumulate[dailyAccIndex][doyIndex]) {
-                        float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
-                        daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
-                                mask[doyIndex],   // for last band index, this is the mask
-                                dayDifference[dailyAccIndex][doyIndex],
-                                dailyAccIndex);
-                    }
-                }
+//                for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+//                    if (accumulate[dailyAccIndex][doyIndex]) {
+//                        float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
+//                        daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
+//                                mask[doyIndex],   // for last band index, this is the mask
+//                                dayDifference[dailyAccIndex][doyIndex],
+//                                dailyAccIndex);
+//                    }
+//                }
             }
         }
 
-        for (int bandIndex = 0; bandIndex < numBands; bandIndex++) {
-            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
-                accumulators[doyIndex].accumulateSumMatrixElement(sumMatrices[doyIndex][bandIndex]);
-                IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
-                        accumulators[doyIndex].getSumMatrix());
-                if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
-                    IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
-                            daysToTheClosestSample[doyIndex]);
-                }
-            }
+        for (int i = 0; i < bandNames.length; i++) {
+            Band targetBand = targetProduct.addBand(bandNames[i], ProductData.TYPE_FLOAT32);
+            targetBand.setSourceImage(accu[i]);
         }
+
+//        for (int bandIndex = 0; bandIndex < numBands; bandIndex++) {
+//            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+//                accumulators[doyIndex].accumulateSumMatrixElement(sumMatrices[doyIndex][bandIndex]);
+//                IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
+//                        accumulators[doyIndex].getSumMatrix());
+//                if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
+//                    IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
+//                            daysToTheClosestSample[doyIndex]);
+//                }
+//            }
+//        }
     }
 
     private float[][] getDailyAccResultArray(Product dailyAccumulationProduct, int bandIndex) {
