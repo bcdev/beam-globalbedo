@@ -2,10 +2,8 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.MatrixElementFullAccumulator;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
@@ -14,7 +12,6 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
 import java.util.*;
 
 /**
@@ -47,25 +44,27 @@ public class IOUtils {
         int productIndex = 0;
         for (String aMerisBbdrFileList : merisBbdrFileList) {
             String sourceProductFileName = merisBbdrDir + File.separator + aMerisBbdrFileList;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
+            if ((new File(sourceProductFileName)).exists()) {
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                bbdrProducts[productIndex] = product;
+                productIndex++;
+            }
         }
         for (String anAatsrBbdrFileList : aatsrBbdrFileList) {
             String sourceProductFileName = aatsrBbdrDir + File.separator + anAatsrBbdrFileList;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
+            if ((new File(sourceProductFileName)).exists()) {
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                bbdrProducts[productIndex] = product;
+                productIndex++;
+            }
         }
         for (String aVgtBbdrFileList : vgtBbdrFileList) {
             String sourceProductFileName = vgtBbdrDir + File.separator + aVgtBbdrFileList;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
-
-        if (productIndex == 0) {
-            throw new OperatorException("No source products found - check contents of BBDR directory!");
+            if ((new File(sourceProductFileName)).exists()) {
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                bbdrProducts[productIndex] = product;
+                productIndex++;
+            }
         }
 
         return bbdrProducts;
@@ -396,7 +395,7 @@ public class IOUtils {
         File[] filesPerMatrixElement = new File[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS];
         final String[] bandnames = getDailyAccumulatorBandNames();
         for (int i = 0; i < filesPerMatrixElement.length; i++) {
-            final String thisFilename = "matrices_" + year + doy + "_" + bandnames[i];
+            final String thisFilename = "matrices_" + year + IOUtils.getDoyString(doy) + "_" + bandnames[i];
             filesPerMatrixElement[i] = new File(dailyAccumulatorDir + File.separator + thisFilename);
 //            filesPerMatrixElement[i] = new File("/home/uwe/ga_processing/tmp" + File.separator +  thisFilename);
         }
@@ -657,7 +656,7 @@ public class IOUtils {
 //            wChannel.write(bb);
 
             // NEW:
-            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 *dim2 * 4);
+            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
                 floatBuffer.put(sumMatrixElement[i], 0, dim2);

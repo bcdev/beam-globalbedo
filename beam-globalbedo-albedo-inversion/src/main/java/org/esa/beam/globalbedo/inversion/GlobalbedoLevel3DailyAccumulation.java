@@ -48,6 +48,11 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
+        if (inputProducts == null || inputProducts.length == 0) {
+            throw new OperatorException("No source products found - check contents of BBDR directory!");
+        }
+
+
         String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
@@ -60,7 +65,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         Product accumulationProduct;
         // make sure that binary output is written sequentially
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-        String dailyAccumulatorBinaryFilename = "matrices_" + year + doy + ".bin";
+        String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
         System.out.println("dailyAccumulatorDir = " + dailyAccumulatorDir);
         final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
         final File[] dailyAccumulatorBinaryFilesPerMatrixElement = IOUtils.getDailyAccumulatorFiles(dailyAccumulatorDir, year, doy);
