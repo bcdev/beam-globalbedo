@@ -124,7 +124,7 @@ class InstrumentConsts {
     };
     private final double[] aatsrFitWeights = {1.5, 1.0, 1.0, 1.55};
 //    private final String aatsrCldFreeExpr = " !"+idepixFlagBandName+".F_CLOUD_BUFFER && !"+idepixFwardFlagBandName+".F_CLOUD_BUFFER ";
-    private final String  aatsrValAotOutputExpr = "("+idepixFlagBandName+".F_LAND && "
+    private final String  aatsrValAotOutputExpr = "("+idepixFlagBandName+".F_LAND "
         + " && (!"+idepixFlagBandName+".F_CLOUD_BUFFER || "+idepixFlagBandName+".F_CLEAR_SNOW)"
         + " && (!"+idepixFwardFlagBandName+".F_CLOUD_BUFFER || "+idepixFwardFlagBandName+".F_CLEAR_SNOW)"
         + " && (90-sun_elev_nadir) < 70"
@@ -137,7 +137,7 @@ class InstrumentConsts {
         + " && reflec_fward_0670 >= 0"
         + " && reflec_fward_0870 >= 0"
         + " && reflec_fward_1600 >= 0 )";
-    private final String  aatsrValidRetrievalExpr = "("+idepixFlagBandName+".F_LAND && "
+    private final String  aatsrValidRetrievalExpr = "("+idepixFlagBandName+".F_LAND "
         + " && !"+idepixFlagBandName+".F_CLOUD_BUFFER"
         + " && !"+idepixFwardFlagBandName+".F_CLOUD_BUFFER"
         + " && !"+idepixFlagBandName+".F_CLEAR_SNOW"
