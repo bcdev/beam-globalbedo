@@ -43,7 +43,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
+            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy, false);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }

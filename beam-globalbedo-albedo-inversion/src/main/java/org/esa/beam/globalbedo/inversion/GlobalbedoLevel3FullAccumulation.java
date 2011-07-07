@@ -78,7 +78,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             try {
                 inputProducts[i] = IOUtils.getAlbedoInputProduct(accumulatorDir, true, doys[i], year, tile,
                         wings,
-                        computeSnow);
+                        computeSnow, false);
             } catch (IOException e) {
                 // todo: just skip product, but add appropriate logging here
                 logger.log(Level.ALL, "Could not process DoY " + doys[i] + " - skipping.");

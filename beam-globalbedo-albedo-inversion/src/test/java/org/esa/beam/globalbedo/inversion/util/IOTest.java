@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.inversion.util;
 
+import com.thoughtworks.xstream.io.path.Path;
 import junit.framework.TestCase;
 
 import java.io.*;
@@ -19,6 +20,7 @@ public class IOTest extends TestCase {
     private int dim1;
     private int dim2;
     private File testfile;
+    File existingTileInfoFile;
 
     @Override
     public void setUp() throws Exception {
@@ -26,6 +28,13 @@ public class IOTest extends TestCase {
         dim2 = 1200;
         testfile = new File(System.getProperty("user.home") + File.separator + "muell.txt");
         testfile.createNewFile();
+    }
+
+    @Override
+    public void tearDown() throws Exception {
+        if (existingTileInfoFile != null && existingTileInfoFile.exists()) {
+        existingTileInfoFile.delete();
+        }
     }
 
     public void testGetDailyBBDRFiles() {
@@ -493,5 +502,16 @@ public class IOTest extends TestCase {
         }
         long t2 = System.currentTimeMillis();
         System.out.println("read test 6 time: = " + (t2 - t1));
+    }
+
+    public void testGetTileInfoFilepath() throws Exception {
+        String tileDir = System.getProperty("user.home");
+        String existingTileInfoFileName = "tileInfo_3.dim";
+        String existingTileInfoFilePath = tileDir + File.separator + existingTileInfoFileName;
+        existingTileInfoFile = new File(existingTileInfoFilePath);
+        existingTileInfoFile.createNewFile();
+        String defaultTileInfoFileName = "tileInfo_0.dim";
+        String tileInfoFilepath = IOUtils.getTileInfoFilePath(tileDir, defaultTileInfoFileName);
+        assertEquals(existingTileInfoFilePath, tileInfoFilepath);
     }
 }

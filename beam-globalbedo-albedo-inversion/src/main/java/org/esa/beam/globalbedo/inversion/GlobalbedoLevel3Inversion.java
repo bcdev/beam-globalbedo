@@ -90,7 +90,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         try {
             inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, useBinaryAccumulators, doy, year, tile,
                     wings,
-                    computeSnow);
+                    computeSnow, false);
         } catch (IOException e) {
             // todo: just skip product, but add appropriate logging here
             logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
@@ -105,8 +105,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         Product reprojectedPriorProduct = null;
         if (usePrior) {
             try {
-                String tileInfoFilePath = dailyAccumulatorDir + File.separator + tileInfoFilename;
-                System.out.println("tileInfoFilePath = " + tileInfoFilePath);
+                String tileInfoFilePath = IOUtils.getTileInfoFilePath(dailyAccumulatorDir, tileInfoFilename);
                 Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
                 if (inputProduct != null) {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,

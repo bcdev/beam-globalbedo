@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.MatrixElementFullAccumulator;
@@ -22,7 +23,8 @@ import java.util.*;
  */
 public class IOUtils {
 
-    public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
+    public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy,
+                                                         Boolean isQRTest) throws
             IOException {
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
@@ -50,20 +52,22 @@ public class IOUtils {
                 productIndex++;
             }
         }
-        for (String anAatsrBbdrFileList : aatsrBbdrFileList) {
-            String sourceProductFileName = aatsrBbdrDir + File.separator + anAatsrBbdrFileList;
-            if ((new File(sourceProductFileName)).exists()) {
-                Product product = ProductIO.readProduct(sourceProductFileName);
-                bbdrProducts[productIndex] = product;
-                productIndex++;
+        if (!isQRTest) {
+            for (String anAatsrBbdrFileList : aatsrBbdrFileList) {
+                String sourceProductFileName = aatsrBbdrDir + File.separator + anAatsrBbdrFileList;
+                if ((new File(sourceProductFileName)).exists()) {
+                    Product product = ProductIO.readProduct(sourceProductFileName);
+                    bbdrProducts[productIndex] = product;
+                    productIndex++;
+                }
             }
-        }
-        for (String aVgtBbdrFileList : vgtBbdrFileList) {
-            String sourceProductFileName = vgtBbdrDir + File.separator + aVgtBbdrFileList;
-            if ((new File(sourceProductFileName)).exists()) {
-                Product product = ProductIO.readProduct(sourceProductFileName);
-                bbdrProducts[productIndex] = product;
-                productIndex++;
+            for (String aVgtBbdrFileList : vgtBbdrFileList) {
+                String sourceProductFileName = vgtBbdrDir + File.separator + aVgtBbdrFileList;
+                if ((new File(sourceProductFileName)).exists()) {
+                    Product product = ProductIO.readProduct(sourceProductFileName);
+                    bbdrProducts[productIndex] = product;
+                    productIndex++;
+                }
             }
         }
 
@@ -182,12 +186,12 @@ public class IOUtils {
                                                     boolean useBinaryFiles,
                                                     int doy, int year, String tile,
                                                     int wings,
-                                                    boolean computeSnow) throws IOException {
+                                                    boolean computeSnow, boolean isQRTest) throws IOException {
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
                 tile,
                 wings,
-                computeSnow);
+                computeSnow, isQRTest);
 
         String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
 
@@ -229,7 +233,7 @@ public class IOUtils {
             final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
                     true, doy, year, tile,
                     wings,
-                    computeSnow);
+                    computeSnow, isQRTest);
             String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
             String[] albedoInputProductBinaryFilepaths = new String[albedoInputProductBinaryFileList.size()];
             int binaryProductIndex = 0;
@@ -293,7 +297,8 @@ public class IOUtils {
                                                        final int doy,
                                                        final int year, String tile,
                                                        int wings,
-                                                       boolean computeSnow) {
+                                                       boolean computeSnow,
+                                                       final boolean isQRTest) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
@@ -360,7 +365,13 @@ public class IOUtils {
                             //    # Center
                             if ((dayOfYear < modisDoy + wings) && (dayOfYear >= modisDoy - wings) &&
                                     (Integer.parseInt(thisYear) == year)) {
-                                albedoInputProductList.add(s);
+                                boolean isQRFilter = true;
+                                if (isQRTest) {
+                                    isQRFilter = (dayOfYear >= 121 && dayOfYear <= 151);    // May 2005
+                                }
+                                if (isQRFilter) {
+                                    albedoInputProductList.add(s);
+                                }
                             }
                             //    # Right wing
                             if ((modisDoy + wings) - 365 > 0) {
@@ -706,6 +717,27 @@ public class IOUtils {
             return -1;
         }
         return doy;
+    }
+
+    public static String getTileInfoFilePath(String dailyAccumulatorDir, String defaultTileInfoFilename) {
+        String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
+        System.out.println("tileInfoFilePath = " + tileInfoFilePath);
+        File tileInfoFile = new File(tileInfoFilePath);
+        if (!tileInfoFile.exists()) {
+            int index = 1;
+            boolean exists = false;
+            while (!exists && index < 365) {
+                final String newTileInfoFilename = defaultTileInfoFilename.substring(0, 9) + index + ".dim";
+                tileInfoFilePath = dailyAccumulatorDir + File.separator + newTileInfoFilename;
+                final File newTileInfoFile = new File(tileInfoFilePath);
+                exists = newTileInfoFile.exists();
+                index++;
+            }
+            if (!exists) {
+                throw new OperatorException("No info file found for given tile - cannot proceed.");
+            }
+        }
+        return tileInfoFilePath;
     }
 
 }
