@@ -33,9 +33,6 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     @Parameter(defaultValue = "2005", description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "001", description = "DoY")
-    private int doy;
-
     @Parameter(defaultValue = "1", interval="[1,12]", description = "Month index")
     private int monthIndex;
 
@@ -52,7 +49,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
 
         Product[] albedo8DayProduct;
         try {
-            albedo8DayProduct = IOUtils.getAlbedo8DayProducts(albedoDir, year, doy);
+            albedo8DayProduct = IOUtils.getAlbedo8DayProducts(albedoDir, tile);
         } catch (IOException e) {
             throw new OperatorException("Cannot load Albedo 8-day products: " + e.getMessage());
         }

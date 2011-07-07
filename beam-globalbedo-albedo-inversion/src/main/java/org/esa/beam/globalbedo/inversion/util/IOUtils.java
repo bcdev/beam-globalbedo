@@ -705,9 +705,31 @@ public class IOUtils {
         return Math.abs(difference);
     }
 
-    public static Product[] getAlbedo8DayProducts(String albedoDir, int year, int doy) throws IOException {
-        // todo implement
-        return new Product[0];  //To change body of created methods use File | Settings | File Templates.
+    public static Product[] getAlbedo8DayProducts(String albedoDir, final String tile) throws IOException {
+
+        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // accept only filenames like 'GlobAlbedo_2005129.h18v04.dim'...
+                return (name.length() == 29 && name.startsWith("GlobAlbedo") && name.endsWith(tile + ".dim"));
+            }
+        };
+
+        final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
+
+        Product[] albedoProducts = new Product[albedoFiles.length];
+
+        int productIndex = 0;
+        for (int i = 0; i < albedoFiles.length; i++) {
+            String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
+
+            if ((new File(albedoProductFileName)).exists()) {
+                Product product = ProductIO.readProduct(albedoProductFileName);
+                albedoProducts[productIndex] = product;
+                productIndex++;
+            }
+        }
+
+        return albedoProducts;
     }
 
     public static int getDoyFromAlbedoProductName(String productName) {
