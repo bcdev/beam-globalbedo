@@ -1,0 +1,10 @@
+#!/bin/tcsh
+
+set SRCDIR = "/data/MER_RR__1P/2005"
+set AOTDIR = "/bcserver12-data/GlobAlbedo/aot/2005/05"
+
+cd $SRCDIR
+foreach SRCFILE (`ls MER_RR__1P*ACR200505*.N1`)
+    echo "time /opt/beam-4.9.0.1/bin/gpt-d.sh  ga.l2 -Peasting=0.0 -Pnorthing=5559752.6 -PcomputeL1ToAotProductOnly=true $SRCFILE -e -t $AOTDIR/${SRCFILE}_AOT.dim &"
+#    time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Peasting=0.0 -Pnorthing=5559752.6 -PcomputeL1ToAotProductOnly=true $SRCFILE -e -t $AOTDIR/${SRCFILE}_AOT.dim &
+end
