@@ -33,7 +33,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     @Parameter(defaultValue = "2005", description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "1", interval="[1,12]", description = "Month index")
+    @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
 
 
@@ -68,9 +68,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
         System.out.println("done");
     }
 
-    static float[][] getMonthlyWeighting() {
-        // todo: test!!!
-
+    public static float[][] getMonthlyWeighting() {
         final int[] startingDoy = new int[]{1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
         final int[] nDays = new int[]{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
@@ -93,7 +91,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
         for (int i = 0; i < eightDayTimePeriodExtended.length; i++) {
             for (int j = 0; j < deltaTime.length; j++) {
                 deltaTime[j] = daysInYear[j] - eightDayTimePeriodExtended[i];
-                weight[i][j] = (float) Math.exp(-1.0*deltaTime[j]/ AlbedoInversionConstants.HALFLIFE);
+                weight[i][j] = (float) Math.exp(-1.0 * Math.abs(deltaTime[j]) / AlbedoInversionConstants.HALFLIFE);
             }
         }
 
@@ -110,18 +108,21 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
                     if (doy >= startingDayInMonth - 8 && doy <= startingDayInMonth + numberOfDaysInMonth + 8) {
                         float monthlyWeight = 1.0f;
                         if (doy >= startingDayInMonth + numberOfDaysInMonth - 8) {
-                            final float distance = (startingDayInMonth + numberOfDaysInMonth - doy)/8.0f;
+                            final float distance = (startingDayInMonth + numberOfDaysInMonth - doy) / 8.0f;
                             monthlyWeight = distance * 0.5f + 0.5f;
                         }
                         if (doy <= startingDayInMonth + 8) {
-                            final float distance = (startingDayInMonth + 8 - doy)/8.0f;
+                            final float distance = (startingDayInMonth + 8 - doy) / 8.0f;
                             monthlyWeight = distance * 0.5f + 0.5f;
                         }
                         nd += monthlyWeight;
-                        sum += weight[(doy+8-1)/8][day-1] * monthlyWeight;
+                        sum += weight[(doy + 8 - 1) / 8][day - 1] * monthlyWeight;
                     }
                 }
-                monthlyWeighting[j][day-1] = sum/nd;
+                monthlyWeighting[j][day - 1] = sum / nd;
+//                System.out.println("ii, jj, sum, ND, monthlyWeighting[ii, jj]: " +
+//                        ii + ", " + jj + ", " + sum + ", " +
+//                        ", " + nd + ", " + ", " + monthlyWeighting[ii][jj]);
             }
             j++;
         }

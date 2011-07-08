@@ -206,7 +206,7 @@ public class DailyAccumulationOp extends PixelOperator {
             long t1 = System.currentTimeMillis();
 //            IOUtils.write3DFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
             for (int i=0; i<dailyAccumulatorBinaryFiles.length; i++) {
-                IOUtils.write2DFloatArrayToFile(dailyAccumulatorBinaryFiles[i], resultArray[i]);
+                IOUtils.writeAccumulatorMatrixElementToFile(dailyAccumulatorBinaryFiles[i], resultArray[i]);
             }
             long t2 = System.currentTimeMillis();
             System.out.println("accumulator result array written. " + (t2-t1));

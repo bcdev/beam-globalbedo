@@ -13,7 +13,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.lang.management.GarbageCollectorMXBean;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
@@ -243,10 +242,10 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             } // fileIndex
             for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
                 accumulators[doyIndex].accumulateSumMatrixElement(sumMatrices[doyIndex]);
-                IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
+                IOUtils.writeAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
                         accumulators[doyIndex].getSumMatrix());
                 if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
-                    IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
+                    IOUtils.writeAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
                             daysToTheClosestSample[doyIndex]);
                 }
 
@@ -387,10 +386,10 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             } // fileIndex
             for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
                 accumulators[doyIndex].accumulateSumMatrixElement(sumMatrices[doyIndex]);
-                IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
+                IOUtils.writeAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex],
                         accumulators[doyIndex].getSumMatrix());
                 if (bandIndex == AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS - 1) {
-                    IOUtils.writeFullAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
+                    IOUtils.writeAccumulatorMatrixElementToFile(fullAccumulatorBinaryFilesPerMatrixElement[doyIndex][bandIndex + 1],
                             daysToTheClosestSample[doyIndex]);
                 }
 

@@ -84,6 +84,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         double monthlyGoodnessOfFit = 0.0;
         double monthlySnowFraction = 0.0;
         double monthlyDataMask = 0.0;
+        double monthlySza = 0.0;
 
         double sumWeights = 0.0;
 
@@ -101,6 +102,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
             monthlyGoodnessOfFit += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
             monthlySnowFraction += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
             monthlyDataMask = (sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble() > 0) ? 1.0 : 0.0;
+            monthlySza += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
 
             sumWeights += thisWeight;
         }
@@ -115,10 +117,11 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         monthlyRelativeEntropy /= sumWeights;
         monthlyGoodnessOfFit /= sumWeights;
         monthlySnowFraction /= sumWeights;
+        monthlySza /= sumWeights;
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyBHR, monthlyDHRSigma, monthlyBHRSigma,
                                                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                                               monthlyDataMask);
+                                               monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -151,6 +154,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
         targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
         targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
+        targetSamples[index + TRG_SZA].set(result.getSza());
     }
 
     @Override
@@ -255,6 +259,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY, relEntropyBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT, goodnessOfFitBandName, albedo8DayProduct[j]);
+            configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK, dataMaskBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SZA, szaBandName, albedo8DayProduct[j]);
         }

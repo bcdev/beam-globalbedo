@@ -577,7 +577,7 @@ public class IOUtils {
 //            ch.close();
 //            f.close();
 
-            // NEW
+            // NEW, faster
             int nRead = ch.read(bb);
             for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
                 floatBuffer.get(sumMatrix[jj]);
@@ -596,53 +596,7 @@ public class IOUtils {
         return accumulator;
     }
 
-    public static void write2DFloatArrayToFile(File file, float[][] values) {
-        int index = 0;
-        try {
-            // Create an output stream to the file.
-            FileOutputStream file_output = new FileOutputStream(file);
-            // Create a writable file channel
-            FileChannel wChannel = file_output.getChannel();
-
-            final int dim1 = values.length;
-            final int dim2 = values[0].length;
-            final int size = dim1 * dim2 * 4;
-
-            // OLD:
-            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-            for (int i = 0; i < dim1; i++) {
-                for (int j = 0; j < dim2; j++) {
-                    bb.putFloat(index, values[i][j]);
-                    index += 4;
-                }
-            }
-
-            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-            // position and the limit is written to the file
-            wChannel.write(bb);
-            // END OLD
-
-            // NEW:
-//            ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * 4);
-//            FloatBuffer floatBuffer = bb.asFloatBuffer();
-//            for (int i = 0; i < dim1; i++) {
-//                floatBuffer.put(values[i], 0, dim2);
-//                wChannel.write(bb);
-//                floatBuffer.clear();
-//            }
-            // END NEW
-
-
-            // Close file when finished with it..
-            wChannel.close();
-            file_output.close();
-        } catch (IOException e) {
-            System.out.println("IO exception = " + e + " // buffer index =  " + index);
-        }
-    }
-
-    public static void writeFullAccumulatorMatrixElementToFile(File file, float[][] sumMatrixElement) {
+    public static void writeAccumulatorMatrixElementToFile(File file, float[][] sumMatrixElement) {
         int index = 0;
         try {
             // Create an output stream to the file.
@@ -666,7 +620,7 @@ public class IOUtils {
 //            // position and the limit is written to the file
 //            wChannel.write(bb);
 
-            // NEW:
+            // NEW, faster:
             ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
@@ -683,25 +637,8 @@ public class IOUtils {
         }
     }
 
-    public static boolean isLeapYear(int year) {
-        if (year < 0) {
-            return false;
-        }
-
-        if (year % 400 == 0) {
-            return true;
-        } else if (year % 100 == 0) {
-            return false;
-        } else if (year % 4 == 0) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
     public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
         final int difference = 365 * (year - referenceYear) + (doy - referenceDoy);
-        // todo: consider leap years
         return Math.abs(difference);
     }
 
