@@ -14,8 +14,6 @@ import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
-import java.io.File;
-
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
@@ -67,7 +65,7 @@ public class InversionOp extends PixelOperator {
         }
     }
 
-    @SourceProduct(description = "Prior product", optional = true)
+    @SourceProduct(description = "Prior product")
     private Product priorProduct;
 
     @Parameter(description = "Year")
@@ -91,8 +89,7 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
-    //    private FullAccumulator fullAccumulator;
-    private MatrixElementFullAccumulator[] matrixElementfullAccumulator = new MatrixElementFullAccumulator[93];
+    private FullAccumulator fullAccumulator;
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
@@ -113,6 +110,7 @@ public class InversionOp extends PixelOperator {
         productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+//        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
 
         productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
@@ -121,35 +119,24 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
 
-//        fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
-//                (year, doy, fullAccumulatorFilePath,
-//                        IOUtils.getDailyAccumulatorBandNames().length + 1);
-
-        int index = 0;
-        File[] fullAccumulatorFiles = IOUtils.getFullAccumulatorFiles(fullAccumulatorFilePath, year, doy);
-//        matrixElementfullAccumulator = new MatrixElementFullAccumulator[fullAccumulatorFiles.length];
-        for (File fullAccumulatorFile : fullAccumulatorFiles) {
-            final String filename = fullAccumulatorFile.getAbsolutePath();
-            matrixElementfullAccumulator[index++] = IOUtils.getMatrixElementFullAccumulatorFromBinaryFile
-                    (year, doy, filename);
-        }
+        fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
+                (year, doy, fullAccumulatorFilePath,
+                        IOUtils.getDailyAccumulatorBandNames().length + 1);
 
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        if (usePrior) {
-            for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
-                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
-                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                    configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
 
-                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                    configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
-                }
+                final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
-            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
-            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
         }
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
     }
 
     @Override
@@ -186,26 +173,18 @@ public class InversionOp extends PixelOperator {
 
 //        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
 //        final FullAccumulator accumulator = fullAccumulator;
-//        final Accumulator accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
-        Accumulator accumulator = Accumulator.createForInversion(matrixElementfullAccumulator, x, y);
+        final Accumulator accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
+        final Prior prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
 
-        Matrix mAcc = getMAcc(accumulator);
-        Matrix vAcc = getVAcc(accumulator);
-        Matrix eAcc = getEAcc(accumulator);
-        double maskAcc = getMaskAcc(accumulator);
+        final Matrix mAcc = accumulator.getM();
+        Matrix vAcc = accumulator.getV();
+        final Matrix eAcc = accumulator.getE();
+        double maskAcc = accumulator.getMask();
 
-        Prior prior = null;
-        double maskPrior = 1.0;
-        if (usePrior) {
-            prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
-            maskPrior = prior.getMask();
-//            if (x == 486 && (y == 554 || y == 555)) {
-            if (x == 326 && y == 149) {
-                System.out.println("mAcc, pAcc = " + mAcc.get(0,0) + ", " + prior.getM().get(0, 0));
-            }
-        }
+        final double maskPrior = prior.getMask();
 
         if (maskAcc > 0 && maskPrior > 0) {
+
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     final double m_ii_accum = mAcc.get(i, i);
@@ -246,25 +225,27 @@ public class InversionOp extends PixelOperator {
                 }
             }
         } else {
-            if (usePrior && maskPrior > 0.0) {
+            if (maskPrior > 0.0) {
                 parameters = prior.getParameters();
-                final LUDecomposition lud = new LUDecomposition(prior.getM());
-                if (lud.isNonsingular()) {
-                    uncertainties = prior.getM().inverse();
-                    entropy = getEntropy(prior.getM());
+                if (usePrior) {
+                    final LUDecomposition lud = new LUDecomposition(prior.getM());
+                    if (lud.isNonsingular()) {
+                        uncertainties = prior.getM().inverse();
+                        entropy = getEntropy(prior.getM());
+                    } else {
+                        uncertainties = new Matrix(
+                                3 * NUM_BBDR_WAVE_BANDS,
+                                3 * NUM_ALBEDO_PARAMETERS, INVALID);
+                        entropy = INVALID;
+                    }
+                    relEntropy = 0.0;
                 } else {
                     uncertainties = new Matrix(
                             3 * NUM_BBDR_WAVE_BANDS,
                             3 * NUM_ALBEDO_PARAMETERS, INVALID);
                     entropy = INVALID;
+                    relEntropy = INVALID;
                 }
-                relEntropy = 0.0;
-            } else {
-                uncertainties = new Matrix(
-                        3 * NUM_BBDR_WAVE_BANDS,
-                        3 * NUM_ALBEDO_PARAMETERS, INVALID);
-                entropy = INVALID;
-                relEntropy = INVALID;
             }
         }
 
@@ -272,30 +253,12 @@ public class InversionOp extends PixelOperator {
         final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
 
         // finally we need the 'Days to the closest sample'...
-//        final float daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
-        final int dayClosetsSampleIndex = matrixElementfullAccumulator.length - 1;
-        final float daysToTheClosestSample = matrixElementfullAccumulator[dayClosetsSampleIndex].getSumMatrix()[x][y];
+        final float daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
 
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                 parameters, uncertainties, entropy, relEntropy,
                 maskAcc, goodnessOfFit, daysToTheClosestSample);
-    }
-
-    private synchronized double getMaskAcc(Accumulator accumulator) {
-        return accumulator.getMask();
-    }
-
-    private synchronized Matrix getEAcc(Accumulator accumulator) {
-        return accumulator.getE();
-    }
-
-    private synchronized Matrix getVAcc(Accumulator accumulator) {
-        return accumulator.getV();
-    }
-
-    private synchronized Matrix getMAcc(Accumulator accumulator) {
-        return accumulator.getM();
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {

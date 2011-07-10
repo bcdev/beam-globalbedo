@@ -49,7 +49,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         // STEP 1: we need the SNOW Prior file for given DoY...
         final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
-                                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct;
         try {
@@ -67,7 +67,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         Product brdfSnowProduct;
         Product brdfNoSnowProduct;
-        Product brdfMergedProduct;
+        Product brdfMergedProduct = null;
         try {
             brdfSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, true);
             brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, false);
@@ -83,31 +83,37 @@ public class GlobalbedoLevel3Albedo extends Operator {
             mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
             brdfMergedProduct = mergeBrdfOp.getTargetProduct();
         } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
-            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for Year/Doy: " +
-                                      Integer.toString(year) + "/" + Integer.toString(doy));
+            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for for tile:" + tile + ", year: " +
+                    year + ", DoY: " + doy);
             // only use Snow product...
             brdfMergedProduct = brdfSnowProduct;
         } else if (brdfSnowProduct == null && brdfNoSnowProduct != null) {
-            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for Year/Doy: " +
-                                      Integer.toString(year) + "/" + Integer.toString(doy));
+            logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for for tile:" + tile + ", year: " +
+                    year + ", DoY: " + doy);
             // only use NoSnow product...
             brdfMergedProduct = brdfNoSnowProduct;
         } else {
-            throw new OperatorException("Neither 'Snow' nor 'NoSnow' BRDF product found for Year/Doy: " +
-                                        Integer.toString(year) + "/" + Integer.toString(doy));
+            logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for for tile:" + tile + ", year: " +
+                    year + ", DoY: " + doy);
         }
 
-        if (mergedProductOnly) {
-            setTargetProduct(brdfMergedProduct);
+        if (brdfMergedProduct != null) {
+            if (mergedProductOnly) {
+                setTargetProduct(brdfMergedProduct);
+            } else {
+                // STEP 2: compute albedo from merged BRDF product...
+                BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
+                albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
+                albedoOp.setParameter("doy", doy);
+                setTargetProduct(albedoOp.getTargetProduct());
+            }
+
+            logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
+                    IOUtils.getDoyString(doy));
         } else {
-            // STEP 2: compute albedo from merged BRDF product...
-            BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
-            albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
-            albedoOp.setParameter("doy", doy);
-            setTargetProduct(albedoOp.getTargetProduct());
+            logger.log(Level.WARNING, "No albedos computed for tile: " + tile + ", year: " + year +
+                    ", Doy: " + IOUtils.getDoyString(doy));
         }
-
-        System.out.println("done");
     }
 
     public static class Spi extends OperatorSpi {

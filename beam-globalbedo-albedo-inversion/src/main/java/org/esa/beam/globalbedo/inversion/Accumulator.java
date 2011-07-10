@@ -56,28 +56,6 @@ public class Accumulator {
         return new Accumulator(M, V, E, mask);
     }
 
-    public static Accumulator createForInversion(MatrixElementFullAccumulator[] matrixElementfullAccumulator, int x, int y) {
-        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        Matrix E = new Matrix(1, 1);
-
-        int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                M.set(i, j, matrixElementfullAccumulator[index++].getSumMatrix()[x][y]);
-            }
-        }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            V.set(i, 0, matrixElementfullAccumulator[index++].getSumMatrix()[x][y]);
-        }
-        E.set(0, 0, matrixElementfullAccumulator[index++].getSumMatrix()[x][y]);
-
-        final double mask = matrixElementfullAccumulator[index++].getSumMatrix()[x][y];
-
-        return new Accumulator(M, V, E, mask);
-    }
-
 
     // getters and setters...
     public Matrix getM() {
@@ -95,5 +73,4 @@ public class Accumulator {
     public double getMask() {
         return mask;
     }
-
 }

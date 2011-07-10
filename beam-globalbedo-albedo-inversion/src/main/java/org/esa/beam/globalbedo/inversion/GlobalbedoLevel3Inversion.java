@@ -10,7 +10,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
-import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -55,8 +54,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
     private boolean accumulationOnly;
 
-    @Parameter(defaultValue = "true", description = "Use MODIS priors for inversion")
-    private boolean usePrior;
+    private boolean usePrior = true;
 
     private Logger logger;
 
@@ -70,67 +68,49 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct = null;
-        if (usePrior) {
-            try {
-                priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
-            } catch (IOException e) {
-                throw new OperatorException("Cannot load prior product: " + e.getMessage());
-            }
-
-            if (priorProduct == null) {
-                logger.log(Level.ALL, "No prior file available for DoY " + IOUtils.getDoyString(doy) + " - do inversion without prior...");
-                usePrior = false;
-            }
+        try {
+            priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
+        } catch (IOException e) {
+            throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
+                    " - cannot proceed...: " + e.getMessage());
         }
 
         // STEP 2: get Daily Accumulator input files...
-        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
-
-        AlbedoInput inputProduct = null;
-        try {
-            inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, useBinaryAccumulators, doy, year, tile,
-                    wings,
-                    computeSnow, false);
-        } catch (IOException e) {
-            // todo: just skip product, but add appropriate logging here
-            logger.log(Level.ALL, "Could not process DoY " + doy + " - skipping.");
-        }
+//        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
+//
+//        AlbedoInput inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, useBinaryAccumulators, doy, year, tile,
+//                wings,
+//                computeSnow);
 
         // STEP 3: set paths...
         final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
-        String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+        String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
 
         // STEP 4: we need to reproject the priors for further use...
         Product reprojectedPriorProduct = null;
-        if (usePrior) {
-            try {
-                String tileInfoFilePath = IOUtils.getTileInfoFilePath(dailyAccumulatorDir, tileInfoFilename);
-                Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
-                if (inputProduct != null) {
-                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            tileInfoProduct);
-                } else {
-                    throw new OperatorException("No accumulator input products available - cannot proceed.");
-                }
-            } catch (IOException e) {
-                throw new OperatorException("Cannot reproject prior products: " + e.getMessage(), e);
-            }
-        } else {
-            reprojectedPriorProduct = new Product("dummy", "dummy", AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                    AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+        try {
+            String tileInfoFilePath = IOUtils.getTileInfoFilePath(fullAccumulatorDir, tileInfoFilename);
+            Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
+//            if (inputProduct != null) {
+                reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
+                        tileInfoProduct);
+//            } else {
+//                throw new OperatorException("No accumulator input products available - cannot proceed.");
+//            }
+        } catch (IOException e) {
+            throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
         }
 
         // STEP 5: do inversion...
         String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
         if (computeSnow) {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
         } else {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
 
-//        String fullAccumulatorFilePath = dailyAccumulatorDir + fullAccumulatorBinaryFilename;
-        String fullAccumulatorFilePath = dailyAccumulatorDir;
+        String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
 
         InversionOp inversionOp = new InversionOp();
         inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
@@ -144,7 +124,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
         Product inversionProduct = inversionOp.getTargetProduct();
         setTargetProduct(inversionProduct);
 
-        System.out.println("done");
+        logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 
     public static class Spi extends OperatorSpi {

@@ -14,8 +14,8 @@ public class AlbedoResult {
     private double[] wsa;
     private Matrix[] bsaSigma;
     private double[] bsaSigmaArray;
-    private Matrix[] wsaSigma;
     private double[] wsaSigmaArray;
+    private Matrix[] wsaSigma;
     private double weightedNumberOfSamples;
     private double relEntropy;
     private double goodnessOfFit;
@@ -37,7 +37,7 @@ public class AlbedoResult {
         this.sza = sza;
     }
 
-    public AlbedoResult(double[] bsa, double[] wsa, double[] bsaSigma, double[] wsaSigma, double weightedNumberOfSamples,
+public AlbedoResult(double[] bsa, double[] wsa, double[] bsaSigma, double[] wsaSigma, double weightedNumberOfSamples,
                         double relEntropy, double goodnessOfFit, double snowFraction, double dataMask, double sza) {
         this.bsa = bsa;
         this.wsa = wsa;
@@ -56,41 +56,80 @@ public class AlbedoResult {
         return bsa;
     }
 
+    public void setBsa(double[] bsa) {
+        this.bsa = bsa;
+    }
+
     public double[] getWsa() {
         return wsa;
+    }
+
+    public void setWsa(double[] wsa) {
+        this.wsa = wsa;
     }
 
     public Matrix[] getBsaSigma() {
         return bsaSigma;
     }
 
+    public void setBsaSigma(Matrix[] bsaSigma) {
+        this.bsaSigma = bsaSigma;
+    }
+
     public Matrix[] getWsaSigma() {
         return wsaSigma;
+    }
+
+    public void setWsaSigma(Matrix[] wsaSigma) {
+        this.wsaSigma = wsaSigma;
     }
 
     public double getWeightedNumberOfSamples() {
         return weightedNumberOfSamples;
     }
 
+    public void setWeightedNumberOfSamples(double weightedNumberOfSamples) {
+        this.weightedNumberOfSamples = weightedNumberOfSamples;
+    }
+
     public double getRelEntropy() {
         return relEntropy;
+    }
+
+    public void setRelEntropy(double relEntropy) {
+        this.relEntropy = relEntropy;
     }
 
     public double getGoodnessOfFit() {
         return goodnessOfFit;
     }
 
+    public void setGoodnessOfFit(double goodnessOfFit) {
+        this.goodnessOfFit = goodnessOfFit;
+    }
 
     public double getSnowFraction() {
         return snowFraction;
+    }
+
+    public void setSnowFraction(double snowFraction) {
+        this.snowFraction = snowFraction;
     }
 
     public double getDataMask() {
         return dataMask;
     }
 
+    public void setDataMask(double dataMask) {
+        this.dataMask = dataMask;
+    }
+
     public double getSza() {
         return sza;
+    }
+
+    public void setSza(double sza) {
+        this.sza = sza;
     }
 
     public double[] getBsaSigmaArray() {

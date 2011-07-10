@@ -7,9 +7,13 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
-import java.io.*;
+import java.io.File;
+import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * 'Master' operator for the daily accumulation part in Albedo Inversion
@@ -35,48 +39,52 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    private Logger logger;
+
     @Override
     public void initialize() throws OperatorException {
 
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose  // todo: change back
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy, false);
+            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
-        if (inputProducts == null || inputProducts.length == 0) {
-            throw new OperatorException("No source products found - check contents of BBDR directory!");
-        }
+        if (inputProducts != null && inputProducts.length > 0) {
+            String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+                    + File.separator + year + File.separator + tile;
+            if (computeSnow) {
+                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            } else {
+                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            }
 
+            // STEP 2: do accumulation, write to binary file
+            Product accumulationProduct;
+            // make sure that binary output is written sequentially
+            JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
+            String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
+            final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
+            DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+            accumulationOp.setSourceProducts(inputProducts);
+            accumulationOp.setParameter("computeSnow", computeSnow);
+            accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
+            accumulationProduct = accumulationOp.getTargetProduct();
 
-        String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
-                + File.separator + year + File.separator + tile;
-        if (computeSnow) {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            setTargetProduct(accumulationProduct);
         } else {
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            //  no BBDR input - just set a dummy target product
+            Product dummyProduct = new Product("tileInfo", "dummy", 1, 1);
+            setTargetProduct(dummyProduct);
         }
 
-        // STEP 2: do accumulation, write to binary file
-        Product accumulationProduct;
-        // make sure that binary output is written sequentially
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-        String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
-        System.out.println("dailyAccumulatorDir = " + dailyAccumulatorDir);
-        final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-        final File[] dailyAccumulatorBinaryFilesPerMatrixElement = IOUtils.getDailyAccumulatorFiles(dailyAccumulatorDir, year, doy);
-        DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
-        accumulationOp.setSourceProducts(inputProducts);
-        accumulationOp.setParameter("computeSnow", computeSnow);
-        accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
-        accumulationOp.setParameter("dailyAccumulatorBinaryFiles", dailyAccumulatorBinaryFilesPerMatrixElement);
-        accumulationProduct = accumulationOp.getTargetProduct();
-
-        setTargetProduct(accumulationProduct);
+        logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
+                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 
     public static class Spi extends OperatorSpi {

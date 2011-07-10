@@ -10,7 +10,6 @@ public class AlbedoInput {
 
     private String[] productFilenames;
     private String[] productBinaryFilenames;
-    private String[] productBinaryFilePaths;
     private int referenceYear;
     private int referenceDoy;
     private int[] productDoys;
@@ -62,13 +61,5 @@ public class AlbedoInput {
 
     public void setReferenceYear(int referenceYear) {
         this.referenceYear = referenceYear;
-    }
-
-    public String[] getProductBinaryFilePaths() {
-        return productBinaryFilePaths;
-    }
-
-    public void setProductBinaryFilePaths(String[] productBinaryFilePaths) {
-        this.productBinaryFilePaths = productBinaryFilePaths;
     }
 }

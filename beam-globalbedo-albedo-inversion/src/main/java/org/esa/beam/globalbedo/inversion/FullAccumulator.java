@@ -1,5 +1,8 @@
 package org.esa.beam.globalbedo.inversion;
 
+import Jama.Matrix;
+import org.esa.beam.framework.gpf.pointop.Sample;
+
 /**
  * Class representing a 'full' 8-day accumulator, holding M, V, E (sumMatrices) and
  * daysToTheClosestSample.
@@ -42,28 +45,5 @@ public class FullAccumulator {
     public float[][] getDaysToTheClosestSample() {
         return daysToTheClosestSample;
     }
-
-    public void setDaysToTheClosestSample(float[][] daysToTheClosestSample) {
-        this.daysToTheClosestSample = daysToTheClosestSample;
-    }
-
-    public void setSumMatrixElement(int elementIndex, float[][] sumMatrixElement) {
-        sumMatrices[elementIndex] = sumMatrixElement;
-    }
-
-    public void accumulateSumMatrixElement(int elementIndex, float[][] sumMatrixElement) {
-        final int size1 = sumMatrixElement.length;
-        final int size2 = sumMatrixElement[0].length;
-        if (size1 != sumMatrices[elementIndex].length || size2 != sumMatrices[elementIndex][0].length) {
-            return;
-        }
-
-        for (int i=0; i<size1; i++) {
-            for (int j=0; j<size2; j++) {
-               sumMatrices[elementIndex][i][j] += sumMatrixElement[i][j];
-            }
-        }
-    }
-
 
 }

@@ -11,7 +11,6 @@ import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
 import java.io.File;
-import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,25 +46,26 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
         // STEP 1: get Albedo 8-day input files...
         final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
 
-        Product[] albedo8DayProduct;
-        try {
-            albedo8DayProduct = IOUtils.getAlbedo8DayProducts(albedoDir, tile);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot load Albedo 8-day products: " + e.getMessage());
+        Product[] albedo8DayProduct = IOUtils.getAlbedo8DayProducts(albedoDir, tile);
+        if (albedo8DayProduct != null && albedo8DayProduct.length > 0) {
+
+            // STEP 2: get monthly weighting...
+            float[][] monthlyWeighting = getMonthlyWeighting();
+
+            // STEP 3: get Albedo monthly product...
+
+            MonthlyFrom8DayAlbedoOp monthlyAlbedoOp = new MonthlyFrom8DayAlbedoOp();
+            monthlyAlbedoOp.setSourceProducts(albedo8DayProduct);
+            monthlyAlbedoOp.setParameter("monthlyWeighting", monthlyWeighting);
+            monthlyAlbedoOp.setParameter("monthIndex", monthIndex);
+            setTargetProduct(monthlyAlbedoOp.getTargetProduct());
+
+            logger.log(Level.ALL, "Finished monthly albedo computation process for tile: " + tile + ", year: " + year +
+                    ", month: " + monthIndex);
+        } else {
+            logger.log(Level.WARNING, "No monthly albedos computated for tile: " + tile + ", year: " + year +
+                    ", month: " + monthIndex);
         }
-
-        // STEP 2: get monthly weighting...
-        float[][] monthlyWeighting = getMonthlyWeighting();
-
-        // STEP 3: get Albedo monthly product...
-
-        MonthlyFrom8DayAlbedoOp monthlyAlbedoOp = new MonthlyFrom8DayAlbedoOp();
-        monthlyAlbedoOp.setSourceProducts(albedo8DayProduct);
-        monthlyAlbedoOp.setParameter("monthlyWeighting", monthlyWeighting);
-        monthlyAlbedoOp.setParameter("monthIndex", monthIndex);
-        setTargetProduct(monthlyAlbedoOp.getTargetProduct());
-
-        System.out.println("done");
     }
 
     public static float[][] getMonthlyWeighting() {
