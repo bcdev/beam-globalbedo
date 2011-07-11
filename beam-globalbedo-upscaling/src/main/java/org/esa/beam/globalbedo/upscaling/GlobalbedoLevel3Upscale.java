@@ -30,7 +30,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
@@ -38,9 +37,12 @@ import org.esa.beam.util.ProductUtils;
 import java.awt.Rectangle;
 import java.awt.geom.AffineTransform;
 import java.io.File;
+import java.io.FileFilter;
+import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
@@ -51,28 +53,38 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @author MarcoZ
  */
 @OperatorMetadata(
-        alias = "ga.upscale",
+        alias = "ga.l3.upscale",
         authors = "Marco Zuehlke",
         copyright = "2011 Brockmann Consult",
         version = "0.1",
         internal = true,
         description = "Reprojects and upscales the GlobAlbedo product \n" +
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
-public class Upscale extends Operator {
+public class GlobalbedoLevel3Upscale extends Operator {
 
     private static final String WGS84_CODE = "EPSG:4326";
     private static final int TILE_SIZE = 1200;
 
-    @Parameter
-    private File tile;
+    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
+    private String gaRootDir;
+
+    @Parameter(defaultValue = "2005", description = "Year")
+    private int year;
+
+    @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
+    private int doy;
 
     @Parameter(valueSet = {"6", "60"}, defaultValue = "60")
     private int scaling;
+
 
     @TargetProduct
     private Product targetProduct;
 
     private Product reprojectedProduct;
+
+    private File refTile;
+
     private String[] brdfModelBandNames;
     private String[][] uncertaintyBandNames;
     private double matrixNodataValue;
@@ -80,8 +92,11 @@ public class Upscale extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        if (tile == null || !tile.exists()) {
-            throw new OperatorException("No tile paramter given.");
+
+        refTile = findRefTile();
+
+        if (refTile == null || !refTile.exists()) {
+            throw new OperatorException("No BRDF files for mosaicing found.");
         }
         ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
         if (productReader == null) {
@@ -89,9 +104,9 @@ public class Upscale extends Operator {
         }
         Product mosaicProduct;
         try {
-            mosaicProduct = productReader.readProductNodes(tile, null);
+            mosaicProduct = productReader.readProductNodes(refTile, null);
         } catch (IOException e) {
-            throw new OperatorException("Could not read mosaic product: '" + tile.getAbsolutePath() + "'. " + e.getMessage(), e);
+            throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
         ReprojectionOp reprojection = new ReprojectionOp();
         reprojection.setParameter("crs", WGS84_CODE);
@@ -100,10 +115,11 @@ public class Upscale extends Operator {
         reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
-        SubsetOp subsetOp = new SubsetOp();
-        subsetOp.setSourceProduct(reprojectedProduct);
-        subsetOp.setRegion(new Rectangle(17 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE));
-        reprojectedProduct = subsetOp.getTargetProduct();
+        // not needed any more
+//        SubsetOp subsetOp = new SubsetOp();
+//        subsetOp.setSourceProduct(reprojectedProduct);
+//        subsetOp.setRegion(new Rectangle(17 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE));
+//        reprojectedProduct = subsetOp.getTargetProduct();
         /////////////////////////////////////////////////////////////////////////////////////////////////
 
         int width = reprojectedProduct.getSceneRasterWidth() / scaling;
@@ -140,13 +156,44 @@ public class Upscale extends Operator {
         targetProduct = upscaledProduct;
     }
 
+    private File findRefTile() {
+
+        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+        FileFilter tileFilter = new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() && pattern.matcher(file.getName()).matches();
+            }
+        };
+
+        final FilenameFilter mergeFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                String expectedFilename = "GlobAlbedo.Merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                return name.equals(expectedFilename);
+            }
+        };
+
+        String mergeDirString = gaRootDir + File.separator + "Merge";
+        File mergeDir = new File(mergeDirString);
+        final File[] mergeFiles = mergeDir.listFiles(tileFilter);
+        for (File mergeFile : mergeFiles) {
+            File[] tileFiles = mergeFile.listFiles(mergeFilter);
+            for (File tileFile : tileFiles) {
+                if (tileFile.exists()) {
+                    return tileFile;
+                }
+            }
+        }
+        return null;
+    }
+
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
-        System.out.println("targetRectangle = " + targetRect);
+//        System.out.println("targetRectangle = " + targetRect);
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                                          targetRect.y * scaling,
-                                          targetRect.width * scaling,
-                                          targetRect.height * scaling);
+                targetRect.y * scaling,
+                targetRect.width * scaling,
+                targetRect.height * scaling);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
         if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
@@ -197,7 +244,7 @@ public class Upscale extends Operator {
             for (int x = rect.x; x < rect.x + rect.width; x++) {
                 double sample = entropy.getSampleDouble(x, y);
                 if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
-                    return  true;
+                    return true;
                 }
             }
         }
@@ -358,7 +405,7 @@ public class Upscale extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(Upscale.class);
+            super(GlobalbedoLevel3Upscale.class);
         }
     }
 }

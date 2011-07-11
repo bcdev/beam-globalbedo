@@ -101,9 +101,11 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
         for (FullAccumulator acc : accsToWrite) {
-            String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + IOUtils.getDoyString(acc.getDoy()) + ".bin";
-            final File fullAccumulatorBinaryFile = new File(fullAccumulatorDir + fullAccumulatorBinaryFilename);
-            IOUtils.writeFullAccumulatorToFile(fullAccumulatorBinaryFile, acc.getSumMatrices(), acc.getDaysToTheClosestSample());
+            if (acc != null) {
+                String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + IOUtils.getDoyString(acc.getDoy()) + ".bin";
+                final File fullAccumulatorBinaryFile = new File(fullAccumulatorDir + fullAccumulatorBinaryFilename);
+                IOUtils.writeFullAccumulatorToFile(fullAccumulatorBinaryFile, acc.getSumMatrices(), acc.getDaysToTheClosestSample());
+            }
         }
 
         // no target product needed here, define a dummy product
@@ -118,17 +120,19 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
     private String[] mergeInputProductsFilenameLists(AlbedoInput[] inputProducts) {
         List<String> filenameList = new ArrayList<String>();
         for (AlbedoInput input : inputProducts) {
-            final String[] thisInputFilenames = input.getProductBinaryFilenames();
-            if (input.getProductBinaryFilenames().length == 0) {
-                logger.log(Level.ALL, "No daily accumulators found for DoY " +
-                        IOUtils.getDoyString(input.getReferenceDoy()) + " ...");
-            }
-            int index = 0;
-            while (index < thisInputFilenames.length) {
-                if (!filenameList.contains(thisInputFilenames[index])) {
-                    filenameList.add(thisInputFilenames[index]);
+            if (input != null) {
+                final String[] thisInputFilenames = input.getProductBinaryFilenames();
+                if (input.getProductBinaryFilenames().length == 0) {
+                    logger.log(Level.ALL, "No daily accumulators found for DoY " +
+                            IOUtils.getDoyString(input.getReferenceDoy()) + " ...");
                 }
-                index++;
+                int index = 0;
+                while (index < thisInputFilenames.length) {
+                    if (!filenameList.contains(thisInputFilenames[index])) {
+                        filenameList.add(thisInputFilenames[index]);
+                    }
+                    index++;
+                }
             }
         }
 
@@ -261,9 +265,12 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
 
         FullAccumulator[] accumulators = new FullAccumulator[numDoys];
         for (int i = 0; i < numDoys; i++) {
-            accumulators[i] = new FullAccumulator(inputProducts[i].getReferenceYear(),
-                    inputProducts[i].getReferenceDoy(),
-                    sumMatrices[i], daysToTheClosestSample[i]);
+            accumulators[i] = null;
+            if (inputProducts[i] != null) {
+                accumulators[i] = new FullAccumulator(inputProducts[i].getReferenceYear(),
+                        inputProducts[i].getReferenceDoy(),
+                        sumMatrices[i], daysToTheClosestSample[i]);
+            }
         }
         return accumulators;
     }

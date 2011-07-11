@@ -182,58 +182,27 @@ public class IOUtils {
                                                     int wings,
                                                     boolean computeSnow) {
 
+        AlbedoInput inputProduct = null;
+
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
                 tile,
                 wings,
                 computeSnow);
 
-        String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
+        if (albedoInputProductList.size() > 0) {
+            String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
 
-        int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
-        int[] albedoInputProductYears = new int[albedoInputProductList.size()];
+            int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
+            int[] albedoInputProductYears = new int[albedoInputProductList.size()];
 
-        int productIndex = 0;
+            int productIndex = 0;
 
-        for (String albedoInputProductName : albedoInputProductList) {
+            for (String albedoInputProductName : albedoInputProductList) {
 
-            String productYearRootDir;
-            // e.g. get '2006' from 'matrices_2006_doy.dim'...
-            final String thisProductYear = albedoInputProductName.substring(9, 13);
-            final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
-            if (computeSnow) {
-                productYearRootDir = accumulatorRootDir.concat(
-                        File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
-            } else {
-                productYearRootDir = accumulatorRootDir.concat(
-                        File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
-            }
-
-            String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
-            albedoInputProductFilenames[productIndex] = sourceProductFileName;
-            albedoInputProductDoys[productIndex] = Integer.parseInt(
-                    thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
-            albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
-            productIndex++;
-        }
-
-        AlbedoInput inputProduct = new AlbedoInput();
-        inputProduct.setProductFilenames(albedoInputProductFilenames);
-        inputProduct.setProductDoys(albedoInputProductDoys);
-        inputProduct.setProductYears(albedoInputProductYears);
-        inputProduct.setReferenceYear(year);
-        inputProduct.setReferenceDoy(doy);
-
-        if (useBinaryFiles) {
-            final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                    true, doy, year, tile,
-                    wings,
-                    computeSnow);
-            String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
-            int binaryProductIndex = 0;
-            for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
                 String productYearRootDir;
-                // e.g. get '2006' from 'matrices_2006xxx.bin'...
-                final String thisProductYear = albedoInputProductBinaryName.substring(9, 13);
+                // e.g. get '2006' from 'matrices_2006_doy.dim'...
+                final String thisProductYear = albedoInputProductName.substring(9, 13);
+                final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
                 if (computeSnow) {
                     productYearRootDir = accumulatorRootDir.concat(
                             File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
@@ -242,11 +211,46 @@ public class IOUtils {
                             File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
                 }
 
-                String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
-                albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
-                binaryProductIndex++;
+                String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
+                albedoInputProductFilenames[productIndex] = sourceProductFileName;
+                albedoInputProductDoys[productIndex] = Integer.parseInt(
+                        thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
+                albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
+                productIndex++;
             }
-            inputProduct.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
+
+            inputProduct = new AlbedoInput();
+            inputProduct.setProductFilenames(albedoInputProductFilenames);
+            inputProduct.setProductDoys(albedoInputProductDoys);
+            inputProduct.setProductYears(albedoInputProductYears);
+            inputProduct.setReferenceYear(year);
+            inputProduct.setReferenceDoy(doy);
+
+            if (useBinaryFiles) {
+                final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
+                        true, doy, year, tile,
+                        wings,
+                        computeSnow);
+                String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
+                int binaryProductIndex = 0;
+                for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
+                    String productYearRootDir;
+                    // e.g. get '2006' from 'matrices_2006xxx.bin'...
+                    final String thisProductYear = albedoInputProductBinaryName.substring(9, 13);
+                    if (computeSnow) {
+                        productYearRootDir = accumulatorRootDir.concat(
+                                File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
+                    } else {
+                        productYearRootDir = accumulatorRootDir.concat(
+                                File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
+                    }
+
+                    String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
+                    albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
+                    binaryProductIndex++;
+                }
+                inputProduct.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
+            }
         }
 
         return inputProduct;
@@ -330,36 +334,38 @@ public class IOUtils {
             }
             final String[] thisYearAlbedoInputFiles = (new File(thisYearsRootDir)).list(inputProductNameFilter);
 
-            for (String s : thisYearAlbedoInputFiles) {
-                if (s.startsWith("matrices_" + thisYear)) {
-                    if (!albedoInputProductList.contains(s)) {
-                        // check the 'wings' condition...
-                        try {
-                            final int dayOfYear = Integer.parseInt(
-                                    s.substring(13, 16));
-                            //    # Left wing
-                            if (365 + (doy - wings) <= 366) {
-                                if (!albedoInputProductList.contains(s)) {
-                                    if (dayOfYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
-                                        albedoInputProductList.add(s);
+            if (thisYearAlbedoInputFiles != null && thisYearAlbedoInputFiles.length > 0) {
+                for (String s : thisYearAlbedoInputFiles) {
+                    if (s.startsWith("matrices_" + thisYear)) {
+                        if (!albedoInputProductList.contains(s)) {
+                            // check the 'wings' condition...
+                            try {
+                                final int dayOfYear = Integer.parseInt(
+                                        s.substring(13, 16));
+                                //    # Left wing
+                                if (365 + (doy - wings) <= 366) {
+                                    if (!albedoInputProductList.contains(s)) {
+                                        if (dayOfYear >= 366 + (doy - wings) && Integer.parseInt(thisYear) < year) {
+                                            albedoInputProductList.add(s);
+                                        }
                                     }
                                 }
-                            }
-                            //    # Center
-                            if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
-                                    (Integer.parseInt(thisYear) == year)) {
-                                albedoInputProductList.add(s);
-                            }
-                            //    # Right wing
-                            if ((doy + wings) - 365 > 0) {
-                                if (!albedoInputProductList.contains(s)) {
-                                    if (dayOfYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
-                                        albedoInputProductList.add(s);
+                                //    # Center
+                                if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
+                                        (Integer.parseInt(thisYear) == year)) {
+                                    albedoInputProductList.add(s);
+                                }
+                                //    # Right wing
+                                if ((doy + wings) - 365 > 0) {
+                                    if (!albedoInputProductList.contains(s)) {
+                                        if (dayOfYear <= (doy + wings - 365) && Integer.parseInt(thisYear) > year) {
+                                            albedoInputProductList.add(s);
+                                        }
                                     }
                                 }
+                            } catch (NumberFormatException e) {
+                                BeamLogManager.getSystemLogger().log(Level.ALL, "Cannot determine wings for accumulator " + s + " - skipping.");
                             }
-                        } catch (NumberFormatException e) {
-                            BeamLogManager.getSystemLogger().log(Level.ALL, "Cannot determine wings for accumulator " + s + " - skipping.");
                         }
                     }
                 }
