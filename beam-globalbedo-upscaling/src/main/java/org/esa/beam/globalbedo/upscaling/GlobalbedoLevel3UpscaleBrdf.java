@@ -53,14 +53,14 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @author MarcoZ
  */
 @OperatorMetadata(
-        alias = "ga.l3.upscale",
+        alias = "ga.l3.upscale.brdf",
         authors = "Marco Zuehlke",
         copyright = "2011 Brockmann Consult",
         version = "0.1",
         internal = true,
         description = "Reprojects and upscales the GlobAlbedo product \n" +
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
-public class GlobalbedoLevel3Upscale extends Operator {
+public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
     private static final String WGS84_CODE = "EPSG:4326";
     private static final int TILE_SIZE = 1200;
@@ -405,7 +405,7 @@ public class GlobalbedoLevel3Upscale extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Upscale.class);
+            super(GlobalbedoLevel3UpscaleBrdf.class);
         }
     }
 }

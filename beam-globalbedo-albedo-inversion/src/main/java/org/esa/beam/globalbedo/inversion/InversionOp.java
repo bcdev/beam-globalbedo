@@ -126,17 +126,19 @@ public class InversionOp extends PixelOperator {
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
-                final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+        if (usePrior) {
+            for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
 
-                final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
+                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
+                }
             }
+            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
         }
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
     }
 
     @Override
@@ -174,16 +176,20 @@ public class InversionOp extends PixelOperator {
 //        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
 //        final FullAccumulator accumulator = fullAccumulator;
         final Accumulator accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
-        final Prior prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
 
         final Matrix mAcc = accumulator.getM();
         Matrix vAcc = accumulator.getV();
         final Matrix eAcc = accumulator.getE();
         double maskAcc = accumulator.getMask();
 
-        final double maskPrior = prior.getMask();
+        double maskPrior = 1.0;
+        Prior prior = null;
+        if (usePrior) {
+            prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
+            maskPrior = prior.getMask();
+        }
 
-        if (maskAcc > 0 && maskPrior > 0) {
+        if (maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
 
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
@@ -217,8 +223,8 @@ public class InversionOp extends PixelOperator {
                 parameters = mAcc.solve(vAcc);
 
                 entropy = getEntropy(mAcc);
-                final double entropyPrior = getEntropy(prior.getM());
                 if (usePrior) {
+                    final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
                 } else {
                     relEntropy = INVALID;
@@ -226,8 +232,8 @@ public class InversionOp extends PixelOperator {
             }
         } else {
             if (maskPrior > 0.0) {
-                parameters = prior.getParameters();
                 if (usePrior) {
+                    parameters = prior.getParameters();
                     final LUDecomposition lud = new LUDecomposition(prior.getM());
                     if (lud.isNonsingular()) {
                         uncertainties = prior.getM().inverse();

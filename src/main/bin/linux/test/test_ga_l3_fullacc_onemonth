@@ -1,7 +1,7 @@
 #!/bin/tcsh
 
-./ga_l3_fullacc.csh h18v04 2005 121 129 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
-./ga_l3_fullacc.csh h18v04 2005 137 145 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
+./ga_l3_fullacc.csh h18v04 2005 129 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_fullacc.csh h18v04 2005 137 145 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_fullacc.csh h18v04 2005 129 129 32 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_fullacc.csh h18v04 2005 121 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_fullacc.csh h18v04 2005 137 137 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
@@ -9,4 +9,6 @@
 
 #./ga_l3_fullacc.csh h18v04 2005 9 9 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_fullacc.csh h18v04 2005 33 33 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
+
+#./ga_l3_fullacc.csh h25v06 2005 129 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 

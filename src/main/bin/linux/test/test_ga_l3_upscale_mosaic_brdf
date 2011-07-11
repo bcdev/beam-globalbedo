@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+./ga_l3_upscale_mosaic_brdf.csh 2005 129 6 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+
+

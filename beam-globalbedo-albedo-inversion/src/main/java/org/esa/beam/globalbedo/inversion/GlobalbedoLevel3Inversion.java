@@ -92,12 +92,13 @@ public class GlobalbedoLevel3Inversion extends Operator {
         try {
             String tileInfoFilePath = IOUtils.getTileInfoFilePath(fullAccumulatorDir, tileInfoFilename);
             Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
-//            if (inputProduct != null) {
+            if (priorProduct != null) {
                 reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
                         tileInfoProduct);
-//            } else {
-//                throw new OperatorException("No accumulator input products available - cannot proceed.");
-//            }
+            } else {
+                usePrior = false;
+                reprojectedPriorProduct = tileInfoProduct;
+            }
         } catch (IOException e) {
             throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
         }

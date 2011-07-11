@@ -1,13 +1,14 @@
 #!/bin/tcsh
 
 #./ga_l3_inversion.csh h18v04 2005 121 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
-#./ga_l3_inversion.csh h18v04 2005 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
+./ga_l3_inversion.csh h18v04 2005 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_inversion.csh h18v04 2005 137 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_inversion.csh h18v04 2005 145 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
-./ga_l3_inversion.csh h18v04 2005 121 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
-./ga_l3_inversion.csh h18v04 2005 129 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
-./ga_l3_inversion.csh h18v04 2005 137 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
-./ga_l3_inversion.csh h18v04 2005 145 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_inversion.csh h18v04 2005 121 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_inversion.csh h18v04 2005 129 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_inversion.csh h18v04 2005 137 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_inversion.csh h18v04 2005 145 540 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_inversion.csh h18v04 2005 9 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_inversion.csh h18v04 2005 33 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_inversion.csh h25v06 2005 129 8 /data/GlobAlbedo /opt/beam-4.9.0.1 
 
