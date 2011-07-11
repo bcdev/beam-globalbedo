@@ -14,4 +14,4 @@ else
     set Day = $doy
 endif
 
-time $beamRootDir/bin/gpt-d.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PmergedProductOnly=true -PgaRootDir=$gaRootDir -e -t $gaRootDir/Merge/$tile/GlobAlbedo.Merge.$year$doy.$tile.dim
+time $beamRootDir/bin/gpt-ga.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PmergedProductOnly=true -PgaRootDir=$gaRootDir -e -t $gaRootDir/Merge/$tile/GlobAlbedo.Merge.$year$doy.$tile.dim

@@ -167,7 +167,10 @@ def GetSZA(File, xmin=1, ymin=1, xmax=1, ymax=1):
     import glob
 
     try:
+	print "file: ", File
         filename = glob.glob(File)
+	print "SZAname: ", filename
+	print "blubb"
         dataset = gdal.Open( filename[0], GA_ReadOnly )
     except:
         print "Error:", sys.exc_info()[0]
@@ -311,7 +314,7 @@ def WriteDataset(File, Albedo, SZA, Mask, H, GoodnessOfFit, SnowMask, NSamples, 
     # Write header
     ULC_coordinates = GetUpperLeftCoordinates(Tile)
     output_header = open(File.split(".bin")[0] + ".hdr", 'w')
-    header_template = open("/bcserver12-data/GlobAlbedo/src/metadata/generic_header_Albedo.hdr")
+    header_template = open("/data/GlobAlbedo/src/metadata/generic_header_Albedo.hdr")
     for lines in header_template:
         if 'SAMPLES,LINES' in lines:
             output_header.write(lines.replace('SAMPLES,LINES', 'samples = ' + str(columns) + '\n' + 'lines = ' + str(rows)))
@@ -330,7 +333,7 @@ def GetUpperLeftCoordinates(Tile):
     Get the Upper Left Corner coordinates in meters for a given MODIS tile
     Coordinates are stored in an ASCII file
     '''
-    ULC_coords_file = '/bcserver12-data/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
+    ULC_coords_file = '/data/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
     ULC_coordinates = open(ULC_coords_file, 'r')
 
     coordinates = ''
@@ -354,6 +357,7 @@ SZA_file = sys.argv[3]
 #SZA_file = "/home/lsg/GlobAlbedo/Inversion/h12v04/SZA/h12v04.001.SZA_LocalNoon.bin"
 
 # Get Solar Zenith Angle at Solar Noon Local Time
+print "SZA: ", SZA_file
 SZA = GetSZA(SZA_file)
 Parameters, C, Mask, H, GoodnessOfFit, SnowMask, NSamples = GetInversion(ParametersFile)
 
@@ -363,9 +367,9 @@ cols = SZA.shape[1]
 #Use RelativeEntropy H as a mask
 Albedo = GetAlbedo(Parameters, C, H, SZA, cols, rows)
 
-OUTDIR = "/bcserver12-data/GlobAlbedo/Albedo/" + Tile
+OUTDIR = "/data/GlobAlbedo/Albedo/" + Tile
 
 YearDoY = os.path.basename(ParametersFile).split('.')[2]
-OutputFilename = 'GlobAlbedo.' + YearDoY + '.' + Tile + '_ENVI.bin'
+OutputFilename = 'GlobAlbedo.' + YearDoY + '.' + Tile + '.bin'
 WriteDataset(OUTDIR + "/" + OutputFilename, Albedo, SZA,  Mask, H, GoodnessOfFit, SnowMask, NSamples, Tile)
 

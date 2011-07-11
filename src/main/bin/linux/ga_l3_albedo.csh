@@ -14,4 +14,4 @@ else
     set Day = $doy
 endif
 
-time $beamRootDir/bin/gpt-d.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $gaRootDir/Albedo/$tile/GlobAlbedo.$year$Day.$tile.dim &
+time $beamRootDir/bin/gpt-ga.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $gaRootDir/Albedo/$tile/GlobAlbedo.$year$Day.$tile.dim &

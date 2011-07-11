@@ -23,10 +23,10 @@ fi
 
 echo "Processing tile $tile, year $year, DoY $DoY..."
 
-PRIORDIR="/bcserver12-data/GlobAlbedo/Priors/$tile/background/processed.p1.0.618034.p2.1.00000"
-SRCDIR="/bcserver12-data/GlobAlbedo/src"
-INVERSIONDIR="/bcserver12-data/GlobAlbedo/inversion_py/$tile"
-OUTPUTDIR="/bcserver12-data/GlobAlbedo/Merge/$tile"
+PRIORDIR="/data/GlobAlbedo/Priors/$tile/background/processed.p1.0.618034.p2.1.00000"
+SRCDIR="/data/GlobAlbedo/src"
+INVERSIONDIR="/data/GlobAlbedo/Inversion/$tile"
+OUTPUTDIR="/data/GlobAlbedo/Merge/$tile"
 
 PriorMaskFile="$PRIORDIR/Kernels.$DoY.005.$tile.backGround.NoSnow.bin"
 

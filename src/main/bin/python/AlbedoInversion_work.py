@@ -481,7 +481,7 @@ def WriteDataset(File, Inversion, DoYClosestSample, GoodnessOfFit, Tile):
     # Write header
     ULC_coordinates = GetUpperLeftCoordinates(Tile)
     output_header = open(File.split(".bin")[0] + ".hdr", 'w')
-    header_template = open("/home/uwe/GlobAlbedo/src/metadata/generic_header.hdr")
+    header_template = open("/data/GlobAlbedo/src/metadata/generic_header.hdr")
     for lines in header_template:
         if 'SAMPLES,LINES' in lines:
             output_header.write(lines.replace('SAMPLES,LINES', 'samples = ' + str(columns) + '\n' + 'lines = ' + str(rows)))
@@ -536,7 +536,7 @@ def WriteDatasetSingleMatrixElement(File, M, V, E, Tile, OutputDir):
     # Write header
     ULC_coordinates = GetUpperLeftCoordinates(Tile)
     output_header = open(File.split(".bin")[0] + ".hdr", 'w')
-    header_template = open("/home/uwe/GlobAlbedo/src/metadata/generic_header.hdr")
+    header_template = open("/data/GlobAlbedo/src/metadata/generic_header.hdr")
     for lines in header_template:
         if 'SAMPLES,LINES' in lines:
             output_header.write(lines.replace('SAMPLES,LINES', 'samples = ' + str(columns) + '\n' + 'lines = ' + str(rows)))
@@ -555,7 +555,7 @@ def GetUpperLeftCoordinates(Tile):
     Get the Upper Left Corner coordinates in meters for a given MODIS tile
     Coordinates are stored in an ASCII file
     '''
-    ULC_coords_file = '/home/uwe/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
+    ULC_coords_file = '/data/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
     ULC_coordinates = open(ULC_coords_file, 'r')
 
     coordinates = ''
@@ -766,7 +766,7 @@ PriorDoY = sys.argv[7]
 #PriorDoY = "*"
 OutDir = sys.argv[8]
 print "outdir: ", OutDir
-DataDir = '/bcserver12-data/GlobAlbedo'
+DataDir = '/data/GlobAlbedo'
 
 #Get ALL DoY to process from prior
 if Snow == 1:

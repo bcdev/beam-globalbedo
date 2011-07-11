@@ -84,8 +84,11 @@ def GetMergeProductByProportion(NoSnow, Snow, PriorMask):
     # Create merge product array and, add an additional band which will be the SnowMask
     Merge = numpy.zeros((BandCount+1, cols,rows), numpy.float32)
 
+    print "colrows: ", cols,rows
+    print "priormask: ", PriorMask
     for column in range(0,cols):
         for row in range(0,rows):
+#	    print "colrow: ", column, row, PriorMask[column][row]
             TotalNSamples = NSamplesNoSnow[column,row] + NSamplesSnow[column,row]
             if TotalNSamples > 0.0:
                 if NSamplesNoSnow[column,row] == 0 and PriorMask[column,row] == 3.0:
@@ -170,7 +173,7 @@ def GetUpperLeftCoordinates(Tile):
     Get the Upper Left Corner coordinates in meters for a given MODIS tile
     Coordinates are stored in an ASCII file
     '''
-    ULC_coords_file = '/home/uwe/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
+    ULC_coords_file = '/data/GlobAlbedo/src/metadata/Tiles_UpperLeftCorner_Coordinates.txt'
     ULC_coordinates = open(ULC_coords_file, 'r')
 
     coordinates = ''
@@ -209,7 +212,7 @@ def WriteDataset(File, MergeProduct, Tile, ProductIsMerged=1):
     # Write header
     ULC_coordinates = GetUpperLeftCoordinates(Tile)
     output_header = open(File.split(".bin")[0] + ".hdr", 'w')
-    header_template = open("/home/uwe/GlobAlbedo/src/metadata/generic_header_merge.hdr")
+    header_template = open("/data/GlobAlbedo/src/metadata/generic_header_merge.hdr")
     for lines in header_template:
         if 'SAMPLES,LINES' in lines:
             output_header.write(lines.replace('SAMPLES,LINES', 'samples = ' + str(cols) + '\n' + 'lines = ' + str(rows)))
@@ -231,12 +234,13 @@ def GetPriorMask(PriorMaskFile, xmin=1, ymin=1, xmax=1, ymax=1):
 
     try:
         filename = glob.glob(PriorMaskFile)
+	print "prior file: ", filename[0]
         dataset = gdal.Open( filename[0], GA_ReadOnly )
     except:
         PriorMask = numpy.zeros((xsize, ysize), numpy.float32)
         return PriorMask
 
-
+    print "bla"
     if xmin == ymin == xmax == ymax == 1:
         Xmin = Ymin = 0
         Xmax, Ymax, BandCount = dataset.RasterXSize, dataset.RasterYSize, dataset.RasterCount
@@ -251,6 +255,7 @@ def GetPriorMask(PriorMaskFile, xmin=1, ymin=1, xmax=1, ymax=1):
         Ymin = ymin - 1
 
     print "Getting GlobAlbedo Prior Mask...", PriorMaskFile
+    print "size: ", xsize, ysize
     PriorMask = numpy.zeros((xsize, ysize), numpy.float32)
     # Mask band 20
     PriorMask[:,:] = dataset.GetRasterBand(20).ReadAsArray(Xmin, Ymin, xsize, ysize)
@@ -270,6 +275,8 @@ NoSnowFile = sys.argv[1]
 SnowFile = sys.argv[2]
 PriorMaskFile = sys.argv[3]
 OUTDIR = sys.argv[4]
+
+print "prior: ", PriorMaskFile
 PriorMask = GetPriorMask(PriorMaskFile)
 
 YearDoY = os.path.basename(NoSnowFile).split('.')[1]

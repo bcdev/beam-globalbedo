@@ -4,4 +4,6 @@
 ./ga_l3_albedo.csh h18v04 2005 129 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_albedo.csh h18v04 2005 137 /data/GlobAlbedo /opt/beam-4.9.0.1 
 #./ga_l3_albedo.csh h18v04 2005 145 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_albedo.csh h18v04 2005 9 /data/GlobAlbedo /opt/beam-4.9.0.1 
+#./ga_l3_albedo.csh h18v04 2005 33 /data/GlobAlbedo /opt/beam-4.9.0.1 
 

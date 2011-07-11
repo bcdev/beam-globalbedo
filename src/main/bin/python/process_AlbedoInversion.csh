@@ -25,9 +25,9 @@ set sensor = ALL
 set wings = $3
 set Outliers = 1
 
-set DATADIR = "/bcserver12-data/GlobAlbedo/Priors/$tile/background/processed.p1.0.618034.p2.1.00000"
-set SRCDIR = "/bcserver12-data/GlobAlbedo/src"
-set OUTDIR = "/bcserver12-data/GlobAlbedo/inversion_py/$tile"
+set DATADIR = "/data/GlobAlbedo/Priors/$tile/background/processed.p1.0.618034.p2.1.00000"
+set SRCDIR = "/data/GlobAlbedo/src"
+set OUTDIR = "/data/GlobAlbedo/Inversion/$tile"
 
 # To use 8 cores -> 6 runs
 #set StartDoY = (001 065 129 193 257 321)

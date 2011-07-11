@@ -178,17 +178,23 @@ def GetMonthlyWeighting():
                     if DoY >= StartingDayInMonth + NumberOfDaysInMonth - 8:
                         Distance = (StartingDayInMonth + NumberOfDaysInMonth - DoY) / 8.
                         MonthlyWeight = Distance * 0.5 + 0.5
+#			print "distance 1, mon weight: ", DoY, ", ", StartingDayInMonth, Distance, ", ", MonthlyWeight
 
                     if DoY <= StartingDayInMonth + 8:
                         Distance = (StartingDayInMonth + 8 - DoY) / 8.
                         MonthlyWeight = Distance * 0.5 + 0.5
+#			print "distance 2, mon weight: ", DoY, ", ", StartingDayInMonth, Distance, ", ", MonthlyWeight
 
                     ND += MonthlyWeight
+#		    print "ND, mon weight: ", DoY, ", ", StartingDayInMonth, ND, ", ", MonthlyWeight
                     # Do not take into account the first weight
                     Sum += weight[(DoY + 8 -1)/8,Days-1] * MonthlyWeight
-
+		    print "DoY, StartingDayInMonth, weight, weightind, ND, Sum, monweight, Sum/ND: ", DoY, ", ", StartingDayInMonth,  weight[(DoY + 8 -1)/8,Days-1], ", ", ((DoY + 8 -1)/8,Days-1), ND, ", ", Sum, ", ", MonthlyWeight, ", ", Sum/ND
+		
                 i += 1
             MonthlyWeighting[j, Days-1] = Sum/ND
+	    if j <= 20:
+                    print "weighting: ", j, ", ", Days-1, ", ", Sum, ", ", ND, ", ", MonthlyWeighting[j, Days-1] 
         j += 1
 
 
@@ -211,6 +217,8 @@ import os
 
 Tile = sys.argv[1]
 Month = sys.argv[2]
+print "Tile: ", Tile
+print "Month: ", Month
 MonthIndex = int(sys.argv[2]) - 1
 
 AlbedoFiles = glob.glob('/data/GlobAlbedo/Albedo/' + Tile + '/*.bin')

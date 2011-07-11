@@ -1,13 +1,22 @@
 #!/bin/tcsh
 
+# January
+#./ga_l3_dailyacc.csh h18v04 2005 9 12 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+#./ga_l3_dailyacc.csh h18v04 2005 13 16 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+#./ga_l3_dailyacc.csh h18v04 2005 17 20 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+#./ga_l3_dailyacc.csh h18v04 2005 21 24 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+
+# February
+#./ga_l3_dailyacc.csh h18v04 2005 33 36 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+
 # May
 #./ga_l3_dailyacc.csh h18v04 2005 121 124 /data/GlobAlbedo /opt/beam-4.9.0.1 &
-#./ga_l3_dailyacc.csh h18v04 2005 125 128 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+./ga_l3_dailyacc.csh h18v04 2005 125 128 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 #./ga_l3_dailyacc.csh h18v04 2005 129 132 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 #./ga_l3_dailyacc.csh h18v04 2005 133 136 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 #./ga_l3_dailyacc.csh h18v04 2005 137 140 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 #./ga_l3_dailyacc.csh h18v04 2005 141 144 /data/GlobAlbedo /opt/beam-4.9.0.1 &
-./ga_l3_dailyacc.csh h18v04 2005 145 148 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+#./ga_l3_dailyacc.csh h18v04 2005 145 148 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 #./ga_l3_dailyacc.csh h18v04 2005 149 151 /data/GlobAlbedo /opt/beam-4.9.0.1 &
 
 # April
