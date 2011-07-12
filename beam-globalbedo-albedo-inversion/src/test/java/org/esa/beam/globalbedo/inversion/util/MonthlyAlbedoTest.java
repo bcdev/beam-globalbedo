@@ -24,4 +24,16 @@ public class MonthlyAlbedoTest extends TestCase {
         assertEquals(1.9015411E-5f, monthlyWeighting[10][188]);
         assertEquals(0.37752336f, monthlyWeighting[11][364]);
     }
+
+    public void testGetMonthString() throws Exception {
+        int month = 11;
+        assertEquals("11", IOUtils.getMonthString(month));
+        month = 7;
+        assertEquals("07", IOUtils.getMonthString(month));
+        month = -1;
+        assertNull(IOUtils.getMonthString(month));
+        month = 13;
+        assertNull(IOUtils.getMonthString(month));
+    }
+
 }

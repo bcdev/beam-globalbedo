@@ -320,47 +320,6 @@ public class IOTest extends TestCase {
         System.out.println("write test 2 time: = " + (t2 - t1));
     }
 
-//    public void testReadFloatArray_1() throws Exception {
-//        long t1 = System.currentTimeMillis();
-//        try {
-//            FileInputStream file_input = new FileInputStream(testfile);
-//            DataInputStream data_in = new DataInputStream(file_input);
-//
-//            float[][] fArray = new float[dim1][dim2];
-//
-//            int jj = 0;
-//            int kk = 0;
-//            while (true && jj < 1200 && kk < 1200) {
-//                try {
-//                    fArray[jj][kk] = data_in.readFloat();
-//                } catch (EOFException eof) {
-//                    System.out.println("End of File");
-//                    break;
-//                }
-//                kk++;
-//                if (kk == dim1) {
-//                    jj++;
-//                    kk = 0;
-//                }
-//
-//            }
-//            data_in.close();
-//            long t2 = System.currentTimeMillis();
-//
-//            System.out.println("read test 1 time: = " + (t2 - t1));
-//            float expected = 1.0f;
-//            assertEquals(expected, fArray[0][1]);
-//            expected = 34 * dim1 + 27.0f;
-//            assertEquals(expected, fArray[34][27]);
-//            expected = 673 * dim1 + 1158.0f;
-//            assertEquals(expected, fArray[673][1158]);
-//            expected = (dim1 - 1) * dim1 + (dim2 - 1) * 1.0f;
-//            assertEquals(expected, fArray[dim1 - 1][dim2 - 1]);
-//        } catch (IOException e) {
-//            System.out.println("IO Exception =: " + e);
-//        }
-//    }
-
     public void testReadFloatArray_2() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -590,5 +549,20 @@ public class IOTest extends TestCase {
         String defaultTileInfoFileName = "tileInfo_0.dim";
         String tileInfoFilepath = IOUtils.getTileInfoFilePath(tileDir, defaultTileInfoFileName);
         assertEquals(existingTileInfoFilePath, tileInfoFilepath);
+    }
+
+    public void testGetTileDirectories() throws Exception {
+        String rootDir = System.getProperty("user.home");
+        File h18v04 = new File(rootDir + File.separator + "h18v04");
+        if (!h18v04.exists()) h18v04.mkdir();
+        File h25v06 = new File(rootDir + File.separator + "h25v06");
+        if (!h25v06.exists()) h25v06.mkdir();
+
+        File[] tileDirs = IOUtils.getTileDirectories(rootDir);
+        assertNotNull(tileDirs);
+        assertEquals(2, tileDirs.length);
+        assertEquals("h18v04", tileDirs[0].getName());
+        assertEquals("h25v06", tileDirs[1].getName());
+
     }
 }

@@ -75,8 +75,14 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-    @Parameter(valueSet = {"6", "60"}, defaultValue = "60")
+    @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
+    private int monthIndex;
+
+    @Parameter(valueSet = {"6", "60"}, description = "Scaling (6 = 0.05deg, 60 = 0.5deg resolution", defaultValue = "60")
     private int scaling;
+
+    @Parameter(defaultValue = "false", description = "True if monthly albedo to upscale")
+    private boolean isMonthlyAlbedo;
 
 
     @TargetProduct
@@ -155,24 +161,25 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     private File findRefTile() {
 
-        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        FileFilter tileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && pattern.matcher(file.getName()).matches();
-            }
-        };
-
         final FilenameFilter albedoFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String expectedFilename = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                String expectedFilename;
+                if (isMonthlyAlbedo) {
+                    expectedFilename = "GlobAlbedo." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
+                } else {
+                    expectedFilename = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                }
                 return name.equals(expectedFilename);
             }
         };
 
-        String albedoDirString = gaRootDir + File.separator + "Albedo";
-        File albedoDir = new File(albedoDirString);
-        final File[] albedoFiles = albedoDir.listFiles(tileFilter);
+        String albedoDirString;
+        if (isMonthlyAlbedo) {
+            albedoDirString = gaRootDir + File.separator + "MonthlyAlbedo";
+        } else {
+            albedoDirString = gaRootDir + File.separator + "Albedo";
+        }
+        final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString);
         for (File albedoFile : albedoFiles) {
             File[] tileFiles = albedoFile.listFiles(albedoFilter);
             for (File tileFile : tileFiles) {
@@ -195,16 +202,16 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         if (hasValidPixel(getSourceTile(relEntropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
-            for (int i=0; i<dhrBandNames.length; i++) {
+            for (int i = 0; i < dhrBandNames.length; i++) {
                 computeNearest(srcTiles.get(dhrBandNames[i]), targetTiles.get(dhrBandNames[i]));
             }
-            for (int i=0; i<bhrBandNames.length; i++) {
+            for (int i = 0; i < bhrBandNames.length; i++) {
                 computeNearest(srcTiles.get(bhrBandNames[i]), targetTiles.get(bhrBandNames[i]));
             }
-            for (int i=0; i<dhrSigmaBandNames.length; i++) {
+            for (int i = 0; i < dhrSigmaBandNames.length; i++) {
                 computeNearest(srcTiles.get(dhrSigmaBandNames[i]), targetTiles.get(dhrSigmaBandNames[i]));
             }
-            for (int i=0; i<bhrSigmaBandNames.length; i++) {
+            for (int i = 0; i < bhrSigmaBandNames.length; i++) {
                 computeNearest(srcTiles.get(bhrSigmaBandNames[i]), targetTiles.get(bhrSigmaBandNames[i]));
             }
 

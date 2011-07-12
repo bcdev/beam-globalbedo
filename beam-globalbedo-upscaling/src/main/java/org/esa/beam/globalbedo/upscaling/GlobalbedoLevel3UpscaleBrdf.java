@@ -77,7 +77,6 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(valueSet = {"6", "60"}, defaultValue = "60")
     private int scaling;
 
-
     @TargetProduct
     private Product targetProduct;
 
@@ -158,14 +157,6 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
     private File findRefTile() {
 
-        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        FileFilter tileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && pattern.matcher(file.getName()).matches();
-            }
-        };
-
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 String expectedFilename = "GlobAlbedo.Merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
@@ -174,8 +165,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         };
 
         String mergeDirString = gaRootDir + File.separator + "Merge";
-        File mergeDir = new File(mergeDirString);
-        final File[] mergeFiles = mergeDir.listFiles(tileFilter);
+        final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
         for (File mergeFile : mergeFiles) {
             File[] tileFiles = mergeFile.listFiles(mergeFilter);
             for (File tileFile : tileFiles) {

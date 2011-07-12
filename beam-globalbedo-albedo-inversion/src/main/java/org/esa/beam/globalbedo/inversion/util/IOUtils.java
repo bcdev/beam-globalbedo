@@ -16,6 +16,7 @@ import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
 import java.util.*;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 /**
  * Utility class for Albedo Inversion I/O operations
@@ -149,6 +150,17 @@ public class IOUtils {
             doyString = "0" + doyString;
         }
         return doyString;
+    }
+
+    public static String getMonthString(int month) {
+        String monthString = Integer.toString(month);
+        if (month < 0 || month > 12) {
+            return null;
+        }
+        if (month < 10) {
+            monthString = "0" + monthString;
+        }
+        return monthString;
     }
 
     static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
@@ -744,6 +756,19 @@ public class IOUtils {
         }
 
         return albedoProducts;
+    }
+
+    public static File[] getTileDirectories(String rootDirString) {
+        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+        FileFilter tileFilter = new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() && pattern.matcher(file.getName()).matches();
+            }
+        };
+
+        File rootDir = new File(rootDirString);
+        return rootDir.listFiles(tileFilter);
     }
 
 }
