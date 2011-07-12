@@ -37,6 +37,7 @@ import org.esa.beam.util.ProductUtils;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
+import java.io.IOException;
 import java.util.ArrayList;
 
 @OperatorMetadata(alias = "ga.l2")
@@ -54,11 +55,14 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false")
     private boolean computeAotToBbdrProductOnly;
 
-    @Parameter
-    private double easting;
+//    @Parameter
+//    private double easting;
+//
+//    @Parameter
+//    private double northing;
 
-    @Parameter
-    private double northing;
+    @Parameter(defaultValue = "")
+    private String tile;
 
     @Override
     public void initialize() throws OperatorException {
@@ -123,6 +127,16 @@ public class GlobalbedoLevel2 extends Operator {
 
     private Product reproject(Product bbdrProduct) {
         ReprojectionOp repro = new ReprojectionOp();
+        double easting = 0.0;
+        double northing = 0.0;
+        try {
+            ModisTileUpperLeftCoordinates coordinates = new ModisTileUpperLeftCoordinates();
+            easting = coordinates.getUpperLeftX(tile);
+            northing = coordinates.getUpperLeftY(tile);
+        } catch (IOException e) {
+            throw new OperatorException("Cannot read tile upper left coordinated - terminate process.");
+        }
+
         repro.setParameter("easting", easting);
         repro.setParameter("northing", northing);
 
