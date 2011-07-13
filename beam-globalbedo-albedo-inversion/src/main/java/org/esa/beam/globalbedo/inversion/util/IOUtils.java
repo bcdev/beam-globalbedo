@@ -129,7 +129,7 @@ public class IOUtils {
         String doyString = getDoyString(doy);
 
         for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo." + Integer.toString(year) + doyString)) {
+            if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
                 Product product = ProductIO.readProduct(sourceProductFileName);
                 return product;
