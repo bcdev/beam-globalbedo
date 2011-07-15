@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -55,12 +55,6 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false")
     private boolean computeAotToBbdrProductOnly;
 
-//    @Parameter
-//    private double easting;
-//
-//    @Parameter
-//    private double northing;
-
     @Parameter(defaultValue = "")
     private String tile;
 
@@ -96,12 +90,18 @@ public class GlobalbedoLevel2 extends Operator {
         // which seems to improve performance tremendously (more than factor 10 for a MERIS full orbit test product)
         Product targetProduct = null;
         Product aotProduct = null;
-        if (!computeAotToBbdrProductOnly) {
-            Geometry geometry = computeProductGeometry(reproject(sourceProduct));
-            SubsetOp subsetOp = new SubsetOp();
-            subsetOp.setGeoRegion(geometry);
-            subsetOp.setSourceProduct(sourceProduct);
-            targetProduct = subsetOp.getTargetProduct();
+        if (computeAotToBbdrProductOnly) {
+            aotProduct = sourceProduct;
+        } else {
+            if (tile != null && !tile.isEmpty()) {
+                Geometry geometry = computeProductGeometry(reproject(sourceProduct));
+                SubsetOp subsetOp = new SubsetOp();
+                subsetOp.setGeoRegion(geometry);
+                subsetOp.setSourceProduct(sourceProduct);
+                targetProduct = subsetOp.getTargetProduct();
+            } else {
+                targetProduct = sourceProduct;
+            }
 
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameter("copyToaRadBands", false);
@@ -109,8 +109,6 @@ public class GlobalbedoLevel2 extends Operator {
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
             //TODO handle EMPTY_PRODUCT case
-        }  else {
-            aotProduct = sourceProduct;
         }
 
         if (computeL1ToAotProductOnly) {
@@ -120,8 +118,11 @@ public class GlobalbedoLevel2 extends Operator {
             bbdrOp.setSourceProduct(aotProduct);
             bbdrOp.setParameter("sensor", sensor);
             Product bbdrProduct = bbdrOp.getTargetProduct();
-
-            setTargetProduct(reproject(bbdrProduct));
+            if (tile != null && !tile.isEmpty()) {
+                setTargetProduct(reproject(bbdrProduct));
+            } else {
+                setTargetProduct(bbdrProduct);
+            }
         }
     }
 

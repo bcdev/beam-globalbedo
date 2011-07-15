@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.framework.gpf.OperatorException;
@@ -7,12 +23,6 @@ import java.util.StringTokenizer;
 
 /**
  * Class providing the Modis tile upper left coordinated from auxdata
- * <p/>
- * Created by IntelliJ IDEA.
- * User: olafd
- * Date: 12.07.11
- * Time: 15:38
- * To change this template use File | Settings | File Templates.
  */
 public class ModisTileUpperLeftCoordinates {
 
