@@ -1,0 +1,18 @@
+ENVI
+description = {
+  Outliers based on MODIS prior}
+SAMPLES,LINES
+bands   = 1
+header offset = 0
+file type = ENVI Standard
+data type = 4
+interleave = bsq
+map info = {Sinusoidal, 1.0000, 1.0000, 
+X,Y
+,9.26625433054999462e+02, 9.26625433055833355e+02, GCS Name = Unknown datum based upon the custom spheroid|Datum = Not specified (based on custom spheroid)|Ellipsoid = Custom spheroid|Primem = Greenwich|, units=Meters}
+projection info = {16, 6371007.2, 0.000000, 0.0, 0.0, GCS Name = Unknown datum based upon the custom spheroid|Datum = Not specified (based on custom spheroid)|Ellipsoid = Custom spheroid|Primem = Greenwich|, Sinusoidal, units=Meters}
+sensor type = Unknown
+byte order = 0
+wavelength units = Unknown
+data ignore value = -9999.0
+band names = { Outliers mask }

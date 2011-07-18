@@ -1,0 +1,23 @@
+ENVI
+description = {
+  GlobAlbedo Monthly Albedo product}
+samples = 792
+lines   = 396
+bands   = 17
+header offset = 0
+file type = ENVI Standard
+data type = 4
+interleave = bsq
+sensor type = Unknown
+byte order = 0
+map info = {Sinusoidal, 1.0, 1.0, -20015109.354,10007554.677, 50543.20543936, 50543.20543941, GCS Name=Unknown datum based upon the custom spheroid|Datum=Not specified (based on custom spheroid)|Ellipsoid=Custom spheroid|Primem=Greenwich|, units=Meters}
+projection info = {16, 6371007.2, 0.000000, 0.0, 0.0, GCS Name=Unknown datum based upon the custom spheroid|Datum=Not specified (based on custom spheroid)|Ellipsoid=Custom spheroid|Primem=Greenwich|, Sinusoidal, units=Meters}
+wavelength units = Unknown
+data ignore value = -9.99900000e+03
+default bands = {3,2,1}
+band names = {
+ DHR VIS, DHR NIR, DHR SW,
+ BHR VIS, BHR NIR, BHR SW,
+ DHR sigma VIS, DHR sigma NIR, DHR sigma SW,
+ BHR sigma VIS, BHR sigma NIR, BHR sigma SW,
+ Weighted Number of Samples, Relative Entropy, Goodness Of Fit, Snow Fraction, Data Mask }
