@@ -27,6 +27,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
 
+    @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
+    private String priorRootDir;
+
     @Parameter(defaultValue = "h18v04", description = "MODIS tile")
     private String tile;
 
@@ -64,7 +67,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input file...
-        final String priorDir = gaRootDir + File.separator + "Priors" + File.separator + tile + File.separator +
+        final String priorDir = priorRootDir + File.separator + tile + File.separator +
                 "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct = null;
