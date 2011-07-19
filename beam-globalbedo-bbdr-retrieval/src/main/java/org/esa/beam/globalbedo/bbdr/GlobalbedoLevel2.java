@@ -88,6 +88,11 @@ public class GlobalbedoLevel2 extends Operator {
         // 1. L1b --> AOT
         // 2. AOT --> BBDR
         // which seems to improve performance tremendously (more than factor 10 for a MERIS full orbit test product)
+
+        if (sourceProduct.getPreferredTileSize() == null) {
+            sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
+            System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
+        }
         Product targetProduct = null;
         Product aotProduct = null;
         if (computeAotToBbdrProductOnly) {
