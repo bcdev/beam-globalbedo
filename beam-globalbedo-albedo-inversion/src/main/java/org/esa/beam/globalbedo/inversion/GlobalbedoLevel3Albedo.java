@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -7,6 +8,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
@@ -86,17 +88,17 @@ public class GlobalbedoLevel3Albedo extends Operator {
             mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
             brdfMergedProduct = mergeBrdfOp.getTargetProduct();
         } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
-            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for for tile:" + tile + ", year: " +
+            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
             // only use Snow product...
-            brdfMergedProduct = brdfSnowProduct;
+            brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct);
         } else if (brdfSnowProduct == null && brdfNoSnowProduct != null) {
-            logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for for tile:" + tile + ", year: " +
+            logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
             // only use NoSnow product...
-            brdfMergedProduct = brdfNoSnowProduct;
+            brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct);
         } else {
-            logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for for tile:" + tile + ", year: " +
+            logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
         }
 
@@ -117,6 +119,18 @@ public class GlobalbedoLevel3Albedo extends Operator {
             logger.log(Level.WARNING, "No albedos computed for tile: " + tile + ", year: " + year +
                     ", Doy: " + IOUtils.getDoyString(doy));
         }
+    }
+
+    private Product copyFromSingleProduct(Product sourceProduct) {
+        Product targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(),
+                sourceProduct.getSceneRasterWidth(), sourceProduct.getSceneRasterHeight());
+        for (Band band : sourceProduct.getBands()) {
+            Band targetBand = ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct);
+            targetBand.setSourceImage(sourceProduct.getBand(band.getName()).getGeophysicalImage());
+        }
+        ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
+        ProductUtils.copyMetadata(sourceProduct, targetProduct);
+        return targetProduct;
     }
 
     public static class Spi extends OperatorSpi {

@@ -78,55 +78,53 @@ public class GlobalbedoLevel3Inversion extends Operator {
                     " - cannot proceed...: " + e.getMessage());
         }
 
-        // STEP 2: get Daily Accumulator input files...
-//        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
-//
-//        AlbedoInput inputProduct = IOUtils.getAlbedoInputProduct(accumulatorDir, useBinaryAccumulators, doy, year, tile,
-//                wings,
-//                computeSnow);
+        if (priorProduct != null) {
+            // STEP 2: set paths...
+            final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
+            String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+                    + File.separator + year + File.separator + tile;
 
-        // STEP 3: set paths...
-        final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
-        String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
-                + File.separator + year + File.separator + tile;
-
-        // STEP 4: we need to reproject the priors for further use...
-        Product reprojectedPriorProduct = null;
-        try {
-            String tileInfoFilePath = IOUtils.getTileInfoFilePath(fullAccumulatorDir, tileInfoFilename);
-            Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
-            if (priorProduct != null) {
-                reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                        tileInfoProduct);
-            } else {
-                usePrior = false;
-                reprojectedPriorProduct = tileInfoProduct;
+            // STEP 3: we need to reproject the priors for further use...
+            Product reprojectedPriorProduct = null;
+            try {
+                String tileInfoFilePath = IOUtils.getTileInfoFilePath(fullAccumulatorDir, tileInfoFilename);
+                Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
+                if (priorProduct != null) {
+                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
+                            tileInfoProduct);
+                } else {
+                    usePrior = false;
+                    reprojectedPriorProduct = tileInfoProduct;
+                }
+            } catch (IOException e) {
+                throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
             }
-        } catch (IOException e) {
-            throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
-        }
 
-        // STEP 5: do inversion...
-        String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
-        if (computeSnow) {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            // STEP 5: do inversion...
+            String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
+            if (computeSnow) {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            } else {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            }
+
+            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
+
+            InversionOp inversionOp = new InversionOp();
+            inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+            inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
+            inversionOp.setParameter("year", year);
+            inversionOp.setParameter("tile", tile);
+            inversionOp.setParameter("doy", doy);
+            inversionOp.setParameter("computeSnow", computeSnow);
+            inversionOp.setParameter("usePrior", usePrior);
+            inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
+            Product inversionProduct = inversionOp.getTargetProduct();
+            setTargetProduct(inversionProduct);
         } else {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
+                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
         }
-
-        String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
-
-        InversionOp inversionOp = new InversionOp();
-        inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
-        inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
-        inversionOp.setParameter("year", year);
-        inversionOp.setParameter("tile", tile);
-        inversionOp.setParameter("doy", doy);
-        inversionOp.setParameter("computeSnow", computeSnow);
-        inversionOp.setParameter("usePrior", usePrior);
-        inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
-        Product inversionProduct = inversionOp.getTargetProduct();
-        setTargetProduct(inversionProduct);
 
         logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
