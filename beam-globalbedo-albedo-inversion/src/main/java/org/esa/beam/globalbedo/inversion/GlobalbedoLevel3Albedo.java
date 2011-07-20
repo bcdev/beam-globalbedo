@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.inversion;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -12,6 +13,8 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
+import javax.media.jai.operator.ConstantDescriptor;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.logging.Level;
@@ -91,12 +94,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
             logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
             // only use Snow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct);
+            brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
         } else if (brdfSnowProduct == null && brdfNoSnowProduct != null) {
             logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
             // only use NoSnow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct);
+            brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
         } else {
             logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + doy);
@@ -121,13 +124,21 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
     }
 
-    private Product copyFromSingleProduct(Product sourceProduct) {
+    private Product copyFromSingleProduct(Product sourceProduct, float propNSampleConstantValue) {
+        final int width = sourceProduct.getSceneRasterWidth();
+        final int height = sourceProduct.getSceneRasterHeight();
         Product targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(),
-                sourceProduct.getSceneRasterWidth(), sourceProduct.getSceneRasterHeight());
+                width, height);
         for (Band band : sourceProduct.getBands()) {
             Band targetBand = ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct);
             targetBand.setSourceImage(sourceProduct.getBand(band.getName()).getGeophysicalImage());
         }
+        // we need to fill the 'Proportion_NSamples' band: 1.0 if only snow, 0.0 if only no snow
+        Band propNSamplesBand = targetProduct.addBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32);
+        BufferedImage bi = ConstantDescriptor.create((float) width, (float) height, new Float[]{propNSampleConstantValue},
+                null).getAsBufferedImage();
+        propNSamplesBand.setSourceImage(bi);
+
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
         return targetProduct;
