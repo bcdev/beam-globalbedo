@@ -37,14 +37,19 @@ import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.ImageUtils;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.JAI;
 import java.awt.geom.GeneralPath;
 import java.awt.geom.Path2D;
 import java.awt.geom.PathIterator;
 import java.awt.image.DataBuffer;
 import java.awt.image.Raster;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * Creates subprodcuts for all intersecting tiles
@@ -57,6 +62,9 @@ public class TileExtractor extends Operator implements Output {
 
     @Parameter
     private String bbdrDir;
+    private int parallelism;
+    private ModisTileCoordinates tileCoordinates;
+    private Geometry sourceGeometry;
 
     @Override
     public void initialize() throws OperatorException {
@@ -64,47 +72,81 @@ public class TileExtractor extends Operator implements Output {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
         }
-        long t1 = System.currentTimeMillis();
-        ModisTileCoordinates tileCoordinates = ModisTileCoordinates.getInstance();
-        Geometry sourceGeometry = computeProductGeometry(sourceProduct);
+        parallelism = JAI.getDefaultInstance().getTileScheduler().getParallelism();
+        tileCoordinates = ModisTileCoordinates.getInstance();
+        sourceGeometry = computeProductGeometry(sourceProduct);
         if (sourceGeometry != null) {
-
-            for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
-                String tileName = tileCoordinates.getTileName(index);
-
-                Product reproject = reproject(sourceProduct, tileName);
-                Geometry reprojectGeometry = computeProductGeometry(reproject);
-                if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
-                    reproject.setPreferredTileSize(reproject.getSceneRasterWidth(), reproject.getSceneRasterHeight() / 4);
-                    System.out.println("tileName = " + tileName);
-                    Band bb_vis = reproject.getBand("BB_VIS");
-                    if (containsFloatData(bb_vis, bb_vis.getNoDataValue())) {
-                        long tt1 = System.currentTimeMillis();
-                        System.out.println("repro: " + reproject.getPreferredTileSize());
-                        File dir = new File(bbdrDir, tileName);
-                        dir.mkdirs();
-                        File file = new File(dir, "subset_" + sourceProduct.getName() + "_BBDR_Geo.dim");
-                        try {
-                            file.createNewFile();
-                        } catch (IOException e) {
-                            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
-                        }
-                        WriteOp writeOp = new WriteOp(reproject, file, DimapProductConstants.DIMAP_FORMAT_NAME);
-                        writeOp.writeProduct(ProgressMonitor.NULL);
-                        long tt2 = System.currentTimeMillis();
-                        System.out.println("done " + tileName + " intime [" + (tt2 - tt1) + " ms]");
-                    } else {
-                        System.out.println("contains no data");
-                    }
-                }
-            }
-            long t2 = System.currentTimeMillis();
-            System.out.println("tiles extracted: " + (t2 - t1) + " ms");
+//          doExtract_simple();
+            doExtract_executor();
         }
         setTargetProduct(new Product("n", "d", 1, 1));
     }
 
-    private boolean containsFloatData(Band band, double noDataValue) {
+    private void doExtract_executor() {
+        ExecutorService executorService = Executors.newFixedThreadPool(parallelism);
+        Future<Product>[] futures = new Future[tileCoordinates.getTileCount()];
+        for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
+            final String tileName = tileCoordinates.getTileName(index);
+            Callable<Product> callable = new Callable<Product>() {
+                @Override
+                public Product call() throws Exception {
+                    return getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+                }
+            };
+            futures[index] = executorService.submit(callable);
+        }
+        for (int index = 0; index < futures.length; index++) {
+            Future<Product> productFuture = futures[index];
+            try {
+                Product product = productFuture.get();
+                if (product != null) {
+                    String tileName = tileCoordinates.getTileName(index);
+                    writeTileProduct(product, tileName);
+                }
+            } catch (InterruptedException e) {
+                throw new OperatorException(e);
+            } catch (ExecutionException e) {
+                throw new OperatorException(e);
+            }
+        }
+        executorService.shutdown();
+
+    }
+
+    private void doExtract_simple() {
+        for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
+            String tileName = tileCoordinates.getTileName(index);
+            Product reproject = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+            if (reproject != null) {
+                writeTileProduct(reproject, tileName);
+            }
+        }
+    }
+
+    private void writeTileProduct(Product product, String tileName) {
+        File dir = new File(bbdrDir, tileName);
+        dir.mkdirs();
+        File file = new File(dir, "subset_" + sourceProduct.getName() + "_BBDR_Geo.dim");
+        WriteOp writeOp = new WriteOp(product, file, DimapProductConstants.DIMAP_FORMAT_NAME);
+        writeOp.writeProduct(ProgressMonitor.NULL);
+    }
+
+    private static Product getReprojectedProductWithData(Product src, Geometry sourceGeometry, String tileName) {
+        Product reproject = reproject(src, tileName);
+        Geometry reprojectGeometry = computeProductGeometry(reproject);
+
+        if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
+            int parallelism = JAI.getDefaultInstance().getTileScheduler().getParallelism();
+            reproject.setPreferredTileSize(reproject.getSceneRasterWidth(), reproject.getSceneRasterHeight() / parallelism);
+            Band bb_vis = reproject.getBand("BB_VIS");
+            if (containsFloatData(bb_vis, bb_vis.getNoDataValue())) {
+                return reproject;
+            }
+        }
+        return null;
+    }
+
+    private static boolean containsFloatData(Band band, double noDataValue) {
         Raster data = band.getSourceImage().getData(null);
         DataBuffer dataBuffer = data.getDataBuffer();
         Object primitiveArray = ImageUtils.getPrimitiveArray(dataBuffer);
