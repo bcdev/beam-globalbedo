@@ -47,6 +47,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -84,24 +85,25 @@ public class TileExtractor extends Operator implements Output {
 
     private void doExtract_executor() {
         ExecutorService executorService = Executors.newFixedThreadPool(parallelism);
-        Future<Product>[] futures = new Future[tileCoordinates.getTileCount()];
+        ExecutorCompletionService<TileProduct> ecs = new ExecutorCompletionService<TileProduct>(executorService);
+
         for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
             final String tileName = tileCoordinates.getTileName(index);
-            Callable<Product> callable = new Callable<Product>() {
+            Callable<TileProduct> callable = new Callable<TileProduct>() {
                 @Override
-                public Product call() throws Exception {
-                    return getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+                public TileProduct call() throws Exception {
+                    Product reprojected = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+                    return new TileProduct(reprojected, tileName);
                 }
             };
-            futures[index] = executorService.submit(callable);
+            ecs.submit(callable);
         }
-        for (int index = 0; index < futures.length; index++) {
-            Future<Product> productFuture = futures[index];
+        for (int i = 0; i < tileCoordinates.getTileCount(); i++) {
             try {
-                Product product = productFuture.get();
-                if (product != null) {
-                    String tileName = tileCoordinates.getTileName(index);
-                    writeTileProduct(product, tileName);
+                Future<TileProduct> future = ecs.take();
+                TileProduct tileProduct = future.get();
+                if (tileProduct.product != null) {
+                    writeTileProduct(tileProduct.product, tileProduct.tileName);
                 }
             } catch (InterruptedException e) {
                 throw new OperatorException(e);
@@ -110,7 +112,6 @@ public class TileExtractor extends Operator implements Output {
             }
         }
         executorService.shutdown();
-
     }
 
     private void doExtract_simple() {
@@ -244,6 +245,16 @@ public class TileExtractor extends Operator implements Output {
         }
 
         return factory.createPolygon(factory.createLinearRing(coordinates), null);
+    }
+
+    private static class TileProduct {
+        private final Product product;
+        private final String tileName;
+
+        private TileProduct(Product product, String tileName) {
+            this.product = product;
+            this.tileName = tileName;
+        }
     }
 
     public static class Spi extends OperatorSpi {
