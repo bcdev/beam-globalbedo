@@ -166,9 +166,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             public boolean accept(File dir, String name) {
                 String expectedFilename;
                 if (isMonthlyAlbedo) {
-                    expectedFilename = "GlobAlbedo." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
+                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
                 } else {
-                    expectedFilename = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
                 }
                 return name.equals(expectedFilename);
             }

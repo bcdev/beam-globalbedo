@@ -13,4 +13,4 @@ else
 endif
 
 
-time $beamRootDir/bin/gpt-d.sh ga.l3.albedo.monthly -Ptile=$tile -Pyear=$year -PmonthIndex=$monthIndex -PgaRootDir=$gaRootDir -e -t $gaRootDir/MonthlyAlbedo/$tile/GlobAlbedo.$year$Month.$tile.dim &
+time $beamRootDir/bin/gpt-d.sh ga.l3.albedo.monthly -Ptile=$tile -Pyear=$year -PmonthIndex=$monthIndex -PgaRootDir=$gaRootDir -e -t $gaRootDir/MonthlyAlbedo/$tile/GlobAlbedo.albedo.$year$Month.$tile.dim &

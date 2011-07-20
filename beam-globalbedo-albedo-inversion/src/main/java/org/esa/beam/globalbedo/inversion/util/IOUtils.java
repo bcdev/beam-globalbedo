@@ -730,7 +730,7 @@ public class IOUtils {
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'GlobAlbedo_2005129.h18v04.dim'...
-                return (name.length() == 29 && name.startsWith("GlobAlbedo") && name.endsWith(tile + ".dim"));
+                return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim"));
             }
         };
 
