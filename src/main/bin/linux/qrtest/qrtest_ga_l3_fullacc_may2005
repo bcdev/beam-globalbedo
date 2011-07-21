@@ -1,0 +1,4 @@
+#!/bin/tcsh
+
+./ga_l3_fullacc.csh h18v04 2005 121 129 540 /data/GlobAlbedo /opt/beam-4.9.0.1 &
+./ga_l3_fullacc.csh h18v04 2005 137 145 540 /data/GlobAlbedo /opt/beam-4.9.0.1 &

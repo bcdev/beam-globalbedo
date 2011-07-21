@@ -1,0 +1,13 @@
+#!/bin/tcsh
+
+set SRCDIR = "/data/GlobAlbedo/qrtest/aot_fub_testsample/"
+set BBDRDIR = "/data/GlobAlbedo/qrtest/bbdr"
+set SRCFILE = "V2KRNP____20050113F013_h25v06.dim"
+set SRCBASENAME = `basename $SRCFILE .dim`
+set sensor = "SPOT_VGT"
+set tile = "h25v06"
+
+echo "QRTEST: Start processing SPOT-VGT...AOT-->BBDR..."
+echo "time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile -PcomputeAotToBbdrProductOnly=true $SRCDIR/$SRCFILE -t $BBDRDIR/subset_${SRCBASENAME}_BBDR_geo.dim &"
+time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile -PcomputeAotToBbdrProductOnly=true $SRCDIR/$SRCFILE -t $BBDRDIR/subset_${SRCBASENAME}_BBDR_geo.dim &
+echo "QRTEST: Finished processing SPOT-VGT...AOT-->BBDR."

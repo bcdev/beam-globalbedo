@@ -1,0 +1,14 @@
+#!/bin/tcsh
+
+# here, process one of the VGT L1b files necessary for the doy=129, wings=8 case in test. do all others offline.
+set SRCDIR = "/data/GlobAlbedo/qrtest/L1b/"
+set BBDRDIR = "/data/GlobAlbedo/qrtest/bbdr"
+set SRCFILE = "V2KRNP____20050511F123.ZIP"
+set SRCBASENAME = `basename $SRCFILE .ZIP`
+set sensor = "SPOT_VGT"
+set tile = "h18v04"
+
+echo "QRTEST: Start processing SPOT_VGT...L1b-->BBDR..."
+echo "time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile $SRCDIR/$SRCFILE -t $BBDRDIR/subset_${SRCBASENAME}_${tile}_BBDR_geo.dim &"
+time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile $SRCDIR/$SRCFILE -t $BBDRDIR/subset_${SRCBASENAME}_${tile}_BBDR_geo.dim &
+echo "QRTEST: Finished processing SPOT-VGT...L1b-->BBDR."

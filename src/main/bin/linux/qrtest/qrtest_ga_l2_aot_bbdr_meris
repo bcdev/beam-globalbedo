@@ -1,0 +1,13 @@
+#!/bin/tcsh
+
+set SRCDIR = "/data/GlobAlbedo/qrtest/aot_fub_testsample/"
+set BBDRDIR = "/data/GlobAlbedo/qrtest/bbdr"
+set SRCFILE = "subset_MER_RR__1PRACR20041209_043316_000015232032_00434_14516_0000.dim"
+set SRCBASENAME = `basename $SRCFILE .dim`
+set sensor = "MERIS"
+set tile = "h25v06"
+
+echo "QRTEST: Start processing MERIS...AOT-->BBDR..."
+echo "time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile -PcomputeAotToBbdrProductOnly=true $SRCDIR/$SRCFILE -t $BBDRDIR/${SRCBASENAME}}_${tile}_BBDR_geo.dim &"
+time /opt/beam-4.9.0.1/bin/gpt-ga.sh  ga.l2 -Psensor=$sensor -Ptile=$tile -PcomputeAotToBbdrProductOnly=true $SRCDIR/$SRCFILE -t $BBDRDIR/${SRCBASENAME}_${tile}_BBDR_geo.dim &
+echo "QRTEST: Finished processing MERIS...AOT-->BBDR."

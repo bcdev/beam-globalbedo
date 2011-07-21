@@ -1,0 +1,9 @@
+#!/bin/tcsh
+
+set startDay = $1
+set endDay = $2
+
+# May 2005
+./ga_l3_dailyacc.csh h18v04 2005 $startDay $endDay /data/GlobAlbedo /opt/beam-4.9.0.1 &
+
+
