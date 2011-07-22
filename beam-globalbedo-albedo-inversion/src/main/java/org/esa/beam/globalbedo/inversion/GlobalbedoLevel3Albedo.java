@@ -53,11 +53,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Override
     public void initialize() throws OperatorException {
         logger = BeamLogManager.getSystemLogger();
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: we need the SNOW Prior file for given DoY...
-        final String priorDir = priorRootDir + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+        final String priorDir = priorRootDir + File.separator + "PriorStage2Snow" + File.separator + tile +
+                File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct;
         try {

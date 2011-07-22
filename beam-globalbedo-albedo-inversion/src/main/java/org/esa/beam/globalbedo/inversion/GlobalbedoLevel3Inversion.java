@@ -67,8 +67,14 @@ public class GlobalbedoLevel3Inversion extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input file...
-        final String priorDir = priorRootDir + File.separator + tile + File.separator +
-                "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+        String priorSnowSeparationDirName;
+        if (computeSnow) {
+            priorSnowSeparationDirName = "PriorStage2Snow";
+        } else {
+            priorSnowSeparationDirName = "PriorStage2";
+        }
+        final String priorDir = priorRootDir + File.separator + priorSnowSeparationDirName + File.separator + tile +
+                File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
         Product priorProduct = null;
         try {
@@ -123,7 +129,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             setTargetProduct(inversionProduct);
         } else {
             logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
-                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
+                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
         }
 
         logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +

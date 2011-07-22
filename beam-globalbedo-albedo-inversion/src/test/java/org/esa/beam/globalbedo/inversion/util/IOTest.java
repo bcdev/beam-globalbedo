@@ -235,13 +235,13 @@ public class IOTest extends TestCase {
     }
 
     public void testGetDoyFromAlbedoProductName() throws Exception {
-        String productName = "GlobAlbedo.2005129.h18v04.dim";
+        String productName = "GlobAlbedo.albedo.2005129.h18v04.dim";
         assertEquals(129, IOUtils.getDoyFromAlbedoProductName(productName));
 
-        productName = "GlobAlbedo.2005001.h18v04.dim";
+        productName = "GlobAlbedo.albedo.2005001.h18v04.dim";
         assertEquals(1, IOUtils.getDoyFromAlbedoProductName(productName));
 
-        productName = "GlobAlbedo.2005999.h18v04.dim";
+        productName = "GlobAlbedo.albedo.2005999.h18v04.dim";
         assertEquals(-1, IOUtils.getDoyFromAlbedoProductName(productName));
     }
 

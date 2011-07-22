@@ -163,7 +163,7 @@ public class DailyAccumulationOp extends PixelOperator {
         final String maskBandName = AlbedoInversionConstants.ACC_MASK_NAME;
         targetProduct.addBand(maskBandName, ProductData.TYPE_INT8);
 //        targetProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
-        targetProduct.setPreferredTileSize(100, 100);
+//        targetProduct.setPreferredTileSize(100, 100);
     }
 
     @Override

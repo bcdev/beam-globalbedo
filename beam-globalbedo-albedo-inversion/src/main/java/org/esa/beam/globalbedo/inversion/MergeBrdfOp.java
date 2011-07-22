@@ -297,7 +297,7 @@ public class MergeBrdfOp extends PixelOperator {
         proportionNsamplesBand.setNoDataValue(Float.NaN);
         proportionNsamplesBand.setNoDataValueUsed(true);
 
-        targetProduct.setPreferredTileSize(100, 100);
+//        targetProduct.setPreferredTileSize(100, 100);
     }
 
     @Override

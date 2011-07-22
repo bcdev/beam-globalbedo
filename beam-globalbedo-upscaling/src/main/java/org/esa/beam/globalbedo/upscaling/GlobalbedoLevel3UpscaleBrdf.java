@@ -74,9 +74,11 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-//    @Parameter(valueSet = {"6", "60"}, defaultValue = "60")
-    @Parameter(valueSet = {"1", "5", "60"}, defaultValue = "60")
+    @Parameter(valueSet = {"5", "60"}, defaultValue = "60")
     private int scaling;
+
+    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
+    private boolean reprojectToPlateCarre;
 
     @TargetProduct
     private Product targetProduct;
@@ -108,11 +110,15 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         } catch (IOException e) {
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
-        ReprojectionOp reprojection = new ReprojectionOp();
-        reprojection.setParameter("crs", WGS84_CODE);
-        reprojection.setSourceProduct(mosaicProduct);
-        reprojectedProduct = reprojection.getTargetProduct();
-        reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
+        if (reprojectToPlateCarre) {
+            ReprojectionOp reprojection = new ReprojectionOp();
+            reprojection.setParameter("crs", WGS84_CODE);
+            reprojection.setSourceProduct(mosaicProduct);
+            reprojectedProduct = reprojection.getTargetProduct();
+            reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
+        } else {
+            reprojectedProduct = mosaicProduct;
+        }
 
         /////////////////////////////////////////////////////////////////////////////////////////////////
         // not needed any more
@@ -134,19 +140,22 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
         upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
 
-
-        final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
-        final double pixelSizeX = modelTransform.getScaleX();
-        final double pixelSizeY = modelTransform.getScaleY();
-        ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
-        reprojectionUpscaleGeoCoding.setParameter("crs", WGS84_CODE);
-        reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
-        reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);
-        reprojectionUpscaleGeoCoding.setParameter("width", width);
-        reprojectionUpscaleGeoCoding.setParameter("height", height);
-        reprojectionUpscaleGeoCoding.setSourceProduct(reprojectedProduct);
-        Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
-        ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
+        if (reprojectToPlateCarre) {
+            final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
+            final double pixelSizeX = modelTransform.getScaleX();
+            final double pixelSizeY = modelTransform.getScaleY();
+            ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
+            reprojectionUpscaleGeoCoding.setParameter("crs", WGS84_CODE);
+            reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
+            reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);
+            reprojectionUpscaleGeoCoding.setParameter("width", width);
+            reprojectionUpscaleGeoCoding.setParameter("height", height);
+            reprojectionUpscaleGeoCoding.setSourceProduct(reprojectedProduct);
+            Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
+            ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
+        } else {
+            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
+        }
 
         brdfModelBandNames = IOUtils.getInversionParameterBandNames();
         matrixNodataValue = upscaledProduct.getBand(brdfModelBandNames[0]).getNoDataValue();

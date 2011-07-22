@@ -41,7 +41,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     @Override
     public void initialize() throws OperatorException {
         logger = BeamLogManager.getSystemLogger();
-        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Albedo 8-day input files...
         final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;

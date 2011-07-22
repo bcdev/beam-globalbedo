@@ -16,7 +16,6 @@
 
 package org.esa.beam.globalbedo.upscaling;
 
-import Jama.Matrix;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
@@ -38,14 +37,10 @@ import org.esa.beam.util.ProductUtils;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
-
-import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
 /**
  * Reprojects and upscales the GlobAlbedo product
@@ -78,12 +73,14 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
     private int monthIndex;
 
-//    @Parameter(valueSet = {"6", "60"}, description = "Scaling (6 = 0.05deg, 60 = 0.5deg resolution", defaultValue = "60")
-    @Parameter(valueSet = {"1", "5", "60"}, description = "Scaling (6 = 0.05deg, 60 = 0.5deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "60"}, description = "Scaling (5 = 5km, 60 = 60km resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "false", description = "True if monthly albedo to upscale")
     private boolean isMonthlyAlbedo;
+
+    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
+    private boolean reprojectToPlateCarre;
 
 
     @TargetProduct
@@ -118,11 +115,15 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         } catch (IOException e) {
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
-        ReprojectionOp reprojection = new ReprojectionOp();
-        reprojection.setParameter("crs", WGS84_CODE);
-        reprojection.setSourceProduct(mosaicProduct);
-        reprojectedProduct = reprojection.getTargetProduct();
-        reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
+        if (reprojectToPlateCarre) {
+            ReprojectionOp reprojection = new ReprojectionOp();
+            reprojection.setParameter("crs", WGS84_CODE);
+            reprojection.setSourceProduct(mosaicProduct);
+            reprojectedProduct = reprojection.getTargetProduct();
+            reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
+        } else {
+            reprojectedProduct = mosaicProduct;
+        }
 
         int width = reprojectedProduct.getSceneRasterWidth() / scaling;
         int height = reprojectedProduct.getSceneRasterHeight() / scaling;
@@ -136,19 +137,22 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
         upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
 
-
-        final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
-        final double pixelSizeX = modelTransform.getScaleX();
-        final double pixelSizeY = modelTransform.getScaleY();
-        ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
-        reprojectionUpscaleGeoCoding.setParameter("crs", WGS84_CODE);
-        reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
-        reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);
-        reprojectionUpscaleGeoCoding.setParameter("width", width);
-        reprojectionUpscaleGeoCoding.setParameter("height", height);
-        reprojectionUpscaleGeoCoding.setSourceProduct(reprojectedProduct);
-        Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
-        ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
+        if (reprojectToPlateCarre) {
+            final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
+            final double pixelSizeX = modelTransform.getScaleX();
+            final double pixelSizeY = modelTransform.getScaleY();
+            ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
+            reprojectionUpscaleGeoCoding.setParameter("crs", WGS84_CODE);
+            reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
+            reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);
+            reprojectionUpscaleGeoCoding.setParameter("width", width);
+            reprojectionUpscaleGeoCoding.setParameter("height", height);
+            reprojectionUpscaleGeoCoding.setSourceProduct(reprojectedProduct);
+            Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
+            ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
+        } else {
+            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
+        }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
         bhrBandNames = IOUtils.getAlbedoBhrBandNames();

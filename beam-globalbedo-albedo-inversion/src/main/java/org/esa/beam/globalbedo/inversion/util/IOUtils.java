@@ -671,8 +671,13 @@ public class IOUtils {
         }
     }
 
+    public IOUtils() {
+
+    }
+
     public static int getDoyFromAlbedoProductName(String productName) {
-        String doyString = productName.substring(15, 18);
+//        String doyString = productName.substring(15, 18);
+        String doyString = productName.substring(22, 25);
         int doy = Integer.parseInt(doyString);
         if (doy < 0 || doy > 366) {
             return -1;

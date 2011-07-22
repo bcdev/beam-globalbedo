@@ -6,6 +6,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -32,7 +33,7 @@ import java.util.logging.Logger;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.l3.fullacc")
-public class GlobalbedoLevel3FullAccumulation extends Operator {
+public class GlobalbedoLevel3FullAccumulation extends Operator implements Output {
 
     private static final double HALFLIFE = 11.54;
     private static final int RASTER_WIDTH = AlbedoInversionConstants.MODIS_TILE_WIDTH;
@@ -71,6 +72,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator {
         for (int i = 0; i < doys.length; i++) {
             doys[i] = startDoy + 8 * i;
         }
+
 
         // STEP 1: get Daily Accumulator input files...
         final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";

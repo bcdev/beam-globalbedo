@@ -113,7 +113,7 @@ public class InversionOp extends PixelOperator {
 //        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
 
-        productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
+//        productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
     }
 
     @Override
