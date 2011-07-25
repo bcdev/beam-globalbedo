@@ -14,7 +14,7 @@ export BEAM4_HOME=/opt/beam-4.9.0.1
     -Xms6g -Xmx6g  \
     -XX:+UnlockExperimentalVMOptions -XX:+UseCompressedOops -XX:+UseConcMarkSweepGC -XX:NewRatio=3 -XX:+AggressiveOpts \
     -Dceres.context=beam \
-    -Dbeam.consoleLog=true -Dbeam.logLevel=ALL -Dbeam.debug=true \
+    -Dbeam.consoleLog=true -Dbeam.logLevel=ALL \
     "-Dbeam.mainClass=org.esa.beam.framework.gpf.main.Main" \
     "-Dbeam.home=$BEAM4_HOME" \
     "-Dncsa.hdf.hdflib.HDFLibrary.hdflib=$BEAM4_HOME/modules/lib-hdf-2.7/lib/libjhdf.so" \
