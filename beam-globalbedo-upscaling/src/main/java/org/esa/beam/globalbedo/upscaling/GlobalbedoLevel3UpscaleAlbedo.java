@@ -228,8 +228,10 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
                     targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME));
             computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                     targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-            computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME));
+            if (!isMonthlyAlbedo) {
+                computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
+                        targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME));
+            }
             computeNearest(srcTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                     targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME));
         } else {
