@@ -33,7 +33,7 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>
-            <version>0.1-SNAPSHOT</version>
+            <version>1.0-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
