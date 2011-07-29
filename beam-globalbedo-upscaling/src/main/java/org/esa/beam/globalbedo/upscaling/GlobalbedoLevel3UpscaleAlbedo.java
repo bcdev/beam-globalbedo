@@ -157,7 +157,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
         bhrBandNames = IOUtils.getAlbedoBhrBandNames();
         dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
-        bhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
+        bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
 
         relEntropyBand = reprojectedProduct.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
 
