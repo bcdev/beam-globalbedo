@@ -199,11 +199,12 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
             computeUncertainty(srcTiles, targetTiles, targetRect);
-            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME));
-            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME));
-            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME));
+            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
@@ -371,13 +372,14 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         }
     }
 
-    private void computeNearest(Tile src, Tile target) {
+    private void computeNearest(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || Float.isNaN(sample)) {
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
                     sample = Float.NaN;
                 }
                 target.setSample(x, y, sample);
@@ -385,7 +387,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         }
     }
 
-    private void computeMajority(Tile src, Tile target) {
+    private void computeMajority(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
@@ -397,7 +399,12 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
                         max = Math.max(max, src.getSampleInt(sx, sy));
                     }
                 }
-                target.setSample(x, y, max);
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sampleMask > 0.0) {
+                    target.setSample(x, y, max);
+                } else {
+                    target.setSample(x, y, Float.NaN);
+                }
             }
         }
     }

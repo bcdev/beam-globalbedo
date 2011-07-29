@@ -208,32 +208,42 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
             for (int i = 0; i < dhrBandNames.length; i++) {
-                computeNearest(srcTiles.get(dhrBandNames[i]), targetTiles.get(dhrBandNames[i]));
+                computeNearest(srcTiles.get(dhrBandNames[i]), targetTiles.get(dhrBandNames[i]),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < bhrBandNames.length; i++) {
-                computeNearest(srcTiles.get(bhrBandNames[i]), targetTiles.get(bhrBandNames[i]));
+                computeNearest(srcTiles.get(bhrBandNames[i]), targetTiles.get(bhrBandNames[i]),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < dhrSigmaBandNames.length; i++) {
-                computeNearest(srcTiles.get(dhrSigmaBandNames[i]), targetTiles.get(dhrSigmaBandNames[i]));
+                computeNearest(srcTiles.get(dhrSigmaBandNames[i]), targetTiles.get(dhrSigmaBandNames[i]),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < bhrSigmaBandNames.length; i++) {
-                computeNearest(srcTiles.get(bhrSigmaBandNames[i]), targetTiles.get(bhrSigmaBandNames[i]));
+                computeNearest(srcTiles.get(bhrSigmaBandNames[i]), targetTiles.get(bhrSigmaBandNames[i]),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
 
             computeMajority(srcTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME));
+                    targetTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearest(srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                    targetTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME));
+                    targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                    targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             if (!isMonthlyAlbedo) {
                 computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
-                        targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME));
+                        targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
+                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             computeNearest(srcTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
-                    targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME));
+                    targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
+                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
@@ -281,13 +291,14 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         return false;
     }
 
-    private void computeNearest(Tile src, Tile target) {
+    private void computeNearest(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || Float.isNaN(sample)) {
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
                     sample = Float.NaN;
                 }
                 target.setSample(x, y, sample);
@@ -295,7 +306,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         }
     }
 
-    private void computeMajority(Tile src, Tile target) {
+    private void computeMajority(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
@@ -307,10 +318,16 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
                         max = Math.max(max, src.getSampleInt(sx, sy));
                     }
                 }
-                target.setSample(x, y, max);
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sampleMask > 0.0) {
+                    target.setSample(x, y, max);
+                } else {
+                    target.setSample(x, y, Float.NaN);
+                }
             }
         }
     }
+
 
     public static class Spi extends OperatorSpi {
 
