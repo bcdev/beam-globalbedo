@@ -11,25 +11,25 @@ import java.io.IOException;
 public class VgtLutTest extends TestCase {
 
     public void testLutAot() throws IOException {
-        AotLookupTable lut = BbdrUtils.getAotLookupTable(Sensor.SPOT_VGT);
+        AotLookupTable lut = BbdrUtils.getAotLookupTable(Sensor.VGT);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testAotKx() throws IOException {
-        LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.SPOT_VGT);
+        LookupTable lut = BbdrUtils.getAotKxLookupTable(Sensor.VGT);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testMerisNskyLutDw() throws IOException {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw(Sensor.SPOT_VGT);
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableDw(Sensor.VGT);
         assertNotNull(lut);
         // TODO write tests
     }
 
     public void testMerisNskyLutUp() throws IOException {
-        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp(Sensor.SPOT_VGT);
+        NskyLookupTable lut = BbdrUtils.getNskyLookupTableUp(Sensor.VGT);
         assertNotNull(lut);
         // TODO write tests
     }

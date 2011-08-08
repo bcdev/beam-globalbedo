@@ -306,7 +306,7 @@ public class BbdrOp extends PixelOperator {
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
                     BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
-        } else if (sensor == Sensor.SPOT_VGT) {
+        } else if (sensor == Sensor.VGT) {
 
             landExpr =
                     "SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD AND (" + commonLandExpr + ")";
@@ -446,7 +446,7 @@ public class BbdrOp extends PixelOperator {
             ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
             cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
             gas = ozo;
-        } else if (sensor == Sensor.SPOT_VGT) {
+        } else if (sensor == Sensor.VGT) {
             ozo = gasLookupTable.getGasMeanVal();   // mean value from whole image
             cwv = sourceSamples[SRC_WVP].getDouble();
             cwv = min(cwv, 4.45);

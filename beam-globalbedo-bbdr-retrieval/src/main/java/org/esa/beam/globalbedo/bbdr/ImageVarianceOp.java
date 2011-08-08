@@ -72,7 +72,7 @@ public class ImageVarianceOp extends Operator {
                 if (band.getName().startsWith("reflec_fward")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
-            } else if (sensor == Sensor.SPOT_VGT) {
+            } else if (sensor == Sensor.VGT) {
                 if (band.getName().startsWith("B") || band.getName().equals("MIR")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }

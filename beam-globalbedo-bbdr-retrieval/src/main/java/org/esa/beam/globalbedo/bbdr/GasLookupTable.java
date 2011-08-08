@@ -28,7 +28,7 @@ class GasLookupTable {
     }
 
     void load(Product sourceProduct) throws IOException {
-        if (sourceProduct != null && sensor == Sensor.SPOT_VGT) {
+        if (sourceProduct != null && sensor == Sensor.VGT) {
             float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
             setGasVal(ozoMeanValue);
             // todo: check small deviation from breadboard mean value calculation (0.24251308 vs. 0.242677)
@@ -95,7 +95,7 @@ class GasLookupTable {
             lutGas = new float[nWvl][nCwv][nAng];
             amfArray = convertAngArrayToAmfArray(angArr);
 
-            if (this.sensor.equals(Sensor.SPOT_VGT)) {
+            if (this.sensor.equals(Sensor.VGT)) {
                 int iOzo = BbdrUtils.getIndexBefore(gas2val, ozoArray);
                 float term = (gas2val - ozoArray[iOzo]) / (ozoArray[iOzo + 1] - ozoArray[iOzo]);
                 for (int iWvl = 0; iWvl < nWvl; iWvl++) {
@@ -157,7 +157,7 @@ class GasLookupTable {
             }
 
             kxLutGas = new float[nWvl][nCwv][nAng][nKxcase][nKx];
-            if (sensor.equals(Sensor.SPOT_VGT)) {
+            if (sensor.equals(Sensor.VGT)) {
                 int iOzo = BbdrUtils.getIndexBefore(gas2val, ozoArray);
                 for (int iWvl = 0; iWvl < nWvl; iWvl++) {
                     for (int iCwv = 0; iCwv < nCwv; iCwv++) {
