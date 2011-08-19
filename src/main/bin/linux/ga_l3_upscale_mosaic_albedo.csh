@@ -20,4 +20,28 @@ else
     set deg = 60km
 endif
 
-time $beamRootDir/bin/gpt-ga.sh ga.l3.upscale.albedo -c 2000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $gaRootDir/Mosaic/albedo/GlobAlbedo.albedo.$year$Day.$deg.PC.dim &
+set SUCCESS = 1
+
+set TARGET = $gaRootDir/Mosaic/albedo/GlobAlbedo.albedo.$year$Day.$deg.PC.dim
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
+set SUCCESS = $status
+echo "Status: $SUCCESS"
+while ( ! -e $TARGET || $SUCCESS != 0)
+    # repeat in case product was not written
+    echo "Product status unclear: $SUCCESS - reprocess..."
+    time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
+    set SUCCESS = $status
+end
+
+set TARGET = $gaRootDir/Mosaic/albedo/GlobAlbedo.albedo.$year$Day.$deg.SIN.dim
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -PreprojectToPlateCarre=false -e -t $TARGET
+set SUCCESS = $status
+echo "Status: $SUCCESS"
+while ( ! -e $TARGET || $SUCCESS != 0)
+    # repeat in case product was not written
+    echo "Product status unclear: $SUCCESS - reprocess..."
+    time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
+    set SUCCESS = $status
+end
+
+

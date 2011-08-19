@@ -15,4 +15,6 @@ else
     set Day = $doy
 endif
 
-time $beamRootDir/bin/gpt-ga.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Albedo/$tile/GlobAlbedo.albedo.$year$Day.$tile.dim &
+if ( -e "$priorRootDir/PriorStage2/$tile" || -e "$priorRootDir/PriorStage2Snow/$tile" ) then
+    time $beamRootDir/bin/gpt-d-l2.sh ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Albedo/$tile/GlobAlbedo.albedo.$year$Day.$tile.dim
+endif

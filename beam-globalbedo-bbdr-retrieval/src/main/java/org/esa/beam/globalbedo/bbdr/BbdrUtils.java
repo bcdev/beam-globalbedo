@@ -249,7 +249,7 @@ public class BbdrUtils {
                 if (i != 0) {
                     return i - 1;
                 } else {
-                    throw new IllegalArgumentException();
+                    return i;
                 }
             }
         }

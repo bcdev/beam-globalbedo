@@ -16,5 +16,9 @@ else
     set Day = $doy
 endif
 
-time $beamRootDir/bin/gpt-ga.sh ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$Day -Pwings=$wings -PcomputeSnow=false -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Inversion/$tile/GlobAlbedo.brdf.$year$Day.$tile.NoSnow.dim &
-time $beamRootDir/bin/gpt-ga.sh ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$Day -Pwings=$wings -PcomputeSnow=true -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Inversion/$tile/GlobAlbedo.brdf.$year$Day.$tile.Snow.dim &
+if ( -e "$priorRootDir/PriorStage2/$tile" ) then
+    time $beamRootDir/bin/gpt-d-l2.sh ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$Day -Pwings=$wings -PcomputeSnow=false -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Inversion/$tile/GlobAlbedo.brdf.$year$Day.$tile.NoSnow.dim
+endif
+if ( -e "$priorRootDir/PriorStage2Snow/$tile" ) then
+    time $beamRootDir/bin/gpt-d-l2.sh ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$Day -Pwings=$wings -PcomputeSnow=true -PgaRootDir=$gaRootDir -PpriorRootDir=$priorRootDir -e -t $gaRootDir/Inversion/$tile/GlobAlbedo.brdf.$year$Day.$tile.Snow.dim
+endif

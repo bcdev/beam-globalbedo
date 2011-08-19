@@ -110,7 +110,7 @@ public class GaMasterOp  extends Operator {
         }
         else if (isVgtProduct) {
             instrument = "VGT";
-            if (sourceProduct.getSceneRasterWidth() > 40000) throw new OperatorException("Product too large, who would do a global grid at 0.008deg resolution???");
+//            if (sourceProduct.getSceneRasterWidth() > 40000) throw new OperatorException("Product too large, who would do a global grid at 0.008deg resolution???");
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         }
         if (reflProduct == EMPTY_PRODUCT) {
