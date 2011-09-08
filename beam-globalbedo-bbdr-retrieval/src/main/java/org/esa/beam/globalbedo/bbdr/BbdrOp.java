@@ -84,6 +84,7 @@ public class BbdrOp extends PixelOperator {
     private static final int TRG_DEM = 20;
     private static final int TRG_SNOW = 21;
     private static final int TRG_AOD = 22;
+    private static final int TRG_AODERR = 23;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
     private static final int n_kernel = 2; //(geo & vol)
@@ -164,7 +165,7 @@ public class BbdrOp extends PixelOperator {
                     "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW",
                     "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
                     "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW",
-                    "AOD550",
+                    "AOD550", "sig_AOD550",
                     "NDVI", "sig_NDVI",
                     "VZA", "SZA", "RAA", "DEM",
             };
@@ -385,6 +386,7 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(TRG_DEM, "DEM");
             configurator.defineSample(TRG_SNOW, "snow_mask");
             configurator.defineSample(TRG_AOD, "AOD550");
+            configurator.defineSample(TRG_AODERR, "sig_AOD550");
         }
     }
 
@@ -406,6 +408,7 @@ public class BbdrOp extends PixelOperator {
             vza = 90.0 - vza;
         }
         double aot = sourceSamples[SRC_AOT].getDouble();
+        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
         hsf *= 0.001;
 //        hsf = max(hsf, -0.45); // elevation up to -450m ASL
@@ -428,6 +431,7 @@ public class BbdrOp extends PixelOperator {
             targetSamples[TRG_SZA].set(sza);
             targetSamples[TRG_DEM].set(hsf);
             targetSamples[TRG_AOD].set(aot);
+            targetSamples[TRG_AODERR].set(delta_aot);
         }
 
         double ozo;
@@ -516,8 +520,6 @@ public class BbdrOp extends PixelOperator {
         } else {
             targetSamples[TRG_NDVI].set(ndvi_land);
         }
-
-        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
 
         double[] err_rad = new double[sensor.getNumBands()];
         double[] err_aod = new double[sensor.getNumBands()];

@@ -1,0 +1,30 @@
+#!/bin/tcsh
+
+set year = 2005
+
+echo "Starting Mosaic `date`" 
+./ga_l3_upscale_mosaic_brdf.csh $year 121 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 129 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 137 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 145 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+./ga_l3_upscale_mosaic_brdf.csh $year 121 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 129 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 137 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_brdf.csh $year 145 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+./ga_l3_upscale_mosaic_albedo.csh $year 121 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 129 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 137 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 145 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+./ga_l3_upscale_mosaic_albedo.csh $year 121 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 129 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 137 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_albedo.csh $year 145 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+./ga_l3_upscale_mosaic_monthlyalbedo.csh $year 5 60 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+./ga_l3_upscale_mosaic_monthlyalbedo.csh $year 5 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+echo "Ending Mosaic `date`" 
+

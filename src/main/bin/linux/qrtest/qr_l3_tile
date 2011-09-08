@@ -1,0 +1,36 @@
+#!/bin/tcsh
+
+set tile = $1
+set year = 2005
+
+
+echo "Starting L3 `date`" 
+./ga_l3_dailyacc.csh $tile $year 121 151  /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1
+
+./ga_l3_fullacc.csh $tile $year 121 145 540 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+
+# remove daily acc
+rm -vf /home/globalbedo/Processing/GlobAlbedo/BBDR/AccumulatorFiles/$year/$tile/*Snow/matrices_$year*	
+
+./ga_l3_inversion.csh $tile $year 121 540 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_inversion.csh $tile $year 129 540 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_inversion.csh $tile $year 137 540 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_inversion.csh $tile $year 145 540 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+
+# remove full acc
+rm -vf /home/globalbedo/Processing/GlobAlbedo/BBDR/AccumulatorFiles/$year/$tile/*Snow/matrices_full_$year*
+
+./ga_l3_mergebrdf.csh $tile $year 121 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_mergebrdf.csh $tile $year 129 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_mergebrdf.csh $tile $year 137 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+./ga_l3_mergebrdf.csh $tile $year 145 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 
+
+./ga_l3_albedo.csh $tile $year 121 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1
+./ga_l3_albedo.csh $tile $year 129 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1
+./ga_l3_albedo.csh $tile $year 137 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1
+./ga_l3_albedo.csh $tile $year 145 /home/globalbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1
+
+./ga_l3_albedo_monthly.csh $tile $year 5 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1
+
+echo "Ending L3 `date`" 
+

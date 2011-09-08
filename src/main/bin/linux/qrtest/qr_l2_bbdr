@@ -1,0 +1,10 @@
+#!/bin/tcsh
+
+set sensor = $1
+set year = $2
+set l1product = $3
+
+echo "Starting L2 `date`" 
+./ga_l2_bbdr_world.csh $l1product $sensor $year /home/globalbedo/Processing/EOData/$sensor /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.9.0.1/
+echo "Ending L2 `date`" 
+
