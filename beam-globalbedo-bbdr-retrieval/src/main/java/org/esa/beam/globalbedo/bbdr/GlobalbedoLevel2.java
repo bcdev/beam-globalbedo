@@ -27,6 +27,10 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.logging.BeamLogManager;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @OperatorMetadata(alias = "ga.l2")
 public class GlobalbedoLevel2 extends Operator {
@@ -46,8 +50,12 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "")
     private String tile;
 
+    private Logger logger;
+
     @Override
     public void initialize() throws OperatorException {
+        logger = BeamLogManager.getSystemLogger();
+
         if (sourceProduct.getPreferredTileSize() == null) {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
@@ -76,20 +84,24 @@ public class GlobalbedoLevel2 extends Operator {
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
-            //TODO handle EMPTY_PRODUCT case
         }
 
-        if (computeL1ToAotProductOnly) {
-            setTargetProduct(aotProduct);
+        if (aotProduct.equals(GaMasterOp.EMPTY_PRODUCT)) {
+            logger.log(Level.ALL, "No AOT product generated for source product: " + sourceProduct.getName() +
+                    " --> cannot create BBDR product.");
         } else {
-            BbdrOp bbdrOp = new BbdrOp();
-            bbdrOp.setSourceProduct(aotProduct);
-            bbdrOp.setParameter("sensor", sensor);
-            Product bbdrProduct = bbdrOp.getTargetProduct();
-            if (tile != null && !tile.isEmpty()) {
-                setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
+            if (computeL1ToAotProductOnly) {
+                setTargetProduct(aotProduct);
             } else {
-                setTargetProduct(bbdrProduct);
+                BbdrOp bbdrOp = new BbdrOp();
+                bbdrOp.setSourceProduct(aotProduct);
+                bbdrOp.setParameter("sensor", sensor);
+                Product bbdrProduct = bbdrOp.getTargetProduct();
+                if (tile != null && !tile.isEmpty()) {
+                    setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
+                } else {
+                    setTargetProduct(bbdrProduct);
+                }
             }
         }
     }
