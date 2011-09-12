@@ -103,7 +103,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         refTile = findRefTile();
 
         if (refTile == null || !refTile.exists()) {
-            throw new OperatorException("No BRDF files for mosaicing found.");
+            throw new OperatorException("No albedo files for mosaicing found.");
         }
         ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
         if (productReader == null) {
