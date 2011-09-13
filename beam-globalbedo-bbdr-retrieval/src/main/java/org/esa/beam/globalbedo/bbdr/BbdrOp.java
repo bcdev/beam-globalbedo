@@ -130,19 +130,36 @@ public class BbdrOp extends PixelOperator {
 
         final Product targetProduct = productConfigurer.getTargetProduct();
         if (sdrOnly) {
-            for (int i = 0; i < sensor.getNumBands(); i++) {
-                Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
-                Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
-                ProductUtils.copySpectralBandProperties(srcBand, band);
-            }
-            for (int i = 0; i < sensor.getNumBands(); i++) {
-                Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
-                Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
-                ProductUtils.copySpectralBandProperties(srcBand, band);
+            if (sensor == Sensor.MERIS) {
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
+                    Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
+                    band.setNoDataValue(Float.NaN);
+                    band.setNoDataValueUsed(true);
+                    ProductUtils.copySpectralBandProperties(srcBand, band);
+                }
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
+                    Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
+                    band.setNoDataValue(Float.NaN);
+                    band.setNoDataValueUsed(true);
+                    ProductUtils.copySpectralBandProperties(srcBand, band);
+                }
+            } else if (sensor == Sensor.VGT) {
+                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+                    Band srcBand = sourceProduct.getBand(bandname);
+                    Band band = targetProduct.addBand("sdr_" + bandname, ProductData.TYPE_FLOAT32);
+                    band.setNoDataValue(Float.NaN);
+                    band.setNoDataValueUsed(true);
+                    ProductUtils.copySpectralBandProperties(srcBand, band);
+                }
+                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+                    Band srcBand = sourceProduct.getBand(bandname);
+                    Band band = targetProduct.addBand("sdr_error_" + bandname, ProductData.TYPE_FLOAT32);
+                    band.setNoDataValue(Float.NaN);
+                    band.setNoDataValueUsed(true);
+                    ProductUtils.copySpectralBandProperties(srcBand, band);
+                }
             }
 
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
@@ -351,11 +368,20 @@ public class BbdrOp extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer configurator) {
         if (sdrOnly) {
             int index = 0;
-            for (int i = 0; i < sensor.getNumBands(); i++) {
-                configurator.defineSample(index++, "sdr_" + (i + 1));
-            }
-            for (int i = 0; i < sensor.getNumBands(); i++) {
-                configurator.defineSample(index++, "sdr_error_" + (i + 1));
+            if (sensor == Sensor.MERIS) {
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    configurator.defineSample(index++, "sdr_" + (i + 1));
+                }
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    configurator.defineSample(index++, "sdr_error_" + (i + 1));
+                }
+            } else if (sensor == Sensor.VGT) {
+                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+                   configurator.defineSample(index++, "sdr_" + bandname);
+                }
+                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+                   configurator.defineSample(index++, "sdr_error_" + bandname);
+                }
             }
             configurator.defineSample(index, "ndvi");
         } else {
