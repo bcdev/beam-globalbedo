@@ -57,6 +57,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
     private boolean accumulationOnly;
 
+    @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
 
     private Logger logger;
