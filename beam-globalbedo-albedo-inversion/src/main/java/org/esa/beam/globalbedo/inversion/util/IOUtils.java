@@ -18,6 +18,8 @@ import java.util.*;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
+
 /**
  * Utility class for Albedo Inversion I/O operations
  *
@@ -473,6 +475,28 @@ public class IOUtils {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getPriorMeanBandNames() {
+        String bandNames[] = new String[NUM_ALBEDO_PARAMETERS * NUM_ALBEDO_PARAMETERS];
+        int index = 0;
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                bandNames[index++] = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+            }
+        }
+        return bandNames;
+    }
+
+    public static String[] getPriSDMeanBandNames() {
+        String bandNames[] = new String[NUM_ALBEDO_PARAMETERS * NUM_ALBEDO_PARAMETERS];
+        int index = 0;
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                bandNames[index++] = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+            }
         }
         return bandNames;
     }
