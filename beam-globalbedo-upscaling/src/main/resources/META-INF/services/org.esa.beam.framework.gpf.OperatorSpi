@@ -1,2 +1,3 @@
 org.esa.beam.globalbedo.upscaling.GlobalbedoLevel3UpscaleBrdf$Spi
 org.esa.beam.globalbedo.upscaling.GlobalbedoLevel3UpscaleAlbedo$Spi
+org.esa.beam.globalbedo.upscaling.GlobalbedoLevel3UpscalePriors$Spi

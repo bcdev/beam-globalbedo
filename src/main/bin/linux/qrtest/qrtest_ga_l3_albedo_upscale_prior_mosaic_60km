@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+./ga_l3_upscale_mosaic_priors.csh 129 60 /home/GlobAlbedo/Processing/GlobAlbedo /data/Priors /opt/beam-4.9.0.1 &
+
+

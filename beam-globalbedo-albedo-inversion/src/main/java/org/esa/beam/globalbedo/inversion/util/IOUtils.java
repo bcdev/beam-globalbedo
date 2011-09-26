@@ -490,7 +490,7 @@ public class IOUtils {
         return bandNames;
     }
 
-    public static String[] getPriSDMeanBandNames() {
+    public static String[] getPriorSDMeanBandNames() {
         String bandNames[] = new String[NUM_ALBEDO_PARAMETERS * NUM_ALBEDO_PARAMETERS];
         int index = 0;
         for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {

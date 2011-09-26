@@ -41,15 +41,16 @@ import java.util.regex.Pattern;
 /**
  * A product reader for the internal mosaic products of GlobAlbedo.
  *
- * @author  MarcoZ
+ * @author MarcoZ
  */
-class GlobAlbedoMosaicProductReader extends AbstractProductReader {
+public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
     private static final String PRODUCT_TYPE = "GlobAlbedo_Mosaic";
 
     private final Pattern pattern;
     private final MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
+    private boolean mosaicPriors;
 
     protected GlobAlbedoMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -60,7 +61,12 @@ class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final File inputFile = getInputFile();
-        Set<MosaicTile> mosaicTiles = createMosaicTiles(inputFile);
+        Set<MosaicTile> mosaicTiles = null;
+        if (mosaicPriors) {
+            mosaicTiles = createPriorMosaicTiles(inputFile);
+        } else {
+            mosaicTiles = createMosaicTiles(inputFile);
+        }
         mosaicGrid = new MosaicGrid(mosaicDefinition, mosaicTiles);
         int width = mosaicDefinition.getWidth();
         int height = mosaicDefinition.getHeight();
@@ -73,7 +79,9 @@ class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
 
-        addGeoCoding(firstMosaicProduct, product);
+        if (!mosaicPriors) {
+            addGeoCoding(firstMosaicProduct, product);
+        }
 
         Band[] bands = firstMosaicProduct.getBands();
         for (Band srcBand : bands) {
@@ -85,29 +93,81 @@ class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return product;
     }
 
-   Set<MosaicTile> createMosaicTiles(File refFile) throws IOException {
-         HashSet<MosaicTile> mosaicTiles = new HashSet<MosaicTile>();
-         File refTileDir = refFile.getParentFile();
-         if (refTileDir == null) {
-             mosaicTiles.add(createMosaicTile(refFile));
-             return mosaicTiles;
-         }
-         File rootDir = refTileDir.getParentFile();
-         if (rootDir == null) {
-             mosaicTiles.add(createMosaicTile(refFile));
-             return mosaicTiles;
-         }
-         String regex = getMosaicFileRegex(refFile.getName());
-         final File[] tileDirs = rootDir.listFiles(new TileDirFilter());
-         for (File tileDir : tileDirs) {
-             final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
-             if (mosaicFiles.length == 1) {
-                 mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
-             } else {
-                 // TODO error
-             }
-         }
-         return mosaicTiles;
+    Set<MosaicTile> createMosaicTiles(File refFile) throws IOException {
+        HashSet<MosaicTile> mosaicTiles = new HashSet<MosaicTile>();
+        File refTileDir = refFile.getParentFile();
+        if (refTileDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
+            return mosaicTiles;
+        }
+        File rootDir = refTileDir.getParentFile();
+        if (rootDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
+            return mosaicTiles;
+        }
+        String regex = getMosaicFileRegex(refFile.getName());
+        final File[] tileDirs = rootDir.listFiles(new TileDirFilter());
+        for (File tileDir : tileDirs) {
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+            if (mosaicFiles.length == 1) {
+                mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
+            } else {
+                // TODO error
+            }
+        }
+        return mosaicTiles;
+    }
+
+    Set<MosaicTile> createPriorMosaicTiles(File refFile) throws IOException {
+        HashSet<MosaicTile> mosaicTiles = new HashSet<MosaicTile>();
+        File refTileDir = refFile.getParentFile().getParentFile().getParentFile();
+        if (refTileDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
+            return mosaicTiles;
+        }
+        File rootDir = refTileDir.getParentFile();
+        if (rootDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
+            return mosaicTiles;
+        }
+        String regex = getMosaicFileRegex(refFile.getName());
+        final File[] tileDirs = getPriorTileDirectories(rootDir.getAbsolutePath());
+        for (File tileDir : tileDirs) {
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+            if (mosaicFiles.length == 1) {
+                mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
+            } else {
+                // TODO error
+            }
+        }
+        return mosaicTiles;
+    }
+
+    public static File[] getPriorTileDirectories(String rootDirString) {
+        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+        FileFilter tileFilter = new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() && pattern.matcher(file.getName()).matches();
+            }
+        };
+
+        File rootDir = new File(rootDirString);
+        File[] priorRootDirs = rootDir.listFiles(tileFilter);
+        File[] priorDirs = new File[priorRootDirs.length];
+        int index = 0;
+        for (File priorDir : priorRootDirs) {
+            final String priorDirName = priorDir + File.separator +
+                    "background" + File.separator +
+                    "processed.p1.0.618034.p2.1.00000";
+            priorDirs[index++] = new File(priorDirName);
+        }
+        return priorDirs;
+    }
+
+
+    public void setMosaicPriors(boolean mosaicPriors) {
+        this.mosaicPriors = mosaicPriors;
     }
 
     String getProductName(File file) {
@@ -149,12 +209,12 @@ class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
         try {
             GeoCoding geocoding = new CrsGeoCoding(mapCRS,
-                                                   rasterWidth,
-                                                   rasterHeight,
-                                                   easting,
-                                                   northing,
-                                                   pixelSizeX,
-                                                   pixelSizeY);
+                    rasterWidth,
+                    rasterHeight,
+                    easting,
+                    northing,
+                    pixelSizeX,
+                    pixelSizeY);
             product.setGeoCoding(geocoding);
         } catch (Exception e) {
             throw new IOException("Cannot create GeoCoding: ", e);
