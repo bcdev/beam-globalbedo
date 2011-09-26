@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -165,6 +165,9 @@ public class BbdrOp extends PixelOperator {
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
             ndvi.setNoDataValue(Float.NaN);
             ndvi.setNoDataValueUsed(true);
+            Band aod = targetProduct.addBand("aod", ProductData.TYPE_FLOAT32);
+            aod.setNoDataValue(Float.NaN);
+            aod.setNoDataValueUsed(true);
 
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
@@ -383,7 +386,8 @@ public class BbdrOp extends PixelOperator {
                    configurator.defineSample(index++, "sdr_error_" + bandname);
                 }
             }
-            configurator.defineSample(index, "ndvi");
+            configurator.defineSample(index++, "ndvi");
+            configurator.defineSample(index, "aod");
         } else {
             configurator.defineSample(TRG_BBDR, "BB_VIS");
             configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
@@ -419,11 +423,11 @@ public class BbdrOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            fillTargetSampleWithNoDataValue(targetSamples);
-            return;
-        }
+//        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+//            // only compute over land
+//            fillTargetSampleWithNoDataValue(targetSamples);
+//            return;
+//        }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
@@ -457,7 +461,9 @@ public class BbdrOp extends PixelOperator {
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
-        if (!sdrOnly) {
+        if (sdrOnly) {
+            targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
+        } else {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);
