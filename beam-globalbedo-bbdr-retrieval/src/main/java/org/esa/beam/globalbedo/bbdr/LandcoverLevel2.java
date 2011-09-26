@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -38,6 +38,7 @@ import java.io.File;
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
 
+    private static final String[] BRR_BANDS = new String[]{"brr_1", "brr_2", "brr_4", "brr_8", "brr_13", "brr_14"};
     @SourceProduct
     private Product sourceProduct;
 
@@ -55,21 +56,30 @@ public class LandcoverLevel2 extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        Product targetProduct = sourceProduct;
+        Product aotProduct;
         if (step1) {
-            targetProduct = processAot(targetProduct);
-            if (targetProduct == GaMasterOp.EMPTY_PRODUCT) {
+            aotProduct = processAot(sourceProduct);
+            if (aotProduct == GaMasterOp.EMPTY_PRODUCT) {
                 setTargetProduct(GaMasterOp.EMPTY_PRODUCT);
                 return;
             }
+        } else {
+            aotProduct = sourceProduct;
         }
         if (useFileTileCache) {
-            attachFileTileCache(targetProduct);
+            attachFileTileCache(aotProduct);
         }
+        Product bbdrProduct;
         if (step2) {
-            targetProduct = processBbdr(targetProduct);
+            bbdrProduct = processBbdr(aotProduct);
+            for (String rayleighBandName : BRR_BANDS) {
+                bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
+            }
+            bbdrProduct.addBand(aotProduct.getBand("p1_lise"));
+        } else {
+            bbdrProduct = aotProduct;
         }
-        setTargetProduct(targetProduct);
+        setTargetProduct(bbdrProduct);
     }
 
     private Product processAot(Product product) {
@@ -78,6 +88,8 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
+        gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
+        gaMasterOp.setParameter("pressureOutputP1Lise", true);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }
@@ -87,9 +99,11 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
-        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
+//        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
+        bbdrOp.setParameter("landExpression", "not cloud_classif_flags.F_WATER");
         return bbdrOp.getTargetProduct();
     }
+
     private void attachFileTileCache(Product product) {
         String productName = sourceProduct.getName();
         File tmpDir = new File(System.getProperty("java.io.tmpdir"), productName + "_" + System.currentTimeMillis());
@@ -108,7 +122,7 @@ public class LandcoverLevel2 extends Operator {
         }
     }
 
-   public static class Spi extends OperatorSpi {
+    public static class Spi extends OperatorSpi {
 
         public Spi() {
             super(LandcoverLevel2.class);

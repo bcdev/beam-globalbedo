@@ -1,4 +1,20 @@
 /*
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -11,9 +27,11 @@ import java.awt.RenderingHints;
 import java.util.HashMap;
 import java.util.Map;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
 import org.esa.beam.framework.datamodel.VirtualBand;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -27,6 +45,7 @@ import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.jai.ImageManager;
+import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
@@ -55,12 +74,13 @@ public class MerisPrepOp extends Operator {
                label = "Perform equalization",
                description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
     private boolean doEqualization;
-
     @Parameter(defaultValue = "true",
                label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
-
-
+    @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
+    private String[] gaOutputRayleigh;
+    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = false;
 
     @Override
     public void initialize() throws OperatorException {
@@ -124,12 +144,37 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
+            pixelClassParam.put("gaOutputRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            pixelClassParam.put("pressureOutputP1Lise", pressureOutputP1Lise);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct);
             for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
                 mask = szaSubProduct.getMaskGroup().get(i);
                 targetProduct.getMaskGroup().add(mask);
+            }
+            if (gaOutputRayleigh != null) {
+                for (String rayleighBandName : gaOutputRayleigh) {
+                    Band band = idepixProduct.getBand(rayleighBandName);
+                    if (band != null) {
+                        targetProduct.addBand(band);
+                    }
+                }
+                ProductNodeGroup<FlagCoding> flagCodingGroup = targetProduct.getFlagCodingGroup();
+                FlagCoding rayleighFlagCoding = flagCodingGroup.get(RayleighCorrectionOp.RAY_CORR_FLAGS);
+                if (rayleighFlagCoding != null) {
+                    flagCodingGroup.remove(rayleighFlagCoding);
+                }
+                Band band = idepixProduct.getBand(RayleighCorrectionOp.RAY_CORR_FLAGS);
+                if (band != null) {
+                    idepixProduct.removeBand(band);
+                }
+            }
+            if (pressureOutputP1Lise) {
+                    Band band = idepixProduct.getBand("p1_lise");
+                    if (band != null) {
+                        targetProduct.addBand(band);
+                    }
             }
         }
 

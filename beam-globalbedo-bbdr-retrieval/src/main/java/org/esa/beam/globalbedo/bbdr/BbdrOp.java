@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -18,6 +18,9 @@ package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.ColorPaletteDef;
+import org.esa.beam.framework.datamodel.ImageInfo;
+import org.esa.beam.framework.datamodel.IndexCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -34,6 +37,7 @@ import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
 
+import java.awt.Color;
 import java.io.IOException;
 
 import static java.lang.Math.PI;
@@ -73,6 +77,7 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_TOA_RFL = 11;
     //    private static final int SRC_TOA_VAR = 10 + 15;
     private int SRC_TOA_VAR;
+    private int SRC_STATUS;
 
     private static final int TRG_BBDR = 0;
     private static final int TRG_ERRORS = 3;
@@ -165,6 +170,9 @@ public class BbdrOp extends PixelOperator {
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
             ndvi.setNoDataValue(Float.NaN);
             ndvi.setNoDataValueUsed(true);
+            Band aod = targetProduct.addBand("aod", ProductData.TYPE_FLOAT32);
+            aod.setNoDataValue(Float.NaN);
+            aod.setNoDataValueUsed(true);
 
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct);
@@ -174,6 +182,27 @@ public class BbdrOp extends PixelOperator {
                     targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
                 }
             }
+            Band statusBand = targetProduct.addBand("status", ProductData.TYPE_INT8);
+            statusBand.setNoDataValue(0);
+            statusBand.setNoDataValueUsed(true);
+            final IndexCoding indexCoding = new IndexCoding("status");
+            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[6];
+            indexCoding.addIndex("land", 1, "");
+            points[0] = new ColorPaletteDef.Point(1, Color.GREEN, "land");
+            indexCoding.addIndex("water", 2, "");
+            points[1] = new ColorPaletteDef.Point(2, Color.BLUE, "water");
+            indexCoding.addIndex("snow", 3, "");
+            points[2] = new ColorPaletteDef.Point(3, Color.YELLOW, "snow");
+            indexCoding.addIndex("cloud", 4, "");
+            points[3] = new ColorPaletteDef.Point(4, Color.WHITE, "cloud");
+            indexCoding.addIndex("cloud_shadow", 5, "");
+            points[4] = new ColorPaletteDef.Point(5, Color.GRAY, "cloud_shadow");
+            indexCoding.addIndex("invalid", 6, "");
+            points[5] = new ColorPaletteDef.Point(6, Color.RED, "invalid");
+            targetProduct.getIndexCodingGroup().add(indexCoding);
+            statusBand.setSampleCoding(indexCoding);
+            statusBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
+
             targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
             String[] bandNames = {
@@ -361,6 +390,25 @@ public class BbdrOp extends PixelOperator {
         for (int i = 0; i < toaBandNames.length; i++) {
             configurator.defineSample(SRC_TOA_VAR + i, toaBandNames[i], varianceProduct);
         }
+        if (sdrOnly) {
+            SRC_STATUS = SRC_TOA_RFL + toaBandNames.length * 2;
+            String expression = "(not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
+                    "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
+                    "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
+                    "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
+            BandMathsOp.BandDescriptor[] bandDescriptors = new BandMathsOp.BandDescriptor[1];
+            bandDescriptors[0] = new BandMathsOp.BandDescriptor();
+            bandDescriptors[0].name = "status";
+            bandDescriptors[0].expression = expression;
+            bandDescriptors[0].type = ProductData.TYPESTRING_INT8;
+
+            BandMathsOp bandMathsOp = new BandMathsOp();
+            bandMathsOp.setParameter("targetBandDescriptors", bandDescriptors);
+            bandMathsOp.setSourceProduct(sourceProduct);
+            Product statusProduct = bandMathsOp.getTargetProduct();
+
+            configurator.defineSample(SRC_STATUS, "status", statusProduct);
+        }
 
     }
 
@@ -383,7 +431,9 @@ public class BbdrOp extends PixelOperator {
                    configurator.defineSample(index++, "sdr_error_" + bandname);
                 }
             }
-            configurator.defineSample(index, "ndvi");
+            configurator.defineSample(index++, "ndvi");
+            configurator.defineSample(index++, "aod");
+            configurator.defineSample(index, "status");
         } else {
             configurator.defineSample(TRG_BBDR, "BB_VIS");
             configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
@@ -418,10 +468,23 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        int status = 0;
+        if (sdrOnly) {
+            status = sourceSamples[SRC_STATUS].getInt();
+            targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+        }
 
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
             // only compute over land
             fillTargetSampleWithNoDataValue(targetSamples);
+            if (sdrOnly) {
+                // if not water, set to invalid
+                if (status != 2) {
+                    status = 6;
+                }
+                // write in all cases because is is now NaN
+                targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+            }
             return;
         }
 
@@ -449,15 +512,24 @@ public class BbdrOp extends PixelOperator {
             hsf = 1.0;
         }
 
-
         if (vza < vzaMin || vza > vzaMax ||
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
-            fillTargetSampleWithNoDataValue(targetSamples);
-            return;
+            if (sdrOnly) {
+                // if land, set to invalid,, but process anyway
+                if (status == 1) {
+                    status = 6;
+                    targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+                }
+            } else {
+                fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
         }
-        if (!sdrOnly) {
+        if (sdrOnly) {
+            targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
+        } else {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);
@@ -499,11 +571,16 @@ public class BbdrOp extends PixelOperator {
 
         double[] toa_rfl = new double[sensor.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
-            toa_rfl[i] = sourceSamples[SRC_TOA_RFL + i].getDouble();
-            toa_rfl[i] /= sensor.getCal2Meris()[i];
-            if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
-                toa_rfl[i] = toa_rfl[i] * 0.01 / mus;
+            double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
+            if (sdrOnly && (toaRefl == 0.0 || Double.isNaN(toaRefl))) {
+                // if toa_refl look bad, set to invalid, but process anyway
+                targetSamples[sensor.getNumBands() * 2 + 2].set(6);
             }
+            toaRefl = toaRefl / sensor.getCal2Meris()[i];
+            if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+                toaRefl = toaRefl * 0.01 / mus;
+            }
+            toa_rfl[i] = toaRefl;
         }
 
         double phi = abs(saa - vaa);

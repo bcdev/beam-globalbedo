@@ -1,4 +1,20 @@
 /*
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -75,6 +91,10 @@ public class GaMasterOp  extends Operator {
     @Parameter(defaultValue = "true",
                label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
+    @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
+    private String[] gaOutputRayleigh;
+    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = false;
 
     private String instrument;
 
@@ -102,6 +122,8 @@ public class GaMasterOp  extends Operator {
             Map<String, Object> params = new HashMap<String, Object>(4);
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             params.put("doEqualization", doEqualization);
+            params.put("gaOutputRayleigh", gaOutputRayleigh);
+            params.put("pressureOutputP1Lise", pressureOutputP1Lise);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {
@@ -190,6 +212,7 @@ public class GaMasterOp  extends Operator {
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(bname) && b.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(b));
             copyBand = copyBand || (bname.equals("elevation"));
+            copyBand = copyBand || (bname.equals("p1_lise") && pressureOutputP1Lise);
 
             if (copyBand){
                 tarBand = ProductUtils.copyBand(bname, reflProduct, tarP);
