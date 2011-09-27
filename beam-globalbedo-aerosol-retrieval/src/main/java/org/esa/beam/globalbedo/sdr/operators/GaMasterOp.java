@@ -95,6 +95,8 @@ public class GaMasterOp  extends Operator {
     private String[] gaOutputRayleigh;
     @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
     private boolean pressureOutputP1Lise = false;
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    private boolean gaLcCloudBuffer = false;
 
     private String instrument;
 
@@ -124,6 +126,7 @@ public class GaMasterOp  extends Operator {
             params.put("doEqualization", doEqualization);
             params.put("gaOutputRayleigh", gaOutputRayleigh);
             params.put("pressureOutputP1Lise", pressureOutputP1Lise);
+            params.put("gaLcCloudBuffer", gaLcCloudBuffer);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {

@@ -90,6 +90,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("doEqualization", false);
         gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
         gaMasterOp.setParameter("pressureOutputP1Lise", true);
+        gaMasterOp.setParameter("gaLcCloudBuffer", true);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }

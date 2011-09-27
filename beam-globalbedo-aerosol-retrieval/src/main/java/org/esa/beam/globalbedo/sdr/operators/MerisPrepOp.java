@@ -81,6 +81,8 @@ public class MerisPrepOp extends Operator {
     private String[] gaOutputRayleigh;
     @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
     private boolean pressureOutputP1Lise = false;
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    private boolean gaLcCloudBuffer = false;
 
     @Override
     public void initialize() throws OperatorException {
@@ -147,6 +149,7 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("gaOutputRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             pixelClassParam.put("pressureOutputP1Lise", pressureOutputP1Lise);
+            pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct);
             for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){

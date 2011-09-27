@@ -392,8 +392,8 @@ public class BbdrOp extends PixelOperator {
         }
         if (sdrOnly) {
             SRC_STATUS = SRC_TOA_RFL + toaBandNames.length * 2;
-            String expression = "(not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER_LC and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
-                    "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER_LC) ? 4:" +
+            String expression = "(not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
+                    "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
                     "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
                     "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
             BandMathsOp.BandDescriptor[] bandDescriptors = new BandMathsOp.BandDescriptor[1];
