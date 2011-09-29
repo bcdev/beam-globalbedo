@@ -108,7 +108,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         String regex = getMosaicFileRegex(refFile.getName());
         final File[] tileDirs = rootDir.listFiles(new TileDirFilter());
         for (File tileDir : tileDirs) {
-            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicPriors));
             if (mosaicFiles.length == 1) {
                 mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
             } else {
@@ -133,7 +133,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         String regex = getMosaicFileRegex(refFile.getName());
         final File[] tileDirs = getPriorTileDirectories(rootDir.getAbsolutePath());
         for (File tileDir : tileDirs) {
-            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicPriors));
             if (mosaicFiles.length == 1) {
                 mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
             } else {
@@ -292,14 +292,27 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private static class MosaicFileFilter implements FileFilter {
 
         private final Pattern pattern;
+        private boolean mosaicPriors;
 
-        private MosaicFileFilter(String regex) {
+        private MosaicFileFilter(String regex, boolean mosaicPriors) {
             pattern = Pattern.compile(regex);
+            this.mosaicPriors = mosaicPriors;
         }
 
         @Override
         public boolean accept(File file) {
-            return file.isFile() && pattern.matcher(file.getName()).matches();
+            final boolean patternMatches = pattern.matcher(file.getName()).matches();
+            final boolean isFile = file.isFile();
+
+            boolean priorComplete = true;
+            if (patternMatches && isFile && mosaicPriors) {
+                // check if binary file exists for give hdr file...
+                final String fileRootPath = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
+                final String binFilePath = fileRootPath + ".bin";
+                priorComplete = new File(binFilePath).exists();
+            }
+
+            return isFile && patternMatches && priorComplete;
         }
     }
 }
