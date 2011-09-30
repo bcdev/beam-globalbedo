@@ -89,39 +89,44 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         double sumWeights = 0.0;
 
         for (int j = 0; j < albedo8DayProduct.length; j++) {
-            int doy = IOUtils.getDoyFromAlbedoProductName(albedo8DayProduct[j].getName());
-            final float thisWeight = monthlyWeighting[monthIndex - 1][doy - 1];
-            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                monthlyDHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i]].getDouble();
-                monthlyBHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i]].getDouble();
-                monthlyDHRSigma[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SIGMA_DHR[i]].getDouble();
-                monthlyBHRSigma[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SIGMA_BHR[i]].getDouble();
+            final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
+            if (dataMask > 1.0) { // the mask is the relative entropy!
+                int doy = IOUtils.getDoyFromAlbedoProductName(albedo8DayProduct[j].getName());
+                final float thisWeight = monthlyWeighting[monthIndex - 1][doy - 1];
+                for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                    monthlyDHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i]].getDouble();
+                    monthlyBHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i]].getDouble();
+                    monthlyDHRSigma[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SIGMA_DHR[i]].getDouble();
+                    monthlyBHRSigma[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SIGMA_BHR[i]].getDouble();
+                }
+                monthlyNsamples += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
+                monthlyRelativeEntropy += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();
+                monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
+                monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
+                monthlyDataMask = (dataMask > 0) ? 1.0 : 0.0;
+                monthlySza += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
+
+                sumWeights += thisWeight;
             }
-            monthlyNsamples += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
-            monthlyRelativeEntropy += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();
-            monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
-            monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
-            monthlyDataMask = (sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble() > 0) ? 1.0 : 0.0;
-            monthlySza += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
-
-            sumWeights += thisWeight;
         }
 
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            monthlyDHR[i] /= sumWeights;
-            monthlyBHR[i] /= sumWeights;
-            monthlyDHRSigma[i] /= sumWeights;
-            monthlyBHRSigma[i] /= sumWeights;
+        if (sumWeights > 0.0) {
+            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                monthlyDHR[i] /= sumWeights;
+                monthlyBHR[i] /= sumWeights;
+                monthlyDHRSigma[i] /= sumWeights;
+                monthlyBHRSigma[i] /= sumWeights;
+            }
+            monthlyNsamples /= sumWeights;
+            monthlyRelativeEntropy /= sumWeights;
+            monthlyGoodnessOfFit /= sumWeights;
+            monthlySnowFraction /= sumWeights;
+            monthlySza /= sumWeights;
         }
-        monthlyNsamples /= sumWeights;
-        monthlyRelativeEntropy /= sumWeights;
-        monthlyGoodnessOfFit /= sumWeights;
-        monthlySnowFraction /= sumWeights;
-        monthlySza /= sumWeights;
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyBHR, monthlyDHRSigma, monthlyBHRSigma,
-                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                                               monthlyDataMask, monthlySza);
+                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
+                monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
     }
