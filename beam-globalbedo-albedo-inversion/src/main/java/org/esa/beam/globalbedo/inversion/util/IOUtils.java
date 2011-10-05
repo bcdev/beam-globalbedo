@@ -700,8 +700,15 @@ public class IOUtils {
     }
 
     public static int getDoyFromAlbedoProductName(String productName) {
-//        String doyString = productName.substring(15, 18);
-        String doyString = productName.substring(22, 25);
+        String doyString;
+        if (productName.startsWith("GlobAlbedo.albedo.")) {
+            doyString = productName.substring(22, 25);
+        } else if (productName.startsWith("GlobAlbedo.")) {
+            doyString = productName.substring(15, 18);
+        } else {
+            return -1;
+        }
+//        System.out.println("productName, doystring = " + productName + "," + doyString);
         int doy = Integer.parseInt(doyString);
         if (doy < 0 || doy > 366) {
             return -1;
@@ -758,33 +765,38 @@ public class IOUtils {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only filenames like 'GlobAlbedo_2005129.h18v04.dim'...
-                return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim"));
+                return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
+                        (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
             }
         };
 
         final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
 
-        Product[] albedoProducts = new Product[albedoFiles.length];
+        if (albedoFiles != null && albedoFiles.length > 0) {
+            Product[] albedoProducts = new Product[albedoFiles.length];
 
-        int productIndex = 0;
-        for (int i = 0; i < albedoFiles.length; i++) {
-            String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
+            int productIndex = 0;
+            for (int i = 0; i < albedoFiles.length; i++) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
 
-            if ((new File(albedoProductFileName)).exists()) {
-                Product product;
-                try {
-                    product = ProductIO.readProduct(albedoProductFileName);
-                    albedoProducts[productIndex] = product;
-                    productIndex++;
-                } catch (IOException e) {
-                    throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                            + e.getMessage());
+                if ((new File(albedoProductFileName)).exists()) {
+                    Product product;
+                    try {
+                        product = ProductIO.readProduct(albedoProductFileName);
+                        albedoProducts[productIndex] = product;
+                        productIndex++;
+                    } catch (IOException e) {
+                        throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
+                                + e.getMessage());
+                    }
                 }
             }
+
+            return albedoProducts;
+        } else {
+            return null;
         }
 
-        return albedoProducts;
     }
 
     public static File[] getTileDirectories(String rootDirString) {

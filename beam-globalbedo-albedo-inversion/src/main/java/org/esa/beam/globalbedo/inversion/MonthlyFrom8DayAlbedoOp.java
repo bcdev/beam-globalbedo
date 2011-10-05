@@ -90,7 +90,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
-            if (dataMask > 1.0) { // the mask is the relative entropy!
+            if (dataMask > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
                 int doy = IOUtils.getDoyFromAlbedoProductName(albedo8DayProduct[j].getName());
                 final float thisWeight = monthlyWeighting[monthIndex - 1][doy - 1];
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -103,7 +103,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
                 monthlyRelativeEntropy += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();
                 monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
                 monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
-                monthlyDataMask = (dataMask > 0) ? 1.0 : 0.0;
+                monthlyDataMask = 1.0;
                 monthlySza += sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
 
                 sumWeights += thisWeight;
