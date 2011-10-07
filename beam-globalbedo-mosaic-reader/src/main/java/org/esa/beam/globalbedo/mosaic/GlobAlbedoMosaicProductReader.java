@@ -243,14 +243,26 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             if (mosaicTile != null) {
                 toRead.translate(-tileBounds.x, -tileBounds.y);
                 Band band = mosaicTile.getProduct().getBand(destBand.getName());
-                ProductData buffer = ProductData.createInstance(band.getDataType(), toRead.width * toRead.height);
-                band.readRasterData(toRead.x, toRead.y, toRead.width, toRead.height, buffer);
+                if (band != null) {
+                    ProductData buffer = ProductData.createInstance(band.getDataType(), toRead.width * toRead.height);
+                    band.readRasterData(toRead.x, toRead.y, toRead.width, toRead.height, buffer);
 
-                int rIndex = 0;
-                for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
-                    for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
-                        wIndex = x + y * destWidth;
-                        destBuffer.setElemDoubleAt(wIndex, buffer.getElemDoubleAt(rIndex++));
+                    int rIndex = 0;
+                    for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
+                        for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
+                            wIndex = x + y * destWidth;
+                            destBuffer.setElemDoubleAt(wIndex, buffer.getElemDoubleAt(rIndex++));
+                        }
+                    }
+                } else {
+                    System.out.println("WARNING: band '" + destBand.getName() + "' not found in product '" +
+                            mosaicTile.getProduct().getName() + "'.");
+                    double nodataValue = destBand.getNoDataValue();
+                    for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
+                        for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
+                            wIndex = x + y * destWidth;
+                            destBuffer.setElemDoubleAt(wIndex, nodataValue);
+                        }
                     }
                 }
             } else {
@@ -307,7 +319,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             boolean priorComplete = true;
             if (patternMatches && isFile && mosaicPriors) {
                 // check if binary file exists for give hdr file...
-                final String fileRootPath = file.getAbsolutePath().substring(0,file.getAbsolutePath().length()-4);
+                final String fileRootPath = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - 4);
                 final String binFilePath = fileRootPath + ".bin";
                 priorComplete = new File(binFilePath).exists();
             }
