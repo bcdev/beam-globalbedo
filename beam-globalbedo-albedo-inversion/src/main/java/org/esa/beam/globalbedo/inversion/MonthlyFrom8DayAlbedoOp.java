@@ -159,7 +159,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
         targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
         targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
-//        targetSamples[index + TRG_SZA].set(result.getSza());
+        targetSamples[index + TRG_SZA].set(result.getSza());
     }
 
     @Override
@@ -233,9 +233,9 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         // is not in breadboard monthly product
-//        Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
-//        szaBand.setNoDataValue(Float.NaN);
-//        szaBand.setNoDataValueUsed(true);
+        Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
+        szaBand.setNoDataValue(Float.NaN);
+        szaBand.setNoDataValueUsed(true);
     }
 
     @Override
@@ -303,7 +303,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
-//        configurator.defineSample(index++, szaBandName);      // is not in breadboard monthly product
+        configurator.defineSample(index++, szaBandName);      // is not in breadboard monthly product
     }
 
 }

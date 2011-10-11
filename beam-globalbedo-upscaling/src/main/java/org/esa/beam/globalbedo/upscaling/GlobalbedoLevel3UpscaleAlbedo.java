@@ -212,19 +212,19 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
             for (int i = 0; i < dhrBandNames.length; i++) {
                 computeNearest(srcTiles.get(dhrBandNames[i]), targetTiles.get(dhrBandNames[i]),
-                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < bhrBandNames.length; i++) {
                 computeNearest(srcTiles.get(bhrBandNames[i]), targetTiles.get(bhrBandNames[i]),
-                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < dhrSigmaBandNames.length; i++) {
                 computeNearest(srcTiles.get(dhrSigmaBandNames[i]), targetTiles.get(dhrSigmaBandNames[i]),
-                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (int i = 0; i < bhrSigmaBandNames.length; i++) {
                 computeNearest(srcTiles.get(bhrSigmaBandNames[i]), targetTiles.get(bhrSigmaBandNames[i]),
-                    srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
 
             computeMajority(srcTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
@@ -239,7 +239,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                     targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-            if (!isMonthlyAlbedo) {
+            if (srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME) != null) {
                 computeNearest(srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
                         targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
                         srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
