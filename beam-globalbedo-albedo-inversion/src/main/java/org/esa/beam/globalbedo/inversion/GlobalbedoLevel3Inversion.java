@@ -128,6 +128,16 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             Product inversionProduct = inversionOp.getTargetProduct();
             setTargetProduct(inversionProduct);
+
+            // correct for lost pixels due to extreme SIN angles near South Pole
+            // todo: this is not a very nice hack. we should try to find a better solution...
+            if (includesSouthPole(tile)) {
+                SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
+                correctionOp.setSourceProduct("sourceProduct", inversionProduct);
+                Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
+                setTargetProduct(southPoleCorrectedProduct);
+            }
+
         } else {
             logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
@@ -135,6 +145,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
+    }
+
+    private boolean includesSouthPole(String tile) {
+        return (tile.equals("h17v17") || tile.equals("h18v17"));
     }
 
     public static class Spi extends OperatorSpi {

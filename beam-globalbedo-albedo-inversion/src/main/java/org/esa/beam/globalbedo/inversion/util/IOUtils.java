@@ -1,6 +1,7 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
@@ -117,10 +118,13 @@ public class IOUtils {
                                                      Product bbdrProduct) throws IOException {
         Product geoCodingReferenceProduct = bbdrProduct;
         ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
-        double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
-        double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
-        Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-                northing);
+        // seems that we just need to copy the geooding, not to reproject...
+//        double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
+//        double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
+//        Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
+//                northing);
+        Product reprojectedProduct = priorProduct;
+
         return reprojectedProduct;
     }
 
