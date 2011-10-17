@@ -57,6 +57,7 @@ class MosaicTile {
 
     public synchronized Product getProduct() throws IOException {
         if (product == null) {
+            System.out.println("reading tile product from: " + file);
             product = ProductIO.readProduct(file);
         }
         return product;

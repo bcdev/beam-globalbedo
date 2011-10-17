@@ -116,12 +116,23 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 setTargetProduct(albedoOp.getTargetProduct());
             }
 
+            if (includesSouthPole(tile)) {
+                SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
+                correctionOp.setSourceProduct("sourceProduct", getTargetProduct());
+                Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
+                setTargetProduct(southPoleCorrectedProduct);
+            }
+
             logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
         } else {
             logger.log(Level.WARNING, "No albedos computed for tile: " + tile + ", year: " + year +
                     ", Doy: " + IOUtils.getDoyString(doy));
         }
+    }
+
+    private boolean includesSouthPole(String tile) {
+        return (tile.equals("h17v17") || tile.equals("h18v17"));
     }
 
     private Product copyFromSingleProduct(Product sourceProduct, float propNSampleConstantValue) {

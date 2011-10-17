@@ -20,6 +20,8 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -99,6 +101,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose todo revert
 
         refTile = findRefTile();
 
@@ -120,10 +123,12 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             reprojection.setParameter("crs", WGS84_CODE);
             reprojection.setSourceProduct(mosaicProduct);
             reprojectedProduct = reprojection.getTargetProduct();
-            reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
+//            reprojectedProduct.setPreferredTileSize(TILE_SIZE / 4, TILE_SIZE / 4);
         } else {
             reprojectedProduct = mosaicProduct;
         }
+//        setTargetProduct(reprojectedProduct);
+
 
         int width = reprojectedProduct.getSceneRasterWidth() / scaling;
         int height = reprojectedProduct.getSceneRasterHeight() / scaling;
@@ -136,6 +141,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
         upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
+//        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 8, TILE_SIZE / scaling / 8);
 
         if (reprojectToPlateCarre) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
@@ -294,20 +300,137 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         return false;
     }
 
+//    private void computeNearest(Tile src, Tile target, Tile mask) {
+//        Rectangle targetRectangle = target.getRectangle();
+//        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+//            checkForCancellation();
+//            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+//                float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+//                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+//                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
+//                    sample = Float.NaN;
+//                }
+//                target.setSample(x, y, sample);
+//            }
+//        }
+//    }
+
     private void computeNearest(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
-        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-            checkForCancellation();
-            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                    sample = Float.NaN;
+
+        final PixelPos pixelPos = new PixelPos(targetRectangle.x * scaling,
+                (targetRectangle.y + targetRectangle.height) * scaling);
+        final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+
+        if (geoPos.getLat() > -86.0) {
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+                checkForCancellation();
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                    float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                    final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                    if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
+                        sample = Float.NaN;
+                    }
+                    target.setSample(x, y, sample);
                 }
-                target.setSample(x, y, sample);
+            }
+        } else {
+            // correct for projection failures near south pole
+            float[][] correctedSampleWest = correctFromWest(src);    // i.e. tile h17v17
+            float[][] correctedSampleEast = correctFromEast(src);    // i.e. tile h18v17
+
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+                checkForCancellation();
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                    float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                    final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                    if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
+                        sample = Float.NaN;
+                    }
+                    final int xCorr = (x - targetRectangle.x) * scaling + scaling / 2;
+                    final int yCorr = (y - targetRectangle.y) * scaling + scaling / 2;
+                    if (correctedSampleWest[xCorr][yCorr] != 0.0) {
+                        target.setSample(x, y, correctedSampleWest[xCorr][yCorr]);
+                    }
+                    else if (correctedSampleEast[xCorr][yCorr] != 0.0) {
+                        target.setSample(x, y, correctedSampleEast[xCorr][yCorr]);
+                    }
+                    else {
+                        target.setSample(x, y, sample);
+                    }
+                }
             }
         }
     }
+
+    private float[][] correctFromWest(Tile src) {
+        final Rectangle sourceRectangle = src.getRectangle();
+        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
+        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
+            // go east direction
+            int xIndex = sourceRectangle.x;
+            float corrValue = 0.0f;
+            float value = src.getSampleFloat(xIndex, y);
+            while ((value == 0.0 || Float.isNaN(value))
+                    && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
+                xIndex++;
+                value = src.getSampleFloat(xIndex, y);
+            }
+            if (value == 0.0 || Float.isNaN(value)) {
+                // go north direction, we WILL find a non-zero value
+                int yIndex = y;
+                float value2 = src.getSampleFloat(xIndex, yIndex);
+                while ((value2 == 0.0 || Float.isNaN(value2))
+                        && yIndex > sourceRectangle.y + 1) {
+                    yIndex--;
+                    value2 = src.getSampleFloat(xIndex, yIndex);
+                }
+                corrValue = value2;
+            } else {
+                corrValue = value;
+            }
+            for (int i = sourceRectangle.x; i < xIndex; i++) {
+                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
+            }
+        }
+        return correctedSample;
+    }
+
+    private float[][] correctFromEast(Tile src) {
+        // todo adjust as for west
+        final Rectangle sourceRectangle = src.getRectangle();
+        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
+        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
+            // go west direction
+            int xIndex = sourceRectangle.x;
+            float corrValue = 0.0f;
+            float value = src.getSampleFloat(xIndex, y);
+            while ((value == 0.0 || Float.isNaN(value))
+                    && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
+                xIndex++;
+                value = src.getSampleFloat(xIndex, y);
+            }
+            if (value == 0.0 || Float.isNaN(value)) {
+                // go north direction, we WILL find a non-zero value
+                int yIndex = y;
+                float value2 = src.getSampleFloat(xIndex, yIndex);
+                while ((value2 == 0.0 || Float.isNaN(value2))
+                        && yIndex > sourceRectangle.y + 1) {
+                    yIndex--;
+                    value2 = src.getSampleFloat(xIndex, yIndex);
+                }
+                corrValue = value2;
+            } else {
+                corrValue = value;
+            }
+            for (int i = sourceRectangle.x; i < xIndex; i++) {
+                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
+            }
+        }
+        return correctedSample;
+    }
+
+
 
     private void computeMajority(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
