@@ -36,7 +36,6 @@ import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
 
-import javax.media.jai.JAI;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -102,8 +101,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose todo revert
-
         refTile = findRefTile();
 
         if (refTile == null || !refTile.exists()) {
@@ -139,7 +136,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-//        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
         upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 2, TILE_SIZE / scaling / 2);
 
         if (reprojectToPlateCarre) {
@@ -206,7 +202,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
-//        System.out.println("targetRectangle = " + targetRect);
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
                 targetRect.y * scaling,
                 targetRect.width * scaling,
@@ -383,7 +378,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             } else {
                 corrValue = value;
             }
-            for (int i = sourceRectangle.x; i < xIndex; i++) {
+            for (int i = sourceRectangle.x; i <= xIndex; i++) {
                 correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
             }
         }
@@ -426,6 +421,11 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     private void computeMajority(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
+
+        final PixelPos pixelPos = new PixelPos(targetRectangle.x * scaling,
+                (targetRectangle.y + targetRectangle.height) * scaling);
+        final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
@@ -440,12 +440,16 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
                 if (sampleMask > 0.0) {
                     target.setSample(x, y, max);
                 } else {
-                    target.setSample(x, y, Float.NaN);
+                    // south pole correction
+                    if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
+                        target.setSample(x, y, 0.0);
+                    } else {
+                        target.setSample(x, y, Float.NaN);
+                    }
                 }
             }
         }
     }
-
 
     public static class Spi extends OperatorSpi {
 
