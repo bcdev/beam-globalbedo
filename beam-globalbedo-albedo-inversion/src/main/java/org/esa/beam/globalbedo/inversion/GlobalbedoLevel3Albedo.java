@@ -67,7 +67,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         if (priorProduct == null) {
-            logger.log(Level.ALL, "No prior file available for DoY " + doy + " - do inversion without prior...");
+            logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
         }
 
         // STEP 2: get BRDF Snow/NoSnow input files...
@@ -83,7 +83,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
         }
 
-        if (brdfSnowProduct != null && brdfNoSnowProduct != null) {
+        if (brdfSnowProduct != null && brdfNoSnowProduct != null && priorProduct != null) {
             // merge Snow/NoSnow products...
             MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
             mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
@@ -92,17 +92,17 @@ public class GlobalbedoLevel3Albedo extends Operator {
             brdfMergedProduct = mergeBrdfOp.getTargetProduct();
         } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
             logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + doy);
+                    year + ", DoY: " + IOUtils.getDoyString(doy));
             // only use Snow product...
             brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
-        } else if (brdfSnowProduct == null && brdfNoSnowProduct != null) {
+        } else if (brdfNoSnowProduct != null && (brdfSnowProduct == null || priorProduct == null)) {
             logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + doy);
+                    year + ", DoY: " + IOUtils.getDoyString(doy));
             // only use NoSnow product...
             brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
         } else {
             logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + doy);
+                    year + ", DoY: " + IOUtils.getDoyString(doy));
         }
 
         if (brdfMergedProduct != null) {

@@ -253,7 +253,7 @@ public class BbdrUtils {
                 }
             }
         }
-        throw new IllegalArgumentException();
+        return (array.length - 2);
     }
 
     public static float getImageMeanValue(PlanarImage image) {

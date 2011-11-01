@@ -72,10 +72,12 @@ public class LandcoverLevel2 extends Operator {
         Product bbdrProduct;
         if (step2) {
             bbdrProduct = processBbdr(aotProduct);
-            for (String rayleighBandName : BRR_BANDS) {
-                bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
+            if (sensor == Sensor.MERIS) {
+                for (String rayleighBandName : BRR_BANDS) {
+                    bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
+                }
+                bbdrProduct.addBand(aotProduct.getBand("p1_lise"));
             }
-            bbdrProduct.addBand(aotProduct.getBand("p1_lise"));
         } else {
             bbdrProduct = aotProduct;
         }
