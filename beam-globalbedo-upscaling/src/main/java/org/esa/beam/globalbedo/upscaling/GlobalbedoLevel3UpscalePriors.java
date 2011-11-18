@@ -32,12 +32,9 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
@@ -71,6 +68,9 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
 
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
+
+    @Parameter(valueSet = {"1", "2"}, description = "Stage of priors to mosaic", defaultValue = "2")
+    private int priorStage;
 
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
@@ -165,9 +165,17 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
 
         String priorSnowSeparationDirName;
         if (computeSnow) {
-            priorSnowSeparationDirName = "PriorStage2Snow";
+            if (priorStage == 1) {
+                priorSnowSeparationDirName = "PriorStage1Snow";
+            } else {
+                priorSnowSeparationDirName = "PriorStage2Snow";
+            }
         } else {
-            priorSnowSeparationDirName = "PriorStage2";
+            if (priorStage == 1) {
+                priorSnowSeparationDirName = "PriorStage1NoSnow";
+            } else {
+                priorSnowSeparationDirName = "PriorStage2";
+            }
         }
         final String priorDirString = priorRootDir + File.separator + priorSnowSeparationDirName;
 
