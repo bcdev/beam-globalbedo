@@ -76,7 +76,6 @@ public class LandcoverLevel2 extends Operator {
                 for (String rayleighBandName : BRR_BANDS) {
                     bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
                 }
-                bbdrProduct.addBand(aotProduct.getBand("p1_lise"));
             }
         } else {
             bbdrProduct = aotProduct;
@@ -91,7 +90,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
         gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
-        gaMasterOp.setParameter("pressureOutputP1Lise", true);
+        gaMasterOp.setParameter("pressureOutputP1Lise", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
