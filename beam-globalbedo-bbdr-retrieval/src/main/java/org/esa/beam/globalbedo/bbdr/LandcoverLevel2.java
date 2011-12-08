@@ -38,7 +38,7 @@ import java.io.File;
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
 
-    private static final String[] BRR_BANDS = new String[]{"brr_1", "brr_2", "brr_4", "brr_8", "brr_13", "brr_14"};
+    private static final String[] BRR_BANDS = new String[]{"brr_1", "brr_2"};
     @SourceProduct
     private Product sourceProduct;
 
