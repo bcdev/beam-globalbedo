@@ -186,7 +186,7 @@ public class BbdrOp extends PixelOperator {
             statusBand.setNoDataValue(0);
             statusBand.setNoDataValueUsed(true);
             final IndexCoding indexCoding = new IndexCoding("status");
-            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[6];
+            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[5];
             indexCoding.addIndex("land", 1, "");
             points[0] = new ColorPaletteDef.Point(1, Color.GREEN, "land");
             indexCoding.addIndex("water", 2, "");
@@ -197,8 +197,6 @@ public class BbdrOp extends PixelOperator {
             points[3] = new ColorPaletteDef.Point(4, Color.WHITE, "cloud");
             indexCoding.addIndex("cloud_shadow", 5, "");
             points[4] = new ColorPaletteDef.Point(5, Color.GRAY, "cloud_shadow");
-            indexCoding.addIndex("invalid", 6, "");
-            points[5] = new ColorPaletteDef.Point(6, Color.RED, "invalid");
             targetProduct.getIndexCodingGroup().add(indexCoding);
             statusBand.setSampleCoding(indexCoding);
             statusBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
@@ -478,11 +476,7 @@ public class BbdrOp extends PixelOperator {
             // only compute over land
             fillTargetSampleWithNoDataValue(targetSamples);
             if (sdrOnly) {
-                // if not water, set to invalid
-                if (status != 2) {
-                    status = 6;
-                }
-                // write in all cases because is is now NaN
+                // write status, because it is now NaN
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
             }
             return;
@@ -516,16 +510,12 @@ public class BbdrOp extends PixelOperator {
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
-            if (sdrOnly) {
-                // if land, set to invalid,, but process anyway
-                if (status == 1) {
-                    status = 6;
-                    targetSamples[sensor.getNumBands() * 2 + 2].set(status);
-                }
-            } else {
                 fillTargetSampleWithNoDataValue(targetSamples);
+                if (sdrOnly) {
+                    // write status
+                    targetSamples[sensor.getNumBands() * 2 + 2].set(0);
+                 }
                 return;
-            }
         }
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
@@ -573,12 +563,12 @@ public class BbdrOp extends PixelOperator {
         for (int i = 0; i < toa_rfl.length; i++) {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
             if (sdrOnly && (toaRefl == 0.0 || Double.isNaN(toaRefl))) {
-                // if toa_refl look bad, set to invalid, but process anyway
-                targetSamples[sensor.getNumBands() * 2 + 2].set(6);
+                // if toa_refl look bad, set to invalid
+                targetSamples[sensor.getNumBands() * 2 + 2].set(0);
             }
-            toaRefl = toaRefl / sensor.getCal2Meris()[i];
+            toaRefl /= sensor.getCal2Meris()[i];
             if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
-                toaRefl = toaRefl * 0.01 / mus;
+                toaRefl *= 0.01 / mus;
             }
             toa_rfl[i] = toaRefl;
         }

@@ -101,8 +101,7 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
-//        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
-        bbdrOp.setParameter("landExpression", "not cloud_classif_flags.F_WATER");
+        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
         return bbdrOp.getTargetProduct();
     }
 
