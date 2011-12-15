@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
@@ -21,6 +37,7 @@ public class MerisLutTest extends TestCase {
         final double[] parametersArray = lut.getDimension(6).getSequence();
         final int nParameters = parametersArray.length;
         assertEquals(5, nParameters);     //  Parameters
+        assertEquals(1.0, parametersArray[0], 1.E-4);
         assertEquals(2.0, parametersArray[1], 1.E-4);
         assertEquals(3.0, parametersArray[2], 1.E-4);
         assertEquals(5.0, parametersArray[4], 1.E-4);
@@ -37,9 +54,11 @@ public class MerisLutTest extends TestCase {
         final double[] szaArray = lut.getDimension(4).getSequence();
         final int nSza = szaArray.length;
         assertEquals(14, nSza);     //  SZA
+        assertEquals(0.0, szaArray[0], 1.E-4);
         assertEquals(6.97, szaArray[2], 1.E-4);
         assertEquals(18.51, szaArray[4], 1.E-4);
         assertEquals(29.96, szaArray[6], 1.E-4);
+        assertEquals(69.9899, szaArray[13], 1.E-4);
 
         final double[] aziArray = lut.getDimension(3).getSequence();
         final int nAzi = aziArray.length;
