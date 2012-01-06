@@ -33,6 +33,7 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.*;
 import java.io.File;
@@ -40,6 +41,8 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.PRIOR_MASK_NAME;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.PRIOR_NSAMPLES_NAME;
@@ -94,9 +97,12 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
     private String maskBandName;
     private Band maskBand;
 
+    private Logger logger;
+
     @Override
     public void initialize() throws OperatorException {
 
+        logger = BeamLogManager.getSystemLogger();
         refTile = findRefTile();
 
         if (refTile == null || !refTile.exists()) {
@@ -163,23 +169,8 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
             }
         };
 
-        String priorSnowSeparationDirName;
-        if (computeSnow) {
-            if (priorStage == 1) {
-                priorSnowSeparationDirName = "PriorStage1Snow";
-            } else {
-                priorSnowSeparationDirName = "PriorStage2Snow";
-            }
-        } else {
-            if (priorStage == 1) {
-                priorSnowSeparationDirName = "PriorStage1NoSnow";
-            } else {
-                priorSnowSeparationDirName = "PriorStage2";
-            }
-        }
-        final String priorDirString = priorRootDir + File.separator + priorSnowSeparationDirName;
-
-        final File[] priorFiles = GlobAlbedoMosaicProductReader.getPriorTileDirectories(priorDirString);
+        logger.log(Level.ALL, "Prior root directory is: '" + priorRootDir + "'...");
+        final File[] priorFiles = GlobAlbedoMosaicProductReader.getPriorTileDirectories(priorRootDir);
         for (File priorFile : priorFiles) {
             File[] tileFiles = priorFile.listFiles(priorFilter);
             for (File tileFile : tileFiles) {

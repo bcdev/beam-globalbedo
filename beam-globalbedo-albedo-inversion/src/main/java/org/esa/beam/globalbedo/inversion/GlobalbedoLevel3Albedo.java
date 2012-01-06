@@ -12,7 +12,6 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
-import javax.media.jai.JAI;
 import javax.media.jai.operator.ConstantDescriptor;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -56,8 +55,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: we need the SNOW Prior file for given DoY...
-        final String priorDir = priorRootDir + File.separator + "PriorStage2Snow" + File.separator + tile +
+        final String priorDir = priorRootDir + File.separator + tile +
                 File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+        logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 
         Product priorProduct;
         try {

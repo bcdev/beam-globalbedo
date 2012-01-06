@@ -45,7 +45,7 @@ public class MerisLutTest extends TestCase {
         final double[] vzaArray = lut.getDimension(5).getSequence();
         final int nVza = vzaArray.length;
         assertEquals(13, nVza);     //  VZA
-        assertEquals(0.0,   vzaArray[0], 1.E-4);
+        assertEquals(0.0, vzaArray[0], 1.E-4);
         assertEquals(12.76, vzaArray[3], 1.E-4);
         assertEquals(24.24, vzaArray[5], 1.E-4);
         assertEquals(35.68, vzaArray[7], 1.E-4);
@@ -416,6 +416,14 @@ public class MerisLutTest extends TestCase {
         assertEquals(-9.34972, value, 1.E-4);
     }
 
+    public void testLutGas() throws IOException {
+        GasLookupTable gasLookupTable = new GasLookupTable(Sensor.MERIS);
+        gasLookupTable.load(null);
+        assertNotNull(gasLookupTable);
+        // todo test sth.
+//        assertEquals(0,gasLookupTable.getAmfArray().length;
+    }
+
     public void testLutInterpolation1D() {
         final double[] dimension = new double[]{0, 1, 2, 3, 4};
         final double[] values = new double[]{0, 2, 5, 10, 22};
@@ -432,7 +440,6 @@ public class MerisLutTest extends TestCase {
         assertEquals(7.5, lut.getValue(2.5), 0.0);
         assertEquals(0.2469, lut.getValue(0.12345), 0.0);
     }
-
 
 
 }

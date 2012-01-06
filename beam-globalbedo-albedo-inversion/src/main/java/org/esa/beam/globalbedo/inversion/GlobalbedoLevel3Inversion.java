@@ -68,14 +68,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Prior input file...
-        String priorSnowSeparationDirName;
-        if (computeSnow) {
-            priorSnowSeparationDirName = "PriorStage2Snow";
-        } else {
-            priorSnowSeparationDirName = "PriorStage2";
-        }
-        final String priorDir = priorRootDir + File.separator + priorSnowSeparationDirName + File.separator + tile +
+        final String priorDir = priorRootDir + File.separator + tile +
                 File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+
+        logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
         Product priorProduct = null;
         try {
