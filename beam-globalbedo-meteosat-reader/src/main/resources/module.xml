@@ -1,0 +1,46 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-mosaic-reader</symbolicName>
+    <version>0.1</version>
+    <name>GlobAlbedo Meteosat Surface Albedo Reader</name>
+
+    <description> </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2011 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+                ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <module>beam-visat</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importMeteosatSurfaceAlbedoProduct</id>
+            <helpId>importMeteosatSurfaceAlbedoProduct</helpId>
+            <formatName>GLOBALBEDO-METEOSAT-SURFACE-ALBEDO</formatName>
+            <useAllFileFilter>false</useAllFileFilter>
+            <text>Import Meteosat Surface Albedo Product...</text>
+            <mnemonic/>
+            <shortDescr>Import a Meteosat Surface Albedo product.
+            </shortDescr>
+            <description>Import a Meteosat Surface Albedo product.
+            </description>
+        </action>
+    </extension>
+
+</module>

@@ -70,6 +70,7 @@
         <module>beam-globalbedo-bbdr-retrieval</module>
         <module>beam-globalbedo-albedo-inversion</module>
         <module>beam-globalbedo-mosaic-reader</module>
+        <module>beam-globalbedo-meteosat-reader</module>
         <module>beam-globalbedo-upscaling</module>
         <module>beam-globalbedo-gmted2010</module>
     </modules>
@@ -144,6 +145,14 @@
                 <artifactId>junit</artifactId>
                 <version>4.8.2</version>
                 <scope>test</scope>
+            </dependency>
+
+            <!-- NetCDF Library ############################################# -->
+
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-netcdf</artifactId>
+                <version>1.0.101</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
