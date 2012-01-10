@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-globalbedo-mosaic-reader</symbolicName>
-    <version>0.1</version>
+    <symbolicName>beam-globalbedo-meteosat-reader</symbolicName>
+    <version>1.0-SNAPSHOT</version>
     <name>GlobAlbedo Meteosat Surface Albedo Reader</name>
 
     <description> </description>
@@ -21,7 +21,7 @@
         <module>beam-core</module>
     </dependency>
     <dependency>
-        <module>beam-visat</module>
+        <module>beam-visat-rcp</module>
         <optional>true</optional>
     </dependency>
 
@@ -33,12 +33,12 @@
             <id>importMeteosatSurfaceAlbedoProduct</id>
             <helpId>importMeteosatSurfaceAlbedoProduct</helpId>
             <formatName>GLOBALBEDO-METEOSAT-SURFACE-ALBEDO</formatName>
-            <useAllFileFilter>false</useAllFileFilter>
-            <text>Import Meteosat Surface Albedo Product...</text>
+            <useAllFileFilter>true</useAllFileFilter>
+            <text>Import METEOSAT Surface Albedo Product...</text>
             <mnemonic/>
-            <shortDescr>Import a Meteosat Surface Albedo product.
+            <shortDescr>Import a METEOSAT Surface Albedo product.
             </shortDescr>
-            <description>Import a Meteosat Surface Albedo product.
+            <description>Import a METEOSAT Surface Albedo product.
             </description>
         </action>
     </extension>

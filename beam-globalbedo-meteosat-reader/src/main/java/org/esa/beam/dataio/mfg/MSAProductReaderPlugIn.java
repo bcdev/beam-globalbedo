@@ -17,7 +17,7 @@ import java.util.regex.Pattern;
  */
 public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
 
-    public static final String FORMAT_NAME_METEOSAT_MSA = "METEOSAT-MSA";
+    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-METEOSAT-SURFACE-ALBEDO";
 
     private static final Class[] SUPPORTED_INPUT_TYPES = new Class[]{String.class, File.class};
     private static final String DESCRIPTION = "METEOSAT MSA Format";
@@ -36,17 +36,11 @@ public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
 
     private boolean isInputValid(Object input) {
         File inputFile = new File(input.toString());
-        String parentDirectoryName = inputFile.getParentFile().getName();
-        return isInputFileNameValid(inputFile.getName()) && isDirectoryNameValid(parentDirectoryName);
+        return isInputZipFileNameValid(inputFile.getName());
     }
 
-    private boolean isInputFileNameValid(String name) {
-        return "L1b_EO_manifest.xml".equals(name);           // todo
-    }
-
-    private boolean isDirectoryNameValid(String parentDirectoryName) {
-        Pattern pattern = Pattern.compile(".*OL_1_(ERR|EFR)_.*");             // todo
-        return pattern.matcher(parentDirectoryName).matches();
+    private boolean isInputZipFileNameValid(String fileName) {
+        return fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.(?i)(zip)");
     }
 
     @Override
@@ -78,5 +72,4 @@ public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
     public BeamFileFilter getProductFileFilter() {
         return new BeamFileFilter(FORMAT_NAMES[0], FILE_EXTENSION, DESCRIPTION);
     }
-
 }

@@ -39,19 +39,5 @@ public class MSAProductReaderTest {
         assertEquals(true, MSAProductReader.validateAlbedoInputFileName(filename));
     }
 
-    @Test
-    public void testSpectralBandsProperties() {
-        // todo
-//        final float[] wavelengths = new float[21];
-//        final float[] bandwidths = new float[21];
-//        MSAProductReader.getSpectralBandsProperties(wavelengths, bandwidths);
-//
-//        assertEquals(400.0, wavelengths[0], 0.0);
-//        assertEquals(412.5, wavelengths[1], 0.0);
-//        assertEquals(1020.0, wavelengths[20], 0.0);
-//
-//        assertEquals(400.0, wavelengths[0], 0.0);
-//        assertEquals(412.5, wavelengths[1], 0.0);
-//        assertEquals(1020.0, wavelengths[20], 0.0);
-    }
+    // todo: continue
 }
