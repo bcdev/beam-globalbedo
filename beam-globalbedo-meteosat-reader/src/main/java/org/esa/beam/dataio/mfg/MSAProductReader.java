@@ -4,10 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.VirtualDir;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.RenderedOp;
@@ -25,11 +22,17 @@ import java.util.logging.Logger;
  */
 public class MSAProductReader extends AbstractProductReader {
 
+    public static final String AUTO_GROUPING_PATTERN = "Surface_Albedo:Quality_Indicators:Navigation";
     private final Logger logger;
     private VirtualDir virtualDir;
     private Product albedoInputProduct;
     private Product ancillaryInputProduct;
     private Product staticInputProduct;
+
+    private static final String ALBEDO_BAND_NAME_PREFIX = "Surface Albedo";
+    private static final String ANCILLARY_BAND_NAME_PREFIX = "Quality_Indicators";
+    private static final String ANCILLARY_BAND_NAME_PRE_PREFIX = "Quality";
+    private static final String STATIC_BAND_NAME_PREFIX = "Navigation";
 
     protected MSAProductReader(MSAProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -46,7 +49,7 @@ public class MSAProductReader extends AbstractProductReader {
     private Product createProduct() {
         try {
             final String[] productFileNames = virtualDir.list(".");
-            
+
             for (String fileName : productFileNames) {
                 if (fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)")) {
                     albedoInputProduct = createAlbedoInputProduct(virtualDir.getFile(fileName));
@@ -60,7 +63,7 @@ public class MSAProductReader extends AbstractProductReader {
             }
         } catch (IOException e) {
             // todo
-            e.printStackTrace();  //To change body of catch statement use File | Settings | File Templates.
+            e.printStackTrace();
         }
 
         Product product = new Product(getInputFile().getName(),
@@ -68,12 +71,25 @@ public class MSAProductReader extends AbstractProductReader {
                 albedoInputProduct.getSceneRasterWidth(),
                 albedoInputProduct.getSceneRasterHeight(),
                 this);
-        ProductUtils.copyMetadata(albedoInputProduct, product);
-        ProductUtils.copyMetadata(ancillaryInputProduct, product);
-        ProductUtils.copyMetadata(staticInputProduct, product);
+//        ProductUtils.copyMetadata(albedoInputProduct, product);
+//        ProductUtils.copyMetadata(ancillaryInputProduct, product);
+//        ProductUtils.copyMetadata(staticInputProduct, product);
+
+        product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
+        product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
+        ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Global_Attributes"), product.getMetadataRoot().getElement("Global_Attributes"));
+
+        ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
+                product.getMetadataRoot().getElement("Variable_Attributes"));
+        ProductUtils.copyMetadata(ancillaryInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
+                product.getMetadataRoot().getElement("Variable_Attributes"));
+        ProductUtils.copyMetadata(staticInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
+                product.getMetadataRoot().getElement("Variable_Attributes"));
+
         attachAlbedoDataToProduct(product);
         attachAncillaryDataToProduct(product);
         attachGeoCodingToProduct(product);
+        product.setAutoGrouping(AUTO_GROUPING_PATTERN);
 
         return product;
     }
@@ -128,23 +144,31 @@ public class MSAProductReader extends AbstractProductReader {
 
     private void attachAlbedoDataToProduct(Product product) {
         for (final Band sourceBand : albedoInputProduct.getBands()) {
-            if (sourceBand.getName().startsWith("Surface Albedo") &&
+            if (sourceBand.getName().startsWith(ALBEDO_BAND_NAME_PREFIX) &&
                     hasSameRasterDimension(product, albedoInputProduct)) {
                 String bandName = sourceBand.getName();
                 flipImage(sourceBand);
                 Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, product);
+                String targetBandName = ALBEDO_BAND_NAME_PREFIX + "_" +
+                        bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+                targetBandName = targetBandName.replace(" ", "_");
+                targetBand.setName(targetBandName);
                 targetBand.setSourceImage(sourceBand.getSourceImage());
             }
         }
     }
-    
+
     private void attachAncillaryDataToProduct(Product product) {
         for (final Band sourceBand : ancillaryInputProduct.getBands()) {
-            if (sourceBand.getName().startsWith("Quality Indicators") &&
+            if (sourceBand.getName().startsWith(ANCILLARY_BAND_NAME_PRE_PREFIX) &&
                     hasSameRasterDimension(product, ancillaryInputProduct)) {
                 String bandName = sourceBand.getName();
                 flipImage(sourceBand);
                 Band targetBand = ProductUtils.copyBand(bandName, ancillaryInputProduct, product);
+                String targetBandName = ANCILLARY_BAND_NAME_PREFIX + "_" +
+                        bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+                targetBandName.replace(" ", "_");
+                targetBand.setName(targetBandName);
                 targetBand.setSourceImage(sourceBand.getSourceImage());
             }
         }
@@ -153,31 +177,27 @@ public class MSAProductReader extends AbstractProductReader {
     private void attachGeoCodingToProduct(Product product) {
         final Band latBand = staticInputProduct.getBand("Navigation/Latitude");
         final Band lonBand = staticInputProduct.getBand("Navigation/Longitude");
+        lonBand.setScalingFactor(1.0);   // static data file contains a weird scaling factor for longitude band
         flipImage(latBand);
         flipImage(lonBand);
 
-        // test:
-//        double[] multiplyBy = new double[1];
-//        multiplyBy[0] = 1.E10;
-//        ParameterBlock pbMult = new ParameterBlock();
-//        pbMult.addSource(lonBand.getSourceImage());
-//        pbMult.add(multiplyBy);
-//        RenderedOp im1 = JAI.create("multiplyconst",pbMult,null);
-//        for (int i=0; i<2; i++) {
-//            pbMult.setSource(im1, 0);
-//            RenderedOp imNew = JAI.create("multiplyconst",pbMult,null);
-//            im1 = imNew;
-//        }
-//        lonBand.setSourceImage(im1);
-        // end test
-        // todo: longitudes in static product are corrupt (order of 1.E-312), find better product and test
-
-        Band targetBand = ProductUtils.copyBand(latBand.getName(), staticInputProduct, product);
+        String bandName = latBand.getName();
+        Band targetBand = ProductUtils.copyBand(bandName, staticInputProduct, product);
+        String targetBandName = STATIC_BAND_NAME_PREFIX + "_" +
+                bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+        targetBand.setName(targetBandName);
         targetBand.setSourceImage(latBand.getSourceImage());
+
+        bandName = lonBand.getName();
         targetBand = ProductUtils.copyBand(lonBand.getName(), staticInputProduct, product);
+        targetBandName = STATIC_BAND_NAME_PREFIX + "_" +
+                bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+        targetBand.setName(targetBandName);
         targetBand.setSourceImage(lonBand.getSourceImage());
 
-        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));
+        // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
+        // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
+        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
     }
 
     private void flipImage(Band sourceBand) {
