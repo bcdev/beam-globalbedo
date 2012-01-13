@@ -17,22 +17,20 @@ import java.util.logging.Logger;
 /**
  * Product reader responsible for reading Meteosat MSA data products in HDF format.
  *
- * @author Marco Peters
+ * @author Olaf Danne
  * @since 1.0
  */
 public class MSAProductReader extends AbstractProductReader {
 
-    public static final String AUTO_GROUPING_PATTERN = "Surface_Albedo:Quality_Indicators:Navigation";
     private final Logger logger;
     private VirtualDir virtualDir;
-    private Product albedoInputProduct;
-    private Product ancillaryInputProduct;
-    private Product staticInputProduct;
-
     private static final String ALBEDO_BAND_NAME_PREFIX = "Surface Albedo";
+
     private static final String ANCILLARY_BAND_NAME_PREFIX = "Quality_Indicators";
     private static final String ANCILLARY_BAND_NAME_PRE_PREFIX = "Quality";
     private static final String STATIC_BAND_NAME_PREFIX = "Navigation";
+
+    private static final String AUTO_GROUPING_PATTERN = "Surface_Albedo:Quality_Indicators:Navigation";
 
     protected MSAProductReader(MSAProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -41,29 +39,41 @@ public class MSAProductReader extends AbstractProductReader {
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        File inputFile = getInputFile();
-        virtualDir = VirtualDir.create(inputFile);
+        virtualDir = MSAProductReaderPlugIn.getInput(getInput());
         return createProduct();
     }
 
     private Product createProduct() {
+        Product albedoInputProduct = null;
+        Product ancillaryInputProduct = null;
+        Product staticInputProduct = null;
         try {
-            final String[] productFileNames = virtualDir.list(".");
+            final String[] productFileNames = virtualDir.list("");
 
             for (String fileName : productFileNames) {
-                if (fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)")) {
+                if (fileName.contains("Albedo") && albedoFileNameMatches(fileName)) {
                     albedoInputProduct = createAlbedoInputProduct(virtualDir.getFile(fileName));
                 }
-                if (fileName.matches("MSA_Ancillary_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)")) {
+                if (fileName.contains("Ancillary") && ancillaryFileNameMatches(fileName)) {
                     ancillaryInputProduct = createAncillaryInputProduct(virtualDir.getFile(fileName));
                 }
-                if (fileName.matches("MSA_Static_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{1}.(?i)(hdf)")) {
+                if (fileName.contains("Static") && staticInputFileNameMatches(fileName)) {
                     staticInputProduct = createStaticInputProduct(virtualDir.getFile(fileName));
                 }
             }
+            if (albedoInputProduct != null && ancillaryInputProduct != null) {
+                if (staticInputProduct == null) {
+                    // product was not included in the tar or tar.bz2 archive
+                    // alternatively, it is by convention expected in same directory as input product
+                    staticInputProduct = getStaticInputProductFromAuxdataFile(albedoInputProduct.getName());
+                }
+            } else {
+                throw new IllegalStateException("Content of Meteosat Surface Albedo product '" + getInputFile().getName() +
+                        "' incomplete or corrupt.");
+            }
         } catch (IOException e) {
-            // todo
-            e.printStackTrace();
+            throw new IllegalStateException("Meteosat Surface Albedo product '" + getInputFile().getName() +
+                    "' cannot be read.");
         }
 
         Product product = new Product(getInputFile().getName(),
@@ -71,14 +81,11 @@ public class MSAProductReader extends AbstractProductReader {
                 albedoInputProduct.getSceneRasterWidth(),
                 albedoInputProduct.getSceneRasterHeight(),
                 this);
-//        ProductUtils.copyMetadata(albedoInputProduct, product);
-//        ProductUtils.copyMetadata(ancillaryInputProduct, product);
-//        ProductUtils.copyMetadata(staticInputProduct, product);
 
         product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
         product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
-        ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Global_Attributes"), product.getMetadataRoot().getElement("Global_Attributes"));
-
+        ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Global_Attributes"),
+                product.getMetadataRoot().getElement("Global_Attributes"));
         ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
                 product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(ancillaryInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
@@ -86,14 +93,59 @@ public class MSAProductReader extends AbstractProductReader {
         ProductUtils.copyMetadata(staticInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
                 product.getMetadataRoot().getElement("Variable_Attributes"));
 
-        attachAlbedoDataToProduct(product);
-        attachAncillaryDataToProduct(product);
-        attachGeoCodingToProduct(product);
+        attachAlbedoDataToProduct(product, albedoInputProduct);
+        attachAncillaryDataToProduct(product, ancillaryInputProduct);
+        attachGeoCodingToProduct(product, staticInputProduct);
         product.setAutoGrouping(AUTO_GROUPING_PATTERN);
 
         return product;
     }
 
+    static boolean staticInputFileNameMatches(String fileName) {
+        if (!(fileName.matches("MSA_Static_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{1}.(?i)(hdf)"))) {
+            throw new IllegalArgumentException("Input file name '" + fileName +
+                    "' does not match naming convention: 'MSA_Static_L2.0_Vm.nn_sss_m.HDF'");
+        }
+        return true;
+    }
+
+    static boolean ancillaryFileNameMatches(String fileName) {
+        if (!(fileName.matches("MSA_Ancillary_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
+            throw new IllegalArgumentException("Input file name '" + fileName +
+                    "' does not match naming convention: 'MSA_Ancillary_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
+        }
+        return true;
+    }
+
+    static boolean albedoFileNameMatches(String fileName) {
+        if (!(fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
+            throw new IllegalArgumentException("Input file name '" + fileName +
+                    "' does not match naming convention: 'MSA_Albedo_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
+        }
+        return true;
+    }
+
+    Product getStaticInputProductFromAuxdataFile(String albedoInputProductName) throws IOException {
+        Product staticInputProduct;
+        final String inputParentDirectory = getInputFile().getParent();
+        String staticFileExt = ".hdf";
+        String staticInputFileName = "MSA_Static_" + albedoInputProductName.substring(11, 25);
+        String staticInputFileNameWithExt = staticInputFileName + staticFileExt;
+        File staticInputFile = new File(inputParentDirectory + File.separator + staticInputFileNameWithExt);
+        if (staticInputFile.exists()) {
+            staticInputProduct = createStaticInputProduct(staticInputFile);
+        } else {
+            staticInputFile = new File(staticInputFileName + staticFileExt.toUpperCase());
+            if (staticInputFile.exists()) {
+                staticInputProduct = createStaticInputProduct(staticInputFile);
+            } else {
+                throw new IllegalStateException("Static data file '" + staticInputFileName +
+                        "' missing - cannot open Meteosat Surface Albedo product,");
+            }
+        }
+        return staticInputProduct;
+    }
+    
     private Product createAlbedoInputProduct(File inputFile) {
         Product albedoProduct = null;
         try {
@@ -142,7 +194,7 @@ public class MSAProductReader extends AbstractProductReader {
         return navigationProduct;
     }
 
-    private void attachAlbedoDataToProduct(Product product) {
+    private void attachAlbedoDataToProduct(Product product, Product albedoInputProduct) {
         for (final Band sourceBand : albedoInputProduct.getBands()) {
             if (sourceBand.getName().startsWith(ALBEDO_BAND_NAME_PREFIX) &&
                     hasSameRasterDimension(product, albedoInputProduct)) {
@@ -158,7 +210,7 @@ public class MSAProductReader extends AbstractProductReader {
         }
     }
 
-    private void attachAncillaryDataToProduct(Product product) {
+    private void attachAncillaryDataToProduct(Product product, Product ancillaryInputProduct) {
         for (final Band sourceBand : ancillaryInputProduct.getBands()) {
             if (sourceBand.getName().startsWith(ANCILLARY_BAND_NAME_PRE_PREFIX) &&
                     hasSameRasterDimension(product, ancillaryInputProduct)) {
@@ -174,10 +226,10 @@ public class MSAProductReader extends AbstractProductReader {
         }
     }
 
-    private void attachGeoCodingToProduct(Product product) {
+    private void attachGeoCodingToProduct(Product product, Product staticInputProduct) {
         final Band latBand = staticInputProduct.getBand("Navigation/Latitude");
         final Band lonBand = staticInputProduct.getBand("Navigation/Longitude");
-        lonBand.setScalingFactor(1.0);   // static data file contains a weird scaling factor for longitude band
+        lonBand.setScalingFactor(1.0);   // current static data file contains a weird scaling factor for longitude band
         flipImage(latBand);
         flipImage(lonBand);
 
@@ -197,6 +249,7 @@ public class MSAProductReader extends AbstractProductReader {
 
         // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
+        // --> special solution for Meteosat, but general solution is still under discussion
         product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
     }
 
@@ -214,14 +267,6 @@ public class MSAProductReader extends AbstractProductReader {
         return widthOne == widthTwo && heightOne == heightTwo;
     }
 
-    static boolean validateAlbedoInputFileName(String fileName) {
-        if (!fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)")) {
-            throw new IllegalArgumentException("Input file name '" + fileName +
-                    "' does not match naming convention: 'MSA Albedo L2.0 Vm.nn sss yyyy fff lll.HDF'");
-        }
-        return true;
-    }
-
     private File getInputFile() {
         return new File(getInput().toString());
     }
@@ -236,9 +281,8 @@ public class MSAProductReader extends AbstractProductReader {
 
     @Override
     public void close() throws IOException {
-        albedoInputProduct.dispose();
-        ancillaryInputProduct.dispose();
-        staticInputProduct.dispose();
+        virtualDir.close();
+        virtualDir = null;
         super.close();
     }
 }
