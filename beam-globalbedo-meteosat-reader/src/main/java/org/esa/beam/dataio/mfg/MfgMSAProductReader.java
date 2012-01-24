@@ -15,12 +15,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Product reader responsible for reading Meteosat MSA data products in HDF format.
+ * Product reader responsible for reading Meteosat First Generation MSA data products in HDF format.
  *
  * @author Olaf Danne
- * @since 1.0
  */
-public class MSAProductReader extends AbstractProductReader {
+public class MfgMSAProductReader extends AbstractProductReader {
 
     private final Logger logger;
     private VirtualDir virtualDir;
@@ -32,14 +31,14 @@ public class MSAProductReader extends AbstractProductReader {
 
     private static final String AUTO_GROUPING_PATTERN = "Surface_Albedo:Quality_Indicators:Navigation";
 
-    protected MSAProductReader(MSAProductReaderPlugIn readerPlugIn) {
+    protected MfgMSAProductReader(MfgMSAProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         logger = Logger.getLogger(getClass().getSimpleName());
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        virtualDir = MSAProductReaderPlugIn.getInput(getInput());
+        virtualDir = MfgMSAProductReaderPlugIn.getInput(getInput());
         return createProduct();
     }
 
@@ -51,13 +50,13 @@ public class MSAProductReader extends AbstractProductReader {
             final String[] productFileNames = virtualDir.list("");
 
             for (String fileName : productFileNames) {
-                if (fileName.contains("Albedo") && albedoFileNameMatches(fileName)) {
+                if (fileName.contains("Albedo") && mfgAlbedoFileNameMatches(fileName)) {
                     albedoInputProduct = createAlbedoInputProduct(virtualDir.getFile(fileName));
                 }
-                if (fileName.contains("Ancillary") && ancillaryFileNameMatches(fileName)) {
+                if (fileName.contains("Ancillary") && mfgAncillaryFileNameMatches(fileName)) {
                     ancillaryInputProduct = createAncillaryInputProduct(virtualDir.getFile(fileName));
                 }
-                if (fileName.contains("Static") && staticInputFileNameMatches(fileName)) {
+                if (fileName.contains("Static") && mfgStaticInputFileNameMatches(fileName)) {
                     staticInputProduct = createStaticInputProduct(virtualDir.getFile(fileName));
                 }
             }
@@ -101,7 +100,7 @@ public class MSAProductReader extends AbstractProductReader {
         return product;
     }
 
-    static boolean staticInputFileNameMatches(String fileName) {
+    static boolean mfgStaticInputFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Static_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{1}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
                     "' does not match naming convention: 'MSA_Static_L2.0_Vm.nn_sss_m.HDF'");
@@ -109,7 +108,7 @@ public class MSAProductReader extends AbstractProductReader {
         return true;
     }
 
-    static boolean ancillaryFileNameMatches(String fileName) {
+    static boolean mfgAncillaryFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Ancillary_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
                     "' does not match naming convention: 'MSA_Ancillary_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
@@ -117,7 +116,7 @@ public class MSAProductReader extends AbstractProductReader {
         return true;
     }
 
-    static boolean albedoFileNameMatches(String fileName) {
+    static boolean mfgAlbedoFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
                     "' does not match naming convention: 'MSA_Albedo_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");

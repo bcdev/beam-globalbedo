@@ -9,6 +9,12 @@ import ucar.unidata.io.bzip2.CBZip2InputStream;
 import java.io.*;
 
 
+/**
+ * A read-only directory that can either be a directory in the file system, a .bz2-file, or a tar.bz2-file.
+ * Files having '.gz' or '.tar.gz' extensions are automatically decompressed.
+ *
+ * @author Olaf Danne
+ */
 public class VirtualDirBz2 extends VirtualDir {
     private final File archiveFile;
     private File extractDir;
@@ -34,7 +40,15 @@ public class VirtualDirBz2 extends VirtualDir {
 
     @Override
     public File getFile(String path) throws IOException {
-        ensureUnpacked();
+        if (isTarBz2(archiveFile.getName())) {
+            ensureUnpackedTarBz2();
+        } else if (isTarOnly(archiveFile.getName())) {
+            ensureUnpackedTar();
+        } else if (isBz2Only(archiveFile.getName())) {
+            ensureUnpackedBz2();
+        } else {
+            throw new IllegalArgumentException("Input file " + archiveFile.getName() + " has wrong type.");
+        }
         final File file = new File(extractDir, path);
         if (!(file.isFile() || file.isDirectory())) {
             throw new IOException();
@@ -58,7 +72,7 @@ public class VirtualDirBz2 extends VirtualDir {
 
     @Override
     public boolean isCompressed() {
-        return isBz2(archiveFile.getName());
+        return (isTarBz2(archiveFile.getName()) || isBz2Only(archiveFile.getName()));
     }
 
     @Override
@@ -105,80 +119,122 @@ public class VirtualDirBz2 extends VirtualDir {
         return path.substring(lastSepIndex + 1, path.length());
     }
 
-    static boolean isBz2(String filename) {
-        final String extension = FileUtils.getExtension(filename);
-        return (".bz2".equals(extension));
+    static boolean isBz2Only(String filename) {
+        return (filename.endsWith(".bz2") && !(filename.endsWith(".tar.bz2")));
     }
 
-    private void ensureUnpacked() throws IOException {
+    static boolean isTarOnly(String filename) {
+        return (filename.endsWith(".tar"));
+    }
+
+    static boolean isTarBz2(String filename) {
+        return (filename.endsWith(".tar.bz2"));
+    }
+
+    private void ensureUnpackedTar() throws IOException {
+        // unpacks *.tar
         if (extractDir == null) {
             extractDir = createTargetDirInTemp(archiveFile.getName());
+            final TarInputStream tis = new TarInputStream(new BufferedInputStream(new FileInputStream(archiveFile)));
+            writeTempFilesFromTarInputStream(tis);
+        }
+    }
 
-            final TarInputStream tis;
-            if (isBz2(archiveFile.getName())) {
-                BufferedInputStream bis = new BufferedInputStream(new FileInputStream(archiveFile));
-                // check the first two bytes before passing input stream to CBZip2InputStream
-                // if they are 'B' and 'Z', skip them
-                // (see http://www.kohsuke.org/bzip2/)
-                int b1 = bis.read();
-                int b2 = bis.read();
-                // 'B' is 66 and 'Z' is 90
-                if (!(b1 == 66) || !(b2 == 90)) {
-                    bis.reset();
-                }
-                // note that this will take quite a while for large datasets
-                // in this case, bunzip2'ing the products externally in advance might be more appropriate...
-                tis = new TarInputStream(new BufferedInputStream(new CBZip2InputStream(bis)));
-            } else {
-                tis = new TarInputStream(new BufferedInputStream(new FileInputStream(archiveFile)));
-            }
-            TarEntry entry;
+    private void ensureUnpackedBz2() throws IOException {
+        // unpacks (decompresses) *.bz2
+        if (extractDir == null) {
+            extractDir = createTargetDirInTemp(archiveFile.getName());
+            BufferedInputStream bis = getBufferedInputStreamFromArchiveFile();
+            final BufferedInputStream bisUnzipped = new BufferedInputStream(new CBZip2InputStream(bis));
 
-            while ((entry = tis.getNextEntry()) != null) {
-                final String entryName = entry.getName();
-                if (entry.isDirectory()) {
-                    final File directory = new File(extractDir, entryName);
-                    ensureDirectory(directory);
-                    continue;
-                }
+            try {
+                String archiveFileNameWithoutBz2 = FileUtils.getFilenameWithoutExtension(archiveFile.getName());
+                final String fileNameFromPath = archiveFileNameWithoutBz2.concat(".hdf");
 
-                final String fileNameFromPath = getFilenameFromPath(entryName);
-                final int pathIndex = entryName.indexOf(fileNameFromPath);
-                String tarPath = null;
-                if (pathIndex > 0) {
-                    tarPath = entryName.substring(0, pathIndex - 1);
-                }
+                final File targetDir = extractDir;
+                writeTempHdfFile(bisUnzipped, fileNameFromPath, targetDir);
 
-                File targetDir;
-                if (tarPath != null) {
-                    targetDir = new File(extractDir, tarPath);
-                } else {
-                    targetDir = extractDir;
-                }
-
-                ensureDirectory(targetDir);
-                final File targetFile = new File(targetDir, fileNameFromPath);
-                if (targetFile.isFile()) {
-                    continue;
-                }
-
-                if (targetFile.exists()) targetFile.delete();
-                if (!targetFile.createNewFile()) {
-                    throw new IOException("Unable to create file: " + targetFile.getAbsolutePath());
-                }
-
-                final OutputStream outStream = new BufferedOutputStream(new FileOutputStream(targetFile));
-                final byte data[] = new byte[1024 * 1024];
-                int count;
-                while ((count = tis.read(data)) != -1) {
-                    outStream.write(data, 0, count);
-                }
-
-                // todo: make sure everything is closed
-                outStream.flush();
-                outStream.close();
+            } finally {
+                bisUnzipped.close();
             }
         }
+    }
+
+    private void ensureUnpackedTarBz2() throws IOException {
+        // unpack *.tar.bz2
+        if (extractDir == null) {
+            extractDir = createTargetDirInTemp(archiveFile.getName());
+            BufferedInputStream bis = getBufferedInputStreamFromArchiveFile();
+            // note that this will take quite a while for large datasets
+            // in this case, bunzip2'ing the products externally in advance might be more appropriate...
+            final TarInputStream tis = new TarInputStream(new BufferedInputStream(new CBZip2InputStream(bis)));
+            writeTempFilesFromTarInputStream(tis);
+        }
+    }
+
+    private void writeTempHdfFile(InputStream is, String targetFileName, File targetDir) throws IOException {
+        final File targetFile = new File(targetDir, targetFileName);
+        if (targetFile.exists()) {
+            targetFile.delete();
+        }
+        if (!targetFile.createNewFile()) {
+            throw new IOException("Unable to create file: " + targetFile.getAbsolutePath());
+        }
+
+        final OutputStream outStream = new BufferedOutputStream(new FileOutputStream(targetFile));
+        try {
+            final byte data[] = new byte[1024 * 1024];
+            int count;
+            while ((count = is.read(data)) > 0) {
+                outStream.write(data, 0, count);
+            }
+        } finally {
+            outStream.flush();
+            outStream.close();
+        }
+    }
+
+    private void writeTempFilesFromTarInputStream(TarInputStream tis) throws IOException {
+        TarEntry entry;
+        while ((entry = tis.getNextEntry()) != null) {
+            final String entryName = entry.getName();
+            if (entry.isDirectory()) {
+                final File directory = new File(extractDir, entryName);
+                ensureDirectory(directory);
+                continue;
+            }
+
+            final String fileNameFromPath = getFilenameFromPath(entryName);
+            final int pathIndex = entryName.indexOf(fileNameFromPath);
+            String tarPath = null;
+            if (pathIndex > 0) {
+                tarPath = entryName.substring(0, pathIndex - 1);
+            }
+
+            File targetDir;
+            if (tarPath != null) {
+                targetDir = new File(extractDir, tarPath);
+            } else {
+                targetDir = extractDir;
+            }
+
+            ensureDirectory(targetDir);
+            writeTempHdfFile(tis, fileNameFromPath, targetDir);
+        }
+    }
+
+    private BufferedInputStream getBufferedInputStreamFromArchiveFile() throws IOException {
+        BufferedInputStream bis = new BufferedInputStream(new FileInputStream(archiveFile));
+        // check the first two bytes before passing input stream to CBZip2InputStream
+        // if they are 'B' and 'Z', skip them
+        // (see http://www.kohsuke.org/bzip2/)
+        int b1 = bis.read();
+        int b2 = bis.read();
+        // 'B' is 66 and 'Z' is 90
+        if (!(b1 == 66) || !(b2 == 90)) {
+            bis.reset();
+        }
+        return bis;
     }
 
     private void ensureDirectory(File targetDir) throws IOException {

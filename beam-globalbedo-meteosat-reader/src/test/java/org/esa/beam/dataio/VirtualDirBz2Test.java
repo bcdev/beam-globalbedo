@@ -186,12 +186,31 @@ public class VirtualDirBz2Test {
     }
 
     @Test
-    public void testIsBz2() {
-        assertTrue(VirtualDirBz2.isBz2("test_archive.tar.bz2"));
+    public void testIsTarOnly() {
+        assertTrue(VirtualDirBz2.isTarOnly("test_archive.tar"));
 
-        assertFalse(VirtualDirBz2.isBz2("test_archive.tar"));
-        assertFalse(VirtualDirBz2.isBz2("test_archive.exe"));
-        assertFalse(VirtualDirBz2.isBz2("test_archive"));
+        assertFalse(VirtualDirBz2.isTarOnly("test_archive.tar.bz2"));
+        assertFalse(VirtualDirBz2.isTarOnly("test_archive.exe"));
+        assertFalse(VirtualDirBz2.isTarOnly("test_archive"));
+    }
+
+    @Test
+    public void testIsBz2Only() {
+        assertTrue(VirtualDirBz2.isBz2Only("test_archive.bz2"));
+
+        assertFalse(VirtualDirBz2.isBz2Only("test_archive.tar.bz2"));
+        assertFalse(VirtualDirBz2.isBz2Only("test_archive.tar"));
+        assertFalse(VirtualDirBz2.isBz2Only("test_archive.exe"));
+        assertFalse(VirtualDirBz2.isBz2Only("test_archive"));
+    }
+
+    @Test
+    public void testIsTarBz2() {
+        assertTrue(VirtualDirBz2.isTarBz2("test_archive.tar.bz2"));
+
+        assertFalse(VirtualDirBz2.isTarBz2("test_archive.tar"));
+        assertFalse(VirtualDirBz2.isTarBz2("test_archive.bz2"));
+        assertFalse(VirtualDirBz2.isTarBz2("test_archive"));
     }
 
 //    @After

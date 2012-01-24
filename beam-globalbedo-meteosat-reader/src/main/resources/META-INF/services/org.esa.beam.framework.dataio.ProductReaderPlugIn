@@ -1,2 +1,3 @@
-org.esa.beam.dataio.mfg.MSAProductReaderPlugIn
+org.esa.beam.dataio.mfg.MfgMSAProductReaderPlugIn
+org.esa.beam.dataio.msg.MsgMSAProductReaderPlugIn
 

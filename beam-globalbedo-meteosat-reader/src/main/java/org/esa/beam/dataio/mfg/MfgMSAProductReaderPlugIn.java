@@ -12,15 +12,13 @@ import org.esa.beam.util.io.FileUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
-import java.util.regex.Pattern;
 
 /**
- * PlugIn class which provides a Level 1 Sentinel 3 product reader to the framework.
+ * PlugIn class which provides a Meteosat First Generation MSA product reader to the framework.
  *
- * @author Marco Peters
- * @since 1.0
+ * @author Olaf Danne
  */
-public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
+public class MfgMSAProductReaderPlugIn implements ProductReaderPlugIn {
 
     public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-METEOSAT-SURFACE-ALBEDO";
 
@@ -86,11 +84,10 @@ public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
 
     private boolean isInputValid(Object input) {
         File inputFile = new File(input.toString());
-        return isInputZipFileNameValid(inputFile.getName());
+        return isInputBz2FileNameValid(inputFile.getName());
     }
 
-    private boolean isInputZipFileNameValid(String fileName) {
-//        return fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.(?i)(zip)");
+    private boolean isInputBz2FileNameValid(String fileName) {
         return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar.(?i)(bz2)") ||
                 fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar"));
     }
@@ -102,7 +99,7 @@ public class MSAProductReaderPlugIn implements ProductReaderPlugIn {
 
     @Override
     public ProductReader createReaderInstance() {
-        return new MSAProductReader(this);
+        return new MfgMSAProductReader(this);
     }
 
     @Override
