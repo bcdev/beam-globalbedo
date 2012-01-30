@@ -116,8 +116,8 @@ public class MergeBrdfOp extends PixelOperator {
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
 
-        if (totalNSamples > 0.0) {
-            if (nSamplesNoSnow == 0.0 && priorMask == 3.0) {
+        if (totalNSamples > 0.0 && (!areSnowSamplesZero() || !areNoSnowSamplesZero())) {
+            if ((nSamplesNoSnow == 0.0 && !areNoSnowSamplesZero()) && priorMask == 3.0) {
                 // Inland water bodies
                 setMergedBandsToZero(sourceSamples, targetSamples);
                 targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
@@ -150,6 +150,24 @@ public class MergeBrdfOp extends PixelOperator {
             setMergedBandsToZero(sourceSamples, targetSamples);
             targetSamples[TRG_PROPORTION_NSAMPLES].set(0.0);
         }
+    }
+
+    private boolean areSnowSamplesZero() {
+        for (int i=0; i<SRC_SNOW_PARAMETERS.length; i++) {
+            if (SRC_SNOW_PARAMETERS[i] > 0.0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean areNoSnowSamplesZero() {
+        for (int i=0; i<SRC_NOSNOW_PARAMETERS.length; i++) {
+            if (SRC_NOSNOW_PARAMETERS[i] > 0.0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private void setMergedBandsToSnowBands(Sample[] sourceSamples, WritableSample[] targetSamples) {
