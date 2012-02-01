@@ -245,7 +245,8 @@ public class MsgMSAProductReader extends AbstractProductReader {
         // PixelGeoCoding needs lat and lon from same product!
         final Band latBandT = product.getBand("LAT");
         final Band lonBandT = product.getBand("LON");
-        product.setGeoCoding(new PixelGeoCoding(latBandT, lonBandT, null, 5));    // this does not work correctly!
+//        product.setGeoCoding(new PixelGeoCoding(latBandT, lonBandT, null, 5));    // this does not work correctly!
+        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
     }
 
     private boolean hasSameRasterDimension(Product productOne, Product productTwo) {
