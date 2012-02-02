@@ -6,6 +6,7 @@ import org.junit.Test;
 
 import static java.lang.Float.NaN;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test class for MeteosatGeoCoding
@@ -91,6 +92,38 @@ public class MeteosatGeoCodingTest {
         assertEquals(7, pixelBoxLut.getPixelBox(0.7).maxX);
         assertEquals(6, pixelBoxLut.getPixelBox(0.7).minY);
         assertEquals(8, pixelBoxLut.getPixelBox(0.7).maxY);
+    }
+
+    @Test
+    public void testFillIncompletePixelBoxLut() throws Exception {
+        MeteosatGeoCoding.PixelBoxLut lut = new MeteosatGeoCoding.PixelBoxLut(0.0, 1.0, 10);
+        lut.add(0.0, 1, 2);
+        lut.add(0.6, 3, 4);
+        lut.add(1.0, 2, 16);
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2), lut.getPixelBox(0.0));
+        assertNull(lut.getPixelBox(0.2));
+        assertNull(lut.getPixelBox(0.3));
+        assertNull(lut.getPixelBox(0.4));
+        assertNull(lut.getPixelBox(0.5));
+        assertEquals(new MeteosatGeoCoding.PixelBox(3, 4), lut.getPixelBox(0.6));
+        assertNull(lut.getPixelBox(0.7));
+        assertNull(lut.getPixelBox(0.8));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 16), lut.getPixelBox(0.9));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 16), lut.getPixelBox(1.0));
+
+        lut.complete();
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 1, 2), lut.getPixelBox(0.0));
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 3, 4), lut.getPixelBox(0.1));
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 3, 4), lut.getPixelBox(0.2));
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 3, 4), lut.getPixelBox(0.3));
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 3, 4), lut.getPixelBox(0.4));
+        assertEquals(new MeteosatGeoCoding.PixelBox(1, 2, 3, 4), lut.getPixelBox(0.5));
+        assertEquals(new MeteosatGeoCoding.PixelBox(3, 4, 3, 4), lut.getPixelBox(0.6));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 4, 3, 16), lut.getPixelBox(0.7));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 4, 3, 16), lut.getPixelBox(0.8));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 16, 2, 16), lut.getPixelBox(0.9));
+        assertEquals(new MeteosatGeoCoding.PixelBox(2, 16, 2, 16), lut.getPixelBox(1.0));
+
     }
 
     private MeteosatGeoCoding createTestGC() {

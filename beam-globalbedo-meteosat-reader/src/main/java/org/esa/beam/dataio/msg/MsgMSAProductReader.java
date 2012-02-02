@@ -244,7 +244,9 @@ public class MsgMSAProductReader extends AbstractProductReader {
         // --> special solution for Meteosat, but general solution is still under discussion
         // PixelGeoCoding needs lat and lon from same product!
         final Band latBandT = product.getBand("LAT");
+        latBandT.setValidPixelExpression("LAT != 90 && LON != 90");
         final Band lonBandT = product.getBand("LON");
+        lonBandT.setValidPixelExpression("LAT != 90 && LON != 90");
 //        product.setGeoCoding(new PixelGeoCoding(latBandT, lonBandT, null, 5));    // this does not work correctly!
         product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
     }
