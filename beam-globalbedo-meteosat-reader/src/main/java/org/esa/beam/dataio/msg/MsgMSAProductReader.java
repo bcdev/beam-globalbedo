@@ -80,12 +80,12 @@ public class MsgMSAProductReader extends AbstractProductReader {
     static boolean msgAlbedoFileNameMatches(String fileName) {
         if (!(fileName.matches(MSA_ALBEDO_HDF_FILENAME_REGEXP))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
-                    "' does not match naming convention: 'HDF5_LSASAF_MSG_ALBEDO_<area>_yyyymmddhhmm'");
+                                                       "' does not match naming convention: 'HDF5_LSASAF_MSG_ALBEDO_<area>_yyyymmddhhmm'");
         }
         return true;
     }
 
-    private Product createProduct() {
+    private Product createProduct() throws IOException {
         Product albedoInputProduct = null;
         Product latInputProduct = null;
         Product lonInputProduct = null;
@@ -108,29 +108,29 @@ public class MsgMSAProductReader extends AbstractProductReader {
                 }
             } else {
                 throw new IllegalStateException("Content of Meteosat Surface Albedo product '" + getInputFile().getName() +
-                        "' incomplete or corrupt.");
+                                                        "' incomplete or corrupt.");
             }
         } catch (IOException e) {
             throw new IllegalStateException("Meteosat Surface Albedo product '" + getInputFile().getName() +
-                    "' cannot be read.");
+                                                    "' cannot be read.");
         }
 
         Product product = new Product(getInputFile().getName(),
-                albedoInputProduct.getProductType(),
-                albedoInputProduct.getSceneRasterWidth(),
-                albedoInputProduct.getSceneRasterHeight(),
-                this);
+                                      albedoInputProduct.getProductType(),
+                                      albedoInputProduct.getSceneRasterWidth(),
+                                      albedoInputProduct.getSceneRasterHeight(),
+                                      this);
 
         product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
         product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
         ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Global_Attributes"),
-                product.getMetadataRoot().getElement("Global_Attributes"));
+                                  product.getMetadataRoot().getElement("Global_Attributes"));
         ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(latInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(lonInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
 
         attachAlbedoDataToProduct(product, albedoInputProduct);
         attachGeoInfoToProduct(product, latInputProduct, lonInputProduct);
@@ -180,7 +180,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
             albedoProduct = ProductIO.readProduct(inputFile);
             if (albedoProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        inputFile.getName());
+                                           inputFile.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -198,7 +198,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
             latLonProduct = ProductIO.readProduct(file);
             if (latLonProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        file.getName());
+                                           file.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -215,7 +215,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
                 Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, product);
                 if (sourceBand.getName().startsWith(ALBEDO_BAND_NAME_PREFIX)) {
                     targetBand.setScalingFactor(0.0001);
-                } else if(sourceBand.getName().equals(QUALITY_FLAG_BAND_NAME)) {
+                } else if (sourceBand.getName().equals(QUALITY_FLAG_BAND_NAME)) {
                     final FlagCoding qualityFlagCoding = createQualityFlagCoding(QUALITY_FLAG_BAND_NAME);
                     targetBand.setSampleCoding(qualityFlagCoding);
                     product.getFlagCodingGroup().add(qualityFlagCoding);
@@ -225,7 +225,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
         }
     }
 
-    private void attachGeoInfoToProduct(Product product, Product latInputProduct, Product lonInputProduct) {
+    private void attachGeoInfoToProduct(Product product, Product latInputProduct, Product lonInputProduct) throws IOException {
         final Band latBand = latInputProduct.getBand("LAT");
         final Band lonBand = lonInputProduct.getBand("LON");
         latBand.setScalingFactor(0.01);
@@ -285,28 +285,28 @@ public class MsgMSAProductReader extends AbstractProductReader {
         Mask mask;
 
         mask = Mask.BandMathsType.create("F_LAND_OR_CONTINENTAL_WATER", "Land or continental water pixels", w, h,
-                "'Q-Flag.F_LAND_OR_CONTINENTAL_WATER'", Color.GREEN, 0.5f);
+                                         "'Q-Flag.F_LAND_OR_CONTINENTAL_WATER'", Color.GREEN, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_SPACE_OR_CONTINENTAL_WATER", "Space (outside disk) or continental water pixels", w, h,
-                "'Q-Flag.F_SPACE_OR_CONTINENTAL_WATER'", Color.BLUE, 0.5f);
+                                         "'Q-Flag.F_SPACE_OR_CONTINENTAL_WATER'", Color.BLUE, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_MSG_OBSERVATIONS", "Pixel has MSG observations", w, h,
-                "'Q-Flag.F_MSG_OBSERVATIONS'", Color.YELLOW, 0.5f);
+                                         "'Q-Flag.F_MSG_OBSERVATIONS'", Color.YELLOW, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_EPS_OBSERVATIONS", "Pixel has EPS observations", w, h,
-                "'Q-Flag.F_EPS_OBSERVATIONS'", Color.CYAN, 0.5f);
+                                         "'Q-Flag.F_EPS_OBSERVATIONS'", Color.CYAN, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_EXTERNAL_INFORMATION", "Pixel has external information", w, h,
-                "'Q-Flag.F_EXTERNAL_INFORMATION'", Color.ORANGE, 0.5f);
+                                         "'Q-Flag.F_EXTERNAL_INFORMATION'", Color.ORANGE, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_SNOW", "Snow pixels", w, h,
-                "'Q-Flag.F_SNOW'", Color.MAGENTA, 0.5f);
+                                         "'Q-Flag.F_SNOW'", Color.MAGENTA, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_UNUSED", "Pixel was not used", w, h,
-                "'Q-Flag.F_UNUSED'", Color.DARK_GRAY, 0.5f);
+                                         "'Q-Flag.F_UNUSED'", Color.DARK_GRAY, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
         mask = Mask.BandMathsType.create("F_FAILURE", "Algorithm failed", w, h,
-                "'Q-Flag.F_FAILURE'", Color.RED, 0.5f);
+                                         "'Q-Flag.F_FAILURE'", Color.RED, 0.5f);
         msaProduct.getMaskGroup().add(index++, mask);
 
         return index;

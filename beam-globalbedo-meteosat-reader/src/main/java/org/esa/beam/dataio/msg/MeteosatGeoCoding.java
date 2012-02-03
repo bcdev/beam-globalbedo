@@ -1,13 +1,11 @@
 package org.esa.beam.dataio.msg;
 
 import com.bc.ceres.core.ProgressMonitor;
-import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
+import org.esa.beam.util.math.MathUtils;
 
-import java.awt.*;
-import java.awt.image.Raster;
 import java.io.IOException;
 
 /**
@@ -18,15 +16,42 @@ import java.io.IOException;
  */
 public class MeteosatGeoCoding extends AbstractGeoCoding {
 
-    private Band latBand;
-    private Band lonBand;
-    private PixelBoxLut latLut;
-    private PixelBoxLut lonLut;
+    private static final int LUT_SIZE = 10;
+    public static final double MIN_DIST = 0.075;
 
-    public MeteosatGeoCoding(Band latitude, Band longitude) {
+    private final Band latBand;
+    private final Band lonBand;
+    private final float[] latData;
+    private final float[] lonData;
+    private final int width;
+    private final int height;
+    private final PixelBoxLut[][] latSuperLut = new PixelBoxLut[180][360];
+    private final PixelBoxLut[][] lonSuperLut = new PixelBoxLut[180][360];
+    private boolean initialized;
+
+    public MeteosatGeoCoding(Band latitude, Band longitude) throws IOException {
         this.latBand = latitude;
         this.lonBand = longitude;
+        width = latBand.getSceneRasterWidth();
+        height = latBand.getSceneRasterHeight();
 
+        latData = readDataFully(latBand);
+        lonData = readDataFully(lonBand);
+    }
+
+    private float[] readDataFully(Band band) throws IOException {
+        final int w = width;
+        final int h = height;
+        final float[] data = new float[w * h];
+        band.readPixels(0, 0, w, h, data);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if (!band.isPixelValid(x, y)) {
+                    data[y * w + x] = Float.NaN;
+                }
+            }
+        }
+        return data;
     }
 
     @Override
@@ -36,16 +61,9 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
         final int x = (int) Math.floor(pixelPos.x);
         final int y = (int) Math.floor(pixelPos.y);
-        if (latBand.isPixelValid(x, y) && lonBand.isPixelValid(x, y)) {
-            try {
-                final float[] lat = new float[1];
-                final float[] lon = new float[1];
-                latBand.readPixels(x, y, 1, 1, lat);
-                lonBand.readPixels(x, y, 1, 1, lon);
-                geoPos.setLocation(lat[0], lon[0]);
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
+        if (x >= 0 && y >= 0 && x < width && y < height) {
+            int index = width * y + x;
+            geoPos.setLocation(latData[index], lonData[index]);
         } else {
             geoPos.setInvalid();
         }
@@ -58,69 +76,84 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             pixelPos = new PixelPos();
         }
 
-        try {
-            fillLatLonLuts();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        if (!initialized) {
+            initialized = true;
+            initialize();
+        }
+
+        int si = getSuperLutI(geoPos.lon);
+        int sj = getSuperLutJ(geoPos.lat);
+        PixelBoxLut latLut = latSuperLut[sj][si];
+        PixelBoxLut lonLut = lonSuperLut[sj][si];
+        if (latLut == null || lonLut == null) {
+            pixelPos.setInvalid();
+            return pixelPos;
         }
 
         final PixelBox latPixelBox = latLut.getPixelBox(geoPos.lat);
         final PixelBox lonPixelBox = lonLut.getPixelBox(geoPos.lon);
-        if (latPixelBox != null && lonPixelBox != null) {
-            // System.out.println("geoPos = " + geoPos);
-            // System.out.println("latPixelBox = " + latPixelBox + ", index = " + latLut.getIndex(geoPos.lat));
-            // System.out.println("lonPixelBox = " + lonPixelBox + ", index = " + lonLut.getIndex(geoPos.lon));
+        if (latPixelBox == null || lonPixelBox == null) {
+            pixelPos.setInvalid();
+            return pixelPos;
+        }
+        // System.out.println("geoPos = " + geoPos);
+        // System.out.println("latPixelBox = " + latPixelBox + ", index = " + latLut.getIndex(geoPos.lat));
+        // System.out.println("lonPixelBox = " + lonPixelBox + ", index = " + lonLut.getIndex(geoPos.lon));
 
-            int x1 = Math.max(latPixelBox.minX, lonPixelBox.minX);
-            int y1 = Math.max(latPixelBox.minY, lonPixelBox.minY);
-            int x2 = Math.min(latPixelBox.maxX, lonPixelBox.maxX);
-            int y2 = Math.min(latPixelBox.maxY, lonPixelBox.maxY);
+//        // intersection of latPixelBox and lonPixelBox
+//        int x1 = Math.max(latPixelBox.minX, lonPixelBox.minX);
+//        int y1 = Math.max(latPixelBox.minY, lonPixelBox.minY);
+//        int x2 = Math.min(latPixelBox.maxX, lonPixelBox.maxX);
+//        int y2 = Math.min(latPixelBox.maxY, lonPixelBox.maxY);
 
-            if (x1 == x2 && y1 == y2) {
-                pixelPos.setLocation(x1 + 0.5F, y1 + 0.5F);
-            } else {
-                int w = x2 - x1 + 1;
-                int h = y2 - y1 + 1;
-                double minDist = Double.MAX_VALUE;
-                int bestX = -1;
-                int bestY = -1;
-                if (w > 0 && h > 0) {
-                    final MultiLevelImage latImage = latBand.getGeophysicalImage();
-                    final MultiLevelImage lonImage = lonBand.getGeophysicalImage();
-                    final Rectangle rect = new Rectangle(x1, y1, w, h);
-                    System.out.println("rect = " + rect);
-                    Raster latData = latImage.getData(rect);
-                    Raster lonData = lonImage.getData(rect);
+        // combination of latPixelBox and lonPixelBox
+        int x1 = Math.min(latPixelBox.minX, lonPixelBox.minX);
+        int y1 = Math.min(latPixelBox.minY, lonPixelBox.minY);
+        int x2 = Math.max(latPixelBox.maxX, lonPixelBox.maxX);
+        int y2 = Math.max(latPixelBox.maxY, lonPixelBox.maxY);
 
-                    for (int y = y1; y <= y2; y++) {
-                        for (int x = x1; x <= x2; x++) {
-                            if (latBand.isPixelValid(x, y) && lonBand.isPixelValid(x, y)) {
-                                float lat = latData.getSampleFloat(x, y, 0);
-                                float lon = lonData.getSampleFloat(x, y, 0);
-                                final float dx = geoPos.lat - lat;
-                                final float dy = lonDiff(geoPos.lon, lon);
-                                // todo - this is not really correct (use spherical dist.)
-                                double dist = dx * dx + dy * dy;
-                                if (dist < minDist) {
-                                    minDist = dist;
-                                    bestX = x;
-                                    bestY = y;
-                                }
-                            }
-                        }
+        if (x1 == x2 && y1 == y2) {
+            pixelPos.setLocation(x1 + 0.5F, y1 + 0.5F);
+            return pixelPos;
+        }
+
+        int w = x2 - x1 + 1;
+        int h = y2 - y1 + 1;
+        if (w <= 0 || h <= 0) {
+            pixelPos.setInvalid();
+            return pixelPos;
+        }
+
+        double minDist = Double.MAX_VALUE;
+        int bestX = -1;
+        int bestY = -1;
+
+        for (int y = y1; y <= y2; y++) {
+            for (int x = x1; x <= x2; x++) {
+                int index = width * y + x;
+                float lat = latData[index];
+                float lon = lonData[index];
+                if (isValid(lat, lon)) {
+                    double dist = MathUtils.sphereDistanceDeg(1.0, lon, lat, geoPos.lon, geoPos.lat) * MathUtils.RTOD;
+                    if (dist < minDist && dist < MIN_DIST) {
+                        minDist = dist;
+                        bestX = x;
+                        bestY = y;
                     }
                 }
-                if (bestX != -1 && bestY != -1) {
-                    pixelPos.setLocation(bestX + 0.5F, bestY + 0.5F);
-                } else {
-                    pixelPos.setInvalid();
-                }
             }
+        }
+        if (bestX != -1 && bestY != -1) {
+            pixelPos.setLocation(bestX + 0.5F, bestY + 0.5F);
         } else {
             pixelPos.setInvalid();
         }
 
         return pixelPos;
+    }
+
+    private boolean isValid(float lat, float lon) {
+        return !Float.isNaN(lat) && !Float.isNaN(lon);
     }
 
     private static float lonDiff(float a1, float a2) {
@@ -135,31 +168,94 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
     }
 
 
-    private void fillLatLonLuts() throws IOException {
-        if (latLut == null) {
-            final long t0 = System.currentTimeMillis();
-            latLut = createLut(latBand, false);
-            lonLut = createLut(lonBand, true);
-            final long t1 = System.currentTimeMillis();
-            System.out.println("fillLatLonLuts:  " + (t1 - t0) + "ms");
+    private void initialize() {
+
+        final long t0 = System.currentTimeMillis();
+
+        final int w = width;
+        final int h = height;
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                final int i = w * y + x;
+                final float lat = latData[i];
+                final float lon = lonData[i];
+                if (isValid(lat, lon)) {
+                    int si = getSuperLutI(lon);
+                    int sj = getSuperLutJ(lat);
+                    PixelBoxLut latLut = latSuperLut[sj][si];
+                    PixelBoxLut lonLut = lonSuperLut[sj][si];
+                    if (latLut == null) {
+                        latLut = new PixelBoxLut(90.0 - (sj + 1), 90.0 - sj, LUT_SIZE);
+                        lonLut = new PixelBoxLut(si - 180.0, (si + 1) - 180.0, LUT_SIZE);
+                        latSuperLut[sj][si] = latLut;
+                        lonSuperLut[sj][si] = lonLut;
+                    }
+                    latLut.add(lat, x, y);
+                    lonLut.add(lon, x, y);
+                    if (x > 0) {
+                        latLut.add(lat, x - 1, y);
+                        lonLut.add(lon, x - 1, y);
+                    }
+                    if (x < w - 1) {
+                        latLut.add(lat, x + 1, y);
+                        lonLut.add(lon, x + 1, y);
+                    }
+                    if (y > 0) {
+                        latLut.add(lat, x, y - 1);
+                        lonLut.add(lon, x, y - 1);
+                    }
+                    if (y < h - 1) {
+                        latLut.add(lat, x, y + 1);
+                        lonLut.add(lon, x, y + 1);
+                    }
+                }
+            }
         }
+        for (int sj = 0; sj < 180; sj++) {
+            for (int si = 0; si < 360; si++) {
+                PixelBoxLut latLut = latSuperLut[sj][si];
+                PixelBoxLut lonLut = lonSuperLut[sj][si];
+                if (latLut != null) {
+                    latLut.complete();
+                    lonLut.complete();
+                }
+            }
+        }
+
+        final long t1 = System.currentTimeMillis();
+        System.out.println("initialize:  " + (t1 - t0) + "ms");
     }
 
-    private PixelBoxLut createLut(Band band, boolean useWidth) throws IOException {
+    private int getSuperLutJ(float lat) {
+        int sj = (int) (90 - lat);
+        if (sj == 180) {
+            sj = 0;
+        }
+        return sj;
+    }
+
+    private int getSuperLutI(float lon) {
+        int si = (int) (lon + 180);
+        if (si == 360) {
+            si = 0;
+        }
+        return si;
+    }
+
+    private static PixelBoxLut createLut(Band band, float[] data, boolean useWidth) {
         final Stx stx = band.getStx(true, ProgressMonitor.NULL);
         final int w = band.getSceneRasterWidth();
         final int h = band.getSceneRasterHeight();
         PixelBoxLut lut = new PixelBoxLut(band.scale(stx.getMin()), band.scale(stx.getMax()), useWidth ? w : h);
-        final float[] line = new float[w];
         for (int y = 0; y < h; y++) {
-            // todo - this may be too slow
-            band.readPixels(0, y, line.length, 1, line);
             for (int x = 0; x < w; x++) {
-                if (band.isPixelValid(x, y)) {
-                    lut.add(line[x], x, y);
+                float coord = data[(w * y + x)];
+                if (!Float.isNaN(coord)) {
+                    lut.add(coord, x, y);
                 }
             }
         }
+//        lut.dump();
         lut.complete();
 
         lut.dump();
@@ -210,18 +306,30 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
 
         void complete() {
-            if (pixelBoxes[0] == null) {
-                throw new IllegalStateException();
-            }
-            if (pixelBoxes[pixelBoxes.length - 1] == null) {
-                throw new IllegalStateException();
-            }
-            boolean pixelBoxSeen = true;
             PixelBox prevValue = pixelBoxes[0];
-            for (int i = 1; i < pixelBoxes.length; i++) {
+            boolean pixelBoxSeen = prevValue != null;
+            int i0 = 0;
+            if (!pixelBoxSeen) {
+                for (; i0 < pixelBoxes.length; i0++) {
+                    prevValue = pixelBoxes[i0];
+                    if (prevValue != null) {
+                        pixelBoxSeen = true;
+                        for (int i = 0; i < i0; i++) {
+                            pixelBoxes[i] = prevValue;
+                        }
+                        break;
+                    }
+                }
+            }
+            if (!pixelBoxSeen) {
+                throw new IllegalStateException();
+            }
+            for (int i = i0; i < pixelBoxes.length; i++) {
                 PixelBox currentValue = pixelBoxes[i];
                 if (pixelBoxSeen) {
-                    if (currentValue == null) {
+                    if (currentValue != null) {
+                        prevValue = currentValue;
+                    } else {
                         prevValue = new PixelBox(prevValue.minX, prevValue.minY, prevValue.maxX, prevValue.maxY);
                         pixelBoxes[i] = prevValue;
                         pixelBoxSeen = false;
@@ -244,7 +352,11 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             System.out.printf("%s\t%s\t%s\t%s\t%s\n", "i", "minX", "maxX", "minY", "maxY");
             for (int i = 0; i < pixelBoxes.length; i++) {
                 PixelBox pixelBox = pixelBoxes[i];
-                System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
+                if (pixelBox != null) {
+                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
+                } else {
+                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, -1, -1, -1, -1);
+                }
             }
         }
     }
