@@ -85,6 +85,11 @@ public class MsgMSAProductReader extends AbstractProductReader {
         return true;
     }
 
+    static String getRegionFromAlbedoInputFilename(String albedoInputFilename) {
+        // region rrrr from 'HDF5_LSASAF_MSG_ALBEDO_<rrrr>'  (Euro, NAfr, SAfr)
+        return albedoInputFilename.substring(23,27);
+    }
+
     private Product createProduct() throws IOException {
         Product albedoInputProduct = null;
         Product latInputProduct = null;
@@ -98,13 +103,14 @@ public class MsgMSAProductReader extends AbstractProductReader {
                 }
             }
             if (albedoInputProduct != null) {
+                String region = getRegionFromAlbedoInputFilename(albedoInputProduct.getName());
                 if (latInputProduct == null) {
                     // lat/lon files are by convention expected in same directory as albedo input product
-                    latInputProduct = getLatInputProductFromSeparateFile();
+                    latInputProduct = getLatInputProductFromSeparateFile(region);
                 }
                 if (lonInputProduct == null) {
                     // lat/lon files are by convention expected in same directory as albedo input product
-                    lonInputProduct = getLonInputProductFromSeparateFile();
+                    lonInputProduct = getLonInputProductFromSeparateFile(region);
                 }
             } else {
                 throw new IllegalStateException("Content of Meteosat Surface Albedo product '" + getInputFile().getName() +
@@ -140,12 +146,13 @@ public class MsgMSAProductReader extends AbstractProductReader {
         return product;
     }
 
-    private Product getLatInputProductFromSeparateFile() throws IOException {
+    private Product getLatInputProductFromSeparateFile(String region) throws IOException {
         String latInputFileName = null;
         final String[] allInputFiles = getInputFile().getParentFile().list();
         for (String anyInputFile : allInputFiles) {
-            if (msgLatInputFileNameMatches(FileUtils.getFilenameWithoutExtension(anyInputFile))) {
-                latInputFileName = FileUtils.getFilenameWithoutExtension(anyInputFile) + ".bz2";
+            String filenameWithoutExtension = FileUtils.getFilenameWithoutExtension(anyInputFile);
+            if (filenameWithoutExtension.contains(region) && msgLatInputFileNameMatches(filenameWithoutExtension)) {
+                latInputFileName = filenameWithoutExtension + ".bz2";
                 break;
             }
         }
@@ -157,11 +164,12 @@ public class MsgMSAProductReader extends AbstractProductReader {
         return createLatLonInputProduct(latInputFileName);
     }
 
-    private Product getLonInputProductFromSeparateFile() throws IOException {
+    private Product getLonInputProductFromSeparateFile(String region) throws IOException {
         String lonInputFileName = null;
         final String[] allInputFiles = getInputFile().getParentFile().list();
         for (String anyInputFile : allInputFiles) {
-            if (msgLonInputFileNameMatches(FileUtils.getFilenameWithoutExtension(anyInputFile))) {
+            String filenameWithoutExtension = FileUtils.getFilenameWithoutExtension(anyInputFile);
+            if (filenameWithoutExtension.contains(region) && msgLonInputFileNameMatches(filenameWithoutExtension)) {
                 lonInputFileName = FileUtils.getFilenameWithoutExtension(anyInputFile) + ".bz2";
                 break;
             }

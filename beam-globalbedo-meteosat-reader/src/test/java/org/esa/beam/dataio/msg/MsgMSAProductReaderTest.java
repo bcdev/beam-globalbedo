@@ -38,4 +38,14 @@ public class MsgMSAProductReaderTest {
         assertEquals(true, MsgMSAProductReader.msgAlbedoFileNameMatches(filename));
     }
 
+    @Test
+    public void testGetRegionFromAlbedoInputFilename() throws Exception {
+        String inputFilename = "HDF5_LSASAF_MSG_ALBEDO_Euro_200601070000.bz2";
+        assertEquals("Euro", MsgMSAProductReader.getRegionFromAlbedoInputFilename(inputFilename));
+        inputFilename = "HDF5_LSASAF_MSG_ALBEDO_NAfr_200601070000.bz2";
+        assertEquals("NAfr", MsgMSAProductReader.getRegionFromAlbedoInputFilename(inputFilename));
+        inputFilename = "HDF5_LSASAF_MSG_ALBEDO_SAfr_200601070000.bz2";
+        assertEquals("SAfr", MsgMSAProductReader.getRegionFromAlbedoInputFilename(inputFilename));
+
+    }
 }
