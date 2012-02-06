@@ -2,6 +2,7 @@ package org.esa.beam.dataio.mfg;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.VirtualDir;
+import org.esa.beam.dataio.msg.MeteosatGeoCoding;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;
@@ -42,7 +43,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
         return createProduct();
     }
 
-    private Product createProduct() {
+    private Product createProduct() throws IOException {
         Product albedoInputProduct = null;
         Product ancillaryInputProduct = null;
         Product staticInputProduct = null;
@@ -225,7 +226,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
         }
     }
 
-    private void attachGeoCodingToProduct(Product product, Product staticInputProduct) {
+    private void attachGeoCodingToProduct(Product product, Product staticInputProduct) throws IOException {
         final Band latBand = staticInputProduct.getBand("Navigation/Latitude");
         final Band lonBand = staticInputProduct.getBand("Navigation/Longitude");
         lonBand.setScalingFactor(1.0);   // current static data file contains a weird scaling factor for longitude band
@@ -250,6 +251,11 @@ public class MfgMSAProductReader extends AbstractProductReader {
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
         // --> special solution for Meteosat, but general solution is still under discussion
         product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
+        final Band latBandT = product.getBand("Navigation_Latitude");
+        latBandT.setValidPixelExpression("Navigation_Latitude != -9999 && Navigation_Longitude != -9999");
+        final Band lonBandT = product.getBand("Navigation_Longitude");
+        lonBandT.setValidPixelExpression("Navigation_Latitude != -9999 && Navigation_Longitude != -9999");
+        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
     }
 
     private void flipImage(Band sourceBand) {
