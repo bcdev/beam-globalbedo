@@ -17,7 +17,8 @@ import java.io.IOException;
 public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     private static final int LUT_SIZE = 10;
-    public static final double MIN_DIST = 0.075;
+    public static final double MIN_DIST = 0.375;
+    public static final double INTERMEDIATE_DIST = 0.025;
 
     private final Band latBand;
     private final Band lonBand;
@@ -167,7 +168,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         return d;
     }
 
-
     private void initialize() {
 
         final long t0 = System.currentTimeMillis();
@@ -179,34 +179,58 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
                 final int i = w * y + x;
                 final float lat = latData[i];
                 final float lon = lonData[i];
-                if (isValid(lat, lon)) {
-                    int si = getSuperLutI(lon);
-                    int sj = getSuperLutJ(lat);
-                    PixelBoxLut latLut = latSuperLut[sj][si];
-                    PixelBoxLut lonLut = lonSuperLut[sj][si];
-                    if (latLut == null) {
-                        latLut = new PixelBoxLut(90.0 - (sj + 1), 90.0 - sj, LUT_SIZE);
-                        lonLut = new PixelBoxLut(si - 180.0, (si + 1) - 180.0, LUT_SIZE);
-                        latSuperLut[sj][si] = latLut;
-                        lonSuperLut[sj][si] = lonLut;
+                fillSuperLut(w, h, y, x, lat, lon);
+
+                final int INTERMEDIATE_VALUES = 100;
+                
+                if (x > 0) {
+                    final float latXminus = latData[w * y + (x - 1)];
+                    final float lonXminus = lonData[w * y + (x - 1)];
+                    final int numLatIntermediateCoords = (int) (Math.abs(lat - latXminus) / INTERMEDIATE_DIST);
+                    final int numLonIntermediateCoords = (int) (Math.abs(lon - lonXminus) / INTERMEDIATE_DIST);
+                    final int numIntermediateCoords = Math.max(numLatIntermediateCoords, numLonIntermediateCoords);
+                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
+                        final float intermediateLatLeft = lat - k * (lat - latXminus) / INTERMEDIATE_VALUES;
+                        final float intermediateLonLeft = lon - k * (lon - lonXminus) / INTERMEDIATE_VALUES;
+                        fillSuperLut(w, h, y, x, intermediateLatLeft, intermediateLonLeft);
                     }
-                    latLut.add(lat, x, y);
-                    lonLut.add(lon, x, y);
-                    if (x > 0) {
-                        latLut.add(lat, x - 1, y);
-                        lonLut.add(lon, x - 1, y);
+                }
+
+                if (x < w - 1) {
+                    final float latXplus = latData[w * y + (x + 1)];
+                    final float lonXplus = lonData[w * y + (x + 1)];
+                    final int numLatIntermediateCoords = (int) (Math.abs(lat - latXplus) / INTERMEDIATE_DIST);
+                    final int numLonIntermediateCoords = (int) (Math.abs(lon - lonXplus) / INTERMEDIATE_DIST);
+                    final int numIntermediateCoords = Math.max(numLatIntermediateCoords, numLonIntermediateCoords);
+                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
+                        final float intermediateLatRight = lat + k * (latXplus - lat) / INTERMEDIATE_VALUES;
+                        final float intermediateLonRight = lon + k * (lonXplus - lon) / INTERMEDIATE_VALUES;
+                        fillSuperLut(w, h, y, x, intermediateLatRight, intermediateLonRight);
                     }
-                    if (x < w - 1) {
-                        latLut.add(lat, x + 1, y);
-                        lonLut.add(lon, x + 1, y);
+                }
+
+                if (y > 0) {
+                    final float latYminus = latData[w * (y - 1) + x];
+                    final float lonYminus = lonData[w * (y - 1) + x];
+                    final int numLatIntermediateCoords = (int) (Math.abs(lat - latYminus) / INTERMEDIATE_DIST);
+                    final int numLonIntermediateCoords = (int) (Math.abs(lon - lonYminus) / INTERMEDIATE_DIST);
+                    final int numIntermediateCoords = Math.max(numLatIntermediateCoords, numLonIntermediateCoords);
+                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
+                        final float intermediateLatDown = lat - k * (lat - latYminus) / INTERMEDIATE_VALUES;
+                        final float intermediateLonDown = lon - k * (lon - lonYminus) / INTERMEDIATE_VALUES;
+                        fillSuperLut(w, h, y, x, intermediateLatDown, intermediateLonDown);
                     }
-                    if (y > 0) {
-                        latLut.add(lat, x, y - 1);
-                        lonLut.add(lon, x, y - 1);
-                    }
-                    if (y < h - 1) {
-                        latLut.add(lat, x, y + 1);
-                        lonLut.add(lon, x, y + 1);
+                }
+                if (y < h - 1) {
+                    final float latYplus = latData[w * (y + 1) + x];
+                    final float lonYplus = lonData[w * (y + 1) + x];
+                    final int numLatIntermediateCoords = (int) (Math.abs(lat - latYplus) / INTERMEDIATE_DIST);
+                    final int numLonIntermediateCoords = (int) (Math.abs(lon - lonYplus) / INTERMEDIATE_DIST);
+                    final int numIntermediateCoords = Math.max(numLatIntermediateCoords, numLonIntermediateCoords);
+                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
+                        final float intermediateLatUp = lat + k * (latYplus - lat) / INTERMEDIATE_VALUES;
+                        final float intermediateLonUp = lon + k * (lonYplus - lon) / INTERMEDIATE_VALUES;
+                        fillSuperLut(w, h, y, x, intermediateLatUp, intermediateLonUp);
                     }
                 }
             }
@@ -222,8 +246,64 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             }
         }
 
+        printMap();
+
         final long t1 = System.currentTimeMillis();
         System.out.println("initialize:  " + (t1 - t0) + "ms");
+    }
+
+    private void fillSuperLut(int w, int h, int y, int x, float lat, float lon) {
+        if (isValid(lat, lon)) {
+            int si = getSuperLutI(lon);
+            int sj = getSuperLutJ(lat);
+            
+            PixelBoxLut latLut = latSuperLut[sj][si];
+            PixelBoxLut lonLut = lonSuperLut[sj][si];
+            if (latLut == null) {
+                latLut = new PixelBoxLut(90.0 - (sj + 1), 90.0 - sj, LUT_SIZE);
+                lonLut = new PixelBoxLut(si - 180.0, (si + 1) - 180.0, LUT_SIZE);
+                latSuperLut[sj][si] = latLut;
+                lonSuperLut[sj][si] = lonLut;
+            }
+            latLut.add(lat, x, y);
+            lonLut.add(lon, x, y);
+
+            if (x > 0) {
+                latLut.add(lat, x - 1, y);
+                lonLut.add(lon, x - 1, y);
+            }
+            if (x < w - 1) {
+                latLut.add(lat, x + 1, y);
+                lonLut.add(lon, x + 1, y);
+            }
+            if (y > 0) {
+                latLut.add(lat, x, y - 1);
+                lonLut.add(lon, x, y - 1);
+            }
+            if (y < h - 1) {
+                latLut.add(lat, x, y + 1);
+                lonLut.add(lon, x, y + 1);
+            }
+        }
+    }
+
+    private void printMap() {
+        for (int sj = 0; sj < 180; sj++) {
+            for (int si = 0; si < 360; si++) {
+                PixelBoxLut latLut = latSuperLut[sj][si];
+                PixelBoxLut lonLut = lonSuperLut[sj][si];
+                if (latLut != null && lonLut != null) {
+                    System.out.print("3");
+                } else if (latLut != null) {
+                    System.out.print("2");
+                } else if (lonLut != null) {
+                    System.out.print("1");
+                } else {
+                    System.out.print("-");
+                }
+            }
+            System.out.println();
+        }
     }
 
     private int getSuperLutJ(float lat) {

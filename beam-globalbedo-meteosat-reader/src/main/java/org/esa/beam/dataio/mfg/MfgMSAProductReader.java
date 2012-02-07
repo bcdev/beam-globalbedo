@@ -250,11 +250,13 @@ public class MfgMSAProductReader extends AbstractProductReader {
         // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
         // --> special solution for Meteosat, but general solution is still under discussion
-        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
+//        latBand.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
+//        lonBand.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
+//        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
         final Band latBandT = product.getBand("Navigation_Latitude");
-        latBandT.setValidPixelExpression("Navigation_Latitude != -9999 && Navigation_Longitude != -9999");
+        latBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
         final Band lonBandT = product.getBand("Navigation_Longitude");
-        lonBandT.setValidPixelExpression("Navigation_Latitude != -9999 && Navigation_Longitude != -9999");
+        lonBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
         product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
     }
 
