@@ -255,8 +255,8 @@ public class MsgMSAProductReader extends AbstractProductReader {
         latBandT.setValidPixelExpression("LAT != 90 && LON != 90");
         final Band lonBandT = product.getBand("LON");
         lonBandT.setValidPixelExpression("LAT != 90 && LON != 90");
-//        product.setGeoCoding(new PixelGeoCoding(latBandT, lonBandT, null, 5));    // this does not work correctly!
-        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
+//        product.setGeoCoding(new PixelGeoCoding(latBandT, lonBandT, null, 50));    // this does not work correctly!
+        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MSG_Euro"));
     }
 
     private boolean hasSameRasterDimension(Product productOne, Product productTwo) {

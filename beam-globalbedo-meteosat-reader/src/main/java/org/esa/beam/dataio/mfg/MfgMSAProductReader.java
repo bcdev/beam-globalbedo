@@ -213,6 +213,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
     private void attachAncillaryDataToProduct(Product product, Product ancillaryInputProduct) {
         for (final Band sourceBand : ancillaryInputProduct.getBands()) {
             if (sourceBand.getName().startsWith(ANCILLARY_BAND_NAME_PRE_PREFIX) &&
+//                    sourceBand.getName().endsWith("NUMSOL") &&
                     hasSameRasterDimension(product, ancillaryInputProduct)) {
                 String bandName = sourceBand.getName();
                 flipImage(sourceBand);
@@ -257,7 +258,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
         latBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
         final Band lonBandT = product.getBand("Navigation_Longitude");
         lonBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
-        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT));
+        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MFG_0deg"));
     }
 
     private void flipImage(Band sourceBand) {

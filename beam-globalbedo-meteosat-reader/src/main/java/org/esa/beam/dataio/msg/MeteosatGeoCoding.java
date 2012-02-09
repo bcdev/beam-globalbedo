@@ -4,10 +4,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
-import org.esa.beam.util.math.MathUtils;
 
-import java.awt.*;
-import java.awt.image.Raster;
 import java.io.IOException;
 
 /**
@@ -32,8 +29,12 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
     private final PixelBoxLut[][] latSuperLut = new PixelBoxLut[180][360];
     private final PixelBoxLut[][] lonSuperLut = new PixelBoxLut[180][360];
     private boolean initialized;
+    
+    private String areaID;
 
-    public MeteosatGeoCoding(Band latitude, Band longitude) throws IOException {
+    private MeteosatQuadTreeSearch mqts;
+
+    public MeteosatGeoCoding(Band latitude, Band longitude, String areaID) throws IOException {
         this.latBand = latitude;
         this.lonBand = longitude;
         width = latBand.getSceneRasterWidth();
@@ -41,6 +42,10 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
         latData = readDataFully(latBand);
         lonData = readDataFully(lonBand);
+        
+        this.areaID = areaID;
+
+        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, areaID);
     }
 
     private float[] readDataFully(Band band) throws IOException {
@@ -80,12 +85,12 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             pixelPos = new PixelPos();
         }
 
-//        System.out.println("entering getPixelPos: geoPos = " + geoPos);
-
         if (!initialized) {
             initialized = true;
             initialize();
         }
+
+        // todo: discuss if we should still consider the LUT approach
 
         int si = getSuperLutI(geoPos.lon);
         int sj = getSuperLutJ(geoPos.lat);
@@ -134,44 +139,34 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         int bestX = -1;
         int bestY = -1;
 
-        for (int y = y1; y <= y2; y++) {
-            for (int x = x1; x <= x2; x++) {
-                int index = width * y + x;
-                float lat = latData[index];
-                float lon = lonData[index];
-                if (isValid(lat, lon)) {
-                    double dist = MathUtils.sphereDistanceDeg(1.0, lon, lat, geoPos.lon, geoPos.lat) * MathUtils.RTOD;
-                    if (dist < minDist && dist < MIN_DIST) {
-                        minDist = dist;
-                        bestX = x;
-                        bestY = y;
-                    }
-                }
-            }
-        }
+//        for (int y = y1; y <= y2; y++) {
+//            for (int x = x1; x <= x2; x++) {
+//                int index = width * y + x;
+//                float lat = latData[index];
+//                float lon = lonData[index];
+//                if (isValid(lat, lon)) {
+//                    double dist = MathUtils.sphereDistanceDeg(1.0, lon, lat, geoPos.lon, geoPos.lat) * MathUtils.RTOD;
+//                    if (dist < minDist && dist < MIN_DIST) {
+//                        minDist = dist;
+//                        bestX = x;
+//                        bestY = y;
+//                    }
+//                }
+//            }
+//        }
 
         if (bestX != -1 && bestY != -1) {
             pixelPos.setLocation(bestX + 0.5F, bestY + 0.5F);
         } else {
-//            if (geoPos.getLat() > 70.89 && geoPos.getLat() < 70.91 && geoPos.getLon() > -10.13 && geoPos.getLon() < -10.1) {
-//                System.out.println("pixel INVALID for geoPos = " + geoPos);
-//                final Result result = new Result();
-//                boolean pixelFound = quadTreeSearch(0,
-//                                            geoPos.lat, geoPos.lon,
-//                                            x1, y1,
-//                                            w,
-//                                            h,
-//                                            result);
-//            }
-            final Result result = new Result();
-            boolean pixelFound = quadTreeSearch(0,
-                                                geoPos.lat, geoPos.lon,
-                                                x1, y1,
-                                                w,
-                                                h,
-                                                result);
+            final MeteosatQuadTreeSearch.Result result = new MeteosatQuadTreeSearch.Result();
+            boolean pixelFound = mqts.search(0,
+                                             geoPos.lat, geoPos.lon,
+                                             x1, y1,
+                                             w,
+                                             h,
+                                             result);
             if (pixelFound) {
-                pixelPos.setLocation(result.x + 0.5f, result.y + 0.5f);
+                pixelPos.setLocation(result.getX() + 0.5f, result.getY() + 0.5f);
             } else {
                 pixelPos.setInvalid();
             }
@@ -196,45 +191,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
                 final float lat = latData[i];
                 final float lon = lonData[i];
                 fillSuperLut(w, h, y, x, lat, lon);
-
-//                if (x > 0) {
-//                    final float latXminus = latData[w * y + (x - 1)];
-//                    final float lonXminus = lonData[w * y + (x - 1)];
-//                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
-//                        final float intermediateLatLeft = lat - k * (lat - latXminus) / INTERMEDIATE_VALUES;
-//                        final float intermediateLonLeft = lon - k * (lon - lonXminus) / INTERMEDIATE_VALUES;
-//                        fillSuperLut(w, h, y, x, intermediateLatLeft, intermediateLonLeft);
-//                    }
-//                }
-//
-//                if (x < w - 1) {
-//                    final float latXplus = latData[w * y + (x + 1)];
-//                    final float lonXplus = lonData[w * y + (x + 1)];
-//                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
-//                        final float intermediateLatRight = lat + k * (latXplus - lat) / INTERMEDIATE_VALUES;
-//                        final float intermediateLonRight = lon + k * (lonXplus - lon) / INTERMEDIATE_VALUES;
-//                        fillSuperLut(w, h, y, x, intermediateLatRight, intermediateLonRight);
-//                    }
-//                }
-//
-//                if (y > 0) {
-//                    final float latYminus = latData[w * (y - 1) + x];
-//                    final float lonYminus = lonData[w * (y - 1) + x];
-//                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
-//                        final float intermediateLatDown = lat - k * (lat - latYminus) / INTERMEDIATE_VALUES;
-//                        final float intermediateLonDown = lon - k * (lon - lonYminus) / INTERMEDIATE_VALUES;
-//                        fillSuperLut(w, h, y, x, intermediateLatDown, intermediateLonDown);
-//                    }
-//                }
-//                if (y < h - 1) {
-//                    final float latYplus = latData[w * (y + 1) + x];
-//                    final float lonYplus = lonData[w * (y + 1) + x];
-//                    for (int k = 0; k < INTERMEDIATE_VALUES; k++) {
-//                        final float intermediateLatUp = lat + k * (latYplus - lat) / INTERMEDIATE_VALUES;
-//                        final float intermediateLonUp = lon + k * (lonYplus - lon) / INTERMEDIATE_VALUES;
-//                        fillSuperLut(w, h, y, x, intermediateLatUp, intermediateLonUp);
-//                    }
-//                }
             }
         }
         for (int sj = 0; sj < 180; sj++) {
@@ -248,7 +204,7 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             }
         }
 
-        printMap();
+//        printMap();
 
         final long t1 = System.currentTimeMillis();
         System.out.println("initialize:  " + (t1 - t0) + "ms");
@@ -324,151 +280,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         return si;
     }
 
-    private boolean quadTreeSearch(final int depth,
-                                   final float lat,
-                                   final float lon,
-                                   final int x, final int y,
-                                   final int w, final int h,
-                                   final Result result) {
-        if (w < 2 || h < 2) {
-            return false;
-        }
-
-        final int x1 = x;
-        final int x2 = x1 + w - 1;
-
-        final int y1 = y;
-        final int y2 = y1 + h - 1;
-
-        // todo - solve 180° longitude problem here
-        GeoPos geoPos = new GeoPos();
-        getGeoPosInternal(x1, y1, geoPos);
-        final float lat0 = geoPos.lat;
-        final float lon0 = geoPos.lon;
-        getGeoPosInternal(x1, y2, geoPos);
-        final float lat1 = geoPos.lat;
-        final float lon1 = geoPos.lon;
-        getGeoPosInternal(x2, y1, geoPos);
-        final float lat2 = geoPos.lat;
-        final float lon2 = geoPos.lon;
-        getGeoPosInternal(x2, y2, geoPos);
-        final float lat3 = geoPos.lat;
-        final float lon3 = geoPos.lon;
-
-//        final float epsL = 0.04f;
-        final float epsL = (float) (0.04 * (1.0 + 1.0*lat));
-        final float latMin = min(lat0, min(lat1, min(lat2, lat3))) - epsL;
-        final float latMax = max(lat0, max(lat1, max(lat2, lat3))) + epsL;
-        final float lonMin = min(lon0, min(lon1, min(lon2, lon3))) - epsL;
-        final float lonMax = max(lon0, max(lon1, max(lon2, lon3))) + epsL;
-
-        boolean pixelFound = false;
-        final boolean definitelyOutside = lat < latMin || lat > latMax || lon < lonMin || lon > lonMax;
-        if (!definitelyOutside) {
-            if (w == 2 && h == 2) {
-                final float f = (float) Math.cos(lat * MathUtils.DTOR);
-                if (result.update(x1, y1, sqr(lat - lat0, f * (lon - lon0)))) {
-                    pixelFound = true;
-                }
-                if (result.update(x1, y2, sqr(lat - lat1, f * (lon - lon1)))) {
-                    pixelFound = true;
-                }
-                if (result.update(x2, y1, sqr(lat - lat2, f * (lon - lon2)))) {
-                    pixelFound = true;
-                }
-                if (result.update(x2, y2, sqr(lat - lat3, f * (lon - lon3)))) {
-                    pixelFound = true;
-                }
-            } else if (w >= 2 && h >= 2) {
-                pixelFound = quadTreeRecursion(depth, lat, lon, x1, y1, w, h, result);
-            }
-        }
-
-//        for (int i = 0; i < depth; i++) {
-//            System.out.print("  ");
-//        }
-//        System.out.println(
-//                depth + ": (" + x + "," + y + ") (" + w + "," + h + ") " + definitelyOutside + "  " + pixelFound);
-
-        return pixelFound;
-    }
-
-    private void getGeoPosInternal(int pixelX, int pixelY, GeoPos geoPos) {
-        int i = width * pixelY + pixelX;
-        geoPos.setLocation(latData[i], lonData[i]);
-    }
-
-
-    private boolean quadTreeRecursion(final int depth,
-                                      final float lat, final float lon,
-                                      final int i, final int j,
-                                      final int w, final int h,
-                                      final Result result) {
-        int w2 = w >> 1;
-        int h2 = h >> 1;
-        final int i2 = i + w2;
-        final int j2 = j + h2;
-        final int w2r = w - w2;
-        final int h2r = h - h2;
-
-        if (w2 < 2) {
-            w2 = 2;
-        }
-
-        if (h2 < 2) {
-            h2 = 2;
-        }
-
-        final boolean b1 = quadTreeSearch(depth + 1, lat, lon, i, j, w2, h2, result);
-        final boolean b2 = quadTreeSearch(depth + 1, lat, lon, i, j2, w2, h2r, result);
-        final boolean b3 = quadTreeSearch(depth + 1, lat, lon, i2, j, w2r, h2, result);
-        final boolean b4 = quadTreeSearch(depth + 1, lat, lon, i2, j2, w2r, h2r, result);
-
-        return b1 || b2 || b3 || b4;
-    }
-
-
-    private static float min(final float a, final float b) {
-        return (a <= b) ? a : b;
-    }
-
-    private static float max(final float a, final float b) {
-        return (a >= b) ? a : b;
-    }
-
-    private static float sqr(final float dx, final float dy) {
-        return dx * dx + dy * dy;
-    }
-
-
-    private static class Result {
-
-        public static final float INVALID = Float.MAX_VALUE;
-
-        private int x;
-        private int y;
-        private float delta;
-
-        private Result() {
-            delta = INVALID;
-        }
-
-        public final boolean update(final int x, final int y, final float delta) {
-            final boolean b = delta < this.delta;
-            if (b) {
-                this.x = x;
-                this.y = y;
-                this.delta = delta;
-            }
-            return b;
-        }
-
-        @Override
-        public String toString() {
-            return "Result[" + x + ", " + y + ", " + delta + "]";
-        }
-    }
-
 
     private static PixelBoxLut createLut(Band band, float[] data, boolean useWidth) {
         final Stx stx = band.getStx(true, ProgressMonitor.NULL);
@@ -483,10 +294,9 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
                 }
             }
         }
-//        lut.dump();
         lut.complete();
 
-        lut.dump();
+//        lut.dump();
         return lut;
     }
 

@@ -24,7 +24,7 @@ public class MeteosatGeoCodingTest {
         final Band lonBand = product.addBand("lon", "X");
         latBand.loadRasterData();
         lonBand.loadRasterData();
-        final MeteosatGeoCoding gc = new MeteosatGeoCoding(latBand, lonBand);
+        final MeteosatGeoCoding gc = new MeteosatGeoCoding(latBand, lonBand, "");
 
         assertTrue(gc.canGetPixelPos());
         assertTrue(gc.canGetGeoPos());
@@ -149,6 +149,6 @@ public class MeteosatGeoCodingTest {
         latBand.setNoDataValueUsed(true);
         lonBand.setNoDataValue(NaN);
         lonBand.setNoDataValueUsed(true);
-        return new MeteosatGeoCoding(latBand, lonBand);
+        return new MeteosatGeoCoding(latBand, lonBand, "");
     }
 }
