@@ -1,10 +1,13 @@
-package org.esa.beam.dataio.msg;
+package org.esa.beam.dataio;
 
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.util.math.MathUtils;
+import org.esa.beam.framework.datamodel.PixelGeoCoding;
 
 /**
- * Provides modified QuadTree search for Meteosat First and Second Generation Albedo product geocoding
+ * Provides a QuadTree search for Meteosat First and Second Generation Albedo product geocoding.
+ * In principle, the algorithm is the same as used in {@link PixelGeoCoding}. A region ID
+ * allows for specific implementations for regions containing weird areas (e.g. off-planet in Meteosat MSG Euro product).
  *
  * @author olafd
  */
@@ -14,14 +17,14 @@ public class MeteosatQuadTreeSearch {
     private final float[] lonData;
     private final int width;
     private final int height;
-    private String areaID;
+    private String regionID;
 
-    public MeteosatQuadTreeSearch(float[] latData, float[] lonData, int width, int height, String areaID) {
+    public MeteosatQuadTreeSearch(float[] latData, float[] lonData, int width, int height, String regionID) {
         this.latData = latData;
         this.lonData = lonData;
         this.width = width;
         this.height = height;
-        this.areaID = areaID;
+        this.regionID = regionID;
     }
 
     public boolean search(final int depth,
@@ -56,9 +59,12 @@ public class MeteosatQuadTreeSearch {
         final float lon3 = geoPos.lon;
 
         float epsL = 0.04f;
-        if (areaID.equals("MSG_Euro")) {
+        if (regionID.equals("MSG_Euro")) {
             // do this for the Msg Euro product only
             if (increaseEpsForMSGEuro(lat, lon)) {
+                // lat-dependent increase of epsL to avoid gaps in case of (lat,lon)-"boxes" which are extremely distorted
+                // compared to their corresponding (x,y)-rectangles (e.g. close to the poles in Meteosat
+                // MSG Euro product). This has shown to eliminate the projection artifacts due to missing (lat,lon) quite well
                 epsL += 0.04 * 1.0 * Math.abs(lat - 35.0);
             }
         }

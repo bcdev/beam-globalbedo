@@ -2,6 +2,7 @@ package org.esa.beam.dataio.msg;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.VirtualDir;
+import org.esa.beam.dataio.MeteosatGeoCoding;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;

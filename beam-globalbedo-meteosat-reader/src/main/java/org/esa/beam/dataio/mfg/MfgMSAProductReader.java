@@ -2,7 +2,7 @@ package org.esa.beam.dataio.mfg;
 
 import com.bc.ceres.core.ProgressMonitor;
 import com.bc.ceres.core.VirtualDir;
-import org.esa.beam.dataio.msg.MeteosatGeoCoding;
+import org.esa.beam.dataio.MeteosatGeoCoding;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;
@@ -191,6 +191,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
             String msg = String.format("Not able to read file '%s.", file.getName());
             logger.log(Level.WARNING, msg, e);
         }
+        // todo: fill missing lat/lon pixels, use algo described in MFG user handbook, section 5.3.4
         return navigationProduct;
     }
 
@@ -248,16 +249,14 @@ public class MfgMSAProductReader extends AbstractProductReader {
         targetBand.setName(targetBandName);
         targetBand.setSourceImage(lonBand.getSourceImage());
 
-        // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
+        // implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
         // --> special solution for Meteosat, but general solution is still under discussion
-//        latBand.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
-//        lonBand.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
 //        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
         final Band latBandT = product.getBand("Navigation_Latitude");
-        latBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
+        latBandT.setValidPixelExpression("'Navigation_Latitude' != -9999.0");
         final Band lonBandT = product.getBand("Navigation_Longitude");
-        lonBandT.setValidPixelExpression("Quality_Indicators_NUMSOL != 255");
+        lonBandT.setValidPixelExpression("'Navigation_Latitude' != -9999.0");
         product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MFG_0deg"));
     }
 

@@ -1,6 +1,5 @@
-package org.esa.beam.dataio.msg;
+package org.esa.beam.dataio;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
@@ -8,7 +7,14 @@ import org.esa.beam.framework.dataop.maptransf.Datum;
 import java.io.IOException;
 
 /**
- * Special geocoding for Meteosat First and Second Generation Albedo products
+ * Special geocoding for Meteosat First and Second Generation Albedo products, using a modified
+ * quad tree approach, which does not apply on the whole image, but on a much smaller pixel box.
+ * These pixel boxes are initially determined for all 1x1 degree lat/lon areas, going once through
+ * the lat and lon coordinates of the whole image. The resulting pixel box for the 1x1 degree lat/lon area is given by
+ * the xMin, xMax, yMin, yMax of all (x, y) <--> (lat,lon) data pairs found in this 1x1 degree lat/lon area.
+ * These 1x1 degree areas represented by their pixel box are stored in two separate lookup tables for lat and lon.
+ * In method {@link #getPixelPos(GeoPos, PixelPos)}, the combination of latPixelBox and lonPixelBox found for
+ * the input (lat, lon) pair is used as starting rectangle for the quad tree search.
  *
  * @author olafd
  * @author norman
@@ -16,9 +22,6 @@ import java.io.IOException;
 public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     private static final int LUT_SIZE = 10;
-    //    public static final double MIN_DIST = 0.375;
-    public static final double MIN_DIST = 0.025;
-    public static final double INTERMEDIATE_DIST = 0.025;
 
     private final Band latBand;
     private final Band lonBand;
@@ -29,12 +32,12 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
     private final PixelBoxLut[][] latSuperLut = new PixelBoxLut[180][360];
     private final PixelBoxLut[][] lonSuperLut = new PixelBoxLut[180][360];
     private boolean initialized;
-    
-    private String areaID;
+
+    private String regionID;      // identifier for region-specific implementations (e.g. 'MSG_Euro')
 
     private MeteosatQuadTreeSearch mqts;
 
-    public MeteosatGeoCoding(Band latitude, Band longitude, String areaID) throws IOException {
+    public MeteosatGeoCoding(Band latitude, Band longitude, String regionID) throws IOException {
         this.latBand = latitude;
         this.lonBand = longitude;
         width = latBand.getSceneRasterWidth();
@@ -42,10 +45,10 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
         latData = readDataFully(latBand);
         lonData = readDataFully(lonBand);
-        
-        this.areaID = areaID;
 
-        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, areaID);
+        this.regionID = regionID;
+
+        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, regionID);
     }
 
     private float[] readDataFully(Band band) throws IOException {
@@ -90,8 +93,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             initialize();
         }
 
-        // todo: discuss if we should still consider the LUT approach
-
         int si = getSuperLutI(geoPos.lon);
         int sj = getSuperLutJ(geoPos.lat);
         PixelBoxLut latLut = latSuperLut[sj][si];
@@ -107,15 +108,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             pixelPos.setInvalid();
             return pixelPos;
         }
-        // System.out.println("geoPos = " + geoPos);
-        // System.out.println("latPixelBox = " + latPixelBox + ", index = " + latLut.getIndex(geoPos.lat));
-        // System.out.println("lonPixelBox = " + lonPixelBox + ", index = " + lonLut.getIndex(geoPos.lon));
-
-//        // intersection of latPixelBox and lonPixelBox
-//        int x1 = Math.max(latPixelBox.minX, lonPixelBox.minX);
-//        int y1 = Math.max(latPixelBox.minY, lonPixelBox.minY);
-//        int x2 = Math.min(latPixelBox.maxX, lonPixelBox.maxX);
-//        int y2 = Math.min(latPixelBox.maxY, lonPixelBox.maxY);
 
         // combination of latPixelBox and lonPixelBox
         int x1 = Math.min(latPixelBox.minX, lonPixelBox.minX);
@@ -135,41 +127,12 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             return pixelPos;
         }
 
-        double minDist = Double.MAX_VALUE;
-        int bestX = -1;
-        int bestY = -1;
-
-//        for (int y = y1; y <= y2; y++) {
-//            for (int x = x1; x <= x2; x++) {
-//                int index = width * y + x;
-//                float lat = latData[index];
-//                float lon = lonData[index];
-//                if (isValid(lat, lon)) {
-//                    double dist = MathUtils.sphereDistanceDeg(1.0, lon, lat, geoPos.lon, geoPos.lat) * MathUtils.RTOD;
-//                    if (dist < minDist && dist < MIN_DIST) {
-//                        minDist = dist;
-//                        bestX = x;
-//                        bestY = y;
-//                    }
-//                }
-//            }
-//        }
-
-        if (bestX != -1 && bestY != -1) {
-            pixelPos.setLocation(bestX + 0.5F, bestY + 0.5F);
+        final MeteosatQuadTreeSearch.Result result = new MeteosatQuadTreeSearch.Result();
+        boolean pixelFound = mqts.search(0, geoPos.lat, geoPos.lon, x1, y1, w, h, result);
+        if (pixelFound) {
+            pixelPos.setLocation(result.getX() + 0.5f, result.getY() + 0.5f);
         } else {
-            final MeteosatQuadTreeSearch.Result result = new MeteosatQuadTreeSearch.Result();
-            boolean pixelFound = mqts.search(0,
-                                             geoPos.lat, geoPos.lon,
-                                             x1, y1,
-                                             w,
-                                             h,
-                                             result);
-            if (pixelFound) {
-                pixelPos.setLocation(result.getX() + 0.5f, result.getY() + 0.5f);
-            } else {
-                pixelPos.setInvalid();
-            }
+            pixelPos.setInvalid();
         }
 
         return pixelPos;
@@ -180,9 +143,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
     }
 
     private void initialize() {
-
-        final long t0 = System.currentTimeMillis();
-
         final int w = width;
         final int h = height;
         for (int y = 0; y < h; y++) {
@@ -203,11 +163,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
                 }
             }
         }
-
-//        printMap();
-
-        final long t1 = System.currentTimeMillis();
-        System.out.println("initialize:  " + (t1 - t0) + "ms");
     }
 
     private void fillSuperLut(int w, int h, int y, int x, float lat, float lon) {
@@ -245,25 +200,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
     }
 
-    private void printMap() {
-        for (int sj = 0; sj < 180; sj++) {
-            for (int si = 0; si < 360; si++) {
-                PixelBoxLut latLut = latSuperLut[sj][si];
-                PixelBoxLut lonLut = lonSuperLut[sj][si];
-                if (latLut != null && lonLut != null) {
-                    System.out.print("3");
-                } else if (latLut != null) {
-                    System.out.print("2");
-                } else if (lonLut != null) {
-                    System.out.print("1");
-                } else {
-                    System.out.print("-");
-                }
-            }
-            System.out.println();
-        }
-    }
-
     private int getSuperLutJ(float lat) {
         int sj = (int) (90 - lat);
         if (sj == 180) {
@@ -278,26 +214,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             si = 0;
         }
         return si;
-    }
-
-
-    private static PixelBoxLut createLut(Band band, float[] data, boolean useWidth) {
-        final Stx stx = band.getStx(true, ProgressMonitor.NULL);
-        final int w = band.getSceneRasterWidth();
-        final int h = band.getSceneRasterHeight();
-        PixelBoxLut lut = new PixelBoxLut(band.scale(stx.getMin()), band.scale(stx.getMax()), useWidth ? w : h);
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                float coord = data[(w * y + x)];
-                if (!Float.isNaN(coord)) {
-                    lut.add(coord, x, y);
-                }
-            }
-        }
-        lut.complete();
-
-//        lut.dump();
-        return lut;
     }
 
     static class PixelBoxLut {
