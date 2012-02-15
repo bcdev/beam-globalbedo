@@ -101,7 +101,9 @@ public class MeteosatQuadTreeSearch {
 
     private boolean increaseEpsForMSGEuro(float lat, float lon) {
         // increase eps threshold towards the pole to make sure that geo positions are not lost in gaps
+        // found from visual inspection of reprojected lat and lon products:
         final boolean isInAreaToIncrease = lon + lat > 43 && lat > 39;
+        // there were some remaining gaps over greenland...
         final boolean greenlandBox1 = lon > -31.775 && lon < -29.775 && lat > 71.8 && lat < 73.37;
         final boolean greenlandBox2 = lon > -29.175 && lon < -27.675 && lat > 70.45 && lat < 70.825;
         return greenlandBox1 || greenlandBox2 || isInAreaToIncrease;

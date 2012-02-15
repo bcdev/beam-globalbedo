@@ -51,21 +51,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, regionID);
     }
 
-    private float[] readDataFully(Band band) throws IOException {
-        final int w = width;
-        final int h = height;
-        final float[] data = new float[w * h];
-        band.readPixels(0, 0, w, h, data);
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                if (!band.isPixelValid(x, y)) {
-                    data[y * w + x] = Float.NaN;
-                }
-            }
-        }
-        return data;
-    }
-
     @Override
     public GeoPos getGeoPos(PixelPos pixelPos, GeoPos geoPos) {
         if (geoPos == null) {
@@ -138,9 +123,36 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         return pixelPos;
     }
 
-    private boolean isValid(float lat, float lon) {
-        return !Float.isNaN(lat) && !Float.isNaN(lon);
+    @Override
+    public boolean transferGeoCoding(Scene srcScene, Scene destScene, ProductSubsetDef subsetDef) {
+        // todo: implement
+        return false;
     }
+
+    @Override
+    public boolean isCrossingMeridianAt180() {
+        return false;
+    }
+
+    @Override
+    public boolean canGetPixelPos() {
+        return true;
+    }
+
+    @Override
+    public boolean canGetGeoPos() {
+        return true;
+    }
+
+    @Override
+    public Datum getDatum() {
+        return Datum.WGS_84;
+    }
+
+    @Override
+    public void dispose() {
+    }
+
 
     private void initialize() {
         final int w = width;
@@ -164,6 +176,22 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             }
         }
     }
+
+    private float[] readDataFully(Band band) throws IOException {
+        final int w = width;
+        final int h = height;
+        final float[] data = new float[w * h];
+        band.readPixels(0, 0, w, h, data);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if (!band.isPixelValid(x, y)) {
+                    data[y * w + x] = Float.NaN;
+                }
+            }
+        }
+        return data;
+    }
+
 
     private void fillSuperLut(int w, int h, int y, int x, float lat, float lon) {
         if (isValid(lat, lon)) {
@@ -215,6 +243,11 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
         return si;
     }
+
+    private boolean isValid(float lat, float lon) {
+        return !Float.isNaN(lat) && !Float.isNaN(lon);
+    }
+
 
     static class PixelBoxLut {
         double min;
@@ -379,33 +412,4 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
     }
 
-    @Override
-    public boolean transferGeoCoding(Scene srcScene, Scene destScene, ProductSubsetDef subsetDef) {
-        // todo: implement
-        return false;
-    }
-
-    @Override
-    public boolean isCrossingMeridianAt180() {
-        return false;
-    }
-
-    @Override
-    public boolean canGetPixelPos() {
-        return true;
-    }
-
-    @Override
-    public boolean canGetGeoPos() {
-        return true;
-    }
-
-    @Override
-    public Datum getDatum() {
-        return Datum.WGS_84;
-    }
-
-    @Override
-    public void dispose() {
-    }
 }
