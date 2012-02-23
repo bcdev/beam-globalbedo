@@ -69,29 +69,29 @@ public class MfgMSAProductReader extends AbstractProductReader {
                 }
             } else {
                 throw new IllegalStateException("Content of Meteosat Surface Albedo product '" + getInputFile().getName() +
-                        "' incomplete or corrupt.");
+                                                        "' incomplete or corrupt.");
             }
         } catch (IOException e) {
             throw new IllegalStateException("Meteosat Surface Albedo product '" + getInputFile().getName() +
-                    "' cannot be read.");
+                                                    "' cannot be read.");
         }
 
         Product product = new Product(getInputFile().getName(),
-                albedoInputProduct.getProductType(),
-                albedoInputProduct.getSceneRasterWidth(),
-                albedoInputProduct.getSceneRasterHeight(),
-                this);
+                                      albedoInputProduct.getProductType(),
+                                      albedoInputProduct.getSceneRasterWidth(),
+                                      albedoInputProduct.getSceneRasterHeight(),
+                                      this);
 
         product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
         product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
         ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Global_Attributes"),
-                product.getMetadataRoot().getElement("Global_Attributes"));
+                                  product.getMetadataRoot().getElement("Global_Attributes"));
         ProductUtils.copyMetadata(albedoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(ancillaryInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(staticInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
 
         attachAlbedoDataToProduct(product, albedoInputProduct);
         attachAncillaryDataToProduct(product, ancillaryInputProduct);
@@ -104,7 +104,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
     static boolean mfgStaticInputFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Static_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{1}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
-                    "' does not match naming convention: 'MSA_Static_L2.0_Vm.nn_sss_m.HDF'");
+                                                       "' does not match naming convention: 'MSA_Static_L2.0_Vm.nn_sss_m.HDF'");
         }
         return true;
     }
@@ -112,7 +112,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
     static boolean mfgAncillaryFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Ancillary_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
-                    "' does not match naming convention: 'MSA_Ancillary_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
+                                                       "' does not match naming convention: 'MSA_Ancillary_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
         }
         return true;
     }
@@ -120,7 +120,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
     static boolean mfgAlbedoFileNameMatches(String fileName) {
         if (!(fileName.matches("MSA_Albedo_L2.0_V[0-9].[0-9]{2}_[0-9]{3}_[0-9]{4}_[0-9]{3}_[0-9]{3}.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input file name '" + fileName +
-                    "' does not match naming convention: 'MSA_Albedo_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
+                                                       "' does not match naming convention: 'MSA_Albedo_L2.0_Vm.nn_sss_yyyy_fff_lll.HDF'");
         }
         return true;
     }
@@ -132,27 +132,29 @@ public class MfgMSAProductReader extends AbstractProductReader {
         String staticInputFileName = "MSA_Static_" + albedoInputProductName.substring(11, 25);
         String staticInputFileNameWithExt = staticInputFileName + staticFileExt;
         File staticInputFile = new File(inputParentDirectory + File.separator + staticInputFileNameWithExt);
+
         if (staticInputFile.exists()) {
             staticInputProduct = createStaticInputProduct(staticInputFile);
         } else {
-            staticInputFile = new File(staticInputFileName + staticFileExt.toUpperCase());
+            staticInputFile = new File(inputParentDirectory + File.separator + staticInputFileName + staticFileExt.toUpperCase());
             if (staticInputFile.exists()) {
                 staticInputProduct = createStaticInputProduct(staticInputFile);
             } else {
                 throw new IllegalStateException("Static data file '" + staticInputFileName +
-                        "' missing - cannot open Meteosat Surface Albedo product,");
+                                                        "' missing - cannot open Meteosat Surface Albedo product,");
             }
         }
+
         return staticInputProduct;
     }
-    
+
     private Product createAlbedoInputProduct(File inputFile) {
         Product albedoProduct = null;
         try {
             albedoProduct = ProductIO.readProduct(inputFile);
             if (albedoProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        inputFile.getName());
+                                           inputFile.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -168,7 +170,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
             qualityProduct = ProductIO.readProduct(file);
             if (qualityProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        file.getName());
+                                           file.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -184,7 +186,7 @@ public class MfgMSAProductReader extends AbstractProductReader {
             navigationProduct = ProductIO.readProduct(file);
             if (navigationProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        file.getName());
+                                           file.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
