@@ -5,9 +5,6 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import java.awt.Rectangle;
-import java.util.HashMap;
-import java.util.Map;
 import org.esa.beam.aatsrrecalibration.operators.RecalibrateAATSRReflectancesOp;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Mask;
@@ -26,6 +23,10 @@ import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
+
+import java.awt.Rectangle;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Create Aatsr input product for Globalbedo aerosol retrieval and BBDR processor
@@ -109,8 +110,7 @@ public class AatsrPrepOp extends Operator {
             }
             pixelClassParam.put("gaUseAatsrFwardForClouds", true);
             idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
-            Band tarBand = ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct);
-            tarBand.setSampleCoding(targetProduct.getFlagCodingGroup().get(instrC.getIdepixFlagBandName()));
+            ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct);
         }
 
         // create elevation product if band is missing in szaSubProduct
@@ -143,13 +143,10 @@ public class AatsrPrepOp extends Operator {
                 tarBand.setSourceImage(srcBand.getSourceImage());
             }
             else if (srcName.startsWith("reflec")){
-                tarBand = ProductUtils.copyBand(srcName, recalProduct, targetProduct);
-                Band recalBand = recalProduct.getBand(srcName);
-                tarBand.setSourceImage(recalBand.getSourceImage());
+                ProductUtils.copyBand(srcName, recalProduct, targetProduct);
             }
             else {
-                tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
-                tarBand.setSourceImage(srcBand.getSourceImage());
+                ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
 
             }
         }
@@ -174,8 +171,7 @@ public class AatsrPrepOp extends Operator {
             Guardian.assertNotNull("elevProduct", elevProduct);
             Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
             Guardian.assertNotNull("elevation band", srcBand);
-            tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
-            tarBand.setSourceImage(srcBand.getSourceImage());
+            ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
         }
 
         // add vitrual surface pressure band if needed

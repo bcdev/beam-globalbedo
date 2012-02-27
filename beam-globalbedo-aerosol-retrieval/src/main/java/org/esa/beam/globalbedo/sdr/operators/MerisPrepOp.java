@@ -21,11 +21,6 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.util.HashMap;
-import java.util.Map;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
@@ -49,6 +44,12 @@ import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
+
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Create Meris input product for Globalbedo aerosol retrieval and BBDR processor
@@ -215,11 +216,8 @@ public class MerisPrepOp extends Operator {
                 String tarName = "reflectance_" + srcName.split("_")[1];
                 tarBand = ProductUtils.copyBand(reflName, reflProduct, targetProduct);
                 tarBand.setName(tarName);
-                Band reflBand = reflProduct.getBand(reflName);
-                tarBand.setSourceImage(reflBand.getSourceImage());
             } else if (!targetProduct.containsBand(srcName)) {
                 tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
-                tarBand.setSourceImage(srcBand.getSourceImage());
             }
         }
 
@@ -238,11 +236,8 @@ public class MerisPrepOp extends Operator {
                 Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
                 Guardian.assertNotNull("elevation band", srcBand);
                 tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
-                tarBand.setSourceImage(srcBand.getSourceImage());
             } else if (sourceProduct.containsBand(ALTITUDE_BAND_NAME)) {
-                Band altitude = ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct);
-                altitude.setSourceImage(szaSubProduct.getBand(ALTITUDE_BAND_NAME).getSourceImage());
-
+                ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct);
             }
         }
 

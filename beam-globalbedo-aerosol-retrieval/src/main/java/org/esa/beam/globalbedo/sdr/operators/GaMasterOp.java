@@ -196,40 +196,37 @@ public class GaMasterOp  extends Operator {
         //copyFlagBandsWithMask(reflProduct, tarP);
         //copyFlagBandsWithMask(aotHiresProduct, tarP);
         Band tarBand;
-        String bname;
+        String sourceBandName;
         if (copyToaRadBands){
-            for (Band b : reflProduct.getBands()){
-                bname = b.getName();
-                if (b.getSpectralWavelength() > 0){
-                    tarBand = ProductUtils.copyBand(bname, reflProduct, tarP);
-                    tarBand.setSourceImage(b.getSourceImage());
+            for (Band sourceBand : reflProduct.getBands()){
+                sourceBandName = sourceBand.getName();
+                if (sourceBand.getSpectralWavelength() > 0){
+                    ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
                 }
             }
         }
-        for (Band b : reflProduct.getBands()){
-            bname = b.getName();
-            if (b.isFlagBand()){
-                tarBand = tarP.getBand(bname);
-                tarBand.setSourceImage(b.getSourceImage());
+        for (Band sourceBand : reflProduct.getBands()){
+            sourceBandName = sourceBand.getName();
+            if (sourceBand.isFlagBand()){
+                tarBand = tarP.getBand(sourceBandName);
+                tarBand.setSourceImage(sourceBand.getSourceImage());
             }
-            boolean copyBand = (copyToaReflBands && !tarP.containsBand(bname) && b.getSpectralWavelength() > 0);
-            copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(b));
-            copyBand = copyBand || (bname.equals("elevation"));
-            copyBand = copyBand || (bname.equals("p1_lise") && pressureOutputP1Lise);
+            boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
+            copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
+            copyBand = copyBand || (sourceBandName.equals("elevation"));
+            copyBand = copyBand || (sourceBandName.equals("p1_lise") && pressureOutputP1Lise);
 
             if (copyBand){
-                tarBand = ProductUtils.copyBand(bname, reflProduct, tarP);
-                tarBand.setSourceImage(b.getSourceImage());
+                ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
             }
         }
-        for (Band b : aotHiresProduct.getBands()){
-            bname = b.getName();
-            if (b.isFlagBand()){
-                tarBand = tarP.getBand(bname);
-                tarBand.setSourceImage(b.getSourceImage());
-            } else if (!tarP.containsBand(bname)) {
-                tarBand = ProductUtils.copyBand(bname, aotHiresProduct, tarP);
-                tarBand.setSourceImage(b.getSourceImage());
+        for (Band sourceBand : aotHiresProduct.getBands()){
+            sourceBandName = sourceBand.getName();
+            if (sourceBand.isFlagBand()){
+                tarBand = tarP.getBand(sourceBandName);
+                tarBand.setSourceImage(sourceBand.getSourceImage());
+            } else if (!tarP.containsBand(sourceBandName)) {
+                ProductUtils.copyBand(sourceBandName, aotHiresProduct, tarP);
             }
         }
         return tarP;
