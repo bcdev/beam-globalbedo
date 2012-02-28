@@ -1,15 +1,18 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.AlbedoInput;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.*;
 import java.nio.ByteBuffer;
@@ -115,14 +118,34 @@ public class IOUtils {
     }
 
     public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
-                                                     Product bbdrProduct) throws IOException {
-        Product geoCodingReferenceProduct = bbdrProduct;
-        ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
-        // seems that we just need to copy the geooding, not to reproject...
-//        double easting = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0];
-//        double northing = AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1];
-//        Product reprojectedProduct = AlbedoInversionUtils.reprojectToSinusoidal(priorProduct, easting,
-//                northing);
+                                                     Product tileInfoProduct) throws IOException {
+        Product geoCodingReferenceProduct = tileInfoProduct;
+        if (geoCodingReferenceProduct != null) {
+            // we just need to copy the geooding, not to reproject...
+            ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
+        } else {
+            // create geocoding manually in case we do not have a 'tileInfo'...
+            ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+            int tileIndex = modisTileCoordinates.findTileIndex(tile);
+            if (tileIndex == -1) {
+                throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
+            }
+            final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
+            final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
+            final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+            final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+            final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+            final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
+            final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
+            try {
+                final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+                CrsGeoCoding geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+                priorProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
+            }
+        }
+
         Product reprojectedProduct = priorProduct;
 
         return reprojectedProduct;
@@ -203,9 +226,9 @@ public class IOUtils {
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                tile,
-                wings,
-                computeSnow);
+                                                                                   tile,
+                                                                                   wings,
+                                                                                   computeSnow);
 
         if (albedoInputProductList.size() > 0) {
             String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
@@ -246,9 +269,9 @@ public class IOUtils {
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                        true, doy, year, tile,
-                        wings,
-                        computeSnow);
+                                                                                                     true, doy, year, tile,
+                                                                                                     wings,
+                                                                                                     computeSnow);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -517,6 +540,7 @@ public class IOUtils {
         } catch (FileNotFoundException e) {
             BeamLogManager.getSystemLogger().log(Level.ALL, "No full accumulator file found for year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " - will use data from MODIS priors...");
+            return null;
         }
         FileChannel ch = f.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(size);
@@ -721,7 +745,7 @@ public class IOUtils {
     }
 
 
-    public static String getTileInfoFilePath(String dailyAccumulatorDir, String defaultTileInfoFilename) {
+    public static Product getTileInfoProduct(String dailyAccumulatorDir, String defaultTileInfoFilename) throws IOException {
         String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
 //        System.out.println("tileInfoFilePath = " + tileInfoFilePath);
         File tileInfoFile = new File(tileInfoFilePath);
@@ -736,10 +760,13 @@ public class IOUtils {
                 index++;
             }
             if (!exists) {
-                throw new OperatorException("No info file found for given tile - cannot proceed.");
+                return null;
+//                throw new OperatorException("No info file found for given tile - cannot proceed.");
             }
         }
-        return tileInfoFilePath;
+//        return tileInfoFilePath;
+        Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
+        return tileInfoProduct;
     }
 
 
@@ -791,7 +818,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }

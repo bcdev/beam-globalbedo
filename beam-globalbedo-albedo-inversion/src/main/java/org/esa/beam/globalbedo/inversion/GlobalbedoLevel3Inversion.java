@@ -1,6 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -90,8 +89,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             // STEP 3: we need to reproject the priors for further use...
             Product reprojectedPriorProduct = null;
             try {
-                String tileInfoFilePath = IOUtils.getTileInfoFilePath(fullAccumulatorDir, tileInfoFilename);
-                Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
+                Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
                 if (priorProduct != null) {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
                             tileInfoProduct);

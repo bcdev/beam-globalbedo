@@ -80,16 +80,18 @@ public class MfgMSAProductReaderPlugIn implements ProductReaderPlugIn {
                 || extension.contains("bz2");
     }
 
-
-
     private boolean isInputValid(Object input) {
         File inputFile = new File(input.toString());
-        return isInputBz2FileNameValid(inputFile.getName());
+        return isInputBz2FileNameValid(inputFile.getName()) || isInputTarFileNameValid(inputFile.getName());
     }
 
     private boolean isInputBz2FileNameValid(String fileName) {
-        return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar.(?i)(bz2)") ||
-                fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar"));
+        return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar.(?i)(bz2)"));
+    }
+
+    private boolean isInputTarFileNameValid(String fileName) {
+        return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar") ||
+                (fileName.startsWith("MSA_L2.0_V") && fileName.endsWith(".tar"))); // for MSSL 're-packed' tar files  :-(
     }
 
     @Override

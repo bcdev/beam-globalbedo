@@ -25,10 +25,10 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-        description = "Performs final inversion from fully accumulated optimal estimation matrices",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+                  description = "Performs final inversion from fully accumulated optimal estimation matrices",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
 
@@ -110,10 +110,7 @@ public class InversionOp extends PixelOperator {
         productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
         productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-//        productConfigurer.copyBands(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-
-//        productConfigurer.getTargetProduct().setPreferredTileSize(100, 100);
     }
 
     @Override
@@ -121,7 +118,7 @@ public class InversionOp extends PixelOperator {
 
         fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
                 (year, doy, fullAccumulatorFilePath,
-                        IOUtils.getDailyAccumulatorBandNames().length + 1);
+                 IOUtils.getDailyAccumulatorBandNames().length + 1);
 
         // prior product:
         // we have:
@@ -173,14 +170,12 @@ public class InversionOp extends PixelOperator {
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 
-//        final Accumulator accumulator = Accumulator.createForInversion(sourceSamples);
-//        final FullAccumulator accumulator = fullAccumulator;
-        final Accumulator accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
-
-        final Matrix mAcc = accumulator.getM();
-        Matrix vAcc = accumulator.getV();
-        final Matrix eAcc = accumulator.getE();
-        double maskAcc = accumulator.getMask();
+        double maskAcc = 0.0;
+        Accumulator accumulator = null;
+        if (fullAccumulator != null) {
+            accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
+            maskAcc = accumulator.getMask();
+        }
 
         double maskPrior = 1.0;
         Prior prior = null;
@@ -189,7 +184,12 @@ public class InversionOp extends PixelOperator {
             maskPrior = prior.getMask();
         }
 
+        double goodnessOfFit = 0.0;
+        float daysToTheClosestSample = 0.0f;
         if (maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
+            final Matrix mAcc = accumulator.getM();
+            Matrix vAcc = accumulator.getV();
+            final Matrix eAcc = accumulator.getE();
 
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
@@ -205,17 +205,17 @@ public class InversionOp extends PixelOperator {
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
                         tmpM)) {
                     tmpM = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
-                            3 * NUM_ALBEDO_PARAMETERS,
-                            INVALID);
+                                      3 * NUM_ALBEDO_PARAMETERS,
+                                      INVALID);
                 }
                 uncertainties = tmpM;
             } else {
                 parameters = new Matrix(NUM_BBDR_WAVE_BANDS *
-                        NUM_ALBEDO_PARAMETERS, 1,
-                        INVALID);
+                                                NUM_ALBEDO_PARAMETERS, 1,
+                                        INVALID);
                 uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
-                        3 * NUM_ALBEDO_PARAMETERS,
-                        INVALID);
+                                           3 * NUM_ALBEDO_PARAMETERS,
+                                           INVALID);
                 maskAcc = 0.0;
             }
 
@@ -230,6 +230,11 @@ public class InversionOp extends PixelOperator {
                     relEntropy = INVALID;
                 }
             }
+            // 'Goodness of Fit'...
+            goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+
+            // finally we need the 'Days to the closest sample'...
+            daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
         } else {
             if (maskPrior > 0.0) {
                 if (usePrior) {
@@ -255,16 +260,10 @@ public class InversionOp extends PixelOperator {
             }
         }
 
-        // 'Goodness of Fit'...
-        final double goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
-
-        // finally we need the 'Days to the closest sample'...
-        final float daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
-
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
-                parameters, uncertainties, entropy, relEntropy,
-                maskAcc, goodnessOfFit, daysToTheClosestSample);
+                          parameters, uncertainties, entropy, relEntropy,
+                          maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {

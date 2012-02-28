@@ -32,6 +32,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
+import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.ImageUtils;
