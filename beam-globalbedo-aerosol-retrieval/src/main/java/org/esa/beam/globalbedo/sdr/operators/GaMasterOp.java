@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -191,8 +191,8 @@ public class GaMasterOp  extends Operator {
         ProductUtils.copyMetadata(aotHiresProduct, tarP);
         ProductUtils.copyTiePointGrids(reflProduct, tarP);
         ProductUtils.copyGeoCoding(reflProduct, tarP);
-        ProductUtils.copyFlagBands(reflProduct, tarP);
-        ProductUtils.copyFlagBands(aotHiresProduct, tarP);
+        ProductUtils.copyFlagBands(reflProduct, tarP, true);
+        ProductUtils.copyFlagBands(aotHiresProduct, tarP, true);
         //copyFlagBandsWithMask(reflProduct, tarP);
         //copyFlagBandsWithMask(aotHiresProduct, tarP);
         Band tarBand;
@@ -201,32 +201,26 @@ public class GaMasterOp  extends Operator {
             for (Band sourceBand : reflProduct.getBands()){
                 sourceBandName = sourceBand.getName();
                 if (sourceBand.getSpectralWavelength() > 0){
-                    ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
+                    ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
                 }
             }
         }
         for (Band sourceBand : reflProduct.getBands()){
             sourceBandName = sourceBand.getName();
-            if (sourceBand.isFlagBand()){
-                tarBand = tarP.getBand(sourceBandName);
-                tarBand.setSourceImage(sourceBand.getSourceImage());
-            }
+
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
             copyBand = copyBand || (sourceBandName.equals("p1_lise") && pressureOutputP1Lise);
 
             if (copyBand){
-                ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
+                ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
             }
         }
         for (Band sourceBand : aotHiresProduct.getBands()){
             sourceBandName = sourceBand.getName();
-            if (sourceBand.isFlagBand()){
-                tarBand = tarP.getBand(sourceBandName);
-                tarBand.setSourceImage(sourceBand.getSourceImage());
-            } else if (!tarP.containsBand(sourceBandName)) {
-                ProductUtils.copyBand(sourceBandName, aotHiresProduct, tarP);
+            if (!sourceBand.isFlagBand() && !tarP.containsBand(sourceBandName)) {
+                ProductUtils.copyBand(sourceBandName, aotHiresProduct, tarP, true);
             }
         }
         return tarP;

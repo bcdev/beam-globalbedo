@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.beam.globalbedo.inversion;
 
 import org.esa.beam.framework.datamodel.Band;
@@ -138,11 +154,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     private Product copyFromSingleProduct(Product sourceProduct, float propNSampleConstantValue) {
         final int width = sourceProduct.getSceneRasterWidth();
         final int height = sourceProduct.getSceneRasterHeight();
-        Product targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(),
-                width, height);
+        Product targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), width, height);
         for (Band band : sourceProduct.getBands()) {
-            Band targetBand = ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct);
-            targetBand.setSourceImage(sourceProduct.getBand(band.getName()).getGeophysicalImage());
+            ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct, true);
         }
         // we need to fill the 'Proportion_NSamples' band: 1.0 if only snow, 0.0 if only no snow
         Band propNSamplesBand = targetProduct.addBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32);

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.beam.dataio.mfg;
 
 import com.bc.ceres.core.ProgressMonitor;
@@ -202,13 +218,12 @@ public class MfgMSAProductReader extends AbstractProductReader {
             if (sourceBand.getName().startsWith(ALBEDO_BAND_NAME_PREFIX) &&
                     hasSameRasterDimension(product, albedoInputProduct)) {
                 String bandName = sourceBand.getName();
-                flipImage(sourceBand);
-                Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, product);
+                RenderedOp flippedImage = flipImage(sourceBand);
                 String targetBandName = ALBEDO_BAND_NAME_PREFIX + "_" +
                         bandName.substring(bandName.indexOf("/") + 1, bandName.length());
                 targetBandName = targetBandName.replace(" ", "_");
-                targetBand.setName(targetBandName);
-                targetBand.setSourceImage(sourceBand.getSourceImage());
+                Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, targetBandName, product, false);
+                targetBand.setSourceImage(flippedImage);
             }
         }
     }
@@ -219,13 +234,12 @@ public class MfgMSAProductReader extends AbstractProductReader {
 //                    sourceBand.getName().endsWith("NUMSOL") &&
                     hasSameRasterDimension(product, ancillaryInputProduct)) {
                 String bandName = sourceBand.getName();
-                flipImage(sourceBand);
-                Band targetBand = ProductUtils.copyBand(bandName, ancillaryInputProduct, product);
+                RenderedOp flippedImage = flipImage(sourceBand);
                 String targetBandName = ANCILLARY_BAND_NAME_PREFIX + "_" +
                         bandName.substring(bandName.indexOf("/") + 1, bandName.length());
-                targetBandName.replace(" ", "_");
-                targetBand.setName(targetBandName);
-                targetBand.setSourceImage(sourceBand.getSourceImage());
+                targetBandName = targetBandName.replace(" ", "_");
+                Band targetBand = ProductUtils.copyBand(bandName, ancillaryInputProduct, targetBandName, product, false);
+                targetBand.setSourceImage(flippedImage);
             }
         }
     }
@@ -234,22 +248,20 @@ public class MfgMSAProductReader extends AbstractProductReader {
         final Band latBand = staticInputProduct.getBand("Navigation/Latitude");
         final Band lonBand = staticInputProduct.getBand("Navigation/Longitude");
         lonBand.setScalingFactor(1.0);   // current static data file contains a weird scaling factor for longitude band
-        flipImage(latBand);
-        flipImage(lonBand);
+        RenderedOp flippedLatImage = flipImage(latBand);
+        RenderedOp flippedLonImage = flipImage(lonBand);
 
         String bandName = latBand.getName();
-        Band targetBand = ProductUtils.copyBand(bandName, staticInputProduct, product);
         String targetBandName = STATIC_BAND_NAME_PREFIX + "_" +
                 bandName.substring(bandName.indexOf("/") + 1, bandName.length());
-        targetBand.setName(targetBandName);
-        targetBand.setSourceImage(latBand.getSourceImage());
+        Band targetBand = ProductUtils.copyBand(bandName, staticInputProduct, targetBandName, product, false);
+        targetBand.setSourceImage(flippedLatImage);
 
         bandName = lonBand.getName();
-        targetBand = ProductUtils.copyBand(lonBand.getName(), staticInputProduct, product);
         targetBandName = STATIC_BAND_NAME_PREFIX + "_" +
                 bandName.substring(bandName.indexOf("/") + 1, bandName.length());
-        targetBand.setName(targetBandName);
-        targetBand.setSourceImage(lonBand.getSourceImage());
+        targetBand = ProductUtils.copyBand(lonBand.getName(), staticInputProduct, targetBandName, product, false);
+        targetBand.setSourceImage(flippedLonImage);
 
         // implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
@@ -262,10 +274,9 @@ public class MfgMSAProductReader extends AbstractProductReader {
         product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MFG_0deg"));
     }
 
-    private void flipImage(Band sourceBand) {
+    private RenderedOp flipImage(Band sourceBand) {
         final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceBand.getSourceImage(), TransposeDescriptor.FLIP_VERTICAL, null);
-        final RenderedOp horizontalFlippedImage = TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
-        sourceBand.setSourceImage(horizontalFlippedImage);
+        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
 
     private boolean hasSameRasterDimension(Product productOne, Product productTwo) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -23,7 +23,6 @@ package org.esa.beam.globalbedo.sdr.operators;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeGroup;
@@ -117,7 +116,9 @@ public class MerisPrepOp extends Operator {
         Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, szaSubProduct);
 
         // subset might have set ptype to null, thus:
-        if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("MERIS Radiance product");
+        if (szaSubProduct.getDescription() == null) {
+            szaSubProduct.setDescription("MERIS Radiance product");
+        }
 
         // setup target product primarily as copy of sourceProduct
         final int rasterWidth = szaSubProduct.getSceneRasterWidth();
@@ -129,13 +130,8 @@ public class MerisPrepOp extends Operator {
         targetProduct.setEndTime(szaSubProduct.getEndTime());
         targetProduct.setPointingFactory(szaSubProduct.getPointingFactory());
         ProductUtils.copyTiePointGrids(szaSubProduct, targetProduct);
-        ProductUtils.copyFlagBands(szaSubProduct, targetProduct);
+        ProductUtils.copyFlagBands(szaSubProduct, targetProduct, true);
         ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
-        Mask mask;
-        for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
-            mask = szaSubProduct.getMaskGroup().get(i);
-            targetProduct.getMaskGroup().add(mask);
-        }
 
         // create pixel calssification if missing in sourceProduct
         // and add flag band to targetProduct
@@ -152,11 +148,7 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("pressureOutputP1Lise", pressureOutputP1Lise);
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyFlagBands(idepixProduct, targetProduct);
-            for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
-                mask = szaSubProduct.getMaskGroup().get(i);
-                targetProduct.getMaskGroup().add(mask);
-            }
+            ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
                 for (String rayleighBandName : gaOutputRayleigh) {
                     Band band = idepixProduct.getBand(rayleighBandName);
@@ -205,29 +197,17 @@ public class MerisPrepOp extends Operator {
 
         // copy all non-radiance bands from sourceProduct and
         // copy reflectance bands from reflProduct
-        Band tarBand;
-        for (Band srcBand : szaSubProduct.getBands()){
+        for (Band srcBand : szaSubProduct.getBands()) {
             String srcName = srcBand.getName();
-            if (srcBand.isFlagBand()){
-                tarBand = targetProduct.getBand(srcName);
-                tarBand.setSourceImage(srcBand.getSourceImage());
-            } else if (srcName.startsWith("radiance")){
-                String reflName = "reflec_" + srcName.split("_")[1];
-                String tarName = "reflectance_" + srcName.split("_")[1];
-                tarBand = ProductUtils.copyBand(reflName, reflProduct, targetProduct);
-                tarBand.setName(tarName);
-            } else if (!targetProduct.containsBand(srcName)) {
-                tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
+            if (!srcBand.isFlagBand()) {
+                if (srcName.startsWith("radiance")) {
+                    String reflName = "reflec_" + srcName.split("_")[1];
+                    String tarName = "reflectance_" + srcName.split("_")[1];
+                    ProductUtils.copyBand(reflName, reflProduct, tarName, targetProduct, true);
+                } else if (!targetProduct.containsBand(srcName)) {
+                    ProductUtils.copyBand(srcName, szaSubProduct, targetProduct, true);
+                }
             }
-        }
-
-        // add idepix flag band data if needed
-        if (needPixelClassif){
-            Guardian.assertNotNull("idepixProduct", idepixProduct);
-            Band srcBand = idepixProduct.getBand(instrC.getIdepixFlagBandName());
-            Guardian.assertNotNull("idepix Band", srcBand);
-            tarBand = targetProduct.getBand(srcBand.getName());
-            tarBand.setSourceImage(srcBand.getSourceImage());
         }
 
         // add elevation band if needed
@@ -235,9 +215,7 @@ public class MerisPrepOp extends Operator {
             if (elevProduct != null) {
                 Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
                 Guardian.assertNotNull("elevation band", srcBand);
-                tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
-            } else if (sourceProduct.containsBand(ALTITUDE_BAND_NAME)) {
-                ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct);
+                ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct, true);
             }
         }
 

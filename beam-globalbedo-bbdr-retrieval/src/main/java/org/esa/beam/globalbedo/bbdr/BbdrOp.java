@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -175,13 +175,8 @@ public class BbdrOp extends PixelOperator {
             aod.setNoDataValueUsed(true);
 
             // copy flag coding and flag images
-            ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-            final Band[] bands = sourceProduct.getBands();
-            for (Band band : bands) {
-                if (band.getFlagCoding() != null) {
-                    targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
-                }
-            }
+            ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+
             Band statusBand = targetProduct.addBand("status", ProductData.TYPE_INT8);
             statusBand.setNoDataValue(0);
             statusBand.setNoDataValueUsed(true);
@@ -221,13 +216,7 @@ public class BbdrOp extends PixelOperator {
             targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
 
             // copy flag coding and flag images
-            ProductUtils.copyFlagBands(sourceProduct, targetProduct);
-            final Band[] bands = sourceProduct.getBands();
-            for (Band band : bands) {
-                if (band.getFlagCoding() != null) {
-                    targetProduct.getBand(band.getName()).setSourceImage(band.getSourceImage());
-                }
-            }
+            ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         }
         readAuxdata();
     }

@@ -1,3 +1,19 @@
+/*
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
 package org.esa.beam.dataio.msg;
 
 import com.bc.ceres.core.ProgressMonitor;
@@ -221,7 +237,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
         if (hasSameRasterDimension(product, albedoInputProduct)) {
             for (final Band sourceBand : albedoInputProduct.getBands()) {
                 String bandName = sourceBand.getName();
-                Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, product);
+                Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, product, true);
                 if (sourceBand.getName().startsWith(ALBEDO_BAND_NAME_PREFIX)) {
                     targetBand.setScalingFactor(0.0001);
                 } else if (sourceBand.getName().equals(QUALITY_FLAG_BAND_NAME)) {
@@ -229,7 +245,6 @@ public class MsgMSAProductReader extends AbstractProductReader {
                     targetBand.setSampleCoding(qualityFlagCoding);
                     product.getFlagCodingGroup().add(qualityFlagCoding);
                 }
-                targetBand.setSourceImage(sourceBand.getSourceImage());
             }
         }
     }
@@ -240,13 +255,8 @@ public class MsgMSAProductReader extends AbstractProductReader {
         latBand.setScalingFactor(0.01);
         lonBand.setScalingFactor(0.01);
 
-        String bandName = latBand.getName();
-        Band targetBand = ProductUtils.copyBand(bandName, latInputProduct, product);
-        targetBand.setSourceImage(latBand.getSourceImage());
-
-        bandName = lonBand.getName();
-        targetBand = ProductUtils.copyBand(lonBand.getName(), lonInputProduct, product);
-        targetBand.setSourceImage(lonBand.getSourceImage());
+        ProductUtils.copyBand(latBand.getName(), latInputProduct, product, true);
+        ProductUtils.copyBand(lonBand.getName(), lonInputProduct, product, true);
 
         // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'

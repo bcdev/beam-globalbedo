@@ -1,4 +1,20 @@
 /*
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ *
+ * This program is free software; you can redistribute it and/or modify it
+ * under the terms of the GNU General Public License as published by the Free
+ * Software Foundation; either version 3 of the License, or (at your option)
+ * any later version.
+ * This program is distributed in the hope that it will be useful, but WITHOUT
+ * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+ * more details.
+ *
+ * You should have received a copy of the GNU General Public License along
+ * with this program; if not, see http://www.gnu.org/licenses/
+ */
+
+/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -8,7 +24,6 @@ package org.esa.beam.globalbedo.sdr.operators;
 import java.util.HashMap;
 import java.util.Map;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.VirtualBand;
@@ -72,12 +87,7 @@ public class VgtPrepOp extends Operator {
         targetProduct.setPointingFactory(szaSubProduct.getPointingFactory());
         ProductUtils.copyTiePointGrids(szaSubProduct, targetProduct);
         ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
-        ProductUtils.copyFlagBands(szaSubProduct, targetProduct);
-        Mask mask;
-        for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
-            mask = szaSubProduct.getMaskGroup().get(i);
-            targetProduct.getMaskGroup().add(mask);
-        }
+        ProductUtils.copyFlagBands(szaSubProduct, targetProduct, true);
 
         // create pixel calssification if missing in sourceProduct
         // and add flag band to targetProduct
@@ -90,11 +100,7 @@ public class VgtPrepOp extends Operator {
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyFlagBands(idepixProduct, targetProduct);
-            for (int i=0; i<idepixProduct.getMaskGroup().getNodeCount(); i++){
-                mask = idepixProduct.getMaskGroup().get(i);
-                targetProduct.getMaskGroup().add(mask);
-            }
+            ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
         }
 
         // create elevation product if band is missing in sourceProduct
@@ -116,29 +122,12 @@ public class VgtPrepOp extends Operator {
             surfPresBand.setUnit("hPa");
         }
 
-
-
         // copy all bands from sourceProduct
-        Band tarBand;
         for (Band srcBand : szaSubProduct.getBands()){
             String srcName = srcBand.getName();
-            if (srcBand.isFlagBand()){
-                tarBand = targetProduct.getBand(srcName);
-                tarBand.setSourceImage(srcBand.getSourceImage());
+            if (!srcBand.isFlagBand()){
+                ProductUtils.copyBand(srcName, szaSubProduct, targetProduct, true);
             }
-            else {
-                tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
-                tarBand.setSourceImage(srcBand.getSourceImage());
-            }
-        }
-
-        // add idepix flag band data if needed
-        if (needPixelClassif){
-            Guardian.assertNotNull("idepixProduct", idepixProduct);
-            Band srcBand = idepixProduct.getBand(instrC.getIdepixFlagBandName());
-            Guardian.assertNotNull("idepix Band", srcBand);
-            tarBand = targetProduct.getBand(srcBand.getName());
-            tarBand.setSourceImage(srcBand.getSourceImage());
         }
 
         // add elevation band if needed
@@ -146,8 +135,7 @@ public class VgtPrepOp extends Operator {
             Guardian.assertNotNull("elevProduct", elevProduct);
             Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
             Guardian.assertNotNull("elevation band", srcBand);
-            tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
-            tarBand.setSourceImage(srcBand.getSourceImage());
+            ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct, true);
         }
 
         // add vitrual surface pressure band if needed
