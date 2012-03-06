@@ -80,7 +80,7 @@ public class LandcoverLevel2 extends Operator {
         Product bbdrProduct;
         if (step2) {
             bbdrProduct = processBbdr(aotProduct);
-            if (sensor == Sensor.MERIS) {
+            if (sensor == Sensor.MERIS && idepixAlgorithm == CloudScreeningSelector.GlobAlbedo) {
                 for (String rayleighBandName : BRR_BANDS) {
                     bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
                 }
