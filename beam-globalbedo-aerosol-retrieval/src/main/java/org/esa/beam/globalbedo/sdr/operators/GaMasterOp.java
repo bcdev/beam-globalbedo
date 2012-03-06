@@ -32,6 +32,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
@@ -97,6 +98,8 @@ public class GaMasterOp  extends Operator {
     private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "GlobAlbedo")
+    private CloudScreeningSelector idepixAlgorithm;
 
     private String instrument;
 
@@ -127,6 +130,7 @@ public class GaMasterOp  extends Operator {
             params.put("gaOutputRayleigh", gaOutputRayleigh);
             params.put("pressureOutputP1Lise", pressureOutputP1Lise);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
+            params.put("idepixAlgorithm", idepixAlgorithm);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {

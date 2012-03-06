@@ -83,6 +83,8 @@ public class MerisPrepOp extends Operator {
     private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+    @Parameter(defaultValue = "GlobAlbedo")
+    private CloudScreeningSelector idepixAlgorithm;
 
     @Override
     public void initialize() throws OperatorException {
@@ -138,7 +140,7 @@ public class MerisPrepOp extends Operator {
         Product idepixProduct = null;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
-            pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);
+            pixelClassParam.put("algorithm", idepixAlgorithm);
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);

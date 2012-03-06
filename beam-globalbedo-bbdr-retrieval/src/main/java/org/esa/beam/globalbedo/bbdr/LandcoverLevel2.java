@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -29,6 +29,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
+import org.esa.beam.idepix.operators.CloudScreeningSelector;
 
 import javax.media.jai.OpImage;
 import javax.media.jai.TileCache;
@@ -53,6 +54,13 @@ public class LandcoverLevel2 extends Operator {
 
     @Parameter(defaultValue = "true")
     private boolean useFileTileCache;
+
+    // for testing purpose
+    @Parameter(defaultValue = "false")
+    private boolean doUclCLoudDetection;
+    @Parameter(defaultValue = "GlobAlbedo")
+    private CloudScreeningSelector idepixAlgorithm;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -92,6 +100,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
         gaMasterOp.setParameter("pressureOutputP1Lise", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
+        gaMasterOp.setParameter("idepixAlgorithm", idepixAlgorithm);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }
@@ -101,6 +110,7 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
+        bbdrOp.setParameter("doUclCLoudDetection", doUclCLoudDetection);
         bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
         return bbdrOp.getTargetProduct();
     }
