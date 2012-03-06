@@ -52,9 +52,10 @@ import java.util.Map;
 
 /**
  * Create Meris input product for Globalbedo aerosol retrieval and BBDR processor
- *
+ * <p/>
  * TODO: check what rad2refl does with the masks and which masks need to be copied.
- *       if the sourceProd contains already idepix, what happens with the masks in rad2refl?
+ * if the sourceProd contains already idepix, what happens with the masks in rad2refl?
+ *
  * @author akheckel
  */
 @OperatorMetadata(alias = "ga.MerisPrepOp",
@@ -104,7 +105,7 @@ public class MerisPrepOp extends Operator {
             targetProduct = GaMasterOp.EMPTY_PRODUCT;
             return;
         } else {
-            Map<String,Object> subsetParam = new HashMap<String, Object>(3);
+            Map<String, Object> subsetParam = new HashMap<String, Object>(3);
             subsetParam.put("region", szaRegion);
             Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
             RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
@@ -112,7 +113,7 @@ public class MerisPrepOp extends Operator {
         }
 
         // convert radiance bands to reflectance
-        Map<String,Object> relfParam = new HashMap<String, Object>(3);
+        Map<String, Object> relfParam = new HashMap<String, Object>(3);
         relfParam.put("doRadToRefl", true);
         relfParam.put("doEqualization", doEqualization);
         Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, szaSubProduct);
@@ -169,33 +170,31 @@ public class MerisPrepOp extends Operator {
                 }
             }
             if (pressureOutputP1Lise) {
-                    Band band = idepixProduct.getBand("p1_lise");
-                    if (band != null) {
-                        targetProduct.addBand(band);
-                    }
+                Band band = idepixProduct.getBand("p1_lise");
+                if (band != null) {
+                    targetProduct.addBand(band);
+                }
             }
         }
 
         // create elevation product if band is missing in sourceProduct
         Product elevProduct = null;
-        if (needElevation && !szaSubProduct.containsBand(ALTITUDE_BAND_NAME)){
+        if (needElevation && !szaSubProduct.containsBand(ALTITUDE_BAND_NAME)) {
             elevProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CreateElevationBandOp.class), GPF.NO_PARAMS, szaSubProduct);
         }
 
         // create surface pressure estimate product if band is missing in sourceProduct
         VirtualBand surfPresBand = null;
-        if (needSurfacePres){
+        if (needSurfacePres) {
             String presExpr = "(1013.25 * exp(-elevation/8400))";
             surfPresBand = new VirtualBand(instrC.getSurfPressureName("MERIS"),
-                                                       ProductData.TYPE_FLOAT32,
-                                                       rasterWidth, rasterHeight, presExpr);
+                                           ProductData.TYPE_FLOAT32,
+                                           rasterWidth, rasterHeight, presExpr);
             surfPresBand.setDescription("estimated sea level pressure (p0=1013.25hPa, hScale=8.4km)");
             surfPresBand.setNoDataValue(0);
             surfPresBand.setNoDataValueUsed(true);
             surfPresBand.setUnit("hPa");
         }
-
-
 
         // copy all non-radiance bands from sourceProduct and
         // copy reflectance bands from reflProduct
@@ -213,11 +212,11 @@ public class MerisPrepOp extends Operator {
         }
 
         // add elevation band if needed
-        if (needElevation){
+        if (needElevation) {
             if (elevProduct != null) {
-                Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
-                Guardian.assertNotNull("elevation band", srcBand);
-                ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct, true);
+                ProductUtils.copyBand(instrC.getElevationBandName(), elevProduct, targetProduct, true);
+            } else if (szaSubProduct.containsBand(ALTITUDE_BAND_NAME)) {
+                ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct, true);
             }
         }
 
