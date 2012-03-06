@@ -34,6 +34,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
 
@@ -57,10 +58,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr",
-        description = "Computes BBDRs and kernel parameters",
-        authors = "Marco Zuehlke, Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+                  description = "Computes BBDRs and kernel parameters",
+                  authors = "Marco Zuehlke, Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -102,8 +103,11 @@ public class BbdrOp extends PixelOperator {
 
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
+    @Parameter(defaultValue = "false")
+    private boolean doUclCLoudDetection;
     @Parameter
     private String landExpression;
+
 
     // Auxdata
     private Matrix nb_coef_arr_all; // = fltarr(n_spc, num_bd)
@@ -128,6 +132,8 @@ public class BbdrOp extends PixelOperator {
     private double aotMax;
     private double hsfMin;
     private double hsfMax;
+
+    private UclCloudDetection uclCloudDetection;
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
@@ -268,6 +274,14 @@ public class BbdrOp extends PixelOperator {
         final double[] aotArray = aotLut.getDimension(1).getSequence();
         aotMin = aotArray[0];
         aotMax = aotArray[aotArray.length - 1];
+
+        if (doUclCLoudDetection) {
+            try {
+                uclCloudDetection = UclCloudDetection.create();
+            } catch (IOException e) {
+                throw new OperatorException(e);
+            }
+        }
     }
 
     @Override
@@ -306,7 +320,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                    BbdrConstants.MERIS_TOA_BAND_NAMES.length);
+                             BbdrConstants.MERIS_TOA_BAND_NAMES.length);
         } else if (sensor == Sensor.AATSR_NADIR) {
             landExpr = commonLandExpr;
 
@@ -322,7 +336,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                    BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
 
         } else if (sensor == Sensor.AATSR_FWARD) {
             landExpr = commonLandExpr;
@@ -339,7 +353,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                    BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         } else if (sensor == Sensor.VGT) {
 
             landExpr =
@@ -357,7 +371,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                    BbdrConstants.VGT_TOA_BAND_NAMES.length);
+                             BbdrConstants.VGT_TOA_BAND_NAMES.length);
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
@@ -412,10 +426,10 @@ public class BbdrOp extends PixelOperator {
                 }
             } else if (sensor == Sensor.VGT) {
                 for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
-                   configurator.defineSample(index++, "sdr_" + bandname);
+                    configurator.defineSample(index++, "sdr_" + bandname);
                 }
                 for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
-                   configurator.defineSample(index++, "sdr_error_" + bandname);
+                    configurator.defineSample(index++, "sdr_error_" + bandname);
                 }
             }
             configurator.defineSample(index++, "ndvi");
@@ -499,12 +513,12 @@ public class BbdrOp extends PixelOperator {
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
-                fillTargetSampleWithNoDataValue(targetSamples);
-                if (sdrOnly) {
-                    // write status
-                    targetSamples[sensor.getNumBands() * 2 + 2].set(0);
-                 }
-                return;
+            fillTargetSampleWithNoDataValue(targetSamples);
+            if (sdrOnly) {
+                // write status
+                targetSamples[sensor.getNumBands() * 2 + 2].set(0);
+            }
+            return;
         }
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
@@ -596,6 +610,15 @@ public class BbdrOp extends PixelOperator {
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
             if (sdrOnly) {
                 targetSamples[i].set(rfl_pix[i]);
+            }
+        }
+        if (sdrOnly && uclCloudDetection != null) {
+            //do an additional cloud check on the SDRs
+            float sdrRed = (float)rfl_pix[6]; //sdr_7
+            float sdrGreen = (float)rfl_pix[13]; //sdr_14
+            float sdrBlue = (float)rfl_pix[2]; //sdr_3
+            if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
+                targetSamples[sensor.getNumBands() * 2 + 2].set(4);
             }
         }
 
