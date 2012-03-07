@@ -472,17 +472,19 @@ public class BbdrOp extends PixelOperator {
         int status = 0;
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
-            targetSamples[sensor.getNumBands() * 2 + 2].set(status);
-        }
-
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            fillTargetSampleWithNoDataValue(targetSamples);
-            if (sdrOnly) {
-                // write status, because it is now NaN
+            if (status != 1 && status != 3) {
+                // not land and not snow
+                fillTargetSampleWithNoDataValue(targetSamples);
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+                return;
             }
-            return;
+            targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+        } else {
+            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+                // only compute over land
+                fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
         }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
@@ -612,13 +614,15 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[i].set(rfl_pix[i]);
             }
         }
-        if (sdrOnly && uclCloudDetection != null) {
-            //do an additional cloud check on the SDRs
-            float sdrRed = (float)rfl_pix[6]; //sdr_7
-            float sdrGreen = (float)rfl_pix[13]; //sdr_14
-            float sdrBlue = (float)rfl_pix[2]; //sdr_3
+        if (sdrOnly && uclCloudDetection != null && status == 1) {
+            //do an additional cloud check on the SDRs (only over land)
+            float sdrRed = (float) rfl_pix[6]; //sdr_7
+            float sdrGreen = (float) rfl_pix[13]; //sdr_14
+            float sdrBlue = (float) rfl_pix[2]; //sdr_3
             if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
+                fillTargetSampleWithNoDataValue(targetSamples);
                 targetSamples[sensor.getNumBands() * 2 + 2].set(4);
+                return;
             }
         }
 
