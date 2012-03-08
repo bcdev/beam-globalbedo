@@ -93,7 +93,11 @@ public class UclCloudDetection {
             float minc = Math.min(red, Math.min(green, blue));
             float difc = maxc - minc;
             value = maxc;
-            sat = difc / maxc;
+            if (red == 0f && green == 0f && blue == 0f) {
+                sat = 0f;
+            } else {
+                sat = difc / maxc;
+            }
             if ((minc != maxc) && (difc != 0.0)) {
                 if ((red == maxc) && (green >= blue)) {
                     hue = (60.0f * ((green - blue) / difc)) + 0.0f;
