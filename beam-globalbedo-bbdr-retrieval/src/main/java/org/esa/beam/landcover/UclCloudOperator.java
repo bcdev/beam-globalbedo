@@ -58,6 +58,7 @@ class UclCloudOperator extends PixelOperator {
         pc.addBand("val", ProductData.TYPE_FLOAT32, Float.NaN);
         pc.addBand("cloudCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
         pc.addBand("landCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
+        pc.addBand("townCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
         pc.addBand("probability", ProductData.TYPE_FLOAT32, Float.NaN);
 
         int w = sourceProduct.getSceneRasterWidth();
@@ -86,7 +87,8 @@ class UclCloudOperator extends PixelOperator {
         sampleConfigurer.defineSample(2, "val");
         sampleConfigurer.defineSample(3, "cloudCoeff");
         sampleConfigurer.defineSample(4, "landCoeff");
-        sampleConfigurer.defineSample(5, "probability");
+        sampleConfigurer.defineSample(5, "townCoeff");
+        sampleConfigurer.defineSample(6, "probability");
     }
 
     @Override
@@ -110,7 +112,11 @@ class UclCloudOperator extends PixelOperator {
         targetSamples[3].set(cloudCoefficient);
         float landCoefficient = uclCloudDetection.landScatterData.getCoefficient(hsv);
         targetSamples[4].set(landCoefficient);
-        targetSamples[5].set(UclCloudDetection.computeProbability(landCoefficient, cloudCoefficient));
+        float townCoefficient = uclCloudDetection.townScatterData.getCoefficient(hsv);
+        targetSamples[5].set(townCoefficient);
+        float land = UclCloudDetection.computeProbability(landCoefficient, cloudCoefficient);
+        float town = UclCloudDetection.computeProbability(townCoefficient, cloudCoefficient);
+        targetSamples[6].set(Math.max(land, town));
     }
 
     public static void main(String[] args) throws IOException {
