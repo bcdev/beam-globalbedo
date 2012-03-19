@@ -16,13 +16,14 @@
 
 package org.esa.beam.landcover;
 
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.ProductNodeFilter;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.PixelOperator;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
@@ -33,8 +34,8 @@ import org.esa.beam.framework.gpf.pointop.WritableSample;
 import java.awt.Color;
 import java.io.IOException;
 
-
-class UclCloudOperator extends PixelOperator {
+@OperatorMetadata(alias = "lc.ucl")
+public class UclCloudOperator extends PixelOperator {
 
     @SourceProduct
     Product sourceProduct;
@@ -59,17 +60,17 @@ class UclCloudOperator extends PixelOperator {
         pc.addBand("cloudCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
         pc.addBand("landCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
         pc.addBand("townCoeff", ProductData.TYPE_FLOAT32, Float.NaN);
-        pc.addBand("probability", ProductData.TYPE_FLOAT32, Float.NaN);
+        pc.addBand("cloud", ProductData.TYPE_INT8);
 
         int w = sourceProduct.getSceneRasterWidth();
         int h = sourceProduct.getSceneRasterHeight();
-        Mask cloudMask = Mask.BandMathsType.create("isCloud", "UCL Cloud", w, h, "probability > -0.1", Color.YELLOW, 0.5f);
+        Mask cloudMask = Mask.BandMathsType.create("isCloud", "UCL Cloud", w, h, "cloud", Color.YELLOW, 0.5f);
         pc.getTargetProduct().getMaskGroup().add(cloudMask);
 
         try {
             uclCloudDetection = UclCloudDetection.create();
         } catch (IOException e) {
-            throw  new OperatorException("failed to initialize algorithm:", e);
+            throw new OperatorException("failed to initialize algorithm:", e);
         }
     }
 
@@ -88,18 +89,12 @@ class UclCloudOperator extends PixelOperator {
         sampleConfigurer.defineSample(3, "cloudCoeff");
         sampleConfigurer.defineSample(4, "landCoeff");
         sampleConfigurer.defineSample(5, "townCoeff");
-        sampleConfigurer.defineSample(6, "probability");
+        sampleConfigurer.defineSample(6, "cloud");
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         float sdrRed = sourceSamples[0].getFloat();
-        if (Float.isNaN(sdrRed)) {
-            for (WritableSample targetSample : targetSamples) {
-                targetSample.set(Float.NaN);
-            }
-            return;
-        }
         float sdrGreen = sourceSamples[1].getFloat();
         float sdrBlue = sourceSamples[2].getFloat();
 
@@ -108,20 +103,16 @@ class UclCloudOperator extends PixelOperator {
         targetSamples[1].set(hsv[1]);
         targetSamples[2].set(hsv[2]);
 
-        float cloudCoefficient = uclCloudDetection.cloudScatterData.getCoefficient(hsv);
-        targetSamples[3].set(cloudCoefficient);
-        float landCoefficient = uclCloudDetection.landScatterData.getCoefficient(hsv);
-        targetSamples[4].set(landCoefficient);
-        float townCoefficient = uclCloudDetection.townScatterData.getCoefficient(hsv);
-        targetSamples[5].set(townCoefficient);
-        float land = UclCloudDetection.computeProbability(landCoefficient, cloudCoefficient);
-        float town = UclCloudDetection.computeProbability(townCoefficient, cloudCoefficient);
-        targetSamples[6].set(Math.max(land, town));
+        targetSamples[3].set(uclCloudDetection.cloudScatterData.getDensity(hsv));
+        targetSamples[4].set(uclCloudDetection.landScatterData.getDensity(hsv));
+        targetSamples[5].set(uclCloudDetection.townScatterData.getDensity(hsv));
+        targetSamples[6].set(uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue));
     }
 
-    public static void main(String[] args) throws IOException {
-        UclCloudOperator operator = new UclCloudOperator();
-        operator.setSourceProduct(ProductIO.readProduct(args[0]));
-        ProductIO.writeProduct(operator.getTargetProduct(), args[1], ProductIO.DEFAULT_FORMAT_NAME);
+    public static class Spi extends OperatorSpi {
+
+        public Spi() {
+            super(UclCloudOperator.class);
+        }
     }
 }
