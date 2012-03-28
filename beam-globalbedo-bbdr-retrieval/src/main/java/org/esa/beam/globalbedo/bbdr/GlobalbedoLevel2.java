@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -82,6 +82,7 @@ public class GlobalbedoLevel2 extends Operator {
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
+            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
         }
