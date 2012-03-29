@@ -19,10 +19,7 @@ package org.esa.beam.globalbedo.upscaling;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -35,6 +32,9 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
+import org.opengis.referencing.operation.TransformException;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -62,6 +62,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     private static final String WGS84_CODE = "EPSG:4326";
     private static final int TILE_SIZE = 1200;
+
+    private static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
+    private static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
@@ -152,7 +155,19 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
             ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
         } else {
-            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
+            final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
+            try {
+                final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
+                final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
+                CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
+                                                  UPPER_LEFT_TILE_UPPER_LEFT_X,
+                                                  UPPER_LEFT_TILE_UPPER_LEFT_Y,
+                                                  pixelSizeX,
+                                                  pixelSizeY);
+                upscaledProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for SIN mosaic: ", e);
+            }
         }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();

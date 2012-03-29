@@ -336,9 +336,9 @@ public class IOUtils {
 
         final FilenameFilter yearFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only years between 1995 and 2010 (GA period)
+                // accept only years between 1995 and 2010 (GA period), but allow 2011 wings!
                 int startYear = 1995;
-                for (int i = 0; i < 16; i++) {
+                for (int i = 0; i <= 16; i++) {
                     String thisYear = (new Integer(startYear + i)).toString();
                     if (name.equals(thisYear)) {
                         return true;
