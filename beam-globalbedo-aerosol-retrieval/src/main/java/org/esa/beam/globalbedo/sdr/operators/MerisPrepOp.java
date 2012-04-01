@@ -41,7 +41,6 @@ import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
-import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.Dimension;
@@ -152,6 +151,7 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
+            ProductUtils.copyBand("schiller", idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
                 for (String rayleighBandName : gaOutputRayleigh) {
                     Band band = idepixProduct.getBand(rayleighBandName);

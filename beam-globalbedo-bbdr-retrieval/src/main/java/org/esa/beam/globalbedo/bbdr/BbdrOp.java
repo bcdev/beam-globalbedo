@@ -182,6 +182,7 @@ public class BbdrOp extends PixelOperator {
 
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
+            ProductUtils.copyBand("schiller", sourceProduct, targetProduct, true);
 
             Band statusBand = targetProduct.addBand("status", ProductData.TYPE_INT8);
             statusBand.setNoDataValue(0);
@@ -409,6 +410,7 @@ public class BbdrOp extends PixelOperator {
             Product statusProduct = bandMathsOp.getTargetProduct();
 
             configurator.defineSample(SRC_STATUS, "status", statusProduct);
+            configurator.defineSample(SRC_STATUS + 1, "schiller", sourceProduct);
         }
 
     }
@@ -614,15 +616,21 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[i].set(rfl_pix[i]);
             }
         }
-        if (sdrOnly && uclCloudDetection != null && status == 1) {
-            //do an additional cloud check on the SDRs (only over land)
-            float sdrRed = (float) rfl_pix[6]; //sdr_7
-            float sdrGreen = (float) rfl_pix[13]; //sdr_14
-            float sdrBlue = (float) rfl_pix[2]; //sdr_3
-            if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
-                fillTargetSampleWithNoDataValue(targetSamples);
-                targetSamples[sensor.getNumBands() * 2 + 2].set(4);
-                return;
+        if (sdrOnly && status == 1) {
+            if (uclCloudDetection != null) {
+                //do an additional cloud check on the SDRs (only over land)
+                float sdrRed = (float) rfl_pix[6]; //sdr_7
+                float sdrGreen = (float) rfl_pix[13]; //sdr_14
+                float sdrBlue = (float) rfl_pix[2]; //sdr_3
+                if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
+                    //fillTargetSampleWithNoDataValue(targetSamples);
+                    //targetSamples[sensor.getNumBands() * 2 + 2].set(4);
+                    //return;
+                    targetSamples[sensor.getNumBands() * 2 + 2].set(10);
+                }
+            }
+            if (sourceSamples[SRC_STATUS + 1].getDouble() > 1.4) {
+                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
             }
         }
 
