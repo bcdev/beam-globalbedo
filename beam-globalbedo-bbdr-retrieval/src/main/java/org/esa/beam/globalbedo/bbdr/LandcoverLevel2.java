@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.idepix.operators.CloudScreeningSelector;
+import org.esa.beam.landcover.LcUclCloudBuffer;
 
 import javax.media.jai.OpImage;
 import javax.media.jai.TileCache;
@@ -112,7 +113,10 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setParameter("sdrOnly", true);
         bbdrOp.setParameter("doUclCLoudDetection", doUclCLoudDetection);
         bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
-        return bbdrOp.getTargetProduct();
+        Product bbdr = bbdrOp.getTargetProduct();
+        LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
+        lcUclCloudBuffer.setSourceProduct(bbdr);
+        return lcUclCloudBuffer.getTargetProduct();
     }
 
     private void attachFileTileCache(Product product) {

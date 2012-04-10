@@ -188,17 +188,31 @@ public class BbdrOp extends PixelOperator {
             statusBand.setNoDataValue(0);
             statusBand.setNoDataValueUsed(true);
             final IndexCoding indexCoding = new IndexCoding("status");
-            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[5];
+            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[8];
             indexCoding.addIndex("land", 1, "");
             points[0] = new ColorPaletteDef.Point(1, Color.GREEN, "land");
+
             indexCoding.addIndex("water", 2, "");
             points[1] = new ColorPaletteDef.Point(2, Color.BLUE, "water");
+
             indexCoding.addIndex("snow", 3, "");
             points[2] = new ColorPaletteDef.Point(3, Color.YELLOW, "snow");
+
             indexCoding.addIndex("cloud", 4, "");
             points[3] = new ColorPaletteDef.Point(4, Color.WHITE, "cloud");
+
             indexCoding.addIndex("cloud_shadow", 5, "");
             points[4] = new ColorPaletteDef.Point(5, Color.GRAY, "cloud_shadow");
+
+            indexCoding.addIndex("ucl_cloud", 10, "");
+            points[5] = new ColorPaletteDef.Point(10, Color.ORANGE, "ucl_cloud");
+
+            indexCoding.addIndex("ucl_cloud_buffer", 11, "");
+            points[6] = new ColorPaletteDef.Point(11, Color.RED, "ucl_cloud_buffer");
+
+            indexCoding.addIndex("schiller_cloud", 20, "");
+            points[7] = new ColorPaletteDef.Point(20, Color.PINK, "schiller_cloud");
+
             targetProduct.getIndexCodingGroup().add(indexCoding);
             statusBand.setSampleCoding(indexCoding);
             statusBand.setImageInfo(new ImageInfo(new ColorPaletteDef(points, points.length)));
