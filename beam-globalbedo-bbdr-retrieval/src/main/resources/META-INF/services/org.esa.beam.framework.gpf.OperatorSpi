@@ -4,3 +4,4 @@ org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.LandcoverLevel2$Spi
 org.esa.beam.globalbedo.bbdr.TileExtractor$Spi
 org.esa.beam.landcover.UclCloudOperator$Spi
+org.esa.beam.landcover.LcUclCloudBuffer$Spi
