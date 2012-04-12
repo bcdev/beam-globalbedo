@@ -34,7 +34,7 @@
             <helpId>importGlobAlbedoMosaicProduct</helpId>
             <formatName>GLOBALBEDO-L3-MOSAIC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobAlbedo Mosaic Product...</text>
+            <text>GlobAlbedo Mosaic</text>
             <mnemonic/>
             <shortDescr>Import a GlobAlbedo Mosaic data product or product subset.
             </shortDescr>

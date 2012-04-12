@@ -34,7 +34,7 @@
             <helpId>importMeteosatSurfaceAlbedoProduct</helpId>
             <formatName>GLOBALBEDO-METEOSAT-SURFACE-ALBEDO</formatName>
             <useAllFileFilter>true</useAllFileFilter>
-            <text>Import METEOSAT Surface Albedo Product...</text>
+            <text>METEOSAT Surface Albedo</text>
             <mnemonic/>
             <shortDescr>Import a METEOSAT Surface Albedo product.
             </shortDescr>
