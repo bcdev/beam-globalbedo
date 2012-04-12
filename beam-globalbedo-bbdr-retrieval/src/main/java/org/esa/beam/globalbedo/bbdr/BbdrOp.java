@@ -182,7 +182,6 @@ public class BbdrOp extends PixelOperator {
 
             // copy flag coding and flag images
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("schiller", sourceProduct, targetProduct, true);
 
             Band statusBand = targetProduct.addBand("status", ProductData.TYPE_INT8);
             statusBand.setNoDataValue(0);
@@ -637,14 +636,15 @@ public class BbdrOp extends PixelOperator {
                 float sdrGreen = (float) rfl_pix[13]; //sdr_14
                 float sdrBlue = (float) rfl_pix[2]; //sdr_3
                 if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
-                    //fillTargetSampleWithNoDataValue(targetSamples);
-                    //targetSamples[sensor.getNumBands() * 2 + 2].set(4);
-                    //return;
+                    fillTargetSampleWithNoDataValue(targetSamples);
                     targetSamples[sensor.getNumBands() * 2 + 2].set(10);
+                    return;
                 }
             }
             if (sourceSamples[SRC_STATUS + 1].getDouble() > 1.4) {
+                fillTargetSampleWithNoDataValue(targetSamples);
                 targetSamples[sensor.getNumBands() * 2 + 2].set(20);
+                return;
             }
         }
 

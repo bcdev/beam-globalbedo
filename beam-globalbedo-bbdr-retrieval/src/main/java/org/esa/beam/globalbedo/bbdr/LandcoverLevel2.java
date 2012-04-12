@@ -40,7 +40,6 @@ import java.io.File;
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
 
-    private static final String[] BRR_BANDS = new String[]{"brr_1", "brr_2"};
     @SourceProduct
     private Product sourceProduct;
 
@@ -81,11 +80,6 @@ public class LandcoverLevel2 extends Operator {
         Product bbdrProduct;
         if (step2) {
             bbdrProduct = processBbdr(aotProduct);
-            if (sensor == Sensor.MERIS && idepixAlgorithm == CloudScreeningSelector.GlobAlbedo) {
-                for (String rayleighBandName : BRR_BANDS) {
-                    bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
-                }
-            }
         } else {
             bbdrProduct = aotProduct;
         }
@@ -98,7 +92,6 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
-        gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
         gaMasterOp.setParameter("pressureOutputP1Lise", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
         gaMasterOp.setParameter("idepixAlgorithm", idepixAlgorithm);
