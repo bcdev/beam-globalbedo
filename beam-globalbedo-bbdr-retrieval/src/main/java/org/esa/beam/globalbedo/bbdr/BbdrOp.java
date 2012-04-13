@@ -134,6 +134,15 @@ public class BbdrOp extends PixelOperator {
     private double hsfMax;
 
     private UclCloudDetection uclCloudDetection;
+    private static final double[] PATH_RADIANCE = new double[]{
+            0.134, 0.103, 0.070, 0.059, 0.040,
+            0.027, 0.022, 0.021, 0.018, 0.015,
+            Double.NaN, 0.014, 0.010, 0.009, 0.008};
+    private static final double[] TRANSMISSION = new double[]{
+            0.65277, 0.71155, 0.77224, 0,78085, 0.78185,
+            0.81036, 0.86705, 0.88244, 0.88342, 0.92075,
+            Double.NaN, 0.93152, 0.9444, 0.9422, 0.58212
+    };
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
@@ -407,7 +416,7 @@ public class BbdrOp extends PixelOperator {
         }
         if (sdrOnly) {
             SRC_STATUS = SRC_TOA_RFL + toaBandNames.length * 2;
-            String expression = "(not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
+            String expression = "l1_flags.INVALID ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
                     "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
                     "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
                     "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
@@ -423,7 +432,8 @@ public class BbdrOp extends PixelOperator {
             Product statusProduct = bandMathsOp.getTargetProduct();
 
             configurator.defineSample(SRC_STATUS, "status", statusProduct);
-            configurator.defineSample(SRC_STATUS + 1, "schiller", sourceProduct);
+            configurator.defineSample(SRC_STATUS + 1, "dem_alt");
+            configurator.defineSample(SRC_STATUS + 2, "schiller");
         }
 
     }
@@ -487,7 +497,21 @@ public class BbdrOp extends PixelOperator {
         int status = 0;
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
-            if (status != 1 && status != 3) {
+            if (status == 2) {
+                fillTargetSampleWithNoDataValue(targetSamples);
+                // water, do simple atmospheric correction
+                if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
+                    // dem_alt from TP includes sea depth
+                    double sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
+                    for (int i = 0; i < sensor.getNumBands(); i++) {
+                        double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
+                        sdr = sdr - sdr13;  // normalize
+                        targetSamples[i].set(sdr);
+                    }
+                }
+                targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+                return;
+            } else if (status != 1 && status != 3) {
                 // not land and not snow
                 fillTargetSampleWithNoDataValue(targetSamples);
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
@@ -641,9 +665,9 @@ public class BbdrOp extends PixelOperator {
                     return;
                 }
             }
-            if (sourceSamples[SRC_STATUS + 1].getDouble() > 1.4) {
+            if (sourceSamples[SRC_STATUS + 2].getDouble() > 1.4) {
                 fillTargetSampleWithNoDataValue(targetSamples);
-                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
+                targetSamples[sensor.getNumBands() * 2 + 2].set(4);
                 return;
             }
         }
