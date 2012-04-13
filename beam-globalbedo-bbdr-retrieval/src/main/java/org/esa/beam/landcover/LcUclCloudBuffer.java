@@ -167,8 +167,8 @@ public class LcUclCloudBuffer extends Operator {
             }
         }
 
-        for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
+        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
                 int status = targetTile.getSampleInt(x, y);
                 if (status == 10 || status == 11) {
                     // map ucl_clod and ucl_cloud_buffer to cloud
