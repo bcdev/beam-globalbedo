@@ -29,4 +29,18 @@
 	<dependency>
         <module>beam-envisat-reader</module>
     </dependency>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <id>cccloud</id>
+            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
+            <operatorName>lc.l2</operatorName>
+            <dialogTitle>lcl2</dialogTitle>
+            <targetProductNameSuffix>_lcl2</targetProductNameSuffix>
+            <text>LcL2...</text>
+            <shortDescr>Lc</shortDescr>
+            <parent>tool</parent>
+        </action>
+    </extension>
+
 </module>
