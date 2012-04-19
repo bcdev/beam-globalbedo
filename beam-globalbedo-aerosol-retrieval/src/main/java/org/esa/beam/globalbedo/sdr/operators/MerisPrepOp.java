@@ -151,7 +151,6 @@ public class MerisPrepOp extends Operator {
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
-            ProductUtils.copyBand("schiller", idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
                 for (String rayleighBandName : gaOutputRayleigh) {
                     Band band = idepixProduct.getBand(rayleighBandName);

@@ -166,16 +166,16 @@ public class LcUclCloudBuffer extends Operator {
                 }
             }
         }
-
-        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
-            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
-                int status = targetTile.getSampleInt(x, y);
-                if (status == 10 || status == 11) {
-                    // map ucl_clod and ucl_cloud_buffer to cloud
-                    targetTile.setSample(x, y, 4);
-                }
-            }
-        }
+          // no translation: different cloud cases should be different
+//        for (int y = rectangle.y; y < rectangle.y + rectangle.height; y++) {
+//            for (int x = rectangle.x; x < rectangle.x + rectangle.width; x++) {
+//                int status = targetTile.getSampleInt(x, y);
+//                if (status == 10 || status == 11) {
+//                    // map ucl_clod and ucl_cloud_buffer to cloud
+//                    targetTile.setSample(x, y, 4);
+//                }
+//            }
+//        }
     }
 
     public static class Spi extends OperatorSpi {

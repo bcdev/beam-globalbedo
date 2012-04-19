@@ -34,6 +34,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.idepix.operators.SchillerAlgorithm;
 import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
@@ -133,6 +134,7 @@ public class BbdrOp extends PixelOperator {
     private double hsfMin;
     private double hsfMax;
 
+    private SchillerAlgorithm landNN;
     private UclCloudDetection uclCloudDetection;
     private static final double[] PATH_RADIANCE = new double[]{
             0.134, 0.103, 0.070, 0.059, 0.040,
@@ -298,6 +300,7 @@ public class BbdrOp extends PixelOperator {
         aotMin = aotArray[0];
         aotMax = aotArray[aotArray.length - 1];
 
+        landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
         if (doUclCLoudDetection) {
             try {
                 uclCloudDetection = UclCloudDetection.create();
@@ -433,7 +436,6 @@ public class BbdrOp extends PixelOperator {
 
             configurator.defineSample(SRC_STATUS, "status", statusProduct);
             configurator.defineSample(SRC_STATUS + 1, "dem_alt");
-            configurator.defineSample(SRC_STATUS + 2, "schiller");
         }
 
     }
@@ -654,21 +656,21 @@ public class BbdrOp extends PixelOperator {
             }
         }
         if (sdrOnly && status == 1) {
-            if (uclCloudDetection != null) {
+            float schillerCloud = landNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples, SRC_TOA_RFL));
+            if (schillerCloud > 1.4) {
+                //fillTargetSampleWithNoDataValue(targetSamples);
+                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
+                //return;
+            } else if (uclCloudDetection != null) {
                 //do an additional cloud check on the SDRs (only over land)
                 float sdrRed = (float) rfl_pix[6]; //sdr_7
                 float sdrGreen = (float) rfl_pix[13]; //sdr_14
                 float sdrBlue = (float) rfl_pix[2]; //sdr_3
                 if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
-                    fillTargetSampleWithNoDataValue(targetSamples);
+                    //fillTargetSampleWithNoDataValue(targetSamples);
                     targetSamples[sensor.getNumBands() * 2 + 2].set(10);
-                    return;
+                    //return;
                 }
-            }
-            if (sourceSamples[SRC_STATUS + 2].getDouble() > 1.4) {
-                fillTargetSampleWithNoDataValue(targetSamples);
-                targetSamples[sensor.getNumBands() * 2 + 2].set(4);
-                return;
             }
         }
 

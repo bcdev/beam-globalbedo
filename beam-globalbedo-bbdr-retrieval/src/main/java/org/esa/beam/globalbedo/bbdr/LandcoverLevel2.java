@@ -56,7 +56,7 @@ public class LandcoverLevel2 extends Operator {
     private boolean useFileTileCache;
 
     // for testing purpose
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     private boolean doUclCLoudDetection;
     @Parameter(defaultValue = "GlobAlbedo")
     private CloudScreeningSelector idepixAlgorithm;
@@ -107,9 +107,13 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setParameter("doUclCLoudDetection", doUclCLoudDetection);
         bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
         Product bbdr = bbdrOp.getTargetProduct();
-        LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
-        lcUclCloudBuffer.setSourceProduct(bbdr);
-        return lcUclCloudBuffer.getTargetProduct();
+        if (doUclCLoudDetection) {
+            LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
+            lcUclCloudBuffer.setSourceProduct(bbdr);
+            return lcUclCloudBuffer.getTargetProduct();
+        } else {
+            return bbdr;
+        }
     }
 
     private void attachFileTileCache(Product product) {

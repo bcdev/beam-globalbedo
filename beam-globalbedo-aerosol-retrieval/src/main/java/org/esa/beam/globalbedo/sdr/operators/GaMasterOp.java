@@ -215,7 +215,6 @@ public class GaMasterOp  extends Operator {
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
-            copyBand = copyBand || (sourceBandName.equals("schiller"));
             copyBand = copyBand || (sourceBandName.equals("p1_lise") && pressureOutputP1Lise);
 
             if (copyBand){
