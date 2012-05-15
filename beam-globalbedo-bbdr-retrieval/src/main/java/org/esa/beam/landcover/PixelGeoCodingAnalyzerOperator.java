@@ -56,15 +56,20 @@ public class PixelGeoCodingAnalyzerOperator extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
-    private Band latBand;
-    private Band lonBand;
-    private Band best_delta_x;
-    private Band best_delta_y;
-    private Band iterCounter;
     private GeoCoding geoCoding;
     private Mask validMask;
+    private Band latBand;
+    private Band lonBand;
+
+    private Band bestDeltaXBand;
+    private Band bestDeltaYBand;
+    private Band iterCounterBand;
+
+    private Band minDeltaBand;
     private static final int SEARCH_RADIUS_SRC = 30;
     private static final int SEARCH_RADIUS = 6;
+    private double deltaThreshold;
+    private Band goodDeltaBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -83,15 +88,43 @@ public class PixelGeoCodingAnalyzerOperator extends Operator {
         lonBand = sourceProduct.getBand("corr_longitude");
         geoCoding = sourceProduct.getGeoCoding();
 
-        best_delta_x = targetProduct.addBand("best_delta_x", ProductData.TYPE_INT8);
-        best_delta_x.setNoDataValue(-1.0);
-        best_delta_x.setNoDataValueUsed(true);
+        bestDeltaXBand = targetProduct.addBand("best_delta_x", ProductData.TYPE_INT8);
+        bestDeltaXBand.setNoDataValue(-1.0);
+        bestDeltaXBand.setNoDataValueUsed(true);
 
-        best_delta_y = targetProduct.addBand("best_delta_y", ProductData.TYPE_INT8);
-        best_delta_y.setNoDataValue(-1.0);
-        best_delta_y.setNoDataValueUsed(true);
+        bestDeltaYBand = targetProduct.addBand("best_delta_y", ProductData.TYPE_INT8);
+        bestDeltaYBand.setNoDataValue(-1.0);
+        bestDeltaYBand.setNoDataValueUsed(true);
 
-        iterCounter = targetProduct.addBand("iterations", ProductData.TYPE_INT8);
+        iterCounterBand = targetProduct.addBand("iterations", ProductData.TYPE_INT8);
+
+        minDeltaBand = targetProduct.addBand("min_delta", ProductData.TYPE_FLOAT32);
+        minDeltaBand.setNoDataValue(Float.NaN);
+        minDeltaBand.setNoDataValueUsed(true);
+
+        goodDeltaBand = targetProduct.addBand("good_delta", ProductData.TYPE_INT8);
+
+        GeoPos p0 = geoCoding.getGeoPos(new PixelPos(0.5f, 0.5f), null);
+        GeoPos p1 = geoCoding.getGeoPos(new PixelPos(1.5f, 0.5f), null);
+//
+//        double distMeters = MathUtils.sphereDistanceDeg(6371.0f, p1.lon, p1.lat, p0.lon, p0.lat);
+//        System.out.println("distMeters = " + distMeters);
+//
+//        double distDeg = MathUtils.sphereDistanceDeg(360.0f/2/Math.PI, p1.lon, p1.lat, p0.lon, p0.lat);
+//        System.out.println("distDeg = " + distDeg);
+//
+//        double pixelKmdist = (6371 * 2 * Math.PI / 360.0) * distDeg;
+//        System.out.println("pixelKmdist = " + pixelKmdist);
+
+        float r = (float) Math.cos(Math.toRadians(p1.lat));
+        float dlat = Math.abs(p0.lat - p1.lat);
+        float dlon = r * lonDiff(p0.lon, p1.lon);
+        float delta = dlat * dlat + dlon * dlon;
+        deltaThreshold = Math.sqrt(delta) * Math.sqrt(2);
+
+
+        System.out.println("deltaThreshold = " + deltaThreshold);
+//        System.out.println("deltaThreshold sqr = " + (deltaThreshold * deltaThreshold));
 
         setTargetProduct(targetProduct);
     }
@@ -107,34 +140,37 @@ public class PixelGeoCodingAnalyzerOperator extends Operator {
         Tile lonTile = getSourceTile(lonBand, sourceRect);
         Tile validTile = getSourceTile(validMask, sourceRect);
 
-        Tile bestDelatX = targetTiles.get(best_delta_x);
-        Tile bestDelatY = targetTiles.get(best_delta_y);
-        Tile counter = targetTiles.get(iterCounter);
+        Tile bestDeltaX = targetTiles.get(bestDeltaXBand);
+        Tile bestDeltaY = targetTiles.get(bestDeltaYBand);
+        Tile iterCounter = targetTiles.get(iterCounterBand);
+        Tile minDelta = targetTiles.get(minDeltaBand);
+        Tile goodDelta = targetTiles.get(goodDeltaBand);
 
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                if (validTile.getSampleBoolean(x, y)) {
+                PixelPos pixelPos = new PixelPos();
+                pixelPos.setLocation(x, y);
+                GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
+                int y1;
+                int x1;
+                int iterations = 0;
+                float bestMinDelta;
+                do {
+                    x1 = (int) Math.floor(pixelPos.x);
+                    y1 = (int) Math.floor(pixelPos.y);
+                    bestMinDelta = findBestPixel(x1, y1, geoPos.lat, geoPos.lon, pixelPos, sourceRect, validTile, latTile, lonTile);
+                    iterations++;
+                } while (isBestPixelOnSearchBorder(x1, y1, pixelPos));
 
-                    PixelPos pixelPos = new PixelPos();
-                    pixelPos.setLocation(x, y);
-                    GeoPos geoPos = geoCoding.getGeoPos(pixelPos, null);
-                    int y1;
-                    int x1;
-                    int iterations = 0;
-                    do {
-                        x1 = (int) Math.floor(pixelPos.x);
-                        y1 = (int) Math.floor(pixelPos.y);
-                        findBestPixel(x1, y1, geoPos.lat, geoPos.lon, pixelPos, sourceRect, validTile, latTile, lonTile);
-                        iterations++;
-                    } while (isBestPixelOnSearchBorder(x1, y1, pixelPos));
+                bestDeltaX.setSample(x, y, Math.abs(pixelPos.x - x));
+                bestDeltaY.setSample(x, y, Math.abs(pixelPos.y - y));
+                iterCounter.setSample(x, y, iterations);
+                minDelta.setSample(x, y, bestMinDelta);
 
-                    bestDelatX.setSample(x, y, Math.abs(pixelPos.x - x));
-                    bestDelatY.setSample(x, y, Math.abs(pixelPos.y - y));
-                    counter.setSample(x, y, iterations);
+                if (Math.sqrt(bestMinDelta) < deltaThreshold) {
+                    goodDelta.setSample(x, y, 1);
                 } else {
-                    bestDelatX.setSample(x, y, -1);
-                    bestDelatY.setSample(x, y, -1);
-                    counter.setSample(x, y, 0);
+                    goodDelta.setSample(x, y, 0);
                 }
             }
         }
@@ -146,11 +182,11 @@ public class PixelGeoCodingAnalyzerOperator extends Operator {
         return diffX > (SEARCH_RADIUS - 2) || diffY > (SEARCH_RADIUS - 2);
     }
 
-    private void findBestPixel(int x0, int y0,
-                               float lat0, float lon0,
-                               PixelPos bestPixel,
-                               Rectangle sourceRect,
-                               Tile validTile, Tile latTile, Tile lonTile) {
+    private float findBestPixel(int x0, int y0,
+                                float lat0, float lon0,
+                                PixelPos bestPixel,
+                                Rectangle sourceRect,
+                                Tile validTile, Tile latTile, Tile lonTile) {
         int x1 = x0 - SEARCH_RADIUS;
         int y1 = y0 - SEARCH_RADIUS;
         int x2 = x0 + SEARCH_RADIUS;
@@ -179,6 +215,7 @@ public class PixelGeoCodingAnalyzerOperator extends Operator {
                 }
             }
         }
+        return minDelta;
     }
 
     /*
