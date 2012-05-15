@@ -78,9 +78,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13-SNAPSHOT</ceres.version>
+        <ceres.version>0.13</ceres.version>
         <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.10-SNAPSHOT</beam.version>
+        <beam.version>4.10</beam.version>
     </properties>
 
     <dependencyManagement>
@@ -132,7 +132,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5-SNAPSHOT</version>
+                <version>1.5</version>
             </dependency>
             <!--<dependency>-->
             <!--<groupId>org.esa.beam</groupId>-->
@@ -155,7 +155,7 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
                 <!--<version>1.0.101</version>-->
-                <version>1.1-SNAPSHOT</version>
+                <version>1.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

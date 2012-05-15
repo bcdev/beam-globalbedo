@@ -41,28 +41,28 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.1</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>
-            <version>2.3.2-SNAPSHOT</version>
+            <version>2.3.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-sdr</artifactId>
-            <version>2.3.2-SNAPSHOT</version>
+            <version>2.3.2</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-l2auxdata</artifactId>
-            <version>1.2.2-SNAPSHOT</version>
+            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.aatsr-recalibration</groupId>
             <artifactId>beam-aatsr-recalibration</artifactId>
-            <version>1.2.1</version>
+            <version>1.2.2</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
