@@ -78,7 +78,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
     private int monthIndex;
 
-    @Parameter(valueSet = {"5", "60"}, description = "Scaling (5 = 5km, 60 = 60km resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "false", description = "True if monthly albedo to upscale")
@@ -129,8 +129,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             reprojectedProduct = mosaicProduct;
         }
 
-        int width = reprojectedProduct.getSceneRasterWidth() / scaling;
-        int height = reprojectedProduct.getSceneRasterHeight() / scaling;
+        final int width  = 43200 / scaling;
+        final int height = 21600 / scaling;
+
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
