@@ -1,14 +1,11 @@
 package org.esa.beam.dataio.tiff;
 
-import com.bc.ceres.core.VirtualDir;
 import org.junit.Test;
 
 import java.io.File;
-import java.io.IOException;
 
 import static junit.framework.Assert.assertEquals;
 import static junit.framework.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 public class TiffDirectoryReaderPluginTest {
