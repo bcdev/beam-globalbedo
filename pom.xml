@@ -73,6 +73,7 @@
         <module>beam-globalbedo-meteosat-reader</module>
         <module>beam-globalbedo-upscaling</module>
         <module>beam-globalbedo-gmted2010</module>
+        <module>beam-tiff-directory-reader</module>
     </modules>
 
     <properties>
@@ -129,6 +130,11 @@
                 <version>${beam.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-geotiff</artifactId>
+                <version>1.2</version>
+            </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
