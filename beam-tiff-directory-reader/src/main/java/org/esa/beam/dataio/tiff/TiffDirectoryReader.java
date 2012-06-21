@@ -77,10 +77,10 @@ public class TiffDirectoryReader extends AbstractProductReader {
 
         Product product;
         Dimension productDim;
+        final Product firstTiffProduct = getFirstTiffProduct();
         if (metaExtractionFile == null || !metaExtractionFile.canRead()) {
             // default solution:
             // read data without any meta information: we only need the product dimensions, take from first product
-            final Product firstTiffProduct = getFirstTiffProduct();
             if (firstTiffProduct == null) {
                 throw new ProductIOException("No TIFF products found.");
             }
@@ -112,7 +112,7 @@ public class TiffDirectoryReader extends AbstractProductReader {
             product.setEndTime(utcCenter);
 
         }
-        addBands(product, input);
+        addBands(product, firstTiffProduct, input);
 
         return product;
     }
@@ -136,18 +136,19 @@ public class TiffDirectoryReader extends AbstractProductReader {
         return filename.substring(0, extensionIndex);
     }
 
-    private void addBands(Product product, VirtualDir folder) throws IOException {
+    private void addBands(Product product, Product firstTiffProduct, VirtualDir folder) throws IOException {
         final GeoTiffProductReaderPlugIn plugIn = new GeoTiffProductReaderPlugIn();
 
         bandProducts = new ArrayList<Product>();
         int bandIndex = 0;
         for (String fileName : folder.list("")) {
             final File bandFile = folder.getFile(fileName);
-            final String extension = FileUtils.getExtension(bandFile);
-            if (extension.toLowerCase().equals(".tif") || extension.toLowerCase().equals(".tiff")) {
+            if (TiffDirectoryReaderPlugin.isTifFile(bandFile)) {
                 ProductReader productReader = plugIn.createReaderInstance();
                 Product bandProduct = productReader.readProductNodes(bandFile, null);
-                if (bandProduct != null) {
+                if (bandProduct != null &&
+                        bandProduct.getSceneRasterWidth() == firstTiffProduct.getSceneRasterWidth() &&
+                        bandProduct.getSceneRasterHeight() == firstTiffProduct.getSceneRasterHeight()) {
                     bandProducts.add(bandProduct);
                     Band srcBand = bandProduct.getBandAt(0);
                     String bandName = FileUtils.getFilenameWithoutExtension(fileName);

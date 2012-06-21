@@ -3,6 +3,8 @@ package org.esa.beam.dataio;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
+import org.geotools.referencing.datum.DefaultGeodeticDatum;
+import org.opengis.referencing.datum.GeodeticDatum;
 
 import java.io.IOException;
 
@@ -74,8 +76,12 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         }
 
         if (!initialized) {
-            initialized = true;
-            initialize();
+            synchronized (this) {
+                if (!initialized) {
+                    initialize();
+                    initialized = true;
+                }
+            }
         }
 
         int si = getSuperLutI(geoPos.lon);

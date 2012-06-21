@@ -58,9 +58,14 @@ public class TiffDirectoryReaderPlugin implements ProductReaderPlugIn {
             return DecodeQualification.UNABLE;
         }
 
+        if (isLandsatMetadataFile(getFileInput(input)) || isMatchingLandsatArchiveFileName(getFileInput(input).getName())) {
+            // we must not this reader in this case
+            return DecodeQualification.UNABLE;
+        }
+
         if (virtualDir.isCompressed() || virtualDir.isArchive()) {
             if (isMatchingArchiveFileName(getFileInput(input).getName())) {
-                // special case
+                // special case for MSSL Hyperspectral Camera products
                 return DecodeQualification.INTENDED;
             }
             return DecodeQualification.SUITABLE;
@@ -114,6 +119,7 @@ public class TiffDirectoryReaderPlugin implements ProductReaderPlugIn {
 
         return DecodeQualification.UNABLE;
     }
+
 
     @Override
     public Class[] getInputTypes() {
@@ -203,6 +209,19 @@ public class TiffDirectoryReaderPlugin implements ProductReaderPlugIn {
     static boolean isMatchingArchiveFileName(String fileName) {
         // todo: confirm
         return StringUtils.isNotNullAndNotEmpty(fileName) && fileName.startsWith("Sample");
+    }
+
+    static boolean isMatchingLandsatArchiveFileName(String fileName) {
+        return StringUtils.isNotNullAndNotEmpty(fileName) &&
+                (fileName.startsWith("L5")
+                        || fileName.startsWith("LT5")
+                        || fileName.startsWith("L7")
+                        || fileName.startsWith("LE7"));
+    }
+
+    static boolean isLandsatMetadataFile(File file) {
+        final String filename = file.getName().toLowerCase();
+        return filename.endsWith("_mtl.txt");
     }
 
     private static class TiffDirFileFilter extends BeamFileFilter {

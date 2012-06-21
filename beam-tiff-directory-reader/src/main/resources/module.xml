@@ -31,7 +31,7 @@
             <helpId>importTIFFDirectoryProduct</helpId>
             <formatName>TIFF_DIRECTORY</formatName>
             <useAllFileFilter>true</useAllFileFilter>
-            <text>TIFF collection</text>
+            <text>TIFF Collection</text>
             <shortDescr>Import a collection of TIFF products from one directory.</shortDescr>
             <description>Import a collection of TIFF products from one directory.</description>
         </action>
