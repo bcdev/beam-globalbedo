@@ -105,7 +105,9 @@ public class BbdrOp extends PixelOperator {
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
     @Parameter(defaultValue = "false")
-    private boolean doUclCLoudDetection;
+    private boolean doUclCloudDetection;
+    @Parameter(defaultValue = "true")
+    private boolean doSchillerCloudDetection;
     @Parameter
     private String landExpression;
 
@@ -300,8 +302,10 @@ public class BbdrOp extends PixelOperator {
         aotMin = aotArray[0];
         aotMax = aotArray[aotArray.length - 1];
 
-        landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
-        if (doUclCLoudDetection) {
+        if (doSchillerCloudDetection) {
+            landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
+        }
+        if (doUclCloudDetection) {
             try {
                 uclCloudDetection = UclCloudDetection.create();
             } catch (IOException e) {
@@ -332,7 +336,7 @@ public class BbdrOp extends PixelOperator {
         configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 
         if (sensor == Sensor.MERIS) {
-            landExpr = "NOT l1_flags.INVALID AND (" + commonLandExpr + ")";
+            landExpr = "NOT l1_flags.INVALID AND NOT l1_flags.COSMETIC AND (" + commonLandExpr + ")";
 
             configurator.defineSample(SRC_VZA, BbdrConstants.MERIS_VZA_TP_NAME);
             configurator.defineSample(SRC_VAA, BbdrConstants.MERIS_VAA_TP_NAME);
@@ -656,21 +660,27 @@ public class BbdrOp extends PixelOperator {
             }
         }
         if (sdrOnly && status == 1) {
-            float schillerCloud = landNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples, SRC_TOA_RFL));
-            if (schillerCloud > 1.4) {
-                //fillTargetSampleWithNoDataValue(targetSamples);
-                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
-                //return;
-            } else if (uclCloudDetection != null) {
+            boolean isSchillerCloud = false;
+            if (landNN != null) {
+                float schillerCloudValue = landNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples, SRC_TOA_RFL));
+                isSchillerCloud = schillerCloudValue > 1.4;
+            }
+            boolean isUclCloud = false;
+            if (uclCloudDetection != null) {
                 //do an additional cloud check on the SDRs (only over land)
                 float sdrRed = (float) rfl_pix[6]; //sdr_7
                 float sdrGreen = (float) rfl_pix[13]; //sdr_14
                 float sdrBlue = (float) rfl_pix[2]; //sdr_3
-                if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
-                    //fillTargetSampleWithNoDataValue(targetSamples);
-                    targetSamples[sensor.getNumBands() * 2 + 2].set(10);
-                    //return;
-                }
+                isUclCloud = uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue);
+            }
+            if (isUclCloud && isSchillerCloud) {
+                //fillTargetSampleWithNoDataValue(targetSamples);
+                targetSamples[sensor.getNumBands() * 2 + 2].set(30);
+                //return;
+            } else if (isUclCloud) {
+                targetSamples[sensor.getNumBands() * 2 + 2].set(10);
+            } else if (isSchillerCloud) {
+                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
             }
         }
 

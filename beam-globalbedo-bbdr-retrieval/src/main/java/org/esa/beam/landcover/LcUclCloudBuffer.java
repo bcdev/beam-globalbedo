@@ -42,6 +42,8 @@ public class LcUclCloudBuffer extends Operator {
     private static final int STATUS_GOOD = 3;
     private static final int UCL_CLOUD = 10;
     private static final int UCL_CLOUD_BUFFER = 11;
+    private static final int UCL_SCHILLER_CLOUD = 30;
+    private static final int UCL_SCHILLER_CLOUD_BUFFER = 31;
 
     @SourceProduct
     private Product sourceProduct;
@@ -89,7 +91,7 @@ public class LcUclCloudBuffer extends Operator {
 
         for (int y = rectangle.y; y < rectangle.y + rectangle.height - 1; y++) {
             for (int x = rectangle.x; x < rectangle.x + rectangle.width - 1; x++) {
-                if (sourceTile.getSampleInt(x, y) == UCL_CLOUD) {
+                if (isUclCloud(sourceTile.getSampleInt(x, y))) {
                     // reference pixel is upper left (x, y)
                     // first set buffer of 1 in each direction
                     int bufferWidth = 1;
@@ -98,9 +100,9 @@ public class LcUclCloudBuffer extends Operator {
                     int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
                     int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
                     // now check if whole 2x2 square (x+1,y), (x, y+1), (x+1, y+1) is cloudy
-                    if (targetTile.getSampleInt(x + 1, y) == UCL_CLOUD &&
-                            targetTile.getSampleInt(x, y + 1) == UCL_CLOUD &&
-                            targetTile.getSampleInt(x + 1, y + 1) == UCL_CLOUD) {
+                    if (isUclCloud(targetTile.getSampleInt(x+1, y)) &&
+                            isUclCloud(targetTile.getSampleInt(x, y+1)) &&
+                            isUclCloud(targetTile.getSampleInt(x+1, y+1))) {
                         // set buffer of 2 in each direction
                         bufferWidth = 2;
                         LEFT_BORDER = Math.max(x - bufferWidth, rectangle.x);
@@ -110,9 +112,7 @@ public class LcUclCloudBuffer extends Operator {
                     }
                     for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                         for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                            if (targetTile.getSampleInt(i, j) <= STATUS_GOOD) {
-                                targetTile.setSample(i, j, UCL_CLOUD_BUFFER);
-                            }
+                            setCloudBuffer(targetTile, i, j);
                         }
                     }
 
@@ -128,12 +128,10 @@ public class LcUclCloudBuffer extends Operator {
             int RIGHT_BORDER = Math.min(x + bufferWidth, rectangle.x + rectangle.width - 1);
 //                int TOP_BORDER = ySouth - bufferWidth;
             int TOP_BORDER = Math.max(rectangle.y, ySouth - bufferWidth);
-            if (targetTile.getSampleInt(x, ySouth) == UCL_CLOUD) {
+            if (isUclCloud(targetTile.getSampleInt(x, ySouth))) {
                 for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
                     for (int j = TOP_BORDER; j <= ySouth; j++) {
-                        if (targetTile.getSampleInt(i, j) <= STATUS_GOOD) {
-                            targetTile.setSample(i, j, UCL_CLOUD_BUFFER);
-                        }
+                        setCloudBuffer(targetTile, i, j);
                     }
                 }
             }
@@ -146,23 +144,19 @@ public class LcUclCloudBuffer extends Operator {
             int LEFT_BORDER = Math.max(rectangle.x, xEast - bufferWidth);
             int TOP_BORDER = Math.max(y - bufferWidth, rectangle.y);
             int BOTTOM_BORDER = Math.min(y + bufferWidth, rectangle.y + rectangle.height - 1);
-            if (targetTile.getSampleInt(xEast, y) == UCL_CLOUD) {
+            if (isUclCloud(targetTile.getSampleInt(xEast, y))) {
                 for (int i = LEFT_BORDER; i <= xEast; i++) {
                     for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {
-                        if (targetTile.getSampleInt(i, j) <= STATUS_GOOD) {
-                            targetTile.setSample(i, j, UCL_CLOUD_BUFFER);
-                        }
+                        setCloudBuffer(targetTile, i, j);
                     }
                 }
             }
         }
         // pixel in lower right corner...
-        if (targetTile.getSampleInt(xEast, ySouth) == UCL_CLOUD) {
+        if (isUclCloud(targetTile.getSampleInt(xEast, ySouth))) {
             for (int i = Math.max(rectangle.x, xEast - 1); i <= xEast; i++) {
                 for (int j = Math.max(rectangle.y, ySouth - 1); j <= ySouth; j++) {
-                    if (targetTile.getSampleInt(i, j) <= STATUS_GOOD) {
-                        targetTile.setSample(i, j, UCL_CLOUD_BUFFER);
-                    }
+                    setCloudBuffer(targetTile, i, j);
                 }
             }
         }
@@ -176,6 +170,19 @@ public class LcUclCloudBuffer extends Operator {
 //                }
 //            }
 //        }
+    }
+
+    private void setCloudBuffer(Tile targetTile, int i, int j) {
+        final int targetSample = targetTile.getSampleInt(i, j);
+        if (targetSample <= STATUS_GOOD) {
+            targetTile.setSample(i, j, UCL_CLOUD_BUFFER);
+        } else if (targetSample == UCL_SCHILLER_CLOUD) {
+            targetTile.setSample(i, j, UCL_SCHILLER_CLOUD_BUFFER);
+        }
+    }
+
+    private boolean isUclCloud(double sample) {
+        return sample == UCL_CLOUD || sample == UCL_SCHILLER_CLOUD;
     }
 
     public static class Spi extends OperatorSpi {
