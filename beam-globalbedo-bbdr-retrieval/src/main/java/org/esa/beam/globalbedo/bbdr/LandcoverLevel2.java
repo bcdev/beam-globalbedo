@@ -56,8 +56,10 @@ public class LandcoverLevel2 extends Operator {
     private boolean useFileTileCache;
 
     // for testing purpose
+    @Parameter(defaultValue = "false")
+    private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
-    private boolean doUclCLoudDetection;
+    private boolean doSchillerCloudDetection;
     @Parameter(defaultValue = "GlobAlbedo")
     private CloudScreeningSelector idepixAlgorithm;
 
@@ -104,10 +106,11 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
-        bbdrOp.setParameter("doUclCLoudDetection", doUclCLoudDetection);
+        bbdrOp.setParameter("doUclCloudDetection", doUclCloudDetection);
+        bbdrOp.setParameter("doSchillerCloudDetection", doSchillerCloudDetection);
         bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
         Product bbdr = bbdrOp.getTargetProduct();
-        if (doUclCLoudDetection) {
+        if (doUclCloudDetection) {
             LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
             lcUclCloudBuffer.setSourceProduct(bbdr);
             return lcUclCloudBuffer.getTargetProduct();

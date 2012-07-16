@@ -423,7 +423,16 @@ public class BbdrOp extends PixelOperator {
         }
         if (sdrOnly) {
             SRC_STATUS = SRC_TOA_RFL + toaBandNames.length * 2;
-            String expression = "l1_flags.INVALID ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
+
+//            SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD
+            String l1InvalidExpression = "";
+            if (sensor == Sensor.MERIS) {
+                l1InvalidExpression = "l1_flags.INVALID";
+            } else if (sensor == Sensor.VGT) {
+                l1InvalidExpression = "!SM.B0_GOOD AND !SM.B2_GOOD AND !SM.B3_GOOD AND !SM.MIR_GOOD";
+            }
+
+            String expression = l1InvalidExpression + " ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
                     "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
                     "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
                     "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
@@ -439,7 +448,9 @@ public class BbdrOp extends PixelOperator {
             Product statusProduct = bandMathsOp.getTargetProduct();
 
             configurator.defineSample(SRC_STATUS, "status", statusProduct);
-            configurator.defineSample(SRC_STATUS + 1, "dem_alt");
+            if (sensor == Sensor.MERIS) {
+                configurator.defineSample(SRC_STATUS + 1, "dem_alt");
+            }
         }
 
     }
@@ -506,15 +517,19 @@ public class BbdrOp extends PixelOperator {
             if (status == 2) {
                 fillTargetSampleWithNoDataValue(targetSamples);
                 // water, do simple atmospheric correction
-                if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
-                    // dem_alt from TP includes sea depth
-                    double sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
-                    for (int i = 0; i < sensor.getNumBands(); i++) {
-                        double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
-                        sdr = sdr - sdr13;  // normalize
-                        targetSamples[i].set(sdr);
+                double sdr13 = 0.0;
+                if (sensor == Sensor.MERIS) {
+                    if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
+                        // dem_alt from TP includes sea depth
+                        sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
                     }
                 }
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
+                    sdr = sdr - sdr13;  // normalize
+                    targetSamples[i].set(sdr);
+                }
+
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
                 return;
             } else if (status != 1 && status != 3) {
