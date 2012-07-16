@@ -56,7 +56,7 @@ public class LandcoverLevel2 extends Operator {
     private boolean useFileTileCache;
 
     // for testing purpose
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
     private boolean doSchillerCloudDetection;

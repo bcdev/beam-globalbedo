@@ -104,7 +104,7 @@ public class BbdrOp extends PixelOperator {
 
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
     private boolean doSchillerCloudDetection;
