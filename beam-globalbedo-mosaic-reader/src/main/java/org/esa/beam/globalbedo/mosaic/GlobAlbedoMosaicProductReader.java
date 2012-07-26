@@ -61,7 +61,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final File inputFile = getInputFile();
-        Set<MosaicTile> mosaicTiles = null;
+        Set<MosaicTile> mosaicTiles;
         if (mosaicPriors) {
             mosaicTiles = createPriorMosaicTiles(inputFile);
         } else {

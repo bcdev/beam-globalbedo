@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.bbdr;
 
 
 import org.esa.beam.globalbedo.auxdata.Luts;
+import org.esa.beam.util.math.LookupTable;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
@@ -170,8 +171,6 @@ public class BbdrUtils {
             double kppVol = iis.readDouble();
             double kppGeo = iis.readDouble();
 
-            // todo: again, we have an array of length 2 as innermost part of the LUT,
-            // which has no meanigful name in breadboard --> clarify
             float[] values = new float[]{1.0f, 2.0f};
             int nValues = values.length;
 
@@ -219,8 +218,6 @@ public class BbdrUtils {
             double kppVol = iis.readDouble();
             double kppGeo = iis.readDouble();
 
-            // todo: again, we have an array of length 2 as innermost part of the LUT,
-            // which has no meanigful name in breadboard --> clarify
             float[] values = new float[]{1.0f, 2.0f};
             int nValues = values.length;
 

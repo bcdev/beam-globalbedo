@@ -63,7 +63,6 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.PRIOR_N
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
 public class GlobalbedoLevel3UpscalePriors extends Operator {
 
-    private static final String WGS84_CODE = "EPSG:4326";
     private static final int TILE_SIZE = 1200;
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
@@ -92,8 +91,6 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
     private File refTile;
 
     private String[] priorMeanBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] priorSDBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String nSamplesBandName;
     private String maskBandName;
     private Band maskBand;
 
@@ -128,8 +125,6 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
 
         priorMeanBandNames = IOUtils.getPriorMeanBandNames();
-        priorSDBandNames = IOUtils.getPriorSDMeanBandNames();
-        nSamplesBandName = PRIOR_NSAMPLES_NAME;
         maskBandName = PRIOR_MASK_NAME;
 
         // for performance, just write one band ...
@@ -270,29 +265,6 @@ public class GlobalbedoLevel3UpscalePriors extends Operator {
             }
         }
     }
-
-    private void computeMajority(Tile src, Tile target, Tile mask) {
-        Rectangle targetRectangle = target.getRectangle();
-        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-            checkForCancellation();
-            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                Rectangle pixelSrc = new Rectangle(x * scaling, y * scaling, scaling, scaling);
-                int max = -1;
-                for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
-                    for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
-                        max = Math.max(max, src.getSampleInt(sx, sy));
-                    }
-                }
-                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sampleMask > 0.0) {
-                    target.setSample(x, y, max);
-                } else {
-                    target.setSample(x, y, Float.NaN);
-                }
-            }
-        }
-    }
-
 
     public static class Spi extends OperatorSpi {
 

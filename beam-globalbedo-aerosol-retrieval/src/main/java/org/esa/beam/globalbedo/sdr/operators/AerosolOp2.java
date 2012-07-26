@@ -6,14 +6,7 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.VirtualBand;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -30,7 +23,7 @@ import org.esa.beam.util.math.RsMathUtils;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.BorderExtender;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -205,7 +198,7 @@ public class AerosolOp2 extends Operator {
 
     private void processSuperPixel(Map<String, Tile> sourceTiles, int iX, int iY, Map<Band, Tile> targetTiles) {
         // read pixel data and init brent fit
-        InputPixelData[] inPixField = null;
+        InputPixelData[] inPixField;
         BrentFitFunction brentFitFunction = null;
         if (instrument.equals("AATSR")) {
             inPixField = readAveragePixel(sourceTiles, iX, iY, pixelWindow);
@@ -238,19 +231,18 @@ public class AerosolOp2 extends Operator {
     private RetrievalResults executeRetrieval(BrentFitFunction brentFitFunction) {
         final double maxAOT = brentFitFunction.getMaxAOT();
         final PointRetrieval pR = new PointRetrieval(brentFitFunction);
-        RetrievalResults result = pR.runRetrieval(maxAOT);
-        return result;
+        return pR.runRetrieval(maxAOT);
     }
 
     private InputPixelData createInPixelData(double[] tileValues) {
-        PixelGeometry geomNadir = null;
-        PixelGeometry geomFward = null;
+        PixelGeometry geomNadir;
+        PixelGeometry geomFward;
         double[][] toaRefl = new double[2][nSpecWvl];
         int skip = 0;
         if (instrument.equals("AATSR")) {
             geomNadir = new PixelGeometry(90.0-tileValues[0], tileValues[1], 90.0-tileValues[2], tileValues[3]);
             skip += 4;
-            geomFward = new PixelGeometry(90.0-tileValues[skip + 0], tileValues[skip + 1], 90.0-tileValues[skip + 2], tileValues[skip + 3]);
+            geomFward = new PixelGeometry(90.0-tileValues[skip], tileValues[skip + 1], 90.0-tileValues[skip + 2], tileValues[skip + 3]);
             skip += 4;
         }
         else {
@@ -273,8 +265,7 @@ public class AerosolOp2 extends Operator {
         }
         double surfP = Math.min(tileValues[skip], 1013.25);
         double o3DU = ensureO3DobsonUnits(tileValues[skip + 1]);
-        InputPixelData ipd = new InputPixelData(geomNadir, geomFward, surfP, o3DU, this.wvCol, specWvl[0], toaRefl[0], toaRefl[1]);
-        return ipd;
+        return new InputPixelData(geomNadir, geomFward, surfP, o3DU, this.wvCol, specWvl[0], toaRefl[0], toaRefl[1]);
     }
 
     private void createTargetProduct() {
@@ -285,7 +276,6 @@ public class AerosolOp2 extends Operator {
 
     private void createTargetProductBands() {
         aotBand = GaHelper.createTargetBand(AotConsts.aot, tarRasterWidth, tarRasterHeight);
-        //targetBand.setValidPixelExpression(instrC.getValidRetrievalExpression(instrument));
         targetProduct.addBand(aotBand);
 
         aotErrorBand = GaHelper.createTargetBand(AotConsts.aotErr, tarRasterWidth, tarRasterHeight);
@@ -386,7 +376,7 @@ public class AerosolOp2 extends Operator {
         int NPixel = 10;
         ArrayList<InputPixelData> inPixelList = new ArrayList<InputPixelData>(pixelWindow.height*pixelWindow.width);
         InputPixelData[] inPixField = null;
-        float ndvi = 0;
+        float ndvi;
         float[] ndviArr = new float[pixelWindow.height*pixelWindow.width];
 
         double[] tileValues = new double[sourceTiles.size()];
@@ -406,7 +396,6 @@ public class AerosolOp2 extends Operator {
         if (nValid < 0.95*pixelWindow.width*pixelWindow.height) return null;
         
         Arrays.sort(ndviArr);
-//        if (ndviArr[ndviArr.length-1-NPixel] > ndviThreshold){
         if (ndviArr[ndviArr.length-10-NPixel] > ndviThreshold){
             for (int y = yOffset; y < yOffset+pixelWindow.height; y++){
                 for (int x = xOffset; x < xOffset+pixelWindow.width; x++){
@@ -481,7 +470,7 @@ public class AerosolOp2 extends Operator {
         Guardian.assertNotNull("specWvl", specWvl);
         final InputStream inputStream = AerosolOp2.class.getResourceAsStream(fname);
         Guardian.assertNotNull("surface spectra InputStream", inputStream);
-        BufferedReader reader = null;
+        BufferedReader reader;
         reader = new BufferedReader(new InputStreamReader(inputStream));
         String line;
         float[] fullWvl  = new float[10000];
@@ -557,38 +546,7 @@ public class AerosolOp2 extends Operator {
             valid = valid && (sourceNoDataValues.get(specBandNames[i]).compareTo(tileValues[i+skip]) != 0);
         }
         skip += specBandNames.length;
-/*
-        // NADIR geometry
-        for (int i=0; i < 4; i++){
-            tileValues[i] = sourceTiles.get(geomBandNames[i]).getSampleDouble(x, y);
-            valid = valid && (sourceNoData.get(geomBandNames[i]).compareTo(tileValues[i]) != 0);
-        }
-        int skip=4;
-        //FWARD geometry
-        if (instrument.equals("AATSR")){
-            for (int i=4; i < 8; i++){
-                tileValues[i] = sourceTiles.get(geomBandNames[i]).getSampleDouble(x, y);
-                valid = valid && (sourceNoData.get(geomBandNames[i]).compareTo(tileValues[i]) != 0);
-            }
-            skip = 8;
-        }
 
-        // NADIR spec channels
-        for (int i=0; i < nSpecWvl; i++){
-            tileValues[i+skip] = sourceTiles.get(specBandNames[i]).getSampleDouble(x, y);
-            valid = valid && (sourceNoData.get(specBandNames[i]).compareTo(tileValues[i+skip]) != 0);
-        }
-        skip += nSpecWvl;
-        //FWARD spec channels
-        if (instrument.equals("AATSR")){
-            for (int i = 0; i < nSpecWvl; i++){
-                tileValues[i+skip] = sourceTiles.get(specBandNames[i+nSpecWvl]).getSampleDouble(x, y);
-                valid = valid && (sourceNoData.get(specBandNames[i+nSpecWvl]).compareTo(tileValues[i+skip]) != 0);
-            }
-            skip += nSpecWvl;
-        }
- *
- */
         // surface pressure data
         tileValues[skip] = sourceTiles.get(surfPresName).getSampleDouble(x, y);
         valid = valid && (sourceNoDataValues.get(surfPresName).compareTo(tileValues[skip]) != 0);
@@ -606,24 +564,19 @@ public class AerosolOp2 extends Operator {
         }
     }
 
-    /**
-     * verify that ozone column is in DU
-     * function assumes 2 common possibilities:
-     *    1. Ozone column being in DU (generally 100 < ozDU < 1000)
-     *    2. Ozone column being in atm.cm (generally < 1 )
-     * conversion factor is 1000
-     * @param ozoneColumn either [DU] or [atm.cm]
-     * @return ozone column [DU]
-     */
+//
+//     verify that ozone column is in DU
+//     function assumes 2 common possibilities:
+//         1. Ozone column being in DU (generally 100 < ozDU < 1000)
+//         2. Ozone column being in atm.cm (generally < 1 )
+//     conversion factor is 1000
+//     return ozone column in [DU]
+//
     private double ensureO3DobsonUnits(double ozoneColumn) {
         return (ozoneColumn<1) ? ozoneColumn*1000 : ozoneColumn;
     }
 
-    /**
-     * Test whether @validBand contains any valid datapoint in the given source rectangle
-     * @param srcRec
-     * @return valid
-     */
+//      Test whether @validBand contains any valid datapoint in the given source rectangle
     private boolean containsTileValidData(Rectangle srcRec) {
         Tile validTile = getSourceTile(validBand, srcRec);
         for (Tile.Pos pos: validTile){
@@ -634,14 +587,8 @@ public class AerosolOp2 extends Operator {
         return false;
     }
 
-    /**
-     * Tests uniformity on the given bin pixel (e.g. 9x9 block)
-     * based on the NIR reflectance (max - min < 0.2)
-     * @param sourceTiles
-     * @param iX
-     * @param iY
-     * @return (maxNirReflec - minNirReflec) < 0.2
-     */
+//     Tests uniformity on the given bin pixel (e.g. 9x9 block)
+//     based on the NIR reflectance (max - min < 0.2)
     private boolean uniformityTest(Map<String, Tile> sourceTiles, int iX, int iY) {
         String nirName = instrC.getNirName(instrument);
         Guardian.assertNotNullOrEmpty("nirName is empty", nirName);
@@ -670,8 +617,6 @@ public class AerosolOp2 extends Operator {
         GeoPos geoPos = geoCoding.getGeoPos(new PixelPos(xOffset, yOffset), null);
         return new float[]{geoPos.lat, geoPos.lon};
     }
-
-
 
     /**
      * The SPI is used to register this operator in the graph processing framework

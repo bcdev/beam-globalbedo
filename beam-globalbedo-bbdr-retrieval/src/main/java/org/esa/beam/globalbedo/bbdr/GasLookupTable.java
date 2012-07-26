@@ -31,8 +31,6 @@ class GasLookupTable {
         if (sourceProduct != null && sensor == Sensor.VGT) {
             float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
             setGasVal(ozoMeanValue);
-            // todo: check small deviation from breadboard mean value calculation (0.24251308 vs. 0.242677)
-//            setGasVal(0.242677f); // test!!
         } else {
             setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
         }
@@ -69,7 +67,6 @@ class GasLookupTable {
     }
 
     private void loadCwvOzoLookupTableArray(Sensor sensor) throws IOException {
-        // todo: test this method!
         ImageInputStream iis = Luts.getCwvLutData(sensor.getInstrument());
         try {
             int nAng = iis.readInt();
@@ -124,7 +121,6 @@ class GasLookupTable {
     }
 
     private void loadCwvOzoKxLookupTableArray(Sensor sensor) throws IOException {
-        // todo: test this method!!
         ImageInputStream iis = Luts.getCwvKxLutData(sensor.getInstrument());
         try {
             // read LUT dimensions and values

@@ -1,8 +1,6 @@
 package org.esa.beam.globalbedo.inversion.util;
 
-import Jama.Matrix;
 import junit.framework.TestCase;
-import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo;
 
 /**

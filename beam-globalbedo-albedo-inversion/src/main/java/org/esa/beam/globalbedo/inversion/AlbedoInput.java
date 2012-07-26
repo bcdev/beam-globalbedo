@@ -8,20 +8,9 @@ package org.esa.beam.globalbedo.inversion;
  */
 public class AlbedoInput {
 
-    private String[] productFilenames;
     private String[] productBinaryFilenames;
     private int referenceYear;
     private int referenceDoy;
-    private int[] productDoys;
-    private int[] productYears;
-
-    public String[] getProductFilenames() {
-        return productFilenames;
-    }
-
-    public void setProductFilenames(String[] productFilenames) {
-        this.productFilenames = productFilenames;
-    }
 
     public String[] getProductBinaryFilenames() {
         return productBinaryFilenames;
@@ -29,22 +18,6 @@ public class AlbedoInput {
 
     public void setProductBinaryFilenames(String[] productBinaryFilenames) {
         this.productBinaryFilenames = productBinaryFilenames;
-    }
-
-    public int[] getProductDoys() {
-        return productDoys;
-    }
-
-    public void setProductDoys(int[] productDoys) {
-        this.productDoys = productDoys;
-    }
-
-    public int[] getProductYears() {
-        return productYears;
-    }
-
-    public void setProductYears(int[] productYears) {
-        this.productYears = productYears;
     }
 
     public int getReferenceDoy() {

@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
 import Jama.Matrix;
-import org.esa.beam.framework.gpf.pointop.Sample;
 
 /**
  * Container object holding the M, V, E estimation matrices and mask value
@@ -51,7 +50,7 @@ public class Accumulator {
         }
         E.set(0, 0, sumMatrices[index++][x][y]);
 
-        final double mask = sumMatrices[index++][x][y];
+        final double mask = sumMatrices[index][x][y];
 
         return new Accumulator(M, V, E, mask);
     }

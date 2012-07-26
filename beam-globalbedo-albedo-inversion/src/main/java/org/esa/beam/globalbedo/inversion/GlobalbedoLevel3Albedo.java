@@ -63,11 +63,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     private boolean mergedProductOnly;
 
 
-    private Logger logger;
-
     @Override
     public void initialize() throws OperatorException {
-        logger = BeamLogManager.getSystemLogger();
+        Logger logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: we need the SNOW Prior file for given DoY...
@@ -111,7 +109,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                     year + ", DoY: " + IOUtils.getDoyString(doy));
             // only use Snow product...
             brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
-        } else if (brdfNoSnowProduct != null && (brdfSnowProduct == null || priorProduct == null)) {
+        } else if (brdfNoSnowProduct != null && brdfSnowProduct == null) {
             logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
                     year + ", DoY: " + IOUtils.getDoyString(doy));
             // only use NoSnow product...

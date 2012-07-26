@@ -34,15 +34,13 @@ import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Pattern;
 
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
@@ -85,8 +83,6 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
     private Product reprojectedProduct;
 
-    private File refTile;
-
     private String[] brdfModelBandNames;
     private String[][] uncertaintyBandNames;
     private double matrixNodataValue;
@@ -95,7 +91,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        refTile = findRefTile();
+        File refTile = findRefTile();
 
         if (refTile == null || !refTile.exists()) {
             throw new OperatorException("No BRDF files for mosaicing found.");
@@ -367,8 +363,8 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     }
 
     private void setFNodata(Tile[] fTiles, int x, int y) {
-        for (int i = 0; i < fTiles.length; i++) {
-            fTiles[i].setSample(x, y, matrixNodataValue);
+        for (Tile fTile : fTiles) {
+            fTile.setSample(x, y, matrixNodataValue);
         }
     }
 

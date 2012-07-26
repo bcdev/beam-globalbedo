@@ -38,7 +38,7 @@ public class InversionOp extends PixelOperator {
 
     public static final int SOURCE_SAMPLE_OFFSET = 0;  // this value must be >= number of bands in a source product
     public static final int PRIOR_OFFSET = (int) pow(NUM_ALBEDO_PARAMETERS, 2.0);
-    public static final int SRC_PRIOR_NSAMPLES = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET;
+    public static final int SRC_PRIOR_NSAMPLES = 2 * PRIOR_OFFSET;
 
     public static final int SRC_PRIOR_MASK = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET + 1;
 
@@ -47,7 +47,6 @@ public class InversionOp extends PixelOperator {
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
     private static final int NUM_TRG_UNCERTAINTIES = ((int) pow(3 * NUM_BBDR_WAVE_BANDS, 2.0) + 3 * NUM_BBDR_WAVE_BANDS) / 2;
 
-    private static final int TRG_ENTROPY = 0;
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
@@ -154,7 +153,7 @@ public class InversionOp extends PixelOperator {
         }
 
         int offset = NUM_TRG_PARAMETERS + NUM_TRG_UNCERTAINTIES;
-        configurator.defineSample(offset + TRG_ENTROPY, INV_ENTROPY_BAND_NAME);
+        configurator.defineSample(offset, INV_ENTROPY_BAND_NAME);
         configurator.defineSample(offset + TRG_REL_ENTROPY, INV_REL_ENTROPY_BAND_NAME);
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
@@ -186,7 +185,7 @@ public class InversionOp extends PixelOperator {
 
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
-        if (maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
+        if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
             final Matrix mAcc = accumulator.getM();
             Matrix vAcc = accumulator.getV();
             final Matrix eAcc = accumulator.getE();
@@ -299,7 +298,7 @@ public class InversionOp extends PixelOperator {
         }
 
         int offset = NUM_TRG_PARAMETERS + NUM_TRG_UNCERTAINTIES;
-        targetSamples[offset + TRG_ENTROPY].set(entropy);
+        targetSamples[offset].set(entropy);
         targetSamples[offset + TRG_REL_ENTROPY].set(relEntropy);
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);

@@ -16,9 +16,7 @@
 
 package org.esa.beam.globalbedo.mosaic;
 
-import java.awt.Point;
-import java.awt.Rectangle;
-import java.awt.geom.Area;
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;

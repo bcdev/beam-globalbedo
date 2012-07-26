@@ -18,7 +18,6 @@ package org.esa.beam.globalbedo.auxdata;
 
 import org.esa.beam.util.io.CsvReader;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -74,9 +73,8 @@ public class ModisTileCoordinates {
     private List<TileCoordinate> loadAuxData() {
         InputStream inputStream = ModisTileCoordinates.class.getResourceAsStream(ULCOORDS_TABLE_DEFAULT_FILE_NAME);
         InputStreamReader streamReader = new InputStreamReader(inputStream);
-        BufferedReader bufferedReader = new BufferedReader(streamReader);
         CsvReader csvReader = new CsvReader(streamReader, SEPARATOR);
-        List<String[]> records = null;
+        List<String[]> records;
         try {
             records = csvReader.readStringRecords();
         } catch (IOException e) {

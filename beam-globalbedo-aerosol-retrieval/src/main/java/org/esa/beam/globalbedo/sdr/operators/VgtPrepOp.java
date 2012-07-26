@@ -91,7 +91,7 @@ public class VgtPrepOp extends Operator {
 
         // create pixel calssification if missing in sourceProduct
         // and add flag band to targetProduct
-        Product idepixProduct = null;
+        Product idepixProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);

@@ -190,11 +190,12 @@ public class TiffDirectoryReaderPlugin implements ProductReaderPlugIn {
     }
 
     static boolean isTifFile(File file) {
-        if (file == null || FileUtils.getExtension(file) == null) {
-            return false;
+        if (!(file == null || FileUtils.getExtension(file) == null)) {
+            if ((FileUtils.getExtension(file).equalsIgnoreCase(".tif") || FileUtils.getExtension(file).equalsIgnoreCase(".tiff"))) {
+                return true;
+            }
         }
-        return FileUtils.getExtension(file).equalsIgnoreCase(".tif") ||
-                FileUtils.getExtension(file).equalsIgnoreCase(".tiff");
+        return false;
     }
 
     static boolean isCompressedFile(File file) {

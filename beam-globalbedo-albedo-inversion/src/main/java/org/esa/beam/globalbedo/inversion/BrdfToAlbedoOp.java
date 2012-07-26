@@ -2,26 +2,18 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.math.MathUtils;
 
-import static java.lang.Math.*;
+import static java.lang.Math.pow;
 
 /**
  * Operator for retrieval of albedo from BRDF model parameters.
@@ -39,11 +31,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
     // source samples:
     private static final int[] SRC_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private String[] parameterBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
-    private String[][] uncertaintyBandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-            [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
@@ -75,7 +62,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private static final int[] TRG_BHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_BHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private static final int TRG_WEIGHTED_NUM_SAMPLES = 0;
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_GOODNESS_OF_FIT = 2;
     private static final int TRG_SNOW_FRACTION = 3;
@@ -195,15 +181,15 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         // # Calculate White-Sky Albedo...
         double[] whiteSkyAlbedo = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        whiteSkyAlbedo[0] = fParams[(3 * 0)] +
-                                (fParams[1 + 3 * 0] * uWsaVis.get(0, 1 + 3 * 0)) +
-                                (fParams[2 + 3 * 0] * uWsaVis.get(0, 2 + 3 * 0));
-        whiteSkyAlbedo[1] = fParams[(3 * 1)] +
-                                (fParams[1 + 3 * 1] * uWsaNir.get(0, 1 + 3 * 1)) +
-                                (fParams[2 + 3 * 1] * uWsaNir.get(0, 2 + 3 * 1));
+        whiteSkyAlbedo[0] = fParams[0] +
+                                (fParams[1] * uWsaVis.get(0, 1)) +
+                                (fParams[2] * uWsaVis.get(0, 2));
+        whiteSkyAlbedo[1] = fParams[3] +
+                                (fParams[4] * uWsaNir.get(0, 4)) +
+                                (fParams[5] * uWsaNir.get(0, 5));
         whiteSkyAlbedo[2] = fParams[(3 * 2)] +
-                                (fParams[1 + 3 * 2] * uWsaSw.get(0, 1 + 3 * 2)) +
-                                (fParams[2 + 3 * 2] * uWsaSw.get(0, 2 + 3 * 2));
+                                (fParams[7] * uWsaSw.get(0, 7)) +
+                                (fParams[8] * uWsaSw.get(0, 8));
 
         // # Cap uncertainties and calculate sqrt
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -255,7 +241,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         }
 
         int index = 4 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
-        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
+        targetSamples[index].set(result.getWeightedNumberOfSamples());
         targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
         targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
         targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
@@ -365,14 +351,14 @@ public class BrdfToAlbedoOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) throws OperatorException {
         // merged BRDF product...
-        parameterBandNames = IOUtils.getInversionParameterBandNames();
+        String[] parameterBandNames = IOUtils.getInversionParameterBandNames();
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             SRC_PARAMETERS[i] = i;
             configurator.defineSample(SRC_PARAMETERS[i], parameterBandNames[i], brdfMergedProduct);
         }
 
         int index = 0;
-        uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
+        String[][] uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_UNCERTAINTIES[index] = index;
@@ -392,7 +378,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES,
                 weightedNumberOfSamplesBandName, brdfMergedProduct);
-        String daysToTheClosestSampleBandName = AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
         configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_DAYS_CLOSEST_SAMPLE,
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, brdfMergedProduct);
@@ -437,7 +422,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
-        configurator.defineSample(index++, szaBandName);
+        configurator.defineSample(index, szaBandName);
     }
 
     public static class Spi extends OperatorSpi {

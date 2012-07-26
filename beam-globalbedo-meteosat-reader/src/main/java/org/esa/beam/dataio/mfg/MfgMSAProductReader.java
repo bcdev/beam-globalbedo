@@ -209,7 +209,6 @@ public class MfgMSAProductReader extends AbstractProductReader {
             String msg = String.format("Not able to read file '%s.", file.getName());
             logger.log(Level.WARNING, msg, e);
         }
-        // todo: fill missing lat/lon pixels, use algo described in MFG user handbook, section 5.3.4
         return navigationProduct;
     }
 

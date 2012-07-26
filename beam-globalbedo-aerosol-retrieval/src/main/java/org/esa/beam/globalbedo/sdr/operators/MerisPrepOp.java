@@ -21,12 +21,7 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.ProductNodeGroup;
-import org.esa.beam.framework.datamodel.VirtualBand;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -43,9 +38,7 @@ import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.Dimension;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -137,7 +130,7 @@ public class MerisPrepOp extends Operator {
 
         // create pixel calssification if missing in sourceProduct
         // and add flag band to targetProduct
-        Product idepixProduct = null;
+        Product idepixProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("algorithm", idepixAlgorithm);

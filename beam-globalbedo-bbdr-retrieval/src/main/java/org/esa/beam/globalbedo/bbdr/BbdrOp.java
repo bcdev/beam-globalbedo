@@ -38,6 +38,7 @@ import org.esa.beam.idepix.operators.SchillerAlgorithm;
 import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
+import org.esa.beam.util.math.LookupTable;
 
 import java.awt.Color;
 import java.io.IOException;
@@ -77,11 +78,9 @@ public class BbdrOp extends PixelOperator {
     private static final int SRC_OZO = 9;
     private static final int SRC_WVP = 10;
     private static final int SRC_TOA_RFL = 11;
-    //    private static final int SRC_TOA_VAR = 10 + 15;
     private int SRC_TOA_VAR;
     private int SRC_STATUS;
 
-    private static final int TRG_BBDR = 0;
     private static final int TRG_ERRORS = 3;
     private static final int TRG_KERN = 9;
     private static final int TRG_NDVI = 15;
@@ -94,7 +93,6 @@ public class BbdrOp extends PixelOperator {
     private static final int TRG_AODERR = 23;
 
     private static final int n_spc = 3; // VIS, NIR, SW ; Broadband albedos
-    private static final int n_kernel = 2; //(geo & vol)
 
     @SourceProduct
     private Product sourceProduct;
@@ -316,9 +314,9 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
-        String[] toaBandNames = null;
+        String[] toaBandNames;
 
-        String landExpr = null;
+        String landExpr;
         final String commonLandExpr;
         if (landExpression != null && !landExpression.isEmpty()) {
             commonLandExpr = landExpression;
@@ -346,7 +344,6 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(SRC_AOT, BbdrConstants.MERIS_AOT_BAND_NAME);
             configurator.defineSample(SRC_AOT_ERR, BbdrConstants.MERIS_AOTERR_BAND_NAME);
             configurator.defineSample(SRC_OZO, BbdrConstants.MERIS_OZO_TP_NAME);
-//            configurator.defineSample(SRC_WVP, "ozone");
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
@@ -361,8 +358,6 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(SRC_DEM, "elevation");
             configurator.defineSample(SRC_AOT, "aot");
             configurator.defineSample(SRC_AOT_ERR, "aot_err");
-//            configurator.defineSample(SRC_OZO, "ozone");
-//            configurator.defineSample(SRC_WVP, "ozone");
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
@@ -378,8 +373,6 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(SRC_DEM, "elevation");
             configurator.defineSample(SRC_AOT, "aot");
             configurator.defineSample(SRC_AOT_ERR, "aot_err");
-//            configurator.defineSample(SRC_OZO, "ozone");
-//            configurator.defineSample(SRC_WVP, "ozone");
 
             toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
@@ -402,6 +395,8 @@ public class BbdrOp extends PixelOperator {
             toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
                              BbdrConstants.VGT_TOA_BAND_NAMES.length);
+        } else {
+            throw new OperatorException("BbdrOp: invalid sensor '" + sensor.toString() + "' - cannot continue.");
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
@@ -478,9 +473,9 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(index++, "aod");
             configurator.defineSample(index, "status");
         } else {
-            configurator.defineSample(TRG_BBDR, "BB_VIS");
-            configurator.defineSample(TRG_BBDR + 1, "BB_NIR");
-            configurator.defineSample(TRG_BBDR + 2, "BB_SW");
+            configurator.defineSample(0, "BB_VIS");
+            configurator.defineSample(1, "BB_NIR");
+            configurator.defineSample(2, "BB_SW");
 
             configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS");
             configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
@@ -767,7 +762,7 @@ public class BbdrOp extends PixelOperator {
 
         double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
         for (int i = 0; i < bbdrsData.length; i++) {
-            targetSamples[TRG_BBDR + i].set(bbdrsData[i]);
+            targetSamples[i].set(bbdrsData[i]);
         }
 
         Matrix err2_mat_rfl = nb_coef_arr_all.times(err2_tot_cov).times(nb_coef_arr_all.transpose());
@@ -796,7 +791,6 @@ public class BbdrOp extends PixelOperator {
 
         double kvol = ((PI / 2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang)) / (mus + muv) - PI / 4.0;
 
-        double br = 1.0;
         double hb = 2.0;
 
         double tan_vp = tan(vza_r);
@@ -860,25 +854,24 @@ public class BbdrOp extends PixelOperator {
         double[][] result = new double[sensor.getNumBands()][7];
 
         int lutDimensionCount = lut.getDimensionCount();
-        double[] coordinates = new double[lutDimensionCount];
-        FracIndex[] fracIndexes = FracIndex.createArray(coordinates.length);
-        double[] v = new double[1 << coordinates.length];
+        FracIndex[] fracIndexes = FracIndex.createArray(lutDimensionCount);
+        double[] v = new double[1 << lutDimensionCount];
 
-        lut.computeFracIndex(lut.getDimension(1), aot, fracIndexes[1]);
-        lut.computeFracIndex(lut.getDimension(2), hsf, fracIndexes[2]);
-        lut.computeFracIndex(lut.getDimension(3), phi, fracIndexes[3]);
-        lut.computeFracIndex(lut.getDimension(4), sza, fracIndexes[4]);
-        lut.computeFracIndex(lut.getDimension(5), vza, fracIndexes[5]);
+        LookupTable.computeFracIndex(lut.getDimension(1), aot, fracIndexes[1]);
+        LookupTable.computeFracIndex(lut.getDimension(2), hsf, fracIndexes[2]);
+        LookupTable.computeFracIndex(lut.getDimension(3), phi, fracIndexes[3]);
+        LookupTable.computeFracIndex(lut.getDimension(4), sza, fracIndexes[4]);
+        LookupTable.computeFracIndex(lut.getDimension(5), vza, fracIndexes[5]);
 
         for (int i = 0; i < result.length; i++) {
             int index = 0;
-            lut.computeFracIndex(lut.getDimension(0), wvl[i], fracIndexes[0]);
+            LookupTable.computeFracIndex(lut.getDimension(0), wvl[i], fracIndexes[0]);
             for (double param : params) {
-                lut.computeFracIndex(lut.getDimension(6), param, fracIndexes[6]);
+                LookupTable.computeFracIndex(lut.getDimension(6), param, fracIndexes[6]);
                 result[i][index++] = lut.getValue(fracIndexes, v);
             }
             for (double kxParam : kxParams) {
-                lut.computeFracIndex(lut.getDimension(6), kxParam, fracIndexes[6]);
+                LookupTable.computeFracIndex(lut.getDimension(6), kxParam, fracIndexes[6]);
                 result[i][index++] = kxAotLut.getValue(fracIndexes, v);
             }
         }
@@ -895,26 +888,25 @@ public class BbdrOp extends PixelOperator {
         double[][] result = new double[broadBandSpecs.length][4];
 
         int lutDimensionCount = lut_dw.getDimensionCount();
-        double[] coordinates = new double[lutDimensionCount];
-        FracIndex[] fracIndexes = FracIndex.createArray(coordinates.length);
-        double[] v = new double[1 << coordinates.length];
+        FracIndex[] fracIndexes = FracIndex.createArray(lutDimensionCount);
+        double[] v = new double[1 << lutDimensionCount];
 
-        lut_dw.computeFracIndex(lut_dw.getDimension(1), aot, fracIndexes[1]);
-        lut_dw.computeFracIndex(lut_dw.getDimension(2), hsf, fracIndexes[2]);
+        LookupTable.computeFracIndex(lut_dw.getDimension(1), aot, fracIndexes[1]);
+        LookupTable.computeFracIndex(lut_dw.getDimension(2), hsf, fracIndexes[2]);
 
         for (int i = 0; i < result.length; i++) {
             int index = 0;
-            lut_dw.computeFracIndex(lut_dw.getDimension(0), broadBandSpecs[i], fracIndexes[0]);
+            LookupTable.computeFracIndex(lut_dw.getDimension(0), broadBandSpecs[i], fracIndexes[0]);
 
-            lut_dw.computeFracIndex(lut_dw.getDimension(3), sza, fracIndexes[3]);
+            LookupTable.computeFracIndex(lut_dw.getDimension(3), sza, fracIndexes[3]);
             for (double param : dw_params) {
-                lut_dw.computeFracIndex(lut_dw.getDimension(4), param, fracIndexes[4]);
+                LookupTable.computeFracIndex(lut_dw.getDimension(4), param, fracIndexes[4]);
                 result[i][index++] = lut_dw.getValue(fracIndexes, v);
             }
 
-            lut_up.computeFracIndex(lut_up.getDimension(3), vza, fracIndexes[3]);
+            LookupTable.computeFracIndex(lut_up.getDimension(3), vza, fracIndexes[3]);
             for (double param : up_params) {
-                lut_up.computeFracIndex(lut_up.getDimension(4), param, fracIndexes[4]);
+                LookupTable.computeFracIndex(lut_up.getDimension(4), param, fracIndexes[4]);
                 result[i][index++] = lut_up.getValue(fracIndexes, v);
             }
         }

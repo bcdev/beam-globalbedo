@@ -8,18 +8,13 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
-import java.lang.annotation.Target;
 import java.util.logging.Level;
 
 /**
@@ -30,6 +25,7 @@ import java.util.logging.Level;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@SuppressWarnings("MismatchedReadAndWriteOfArray")
 @OperatorMetadata(alias = "ga.inversion.dailyaccbinary",
                   description = "Provides daily accumulation of single BBDR observations",
                   authors = "Olaf Danne",
@@ -37,7 +33,6 @@ import java.util.logging.Level;
                   copyright = "(C) 2011 by Brockmann Consult")
 public class DailyAccumulationOp extends PixelOperator {
 
-    private static final int SRC_BB_VIS = 0;
     private static final int SRC_BB_NIR = 1;
     private static final int SRC_BB_SW = 2;
     private static final int SRC_SIG_BB_VIS_VIS = 3;
@@ -96,7 +91,7 @@ public class DailyAccumulationOp extends PixelOperator {
         for (int i = 0; i < sourceProducts.length; i++) {
             Product sourceProduct = sourceProducts[i];
 
-            configurator.defineSample((sourceSampleOffset * i) + SRC_BB_VIS, AlbedoInversionConstants.BBDR_BB_VIS_NAME,
+            configurator.defineSample(sourceSampleOffset * i, AlbedoInversionConstants.BBDR_BB_VIS_NAME,
                                       sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_BB_NIR, AlbedoInversionConstants.BBDR_BB_NIR_NAME,
                                       sourceProduct);
@@ -280,7 +275,7 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private Matrix getBBDR(Sample[] sourceSamples, int sourceProductIndex) {
         Matrix bbdr = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        final double bbVis = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble();
+        final double bbVis = sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble();
         bbdr.set(0, 0, bbVis);
         final double bbNir = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble();
         bbdr.set(1, 0, bbNir);
@@ -351,7 +346,7 @@ public class DailyAccumulationOp extends PixelOperator {
                 return true;
             }
         } else {
-            // todo: AATSR  , but maybe descoped
+            // AATSR  has been descoped - no actions
         }
         return false;
     }
@@ -363,8 +358,8 @@ public class DailyAccumulationOp extends PixelOperator {
 
 
     private boolean isBBDRFilter(Sample[] sourceSamples, int sourceProductIndex) {
-        return (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble() == 0.0 ||
-                sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_VIS].getDouble() == 9999.0 ||
+        return (sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble() == 0.0 ||
+                sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble() == 9999.0 ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 0.0 ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 9999.0 ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble() == 0.0 ||

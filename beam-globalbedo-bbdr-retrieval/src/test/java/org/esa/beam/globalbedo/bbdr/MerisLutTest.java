@@ -17,6 +17,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import junit.framework.TestCase;
+import org.esa.beam.util.math.LookupTable;
 
 import java.io.IOException;
 
@@ -420,8 +421,7 @@ public class MerisLutTest extends TestCase {
         GasLookupTable gasLookupTable = new GasLookupTable(Sensor.MERIS);
         gasLookupTable.load(null);
         assertNotNull(gasLookupTable);
-        // todo test sth.
-//        assertEquals(0,gasLookupTable.getAmfArray().length;
+        // todo test more
     }
 
     public void testLutInterpolation1D() {

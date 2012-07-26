@@ -20,20 +20,21 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import javax.media.jai.operator.ConstantDescriptor;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNull;
 
 public class BbdrOpTest {
 
     private static final int W = 3;
     private static final int H = 3;
 
-//    @Test
+    @Test
+    @Ignore
     public void testMerisSdrPixel() {
         BbdrOp bbdrOp = new BbdrOp();
         bbdrOp.setSourceProduct(createSourceProduct());

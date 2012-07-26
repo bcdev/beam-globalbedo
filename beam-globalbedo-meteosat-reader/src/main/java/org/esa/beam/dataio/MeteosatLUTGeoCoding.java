@@ -1,6 +1,5 @@
 package org.esa.beam.dataio;
 
-import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductSubsetDef;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
@@ -21,8 +20,6 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
     private static final int LUT_SIZE = 10;
     public static final double MIN_DIST = 0.025;
 
-    private final Band latBand;
-    private final Band lonBand;
     private final float[] latData;
     private final float[] lonData;
     private final int width;
@@ -36,17 +33,15 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
     private MeteosatQuadTreeSearch mqts;
 
     public MeteosatLUTGeoCoding(Band latitude, Band longitude, String areaID) throws IOException {
-        this.latBand = latitude;
-        this.lonBand = longitude;
-        width = latBand.getSceneRasterWidth();
-        height = latBand.getSceneRasterHeight();
+        width = latitude.getSceneRasterWidth();
+        height = latitude.getSceneRasterHeight();
 
-        latData = readDataFully(latBand);
-        lonData = readDataFully(lonBand);
+        latData = readDataFully(latitude);
+        lonData = readDataFully(longitude);
 
         this.areaID = areaID;
 
-        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, areaID);
+        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, areaID);
     }
 
     private float[] readDataFully(Band band) throws IOException {
@@ -90,8 +85,6 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
             initialized = true;
             initialize();
         }
-
-        // todo: discuss if we should still consider the LUT approach
 
         int si = getSuperLutI(geoPos.lon);
         int sj = getSuperLutJ(geoPos.lat);
@@ -235,24 +228,24 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
         }
     }
 
-    private void printMap() {
-        for (int sj = 0; sj < 180; sj++) {
-            for (int si = 0; si < 360; si++) {
-                PixelBoxLut latLut = latSuperLut[sj][si];
-                PixelBoxLut lonLut = lonSuperLut[sj][si];
-                if (latLut != null && lonLut != null) {
-                    System.out.print("3");
-                } else if (latLut != null) {
-                    System.out.print("2");
-                } else if (lonLut != null) {
-                    System.out.print("1");
-                } else {
-                    System.out.print("-");
-                }
-            }
-            System.out.println();
-        }
-    }
+//    private void printMap() {
+//        for (int sj = 0; sj < 180; sj++) {
+//            for (int si = 0; si < 360; si++) {
+//                PixelBoxLut latLut = latSuperLut[sj][si];
+//                PixelBoxLut lonLut = lonSuperLut[sj][si];
+//                if (latLut != null && lonLut != null) {
+//                    System.out.print("3");
+//                } else if (latLut != null) {
+//                    System.out.print("2");
+//                } else if (lonLut != null) {
+//                    System.out.print("1");
+//                } else {
+//                    System.out.print("-");
+//                }
+//            }
+//            System.out.println();
+//        }
+//    }
 
     private int getSuperLutJ(float lat) {
         int sj = (int) (90 - lat);
@@ -268,26 +261,6 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
             si = 0;
         }
         return si;
-    }
-
-
-    private static PixelBoxLut createLut(Band band, float[] data, boolean useWidth) {
-        final Stx stx = band.getStx(true, ProgressMonitor.NULL);
-        final int w = band.getSceneRasterWidth();
-        final int h = band.getSceneRasterHeight();
-        PixelBoxLut lut = new PixelBoxLut(band.scale(stx.getMin()), band.scale(stx.getMax()), useWidth ? w : h);
-        for (int y = 0; y < h; y++) {
-            for (int x = 0; x < w; x++) {
-                float coord = data[(w * y + x)];
-                if (!Float.isNaN(coord)) {
-                    lut.add(coord, x, y);
-                }
-            }
-        }
-        lut.complete();
-
-//        lut.dump();
-        return lut;
     }
 
     static class PixelBoxLut {
@@ -374,19 +347,19 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
             }
         }
 
-        public void dump() {
-            System.out.printf("min\t%s\n", min);
-            System.out.printf("max\t%s\n", max);
-            System.out.printf("%s\t%s\t%s\t%s\t%s\n", "i", "minX", "maxX", "minY", "maxY");
-            for (int i = 0; i < pixelBoxes.length; i++) {
-                PixelBox pixelBox = pixelBoxes[i];
-                if (pixelBox != null) {
-                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
-                } else {
-                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, -1, -1, -1, -1);
-                }
-            }
-        }
+//        public void dump() {
+//            System.out.printf("min\t%s\n", min);
+//            System.out.printf("max\t%s\n", max);
+//            System.out.printf("%s\t%s\t%s\t%s\t%s\n", "i", "minX", "maxX", "minY", "maxY");
+//            for (int i = 0; i < pixelBoxes.length; i++) {
+//                PixelBox pixelBox = pixelBoxes[i];
+//                if (pixelBox != null) {
+//                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
+//                } else {
+//                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, -1, -1, -1, -1);
+//                }
+//            }
+//        }
     }
 
     static final class PixelBox {
@@ -425,10 +398,9 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
 
             PixelBox pixelBox = (PixelBox) o;
 
-            if (maxX != pixelBox.maxX) return false;
-            if (maxY != pixelBox.maxY) return false;
-            if (minX != pixelBox.minX) return false;
-            if (minY != pixelBox.minY) return false;
+            if (maxX != pixelBox.maxX || maxY != pixelBox.maxY || minX != pixelBox.minX || minY != pixelBox.minY) {
+                return false;
+            }
 
             return true;
         }
@@ -455,7 +427,6 @@ public class MeteosatLUTGeoCoding extends AbstractGeoCoding {
 
     @Override
     public boolean transferGeoCoding(Scene srcScene, Scene destScene, ProductSubsetDef subsetDef) {
-        // todo: implement
         return false;
     }
 

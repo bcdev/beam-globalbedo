@@ -15,6 +15,7 @@ import java.io.*;
  *
  * @author Olaf Danne
  */
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class VirtualDirBz2 extends VirtualDir {
     private final File archiveFile;
     private File extractDir;

@@ -6,7 +6,6 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
@@ -18,6 +17,7 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@SuppressWarnings("MismatchedReadAndWriteOfArray")
 @OperatorMetadata(alias = "ga.albedo.monthly",
         description = "Provides monthly albedos from 8-day periods",
         authors = "Olaf Danne",
@@ -54,7 +54,6 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
     private static final int[] TRG_BHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_BHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private static final int TRG_WEIGHTED_NUM_SAMPLES = 0;
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_GOODNESS_OF_FIT = 2;
     private static final int TRG_SNOW_FRACTION = 3;
@@ -154,7 +153,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         }
 
         int index = 4 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
-        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
+        targetSamples[index].set(result.getWeightedNumberOfSamples());
         targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
         targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
         targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());

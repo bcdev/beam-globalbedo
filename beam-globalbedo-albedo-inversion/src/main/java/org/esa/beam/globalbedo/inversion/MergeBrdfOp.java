@@ -7,14 +7,10 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
-import static java.lang.Math.*;
+import static java.lang.Math.pow;
 
 /**
  * Operator for merging BRDF Snow/NoSnow products.
@@ -153,8 +149,8 @@ public class MergeBrdfOp extends PixelOperator {
     }
 
     private boolean areSnowSamplesZero() {
-        for (int i=0; i<SRC_SNOW_PARAMETERS.length; i++) {
-            if (SRC_SNOW_PARAMETERS[i] > 0.0) {
+        for (int SRC_SNOW_PARAMETER : SRC_SNOW_PARAMETERS) {
+            if (SRC_SNOW_PARAMETER > 0.0) {
                 return false;
             }
         }
@@ -162,8 +158,8 @@ public class MergeBrdfOp extends PixelOperator {
     }
 
     private boolean areNoSnowSamplesZero() {
-        for (int i=0; i<SRC_NOSNOW_PARAMETERS.length; i++) {
-            if (SRC_NOSNOW_PARAMETERS[i] > 0.0) {
+        for (int SRC_NOSNOW_PARAMETER : SRC_NOSNOW_PARAMETERS) {
+            if (SRC_NOSNOW_PARAMETER > 0.0) {
                 return false;
             }
         }

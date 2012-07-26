@@ -40,13 +40,10 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    private Logger logger;
-
     @Override
     public void initialize() throws OperatorException {
 
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
-        logger = BeamLogManager.getSystemLogger();
+        Logger logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;

@@ -47,7 +47,7 @@ public class MomoLut {
     private final Map<DimSelector, LutLimits> lutLimits;
 
     /**
-     * standart constructor reading the binary LUT file from "lutName"
+     * Standard constructor reading the binary LUT file from "lutName"
      * the number of channels or wavelength for which the LUTs is given
      * is not contained in the file
      *
@@ -85,7 +85,12 @@ public class MomoLut {
         gasTransLut = readGasTransTable(gasIis);
     }
 
-    // public methods
+    /**
+     * todo add Javadoc
+     *
+     * @param inPix
+     * @param tau
+     */
     public synchronized void getSdrAndDiffuseFrac(InputPixelData inPix, double tau) {
         Guardian.assertEquals("InputPixelData.nSpecWvl", inPix.nSpecWvl, nWvl);
         Guardian.assertNotNull("InputPixelData.diffuseFrac[][]", inPix.diffuseFrac);
@@ -113,9 +118,14 @@ public class MomoLut {
         }
     }
 
-
+    /**
+     * todo add Javadoc
+     *
+     * @param ipd
+     * @return
+     */
     public boolean isInsideLut(InputPixelData ipd) {
-        boolean valid = (ipd.geom.vza >= lutLimits.get(DimSelector.VZA).min)
+        return (ipd.geom.vza >= lutLimits.get(DimSelector.VZA).min)
                 && (ipd.geom.vza <= lutLimits.get(DimSelector.VZA).max)
                 && (ipd.geom.sza >= lutLimits.get(DimSelector.SZA).min)
                 && (ipd.geom.sza <= lutLimits.get(DimSelector.SZA).max)
@@ -123,9 +133,14 @@ public class MomoLut {
                 && (ipd.geom.razi <= lutLimits.get(DimSelector.AZI).max);
         //&& (ipd.surfPressure >= lutLimits.get(DimSelector.HSF).min)
         //&& (ipd.surfPressure <= lutLimits.get(DimSelector.HSF).max);
-        return valid;
     }
 
+    /**
+     * todo add Javadoc
+     *
+     * @param ipd
+     * @return
+     */
     public synchronized double getMaxAOT(InputPixelData ipd) {
         final float geomAMF = (float) ((1 / Math.cos(Math.toRadians(ipd.geom.sza))
                 + 1 / Math.cos(Math.toRadians(ipd.geom.vza))));
@@ -147,6 +162,7 @@ public class MomoLut {
     }
 
     // private methods
+
     private Map<DimSelector, LutLimits> getLutLimits() {
         Map<DimSelector, LutLimits> limits = new HashMap<DimSelector, LutLimits>(5);
         limits.put(DimSelector.VZA, new LutLimits(vza[0], vza[vza.length - 1]));
@@ -213,7 +229,7 @@ public class MomoLut {
     }
 
     private enum DimSelector {
-        VZA, SZA, AZI, HSF, AOT;
+        VZA, SZA, AZI, HSF, AOT
     }
 
     private static class LutLimits {

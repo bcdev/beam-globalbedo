@@ -36,7 +36,7 @@ import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.BorderExtender;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.Map;
 
 /**

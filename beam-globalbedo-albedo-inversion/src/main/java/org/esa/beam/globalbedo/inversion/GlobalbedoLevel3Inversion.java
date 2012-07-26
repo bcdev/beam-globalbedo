@@ -56,15 +56,13 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
     private boolean accumulationOnly;
 
+    @SuppressWarnings("FieldCanBeLocal")
     @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
 
-    private Logger logger;
-
     @Override
     public void initialize() throws OperatorException {
-        logger = BeamLogManager.getSystemLogger();
-//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        Logger logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get Prior input file...
         final String priorDir = priorRootDir + File.separator + tile +
@@ -72,12 +70,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
-        Product priorProduct = null;
+        Product priorProduct;
         try {
             priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
         } catch (IOException e) {
             throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                    " - cannot proceed...: " + e.getMessage());
+                                                " - cannot proceed...: " + e.getMessage());
         }
 
         if (priorProduct != null) {
@@ -87,16 +85,11 @@ public class GlobalbedoLevel3Inversion extends Operator {
                     + File.separator + year + File.separator + tile;
 
             // STEP 3: we need to reproject the priors for further use...
-            Product reprojectedPriorProduct = null;
+            Product reprojectedPriorProduct;
             try {
                 Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
-                if (priorProduct != null) {
-                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            tileInfoProduct);
-                } else {
-                    usePrior = false;
-                    reprojectedPriorProduct = tileInfoProduct;
-                }
+                reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
+                                                                             tileInfoProduct);
             } catch (IOException e) {
                 throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
             }

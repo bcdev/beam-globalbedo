@@ -25,8 +25,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     private static final int LUT_SIZE = 10;
 
-    private final Band latBand;
-    private final Band lonBand;
     private final float[] latData;
     private final float[] lonData;
     private final int width;
@@ -40,17 +38,15 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
     private MeteosatQuadTreeSearch mqts;
 
     public MeteosatGeoCoding(Band latitude, Band longitude, String regionID) throws IOException {
-        this.latBand = latitude;
-        this.lonBand = longitude;
-        width = latBand.getSceneRasterWidth();
-        height = latBand.getSceneRasterHeight();
+        width = latitude.getSceneRasterWidth();
+        height = latitude.getSceneRasterHeight();
 
-        latData = readDataFully(latBand);
-        lonData = readDataFully(lonBand);
+        latData = readDataFully(latitude);
+        lonData = readDataFully(longitude);
 
         this.regionID = regionID;
 
-        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, height, regionID);
+        mqts = new MeteosatQuadTreeSearch(latData, lonData, width, regionID);
     }
 
     @Override
@@ -131,7 +127,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     @Override
     public boolean transferGeoCoding(Scene srcScene, Scene destScene, ProductSubsetDef subsetDef) {
-        // todo: implement
         return false;
     }
 
@@ -339,19 +334,19 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
             }
         }
 
-        public void dump() {
-            System.out.printf("min\t%s\n", min);
-            System.out.printf("max\t%s\n", max);
-            System.out.printf("%s\t%s\t%s\t%s\t%s\n", "i", "minX", "maxX", "minY", "maxY");
-            for (int i = 0; i < pixelBoxes.length; i++) {
-                PixelBox pixelBox = pixelBoxes[i];
-                if (pixelBox != null) {
-                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
-                } else {
-                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, -1, -1, -1, -1);
-                }
-            }
-        }
+//        public void dump() {
+//            System.out.printf("min\t%s\n", min);
+//            System.out.printf("max\t%s\n", max);
+//            System.out.printf("%s\t%s\t%s\t%s\t%s\n", "i", "minX", "maxX", "minY", "maxY");
+//            for (int i = 0; i < pixelBoxes.length; i++) {
+//                PixelBox pixelBox = pixelBoxes[i];
+//                if (pixelBox != null) {
+//                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, pixelBox.minX, pixelBox.maxX, pixelBox.minY, pixelBox.maxY);
+//                } else {
+//                    System.out.printf("%d\t%d\t%d\t%d\t%d\n", i, -1, -1, -1, -1);
+//                }
+//            }
+//        }
     }
 
     static final class PixelBox {
@@ -390,12 +385,8 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
             PixelBox pixelBox = (PixelBox) o;
 
-            if (maxX != pixelBox.maxX) return false;
-            if (maxY != pixelBox.maxY) return false;
-            if (minX != pixelBox.minX) return false;
-            if (minY != pixelBox.minY) return false;
+            return !(maxX != pixelBox.maxX || maxY != pixelBox.maxY || minX != pixelBox.minX || minY != pixelBox.minY);
 
-            return true;
         }
 
         @Override

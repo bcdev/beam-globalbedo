@@ -66,16 +66,6 @@ public class GaMasterOp  extends Operator {
     private boolean noFilling;
     @Parameter(defaultValue="false")
     private boolean noUpscaling;
-/*
-    @Parameter(defaultValue="false")
-    private boolean tc1G;
-    @Parameter(defaultValue="true")
-    private boolean retrieveAOT = true;
-    @Parameter(defaultValue="false")
-    private boolean saveSdrBands = false;
-    @Parameter(defaultValue="false")
-    private boolean saveModelBands = false;
-*/
     @Parameter(defaultValue="1")
     private int soilSpecId;
     @Parameter(defaultValue="5")
@@ -152,13 +142,7 @@ public class GaMasterOp  extends Operator {
         aotParams.put("vegSpecId", vegSpecId);
         aotParams.put("scale", scale);
         aotParams.put("ndviThreshold", ndviThr);
-        /*
-        aotParams.put("retrieveAOT", retrieveAOT);
-        aotParams.put("saveToaBands", saveToaBands);
-        aotParams.put("saveSdrBands", saveSdrBands);
-        aotParams.put("saveModelBands", saveModelBands);
-         *
-         */
+
         Product aotDownsclProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AerosolOp2.class), aotParams, reflProduct, rhAot);
 
         Product fillAotProduct = aotDownsclProduct;
@@ -197,9 +181,6 @@ public class GaMasterOp  extends Operator {
         ProductUtils.copyGeoCoding(reflProduct, tarP);
         ProductUtils.copyFlagBands(reflProduct, tarP, true);
         ProductUtils.copyFlagBands(aotHiresProduct, tarP, true);
-        //copyFlagBandsWithMask(reflProduct, tarP);
-        //copyFlagBandsWithMask(aotHiresProduct, tarP);
-        Band tarBand;
         String sourceBandName;
         if (copyToaRadBands){
             for (Band sourceBand : reflProduct.getBands()){

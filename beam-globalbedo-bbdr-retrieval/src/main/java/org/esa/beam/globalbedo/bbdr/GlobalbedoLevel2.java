@@ -50,19 +50,17 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "")
     private String tile;
 
-    private Logger logger;
-
     @Override
     public void initialize() throws OperatorException {
-        logger = BeamLogManager.getSystemLogger();
+        Logger logger = BeamLogManager.getSystemLogger();
 
         if (sourceProduct.getPreferredTileSize() == null) {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
         }
 
-        Product targetProduct = null;
-        Product aotProduct = null;
+        Product targetProduct;
+        Product aotProduct;
         if (computeAotToBbdrProductOnly) {
             aotProduct = sourceProduct;
         } else {

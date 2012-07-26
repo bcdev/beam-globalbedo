@@ -109,8 +109,7 @@ public class IOUtils {
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith("Kernels." + doyString)) {
                 String sourceProductFileName = priorDir + File.separator + priorFileName;
-                Product product = ProductIO.readProduct(sourceProductFileName);
-                return product;
+                return ProductIO.readProduct(sourceProductFileName);
             }
         }
 
@@ -119,10 +118,9 @@ public class IOUtils {
 
     public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
                                                      Product tileInfoProduct) throws IOException {
-        Product geoCodingReferenceProduct = tileInfoProduct;
-        if (geoCodingReferenceProduct != null) {
+        if (tileInfoProduct != null) {
             // we just need to copy the geooding, not to reproject...
-            ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
+            ProductUtils.copyGeoCoding(tileInfoProduct, priorProduct);
         } else {
             // create geocoding manually in case we do not have a 'tileInfo'...
             ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
@@ -146,9 +144,7 @@ public class IOUtils {
             }
         }
 
-        Product reprojectedProduct = priorProduct;
-
-        return reprojectedProduct;
+        return priorProduct;
     }
 
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
@@ -160,8 +156,7 @@ public class IOUtils {
         for (String brdfFileName : brdfFileList) {
             if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
-                Product product = ProductIO.readProduct(sourceProductFileName);
-                return product;
+                return ProductIO.readProduct(sourceProductFileName);
             }
         }
 
@@ -231,39 +226,7 @@ public class IOUtils {
                                                                                    computeSnow);
 
         if (albedoInputProductList.size() > 0) {
-            String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
-
-            int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
-            int[] albedoInputProductYears = new int[albedoInputProductList.size()];
-
-            int productIndex = 0;
-
-            for (String albedoInputProductName : albedoInputProductList) {
-
-                String productYearRootDir;
-                // e.g. get '2006' from 'matrices_2006_doy.dim'...
-                final String thisProductYear = albedoInputProductName.substring(9, 13);
-                final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
-                if (computeSnow) {
-                    productYearRootDir = accumulatorRootDir.concat(
-                            File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
-                } else {
-                    productYearRootDir = accumulatorRootDir.concat(
-                            File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
-                }
-
-                String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
-                albedoInputProductFilenames[productIndex] = sourceProductFileName;
-                albedoInputProductDoys[productIndex] = Integer.parseInt(
-                        thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
-                albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
-                productIndex++;
-            }
-
             inputProduct = new AlbedoInput();
-            inputProduct.setProductFilenames(albedoInputProductFilenames);
-            inputProduct.setProductDoys(albedoInputProductDoys);
-            inputProduct.setProductYears(albedoInputProductYears);
             inputProduct.setReferenceYear(year);
             inputProduct.setReferenceDoy(doy);
 
@@ -442,7 +405,7 @@ public class IOUtils {
         }
 
         bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
-        bandNames[index++] = AlbedoInversionConstants.ACC_MASK_NAME;
+        bandNames[index] = AlbedoInversionConstants.ACC_MASK_NAME;
 
         return bandNames;
     }
@@ -534,7 +497,7 @@ public class IOUtils {
 //        int size = numBands * rasterWidth * rasterHeight;         // OLD
         int size = numBands * rasterWidth * rasterHeight * 4; // NEW
         final File fullAccumulatorBinaryFile = new File(filename);
-        FileInputStream f = null;
+        FileInputStream f;
         try {
             f = new FileInputStream(fullAccumulatorBinaryFile);
         } catch (FileNotFoundException e) {
@@ -553,43 +516,8 @@ public class IOUtils {
 
         try {
             long t1 = System.currentTimeMillis();
-            // OLD
-//            int nRead;
-//            int ii = 0;
-//            int jj = 0;
-//            int kk = 0;
-//            while ((nRead = ch.read(bb)) != -1) {
-//                if (nRead == 0) {
-//                    continue;
-//                }
-//                bb.position(0);
-//                bb.limit(nRead);
-//                while (bb.hasRemaining()) {
-//                    final float value = bb.getFloat();
-//                    // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
-//                    if (ii == numBands-1) {
-//                        daysToTheClosestSample[jj][kk] = value;
-//                    } else {
-//                        sumMatrices[ii][jj][kk] = value;
-//                    }
-//                    // find the right indices for sumMatrices array...
-//                    kk++;
-//                    if (kk == rasterHeight) {
-//                        jj++;
-//                        kk = 0;
-//                        if (jj == rasterWidth) {
-//                            ii++;
-//                            jj = 0;
-//                        }
-//                    }
-//                }
-//                bb.clear();
-//            }
-//            ch.close();
-//            f.close();
 
-            // NEW, faster
-            int nRead = ch.read(bb);
+            ch.read(bb);
             for (int ii = 0; ii < numBands - 1; ii++) {
                 for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
                     floatBuffer.get(sumMatrices[ii][jj]);
@@ -602,15 +530,15 @@ public class IOUtils {
             floatBuffer.clear();
             ch.close();
             f.close();
-            // end NEW
+
             long t2 = System.currentTimeMillis();
             BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulator read in: " + (t2 - t1) + " ms");
 
             accumulator = new FullAccumulator(year, doy, sumMatrices, daysToTheClosestSample);
 
         } catch (IOException e) {
-            // todo
-            e.printStackTrace();
+            BeamLogManager.getSystemLogger().log(Level.SEVERE, "Could not read full accumulator file '" + filename +
+                    "':  " + e.getMessage());
         }
         return accumulator;
     }
@@ -626,25 +554,7 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
-            final int size = dim1 * dim2 * dim3 * 4;
-            // OLD
-//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-//
-//            for (int i = 0; i < dim1; i++) {
-//                for (int j = 0; j < dim2; j++) {
-//                    for (int k = 0; k < dim3; k++) {
-//                        bb.putFloat(index, values[i][j][k]);
-//                        index += 4;
-//                    }
-//                }
-//            }
-//
-//            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-//            // position and the limit is written to the file
-//            wChannel.write(bb);
-            // end OLD
 
-            // NEW, faster:
             ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * dim3 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
@@ -653,7 +563,6 @@ public class IOUtils {
                 }
             }
             wChannel.write(bb);
-            // END NEW
 
             // Close file when finished with it..
             wChannel.close();
@@ -675,32 +584,7 @@ public class IOUtils {
             final int dim1 = sumMatrices.length;
             final int dim2 = sumMatrices[0].length;
             final int dim3 = sumMatrices[0][0].length;
-            final int size = (dim1 + 1) * dim2 * dim3 * 4;
-            // OLD
-//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
-//
-//            for (int i = 0; i < dim1; i++) {
-//                for (int j = 0; j < dim2; j++) {
-//                    for (int k = 0; k < dim3; k++) {
-//                        bb.putFloat(index, sumMatrices[i][j][k]);
-//                        index += 4;
-//                    }
-//                }
-//            }
-//
-//            for (int j = 0; j < dim2; j++) {
-//                for (int k = 0; k < dim3; k++) {
-//                    bb.putFloat(index, daysClosestSample[j][k]);
-//                    index += 4;
-//                }
-//            }
-//
-//            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
-//            // position and the limit is written to the file
-//            wChannel.write(bb);
-            // end OLD
 
-            // NEW, faster:
             ByteBuffer bb = ByteBuffer.allocateDirect((dim1 + 1) * dim2 * dim3 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
@@ -712,7 +596,6 @@ public class IOUtils {
                 floatBuffer.put(daysClosestSample[j], 0, dim3);
             }
             wChannel.write(bb);
-            // END NEW
 
             // Close file when finished with it..
             wChannel.close();
@@ -736,7 +619,6 @@ public class IOUtils {
         } else {
             return -1;
         }
-//        System.out.println("productName, doystring = " + productName + "," + doyString);
         int doy = Integer.parseInt(doyString);
         if (doy < 0 || doy > 366) {
             return -1;
@@ -747,7 +629,6 @@ public class IOUtils {
 
     public static Product getTileInfoProduct(String dailyAccumulatorDir, String defaultTileInfoFilename) throws IOException {
         String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
-//        System.out.println("tileInfoFilePath = " + tileInfoFilePath);
         File tileInfoFile = new File(tileInfoFilePath);
         if (!tileInfoFile.exists()) {
             int index = 1;
@@ -761,34 +642,13 @@ public class IOUtils {
             }
             if (!exists) {
                 return null;
-//                throw new OperatorException("No info file found for given tile - cannot proceed.");
             }
         }
-//        return tileInfoFilePath;
-        Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
-        return tileInfoProduct;
-    }
-
-
-    public static boolean isLeapYear(int year) {
-        if (year < 0) {
-            return false;
-        }
-
-        if (year % 400 == 0) {
-            return true;
-        } else if (year % 100 == 0) {
-            return false;
-        } else if (year % 4 == 0) {
-            return true;
-        } else {
-            return false;
-        }
+        return ProductIO.readProduct(tileInfoFilePath);
     }
 
     public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
         final int difference = 365 * (year - referenceYear) + (doy - referenceDoy);
-        // todo: consider leap years
         return Math.abs(difference);
     }
 
@@ -807,8 +667,8 @@ public class IOUtils {
             Product[] albedoProducts = new Product[albedoFiles.length];
 
             int productIndex = 0;
-            for (int i = 0; i < albedoFiles.length; i++) {
-                String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
+            for (String albedoFile : albedoFiles) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFile;
 
                 if ((new File(albedoProductFileName)).exists()) {
                     Product product;

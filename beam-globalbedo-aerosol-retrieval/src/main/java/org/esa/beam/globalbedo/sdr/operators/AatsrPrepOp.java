@@ -39,7 +39,7 @@ import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.Rectangle;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,8 +104,8 @@ public class AatsrPrepOp extends Operator {
 
         // create pixel calssification if missing in szaSubProduct
         // and add flag band to targetProduct
-        Product idepixNadirProduct = null;
-        Product idepixFwardProduct = null;
+        Product idepixNadirProduct;
+        Product idepixFwardProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);

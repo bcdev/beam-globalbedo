@@ -104,13 +104,13 @@ public class MsgMSAProductReader extends AbstractProductReader {
 
     static String getRegionFromAlbedoInputFilename(String albedoInputFilename) {
         // region rrrr from 'HDF5_LSASAF_MSG_ALBEDO_<rrrr>'  (Euro, NAfr, SAfr)
-        return albedoInputFilename.substring(23,27);
+        return albedoInputFilename.substring(23, 27);
     }
 
     private Product createProduct() throws IOException {
         Product albedoInputProduct = null;
-        Product latInputProduct = null;
-        Product lonInputProduct = null;
+        Product latInputProduct;
+        Product lonInputProduct;
         try {
             final String[] productFileNames = virtualDir.list("");   // should contain only one file
 
@@ -121,14 +121,10 @@ public class MsgMSAProductReader extends AbstractProductReader {
             }
             if (albedoInputProduct != null) {
                 String region = getRegionFromAlbedoInputFilename(albedoInputProduct.getName());
-                if (latInputProduct == null) {
-                    // lat/lon files are by convention expected in same directory as albedo input product
-                    latInputProduct = getLatInputProductFromSeparateFile(region);
-                }
-                if (lonInputProduct == null) {
-                    // lat/lon files are by convention expected in same directory as albedo input product
-                    lonInputProduct = getLonInputProductFromSeparateFile(region);
-                }
+                // lat/lon files are by convention expected in same directory as albedo input product
+                latInputProduct = getLatInputProductFromSeparateFile(region);
+                // lat/lon files are by convention expected in same directory as albedo input product
+                lonInputProduct = getLonInputProductFromSeparateFile(region);
             } else {
                 throw new IllegalStateException("Content of Meteosat Surface Albedo product '" + getInputFile().getName() +
                                                         "' incomplete or corrupt.");
@@ -258,7 +254,7 @@ public class MsgMSAProductReader extends AbstractProductReader {
         ProductUtils.copyBand(latBand.getName(), latInputProduct, product, true);
         ProductUtils.copyBand(lonBand.getName(), lonInputProduct, product, true);
 
-        // todo: implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
+        // use specific MeteosatGeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
         // --> special solution for Meteosat, but general solution is still under discussion
         // PixelGeoCoding needs lat and lon from same product!
