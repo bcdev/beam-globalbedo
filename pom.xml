@@ -79,9 +79,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13</ceres.version>
+        <ceres.version>0.13.1</ceres.version>
         <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.10</beam.version>
+        <beam.version>4.10.3</beam.version>
     </properties>
 
     <dependencyManagement>
@@ -112,7 +112,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-visat</artifactId>
-                <version>4.10.3</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -122,12 +122,12 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>4.10.3</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
-                <version>4.10.3</version>
+                <version>${beam.version}</version>
             </dependency>
 
             <dependency>
@@ -161,7 +161,7 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
                 <!--<version>1.0.101</version>-->
-                <version>1.1</version>
+                <version>1.1.1</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
