@@ -553,17 +553,10 @@ public class BbdrOp extends PixelOperator {
         double aot = sourceSamples[SRC_AOT].getDouble();
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
-        if (hsf >= 0.0) {
-            // add one meter to avoid truncation to zero
-            hsf += 1.0;
-        }
 
-        hsf *= 0.001;
-//        hsf = max(hsf, -0.45); // elevation up to -450m ASL
-        // CORRECTION, LG 2011/06/17:
-        if (hsf < 0.0 && hsf >= -0.45) {
-//            hsf = 0.0;
-            hsf = 1.0;
+        hsf *= 0.001; // convert m to km
+        if (hsf <= 0.0 && hsf >= -0.45) {
+            hsf = hsfMin;
         }
 
         if (vza < vzaMin || vza > vzaMax ||
