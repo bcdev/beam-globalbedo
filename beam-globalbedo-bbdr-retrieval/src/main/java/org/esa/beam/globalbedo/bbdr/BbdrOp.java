@@ -422,7 +422,7 @@ public class BbdrOp extends PixelOperator {
 //            SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD
             String l1InvalidExpression = "";
             if (sensor == Sensor.MERIS) {
-                l1InvalidExpression = "l1_flags.INVALID";
+                l1InvalidExpression = "l1_flags.INVALID OR l1_flags.COSMETIC";
             } else if (sensor == Sensor.VGT) {
                 l1InvalidExpression = "!SM.B0_GOOD AND !SM.B2_GOOD AND !SM.B3_GOOD AND !SM.MIR_GOOD";
             }
