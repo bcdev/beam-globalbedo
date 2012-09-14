@@ -517,12 +517,15 @@ public class BbdrOp extends PixelOperator {
                     if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
                         // dem_alt from TP includes sea depth
                         sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
+                        for (int i = 0; i < sensor.getNumBands(); i++) {
+                            double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
+                            sdr = sdr - sdr13;  // normalize
+                            targetSamples[i].set(sdr);
+                        }
+                    } else {
+                        targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+                        return;
                     }
-                }
-                for (int i = 0; i < sensor.getNumBands(); i++) {
-                    double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
-                    sdr = sdr - sdr13;  // normalize
-                    targetSamples[i].set(sdr);
                 }
 
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
