@@ -63,6 +63,9 @@ public class AlbedoInversionConstants {
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_X = 926.6254330558;
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_Y = 926.6254330558;
 
+    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
+    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
+
     public static final String MODIS_SIN_PROJECTION_CRS_STRING = "PROJCS[\"MODIS Sinusoidal\"," +
             "GEOGCS[\"WGS 84\"," +
             "  DATUM[\"WGS_1984\"," +

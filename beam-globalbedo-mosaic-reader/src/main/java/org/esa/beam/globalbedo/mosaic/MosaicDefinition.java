@@ -22,7 +22,7 @@ package org.esa.beam.globalbedo.mosaic;
 class MosaicDefinition {
     private final int numTileX;
     private final int numTileY;
-    private final int tileSize;
+    private int tileSize;
 
     public MosaicDefinition(int numTileX, int numTileY, int tileSize) {
         this.numTileX = numTileX;
@@ -48,5 +48,9 @@ class MosaicDefinition {
 
     public int getTileSize() {
         return tileSize;
+    }
+
+    public void setTileSize(int tileSize) {
+        this.tileSize = tileSize;
     }
 }

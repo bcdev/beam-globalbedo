@@ -26,5 +26,10 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-albedo-inversion</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 </project>

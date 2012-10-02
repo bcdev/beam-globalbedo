@@ -23,7 +23,12 @@ import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.ProductUtils;
+import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
@@ -51,6 +56,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private final MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
     private boolean mosaicPriors;
+    private boolean mosaicAdam;
 
     protected GlobAlbedoMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -64,6 +70,9 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         Set<MosaicTile> mosaicTiles;
         if (mosaicPriors) {
             mosaicTiles = createPriorMosaicTiles(inputFile);
+        } else if (mosaicAdam) {
+            mosaicDefinition.setTileSize(120);
+            mosaicTiles = createMosaicTiles(inputFile);
         } else {
             mosaicTiles = createMosaicTiles(inputFile);
         }
@@ -73,14 +82,23 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
         Product firstMosaicProduct = mosaicTiles.iterator().next().getProduct();
 
-        final Product product = new Product(getProductName(inputFile), PRODUCT_TYPE, width, height);
+        final String productName = getProductName(inputFile);
+        final Product product = new Product(productName, PRODUCT_TYPE, width, height);
         product.setPreferredTileSize(mosaicDefinition.getTileSize() / 4, mosaicDefinition.getTileSize() / 4);
         product.setFileLocation(inputFile);
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
 
-        if (!mosaicPriors) {
+        if (firstMosaicProduct.getGeoCoding() != null && !mosaicPriors && !mosaicAdam) {
             addGeoCoding(firstMosaicProduct, product);
+        } else {
+            CrsGeoCoding crsGeoCoding = null;
+            if (mosaicAdam) {
+                crsGeoCoding = getMosaicGeocoding(10);
+            } else if (mosaicPriors) {
+                crsGeoCoding = getMosaicGeocoding(1);
+            }
+            product.setGeoCoding(crsGeoCoding);
         }
 
         Band[] bands = firstMosaicProduct.getBands();
@@ -165,9 +183,25 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return priorDirs;
     }
 
+    public static File[] getAdamTileDirectories(String rootDirString) {
+        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+        FileFilter tileFilter = new FileFilter() {
+            @Override
+            public boolean accept(File file) {
+                return file.isDirectory() && pattern.matcher(file.getName()).matches();
+            }
+        };
+
+        File rootDir = new File(rootDirString);
+        return rootDir.listFiles(tileFilter);
+    }
 
     public void setMosaicPriors(boolean mosaicPriors) {
         this.mosaicPriors = mosaicPriors;
+    }
+
+    public void setMosaicAdam(boolean mosaicAdam) {
+        this.mosaicAdam = mosaicAdam;
     }
 
     String getProductName(File file) {
@@ -175,6 +209,13 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         Matcher matcher = pattern.matcher(fileName);
         matcher.find();
         return fileName.substring(0, matcher.start() - 1);
+    }
+
+    String getTileName(File file) {
+        String fileName = file.getName();
+        Matcher matcher = pattern.matcher(fileName);
+        matcher.find();
+        return fileName.substring(matcher.start(), matcher.start() + 6);
     }
 
     MosaicTile createMosaicTile(File file) {
@@ -220,6 +261,23 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             throw new IOException("Cannot create GeoCoding: ", e);
         }
     }
+
+    private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
+        final double easting = AlbedoInversionConstants.UPPER_LEFT_TILE_UPPER_LEFT_X;
+        final double northing = AlbedoInversionConstants.UPPER_LEFT_TILE_UPPER_LEFT_Y;
+        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH *36 / downscalingFactor;
+        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT *18 / downscalingFactor;
+        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
+        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
+        try {
+            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+        } catch (Exception e) {
+            throw new OperatorException("Cannot attach mosaic geocoding : ", e);
+        }
+    }
+
 
     @Override
     protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
@@ -316,15 +374,15 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             final boolean patternMatches = pattern.matcher(file.getName()).matches();
             final boolean isFile = file.isFile();
 
-            boolean priorComplete = true;
+            boolean complete = true;
             if (patternMatches && isFile && mosaicPriors) {
                 // check if binary file exists for give hdr file...
                 final String fileRootPath = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - 4);
                 final String binFilePath = fileRootPath + ".bin";
-                priorComplete = new File(binFilePath).exists();
+                complete = new File(binFilePath).exists();
             }
 
-            return isFile && patternMatches && priorComplete;
+            return isFile && patternMatches && complete;
         }
     }
 }
