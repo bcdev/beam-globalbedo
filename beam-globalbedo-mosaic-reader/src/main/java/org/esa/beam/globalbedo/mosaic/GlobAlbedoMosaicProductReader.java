@@ -18,28 +18,21 @@ package org.esa.beam.globalbedo.mosaic;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
-import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import java.awt.Point;
-import java.awt.Rectangle;
+import java.awt.*;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -263,18 +256,19 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     }
 
     private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
-        final double easting = AlbedoInversionConstants.UPPER_LEFT_TILE_UPPER_LEFT_X;
-        final double northing = AlbedoInversionConstants.UPPER_LEFT_TILE_UPPER_LEFT_Y;
-        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH *36 / downscalingFactor;
-        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT *18 / downscalingFactor;
-        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
-        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
+        final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
+        final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
+        final String crsString = MosaicConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+        final int imageWidth = MosaicConstants.MODIS_TILE_WIDTH *36 / downscalingFactor;
+        final int imageHeight = MosaicConstants.MODIS_TILE_HEIGHT *18 / downscalingFactor;
+        final double pixelSizeX = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
+        final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
             return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
         } catch (Exception e) {
-            throw new OperatorException("Cannot attach mosaic geocoding : ", e);
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
+            return null;
         }
     }
 
