@@ -75,8 +75,8 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
     @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
     private int monthIndex;
 
-    @Parameter(valueSet = {"1", "5"}, description = "Scaling (10 = 1/10deg, 50 = 1/2deg resolution", defaultValue = "1")
-    private int scaling;
+    @Parameter(valueSet = {"1.2"}, description = "Scaling (1.2 = 1/10deg resolution)", defaultValue = "1.2")
+    private double scaling;
 
     @Parameter(defaultValue = "true", description = "If True product will be reprojected")
     private boolean reprojectToPlateCarre;
@@ -133,8 +133,8 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
             reprojectedProduct = mosaicProduct;
         }
 
-        int width = reprojectedProduct.getSceneRasterWidth() / scaling;
-        int height = reprojectedProduct.getSceneRasterHeight() / scaling;
+        int width = (int) (4320 / scaling);   // with scaling of 1.2, width is 3600 as requested
+        int height = (int) (2160 / scaling);  // with scaling of 1.2, height is 1800 as requested
 
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
 
@@ -152,7 +152,7 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize(ADAM_TILE_SIZE / scaling / 4, ADAM_TILE_SIZE / scaling / 4);
+        upscaledProduct.setPreferredTileSize((int) (ADAM_TILE_SIZE / scaling / 4), (int) (ADAM_TILE_SIZE / scaling / 4));
 
         if (reprojectToPlateCarre) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
@@ -208,10 +208,10 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
-        Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                                          targetRect.y * scaling,
-                                          targetRect.width * scaling,
-                                          targetRect.height * scaling);
+        Rectangle srcRect = new Rectangle((int) (targetRect.x * scaling),
+                                          (int) (targetRect.y * scaling),
+                                          (int) (targetRect.width * scaling),
+                                          (int) (targetRect.height * scaling));
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
         if (hasValidPixel(getSourceTile(nsamplesBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
@@ -272,8 +272,8 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                float sample = src.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
+                final float sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
                 if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
                     sample = Float.NaN;
                 }
@@ -281,6 +281,7 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
             }
         }
     }
+
 
     public static class Spi extends OperatorSpi {
 
