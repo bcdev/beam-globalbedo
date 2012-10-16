@@ -10,6 +10,14 @@ package org.esa.beam.globalbedo.mosaic;
  */
 public class MosaicConstants {
 
+    public static final String WGS84_CODE = "EPSG:4326";
+
+    public static final int NUM_H_TILES = 36;
+    public static final int NUM_V_TILES = 18;
+
+    public static final int MODIS_TILE_SIZE = 1200;
+    public static final int ADAM_TILE_SIZE = 120;
+
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
 

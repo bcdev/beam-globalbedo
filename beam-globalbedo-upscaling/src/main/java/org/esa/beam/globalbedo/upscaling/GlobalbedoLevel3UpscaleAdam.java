@@ -19,8 +19,8 @@ package org.esa.beam.globalbedo.upscaling;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -29,17 +29,14 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
-import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.jai.ImageManager;
+import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -58,28 +55,15 @@ import java.util.logging.Logger;
         internal = true,
         description = "Upscales and mosaics ADAM products (pretty similar to the MODIS priors) \n" +
                 " that exist in multiple Sinusoidal tiles into a 0.1 degree  Plate Caree product.")
-public class GlobalbedoLevel3UpscaleAdam extends Operator {
-
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /disk/Globalbedo
-    private String gaRootDir;
+public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp {
 
     @Parameter(defaultValue = "", description = "ADAM root directory")
-    // e.g., /disk/Globalbedo90/adam/processed/Monthly
     private String adamRootDir;
     // products at MSSL are like /disk/Globalbedo90/adam/processed/Monthly/h23v06/Adam.nr.200506.h23v06.dim
     //   general:                /disk/Globalbedo90/adam/processed/Monthly/hXXvYy/Adam.nr.yyyyMM.hXXvYY.dim
 
-    @Parameter(defaultValue = "2005", description = "Year")
-    private int year;
-
-    @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
-    private int monthIndex;
-
     @Parameter(valueSet = {"1.2"}, description = "Scaling (1.2 = 1/10deg resolution)", defaultValue = "1.2")
     private double scaling;
-
-    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
-    private boolean reprojectToPlateCarre;
 
 
     @TargetProduct
@@ -87,35 +71,31 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
 
 
     private static final String ADAM_NSAMPLES_NAME = "GROUND_N_SAMPLES";
-
-    private static final String WGS84_CODE = "EPSG:4326";
-    private static final int ADAM_TILE_SIZE = 120;
-
-    private Product reprojectedProduct;
+    private static final String ADAM_STAGE1_PRIOR_NSAMPLES_NAME = "Weighted number of samples";
+    private static final String ADAM_STAGE2_PRIOR_NSAMPLES_NAME = "N samples";
 
     private Band nsamplesBand;
-    private String nsamplesBandName;
-
-    private File refTile;
-
-    private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
-
-        logger = BeamLogManager.getSystemLogger();
-        refTile = findRefTile();
-
+        final File refTile = findRefTile();
         if (refTile == null || !refTile.exists()) {
             throw new OperatorException("No ADAM files for mosaicing found.");
         }
-        ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
+
+        final ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
         if (productReader == null) {
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
         if (productReader instanceof GlobAlbedoMosaicProductReader) {
-            ((GlobAlbedoMosaicProductReader) productReader).setMosaicAdam(true);
+            if (isPriors) {
+                ((GlobAlbedoMosaicProductReader) productReader).setMosaicAdamPriors(true);
+                ((GlobAlbedoMosaicProductReader) productReader).setAdamPriorStage(priorStage);
+            } else {
+                ((GlobAlbedoMosaicProductReader) productReader).setMosaicAdam(true);
+            }
         }
+
         Product mosaicProduct;
         try {
             mosaicProduct = productReader.readProductNodes(refTile, null);
@@ -123,22 +103,25 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
-        if (reprojectToPlateCarre) {
-            ReprojectionOp reprojection = new ReprojectionOp();
-            reprojection.setParameter("crs", WGS84_CODE);
-            reprojection.setSourceProduct(mosaicProduct);
-            reprojectedProduct = reprojection.getTargetProduct();
-            reprojectedProduct.setPreferredTileSize(ADAM_TILE_SIZE / 4, ADAM_TILE_SIZE / 4);
+        setReprojectedProduct(mosaicProduct, MosaicConstants.ADAM_TILE_SIZE);
+
+        final int width  = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling);
+        final int height = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling);
+        final int tileWidth = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
+        final int tileHeight = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
+
+        setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
+
+        String nsamplesBandName;
+        if (isPriors) {
+            if (priorStage == 1) {
+                nsamplesBandName = ADAM_STAGE1_PRIOR_NSAMPLES_NAME;
+            } else {
+                nsamplesBandName = ADAM_STAGE2_PRIOR_NSAMPLES_NAME;
+            }
         } else {
-            reprojectedProduct = mosaicProduct;
+            nsamplesBandName = ADAM_NSAMPLES_NAME;
         }
-
-        int width = (int) (4320 / scaling);   // with scaling of 1.2, width is 3600 as requested
-        int height = (int) (2160 / scaling);  // with scaling of 1.2, height is 1800 as requested
-
-        Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
-
-        nsamplesBandName = ADAM_NSAMPLES_NAME;
         nsamplesBand = reprojectedProduct.getBand(nsamplesBandName);
 
         // we need ALL bands...
@@ -152,58 +135,12 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize((int) (ADAM_TILE_SIZE / scaling / 4), (int) (ADAM_TILE_SIZE / scaling / 4));
+        upscaledProduct.setPreferredTileSize((int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4),
+                                             (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4));
 
-        if (reprojectToPlateCarre) {
-            final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
-            final double pixelSizeX = modelTransform.getScaleX();
-            final double pixelSizeY = modelTransform.getScaleY();
-            ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
-            reprojectionUpscaleGeoCoding.setParameter("crs", WGS84_CODE);
-            reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
-            reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);
-            reprojectionUpscaleGeoCoding.setParameter("width", width);
-            reprojectionUpscaleGeoCoding.setParameter("height", height);
-            reprojectionUpscaleGeoCoding.setSourceProduct(reprojectedProduct);
-            Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
-            ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
-        } else {
-            try {
-                final GeoCoding mosaicGeoCoding = mosaicProduct.getGeoCoding();
-                if (mosaicGeoCoding != null) {
-                    upscaledProduct.setGeoCoding(mosaicGeoCoding);
-                } else {
-                    logger.log(Level.WARNING, "No geocoding available for mosaic product.");
-                }
-            } catch (Exception e) {
-                throw new OperatorException("Cannot attach geocoding for mosaic product: ", e);
-            }
-        }
+        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, true);
 
         targetProduct = upscaledProduct;
-    }
-
-    private File findRefTile() {
-
-        final FilenameFilter adamFilter = new FilenameFilter() {
-            public boolean accept(File dir, String name) {
-                // Adam.nr.yyyyMM.hXXvYY.dim
-                String expectedFilename = "Adam.nr." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
-                return name.equalsIgnoreCase(expectedFilename);
-            }
-        };
-
-        logger.log(Level.ALL, "ADAM root directory is: '" + adamRootDir + "'...");
-        final File[] adamFiles = GlobAlbedoMosaicProductReader.getAdamTileDirectories(adamRootDir);
-        for (File adamFile : adamFiles) {
-            File[] adamTileFiles = adamFile.listFiles(adamFilter);
-            for (File adamTileFile : adamTileFiles) {
-                if (adamTileFile.exists()) {
-                    return adamTileFile;
-                }
-            }
-        }
-        return null;
     }
 
     @Override
@@ -213,12 +150,12 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
                                           (int) (targetRect.width * scaling),
                                           (int) (targetRect.height * scaling));
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
-        if (hasValidPixel(getSourceTile(nsamplesBand, srcRect))) {
-            Map<String, Tile> srcTiles = getSourceTiles(srcRect);
+        Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
+        if (hasValidPixel(getSourceTile(nsamplesBand, srcRect), nsamplesBand.getNoDataValue())) {
             for (Band srcBand : reprojectedProduct.getBands()) {
                 computeNearest(srcTiles.get(srcBand.getName()), targetTiles.get(srcBand.getName()),
-                               srcTiles.get(ADAM_NSAMPLES_NAME));
+                               srcTiles.get(nsamplesBand.getName()), scaling);
             }
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
@@ -236,52 +173,51 @@ public class GlobalbedoLevel3UpscaleAdam extends Operator {
         }
     }
 
-    private Map<String, Tile> getSourceTiles(Rectangle srcRect) {
-        Band[] srcBands = reprojectedProduct.getBands();
-        Map<String, Tile> srcTiles = new HashMap<String, Tile>(srcBands.length);
-        for (Band band : srcBands) {
-            srcTiles.put(band.getName(), getSourceTile(band, srcRect));
+    private File findRefTile() {
+        FilenameFilter adamFilter;
+        File[] adamFiles;
+        if (isPriors) {
+            if (priorStage == 1) {
+                // e.g. <adamRootDir>/<tile>/stage1prior/processed/Kernels.001.005.h18v04.SnowAndNoSnow.hdr
+                adamFilter = new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
+                        String expectedFilenameSuffix = "SnowAndNoSnow.hdr";
+                        return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
+                    }
+                };
+            } else {
+                // e.g. <adamRootDir>/<tile>/stage2prior/background/processed/Kernels.001.005.h18v04.backGround.SnowAndNoSnow.hdr
+                adamFilter = new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
+                        String expectedFilenameSuffix = "backGround.SnowAndNoSnow.hdr";
+                        return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
+                    }
+                };
+            }
+            adamFiles = GlobAlbedoMosaicProductReader.getAdamPriorTileDirectories(adamRootDir, priorStage);
+        } else {
+            adamFilter = new FilenameFilter() {
+                public boolean accept(File dir, String name) {
+                    // Adam.nr.yyyyMM.hXXvYY.dim
+                    String expectedFilename = "Adam.nr." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
+                    return name.equalsIgnoreCase(expectedFilename);
+                }
+            };
+            adamFiles = GlobAlbedoMosaicProductReader.getAdamTileDirectories(adamRootDir);
         }
-        return srcTiles;
-    }
 
-    private Map<String, Tile> getTargetTiles(Map<Band, Tile> targetBandTiles) {
-        Map<String, Tile> targetTiles = new HashMap<String, Tile>();
-        for (Map.Entry<Band, Tile> entry : targetBandTiles.entrySet()) {
-            targetTiles.put(entry.getKey().getName(), entry.getValue());
-        }
-        return targetTiles;
-    }
-
-    private boolean hasValidPixel(Tile entropy) {
-        double noDataValue = nsamplesBand.getNoDataValue();
-        Rectangle rect = entropy.getRectangle();
-        for (int y = rect.y; y < rect.y + rect.height; y++) {
-            for (int x = rect.x; x < rect.x + rect.width; x++) {
-                double sample = entropy.getSampleDouble(x, y);
-                if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
-                    return true;
+        for (File adamFile : adamFiles) {
+            File[] adamTileFiles = adamFile.listFiles(adamFilter);
+            for (File adamTileFile : adamTileFiles) {
+                if (adamTileFile.exists()) {
+                    return adamTileFile;
                 }
             }
         }
-        return false;
+        return null;
     }
-
-    private void computeNearest(Tile src, Tile target, Tile mask) {
-        Rectangle targetRectangle = target.getRectangle();
-        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-            checkForCancellation();
-            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                float sample = src.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
-                final float sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
-                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                    sample = Float.NaN;
-                }
-                target.setSample(x, y, sample);
-            }
-        }
-    }
-
 
     public static class Spi extends OperatorSpi {
 
