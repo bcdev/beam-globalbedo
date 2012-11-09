@@ -8,3 +8,4 @@ org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.SouthPoleCorrectionOp$Spi
+org.esa.beam.globalbedo.inversion.util.ModisTileAttachGeocodingOp$Spi
