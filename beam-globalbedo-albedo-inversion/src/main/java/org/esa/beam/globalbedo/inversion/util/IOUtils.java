@@ -656,8 +656,7 @@ public class IOUtils {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
-                        (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
+                return isAlbedo8DayDimapProduct(name, tile) || isAlbedo8DayNetcdfProduct(name, tile);
             }
         };
 
@@ -688,6 +687,16 @@ public class IOUtils {
             return null;
         }
 
+    }
+
+    private static boolean isAlbedo8DayDimapProduct(String name, String tile) {
+        return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
+                (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim"));
+    }
+
+    private static boolean isAlbedo8DayNetcdfProduct(String name, String tile) {
+        return (name.length() == 35 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".nc")) ||
+                (name.length() == 28 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".nc"));
     }
 
     public static File[] getTileDirectories(String rootDirString) {
