@@ -44,8 +44,8 @@ public class QaOp extends Operator {
     @Parameter(defaultValue = "1")
     private int badDataRowsThreshold;
 
-    private static final int START_ROW_OFFSET = 10;
-    private static final int END_ROW_OFFSET = 10;
+    private static final int START_ROW_OFFSET_MAX = 100;
+    private static final int END_ROW_OFFSET_MAX = 100;
 
     @Override
     public void initialize() throws OperatorException {
@@ -67,15 +67,54 @@ public class QaOp extends Operator {
             return;
         }
         final RasterDataNode sourceRaster = sourceProduct.getRasterDataNode(b.getName());
-        int y = START_ROW_OFFSET;
+
+        int yStart = 0;
+        boolean firstGoodRowFound = false;
+        while (!firstGoodRowFound && yStart < height-1) {
+            int[] pixels = new int[width];
+            pixels = sourceRaster.getPixels(0, yStart, width, 1, pixels);
+            int x = 0;
+            while (!firstGoodRowFound && x < width - 1) {
+                firstGoodRowFound = !isInvalidMaskBitSet(pixels[x]);
+                x++;
+            }
+            yStart++;
+        }
+
+        if (yStart >= START_ROW_OFFSET_MAX) {
+            System.out.println("Too many invalid rows (" + yStart + ") at start of product - QA failed.");
+            writeProductForQAFailure(true);
+            return;
+        }
+
+        int yEnd = height-1;
+        boolean lastGoodRowFound = false;
+        while (!lastGoodRowFound && yEnd > yStart) {
+            int[] pixels = new int[width];
+            pixels = sourceRaster.getPixels(0, yEnd, width, 1, pixels);
+            int x = 0;
+            while (!lastGoodRowFound && x < width - 1) {
+                lastGoodRowFound = !isInvalidMaskBitSet(pixels[x]);
+                x++;
+            }
+            yEnd--;
+        }
+
+        if (yEnd <= height-END_ROW_OFFSET_MAX) {
+            System.out.println("Too many invalid rows (" + yStart + ") at end of product - QA failed.");
+            writeProductForQAFailure(true);
+            return;
+        }
+
+        int y = yStart;
         int badDataRows = 0;
-        while (!qaFailed && y < height-END_ROW_OFFSET) {
+        while (!qaFailed && y < yEnd) {
             int[] pixels = new int[width];
             pixels = sourceRaster.getPixels(0, y, width, 1, pixels);
             int x = 0;
             int badCount = 0;
             while (badCount * 100.0 / (width - 1) < percentBadDataValuesThreshold && x < width - 1) {
-                final boolean isBadPixel = ((pixels[x] >> invalidMaskBitIndex) & 1) != 0;
+                final boolean isBadPixel = isInvalidMaskBitSet(pixels[x]);
                 if (isBadPixel) {
                     badCount++;
                 }
@@ -95,15 +134,25 @@ public class QaOp extends Operator {
         writeProductForQAFailure(qaFailed);
     }
 
+    private boolean isInvalidMaskBitSet(int pixel) {
+        return ((pixel >> invalidMaskBitIndex) & 1) != 0;
+    }
+
     private void writeProductForQAFailure(boolean qaFailed) {
         Product failedProduct = new Product(sourceProduct.getName(),
                                             sourceProduct.getProductType(),
                                             sourceProduct.getSceneRasterWidth(),
                                             sourceProduct.getSceneRasterHeight());
         if (qaFailed) {
-            System.out.println(sourceProduct.getName());
-            ProductUtils.copyBand(radianceOutputBandName, sourceProduct, failedProduct, false);   // todo: discuss band(s) to write
-            ProductUtils.copyBand(l1FlagBandName, sourceProduct, failedProduct, false);
+            failedProduct.setProductType(sourceProduct.getProductType() + "_QA_FAILED");
+//            ProductUtils.copyMasks(sourceProduct, failedProduct);
+//            ProductUtils.copyMetadata(sourceProduct, failedProduct);
+            ProductUtils.copyGeoCoding(sourceProduct, failedProduct);
+            ProductUtils.copyBand(radianceOutputBandName, sourceProduct, failedProduct, true);
+//            ProductUtils.copySpectralBandProperties(sourceProduct.getBand(radianceOutputBandName),
+//                                                    failedProduct.getBand(radianceOutputBandName));
+            ProductUtils.copyBand(l1FlagBandName, sourceProduct, failedProduct, true);
+            ProductUtils.copyFlagCoding(sourceProduct.getBand(l1FlagBandName).getFlagCoding(), failedProduct);
         }
         setTargetProduct(failedProduct);
     }
