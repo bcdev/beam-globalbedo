@@ -14,12 +14,19 @@ import org.esa.beam.util.ProductUtils;
 import java.io.IOException;
 
 /**
- * todo: add comment
+ * Class providing a QA for MERIS L1b products: quality check fails if
+ * - more than either the first or last 100 rows of the product are invalid, where 'invalid' means that more
+ *   than a certain percentage (user parameter) of pixels in a row is flagged as INVALID
+ * - the product contains more than a certain number (user parameter) of invalid rows elsewhere (not at top or bottom)
+ *
+ * The target product will be an 'empty' product (no bands) if the quality check passed. If the quality check failed,
+ * the L1 flag band and one of the radiance bands (user parameter) will be written to the target product. In this case,
+ * the extension '_QA_FAILED' is added to the product type for a later identification.
  *
  * @author olafd
  */
 @OperatorMetadata(alias = "lc.l2.qa")
-public class QaOp extends Operator {
+public class LcQaOp extends Operator {
 
     @SourceProduct(alias = "l1b", description = "MERIS L1b (N1) product")
     private Product sourceProduct;
@@ -68,13 +75,14 @@ public class QaOp extends Operator {
         }
         final RasterDataNode sourceRaster = sourceProduct.getRasterDataNode(b.getName());
 
+        // check first rows of product
         int yStart = 0;
         boolean firstGoodRowFound = false;
         while (!firstGoodRowFound && yStart < height-1) {
             int[] pixels = new int[width];
             pixels = sourceRaster.getPixels(0, yStart, width, 1, pixels);
             int x = 0;
-            while (!firstGoodRowFound && x < width - 1) {
+            while (!firstGoodRowFound && x < width) {
                 firstGoodRowFound = !isInvalidMaskBitSet(pixels[x]);
                 x++;
             }
@@ -87,13 +95,14 @@ public class QaOp extends Operator {
             return;
         }
 
+        // check last rows of product
         int yEnd = height-1;
         boolean lastGoodRowFound = false;
         while (!lastGoodRowFound && yEnd > yStart) {
             int[] pixels = new int[width];
             pixels = sourceRaster.getPixels(0, yEnd, width, 1, pixels);
             int x = 0;
-            while (!lastGoodRowFound && x < width - 1) {
+            while (!lastGoodRowFound && x < width) {
                 lastGoodRowFound = !isInvalidMaskBitSet(pixels[x]);
                 x++;
             }
@@ -106,6 +115,7 @@ public class QaOp extends Operator {
             return;
         }
 
+        // valid start and end row found in first and last 100 rows - now check all rows in between
         int y = yStart;
         int badDataRows = 0;
         while (!qaFailed && y < yEnd) {
@@ -113,18 +123,19 @@ public class QaOp extends Operator {
             pixels = sourceRaster.getPixels(0, y, width, 1, pixels);
             int x = 0;
             int badCount = 0;
-            while (badCount * 100.0 / (width - 1) < percentBadDataValuesThreshold && x < width - 1) {
+            while (badCount * 100.0 / width < percentBadDataValuesThreshold && x < width) {
                 final boolean isBadPixel = isInvalidMaskBitSet(pixels[x]);
                 if (isBadPixel) {
                     badCount++;
                 }
                 x++;
             }
-            final double percentBadDataValues = badCount * 100.0 / (width - 1);
+            final double percentBadDataValues = badCount * 100.0 / width;
             if (percentBadDataValues >= percentBadDataValuesThreshold) {
                 // row is identified as 'bad'
                 badDataRows++;
                 if (badDataRows >= badDataRowsThreshold) {
+                    // limit of allowed 'bad' rows is exceeded - QA failed
                     qaFailed = true;
                 }
             }
@@ -139,28 +150,33 @@ public class QaOp extends Operator {
     }
 
     private void writeProductForQAFailure(boolean qaFailed) {
-        Product failedProduct = new Product(sourceProduct.getName(),
-                                            sourceProduct.getProductType(),
-                                            sourceProduct.getSceneRasterWidth(),
-                                            sourceProduct.getSceneRasterHeight());
+        Product qaResultProduct;
         if (qaFailed) {
-            failedProduct.setProductType(sourceProduct.getProductType() + "_QA_FAILED");
-//            ProductUtils.copyMasks(sourceProduct, failedProduct);
-//            ProductUtils.copyMetadata(sourceProduct, failedProduct);
-            ProductUtils.copyGeoCoding(sourceProduct, failedProduct);
-            ProductUtils.copyBand(radianceOutputBandName, sourceProduct, failedProduct, true);
-//            ProductUtils.copySpectralBandProperties(sourceProduct.getBand(radianceOutputBandName),
-//                                                    failedProduct.getBand(radianceOutputBandName));
-            ProductUtils.copyBand(l1FlagBandName, sourceProduct, failedProduct, true);
-            ProductUtils.copyFlagCoding(sourceProduct.getBand(l1FlagBandName).getFlagCoding(), failedProduct);
+            // in this case, modify product type, copy geocoding, L1 flags, and one radiance band
+            System.out.println("QA FAILED - writing target product with flag band and one radiance band...");
+            qaResultProduct = new Product(sourceProduct.getName(),
+                                        sourceProduct.getProductType(),
+                                        sourceProduct.getSceneRasterWidth(),
+                                        sourceProduct.getSceneRasterHeight());
+            qaResultProduct.setProductType(sourceProduct.getProductType() + "_QA_FAILED");
+            ProductUtils.copyGeoCoding(sourceProduct, qaResultProduct);
+            ProductUtils.copyBand(radianceOutputBandName, sourceProduct, qaResultProduct, true);
+            ProductUtils.copyBand(l1FlagBandName, sourceProduct, qaResultProduct, true);
+            ProductUtils.copyFlagCoding(sourceProduct.getBand(l1FlagBandName).getFlagCoding(), qaResultProduct);
+        } else {
+            System.out.println("QA PASSED - writing empty target product...");
+            qaResultProduct = new Product(sourceProduct.getName(),
+                                        sourceProduct.getProductType(),
+                                        0, 0);
         }
-        setTargetProduct(failedProduct);
+        setTargetProduct(qaResultProduct);
     }
 
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(QaOp.class);
+            super(LcQaOp.class);
         }
     }
 }
+
