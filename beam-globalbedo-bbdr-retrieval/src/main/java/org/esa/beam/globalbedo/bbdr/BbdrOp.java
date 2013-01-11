@@ -34,7 +34,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.idepix.operators.SchillerAlgorithm;
+import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;

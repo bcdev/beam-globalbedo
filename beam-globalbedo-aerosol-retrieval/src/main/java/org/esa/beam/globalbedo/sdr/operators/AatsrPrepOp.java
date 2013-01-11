@@ -34,8 +34,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.idepix.operators.CloudScreeningSelector;
-import org.esa.beam.idepix.operators.ComputeChainOp;
+import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
@@ -108,16 +107,14 @@ public class AatsrPrepOp extends Operator {
         Product idepixFwardProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
-            pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);
             pixelClassParam.put("gaCopyRadiances", false);
-            pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaUseAatsrFwardForClouds", false);
             pixelClassParam.put("gaCloudBufferWidth", 3);
-            idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixNadirProduct, targetProduct, true);
             pixelClassParam.put("gaUseAatsrFwardForClouds", true);
-            idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct, true);
         }
 

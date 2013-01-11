@@ -31,8 +31,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.idepix.operators.CloudScreeningSelector;
-import org.esa.beam.idepix.operators.ComputeChainOp;
+import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
@@ -72,12 +71,8 @@ public class MerisPrepOp extends Operator {
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
-    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
-    private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "GlobAlbedo")
-    private CloudScreeningSelector idepixAlgorithm;
 
     @Override
     public void initialize() throws OperatorException {
@@ -133,16 +128,13 @@ public class MerisPrepOp extends Operator {
         Product idepixProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
-            pixelClassParam.put("algorithm", idepixAlgorithm);
             pixelClassParam.put("gaCopyRadiances", false);
-            pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
-            pixelClassParam.put("gaOutputRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
+            pixelClassParam.put("gaCopyRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
-            pixelClassParam.put("pressureOutputP1Lise", pressureOutputP1Lise);
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
-            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
                 for (String rayleighBandName : gaOutputRayleigh) {
@@ -159,12 +151,6 @@ public class MerisPrepOp extends Operator {
                 Band band = idepixProduct.getBand(RayleighCorrectionOp.RAY_CORR_FLAGS);
                 if (band != null) {
                     idepixProduct.removeBand(band);
-                }
-            }
-            if (pressureOutputP1Lise) {
-                Band band = idepixProduct.getBand("p1_lise");
-                if (band != null) {
-                    targetProduct.addBand(band);
                 }
             }
         }

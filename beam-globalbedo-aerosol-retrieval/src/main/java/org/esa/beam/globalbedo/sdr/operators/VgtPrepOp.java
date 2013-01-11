@@ -21,8 +21,6 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import java.util.HashMap;
-import java.util.Map;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -34,10 +32,12 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.idepix.operators.CloudScreeningSelector;
-import org.esa.beam.idepix.operators.ComputeChainOp;
+import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Create Vgt input product for Globalbedo aerosol retrieval and BBDR processor
@@ -94,12 +94,11 @@ public class VgtPrepOp extends Operator {
         Product idepixProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
-            pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
-            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
         }
 

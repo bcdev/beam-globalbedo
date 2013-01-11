@@ -32,13 +32,11 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.Dimension;
-import java.awt.RenderingHints;
+import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -84,12 +82,10 @@ public class GaMasterOp  extends Operator {
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
-    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
-    private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "GlobAlbedo")
-    private CloudScreeningSelector idepixAlgorithm;
+//    @Parameter(defaultValue = "GlobAlbedo")
+//    private CloudScreeningSelector idepixAlgorithm;
 
     private String instrument;
 
@@ -118,9 +114,7 @@ public class GaMasterOp  extends Operator {
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             params.put("doEqualization", doEqualization);
             params.put("gaOutputRayleigh", gaOutputRayleigh);
-            params.put("pressureOutputP1Lise", pressureOutputP1Lise);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
-            params.put("idepixAlgorithm", idepixAlgorithm);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         }
         else if (isAatsrProduct) {
@@ -196,7 +190,6 @@ public class GaMasterOp  extends Operator {
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
-            copyBand = copyBand || (sourceBandName.equals("p1_lise") && pressureOutputP1Lise);
 
             if (copyBand){
                 ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);

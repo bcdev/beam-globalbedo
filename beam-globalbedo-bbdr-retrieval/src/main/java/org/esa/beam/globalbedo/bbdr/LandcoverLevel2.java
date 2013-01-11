@@ -29,7 +29,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
-import org.esa.beam.idepix.operators.CloudScreeningSelector;
 import org.esa.beam.landcover.LcUclCloudBuffer;
 
 import javax.media.jai.OpImage;
@@ -60,9 +59,6 @@ public class LandcoverLevel2 extends Operator {
     private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
     private boolean doSchillerCloudDetection;
-    @Parameter(defaultValue = "GlobAlbedo")
-    private CloudScreeningSelector idepixAlgorithm;
-
 
     @Override
     public void initialize() throws OperatorException {
@@ -94,9 +90,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
-        gaMasterOp.setParameter("pressureOutputP1Lise", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
-        gaMasterOp.setParameter("idepixAlgorithm", idepixAlgorithm);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }
