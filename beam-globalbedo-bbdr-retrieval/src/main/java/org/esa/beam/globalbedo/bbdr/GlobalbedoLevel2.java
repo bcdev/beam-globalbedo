@@ -88,6 +88,7 @@ public class GlobalbedoLevel2 extends Operator {
                 subsetOp.setSourceProduct(masterSourceProduct);
 
                 if (slaveSourceProduct != null) {
+                    // todo: test this case!!!
                     aotSourceProduct = getTargetProductFromCollocation(geometry, subsetOp);
                 } else {
                     aotSourceProduct = subsetOp.getTargetProduct();
