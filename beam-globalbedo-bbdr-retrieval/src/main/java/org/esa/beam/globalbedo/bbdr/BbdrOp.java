@@ -68,16 +68,17 @@ public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
     private static final int SRC_SNOW_MASK = 1;
-    private static final int SRC_VZA = 2;
-    private static final int SRC_VAA = 3;
-    private static final int SRC_SZA = 4;
-    private static final int SRC_SAA = 5;
-    private static final int SRC_DEM = 6;
-    private static final int SRC_AOT = 7;
-    private static final int SRC_AOT_ERR = 8;
-    private static final int SRC_OZO = 9;
-    private static final int SRC_WVP = 10;
-    private static final int SRC_TOA_RFL = 11;
+    private static final int SRC_SEAICE_MASK = 2;
+    private static final int SRC_VZA = 3;
+    private static final int SRC_VAA = 4;
+    private static final int SRC_SZA = 5;
+    private static final int SRC_SAA = 6;
+    private static final int SRC_DEM = 7;
+    private static final int SRC_AOT = 8;
+    private static final int SRC_AOT_ERR = 9;
+    private static final int SRC_OZO = 10;
+    private static final int SRC_WVP = 11;
+    private static final int SRC_TOA_RFL = 12;
     private int SRC_TOA_VAR;
     private int SRC_STATUS;
 
@@ -102,6 +103,8 @@ public class BbdrOp extends PixelOperator {
 
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
+    @Parameter(defaultValue = "false")
+    private boolean bbdrSeaIce;  // mode for MERIS SDR/BBDR computation including seaice areas (GA CCN, 2013)
     @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
@@ -153,35 +156,9 @@ public class BbdrOp extends PixelOperator {
         final Product targetProduct = productConfigurer.getTargetProduct();
         if (sdrOnly) {
             if (sensor == Sensor.MERIS) {
-                for (int i = 0; i < sensor.getNumBands(); i++) {
-                    Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
-                    Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
-                    band.setNoDataValue(Float.NaN);
-                    band.setNoDataValueUsed(true);
-                    ProductUtils.copySpectralBandProperties(srcBand, band);
-                }
-                for (int i = 0; i < sensor.getNumBands(); i++) {
-                    Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
-                    Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
-                    band.setNoDataValue(Float.NaN);
-                    band.setNoDataValueUsed(true);
-                    ProductUtils.copySpectralBandProperties(srcBand, band);
-                }
+                addMerisSdrBands(targetProduct);
             } else if (sensor == Sensor.VGT) {
-                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
-                    Band srcBand = sourceProduct.getBand(bandname);
-                    Band band = targetProduct.addBand("sdr_" + bandname, ProductData.TYPE_FLOAT32);
-                    band.setNoDataValue(Float.NaN);
-                    band.setNoDataValueUsed(true);
-                    ProductUtils.copySpectralBandProperties(srcBand, band);
-                }
-                for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
-                    Band srcBand = sourceProduct.getBand(bandname);
-                    Band band = targetProduct.addBand("sdr_error_" + bandname, ProductData.TYPE_FLOAT32);
-                    band.setNoDataValue(Float.NaN);
-                    band.setNoDataValueUsed(true);
-                    ProductUtils.copySpectralBandProperties(srcBand, band);
-                }
+                addVgtSdrBands(targetProduct);
             }
 
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
@@ -229,6 +206,10 @@ public class BbdrOp extends PixelOperator {
 
             targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
+            if (sensor == Sensor.MERIS && bbdrSeaIce) {
+                addMerisSdrBands(targetProduct);
+            }
+
             String[] bandNames = {
                     "BB_VIS", "BB_NIR", "BB_SW",
                     "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW",
@@ -250,6 +231,40 @@ public class BbdrOp extends PixelOperator {
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
         }
         readAuxdata();
+    }
+
+    private void addVgtSdrBands(Product targetProduct) {
+        for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+            Band srcBand = sourceProduct.getBand(bandname);
+            Band band = targetProduct.addBand("sdr_" + bandname, ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+            ProductUtils.copySpectralBandProperties(srcBand, band);
+        }
+        for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
+            Band srcBand = sourceProduct.getBand(bandname);
+            Band band = targetProduct.addBand("sdr_error_" + bandname, ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+            ProductUtils.copySpectralBandProperties(srcBand, band);
+        }
+    }
+
+    private void addMerisSdrBands(Product targetProduct) {
+        for (int i = 0; i < sensor.getNumBands(); i++) {
+            Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
+            Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+            ProductUtils.copySpectralBandProperties(srcBand, band);
+        }
+        for (int i = 0; i < sensor.getNumBands(); i++) {
+            Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
+            Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
+            ProductUtils.copySpectralBandProperties(srcBand, band);
+        }
     }
 
     void readAuxdata() {
@@ -324,14 +339,19 @@ public class BbdrOp extends PixelOperator {
             if (sensor == Sensor.AATSR_FWARD) {
                 commonLandExpr = "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
             } else {
-                commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+                commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW OR cloud_classif_flags.F_SEAICE";
             }
         }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
+        final String seaIceMaskExpression = "cloud_classif_flags.F_SEAICE";
 
         BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
         Product snowMaskProduct = snowOp.getTargetProduct();
         configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
+
+        BandMathsOp seaIceOp = BandMathsOp.createBooleanExpressionBand(seaIceMaskExpression, sourceProduct);
+        Product seaIceMaskProduct = seaIceOp.getTargetProduct();
+        configurator.defineSample(SRC_SEAICE_MASK, seaIceMaskProduct.getBandAt(0).getName(), seaIceMaskProduct);
 
         if (sensor == Sensor.MERIS) {
             landExpr = "NOT l1_flags.INVALID AND NOT l1_flags.COSMETIC AND (" + commonLandExpr + ")";
@@ -427,6 +447,13 @@ public class BbdrOp extends PixelOperator {
                 l1InvalidExpression = "!SM.B0_GOOD AND !SM.B2_GOOD AND !SM.B3_GOOD AND !SM.MIR_GOOD";
             }
 
+            // Status:
+            // 5 : cloud shadow, but not cloud or cloud buffer
+            // 4 : cloud or cloud buffer
+            // 3 : clear snow
+            // 2 : water
+            // 1 : every other valid pixel (i.e. clear land, now also including sea ice if classified)
+            // 0 : invalid
             String expression = l1InvalidExpression + " ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
                     "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
                     "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
@@ -447,7 +474,6 @@ public class BbdrOp extends PixelOperator {
                 configurator.defineSample(SRC_STATUS + 1, "dem_alt");
             }
         }
-
     }
 
     @Override
@@ -501,6 +527,17 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(TRG_SNOW, "snow_mask");
             configurator.defineSample(TRG_AOD, "AOD550");
             configurator.defineSample(TRG_AODERR, "sig_AOD550");
+
+            int index = TRG_AODERR + 1;
+            if (sensor == Sensor.MERIS && bbdrSeaIce) {
+                // we want to have as well the SDRs in this case
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    configurator.defineSample(index++, "sdr_" + (i + 1));
+                }
+                for (int i = 0; i < sensor.getNumBands(); i++) {
+                    configurator.defineSample(index++, "sdr_error_" + (i + 1));
+                }
+            }
         }
     }
 
@@ -553,7 +590,12 @@ public class BbdrOp extends PixelOperator {
             sza = 90.0 - sza;
             vza = 90.0 - vza;
         }
-        double aot = sourceSamples[SRC_AOT].getDouble();
+        double aot;
+        if (sensor == Sensor.MERIS && bbdrSeaIce && sourceSamples[SRC_SEAICE_MASK].getBoolean()) {
+            aot = 0.0;  // todo: for sea ice case, provide climatological value if available (GA CCN, T6)
+        } else {
+            aot = sourceSamples[SRC_AOT].getDouble();
+        }
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
 
@@ -664,6 +706,10 @@ public class BbdrOp extends PixelOperator {
             if (sdrOnly) {
                 targetSamples[i].set(rfl_pix[i]);
             }
+            if (sensor == Sensor.MERIS && bbdrSeaIce) {
+                int offset = TRG_AODERR + 1;
+                targetSamples[offset + i].set(rfl_pix[i]);
+            }
         }
         if (sdrOnly && status == 1) {
             boolean isSchillerCloud = false;
@@ -739,6 +785,12 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[sensor.getNumBands() + i].set(err2_tot_cov.get(i, i));
             }
             return;
+        }
+        if (sensor == Sensor.MERIS && bbdrSeaIce) {
+            int offset = TRG_AODERR + 1;
+            for (int i = 0; i < sensor.getNumBands(); i++) {
+                targetSamples[offset + sensor.getNumBands() + i].set(err2_tot_cov.get(i, i));
+            }
         }
         // end of implementation needed for landcover cci
 

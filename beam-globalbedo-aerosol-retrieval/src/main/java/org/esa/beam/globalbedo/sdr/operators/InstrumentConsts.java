@@ -120,7 +120,8 @@ class InstrumentConsts {
 
         this.validRetrievalExpr = new HashMap<String, String>(supportedInstruments.length);
         String merisValidRetrievalExpr = "(!l1_flags.INVALID "
-                + " &&  " + idepixFlagBandName + ".F_LAND "
+//                + " &&  " + idepixFlagBandName + ".F_LAND "
+                + " &&  (" + idepixFlagBandName + ".F_LAND || " + idepixFlagBandName + ".F_SEAICE)"
                 + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW "
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "
                 + " && (" + EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME + "<70))";
@@ -150,7 +151,8 @@ class InstrumentConsts {
 
         this.validAotOutExpr = new HashMap<String, String>(supportedInstruments.length);
         String merisValAotOutputExpr = "(!l1_flags.INVALID "
-                + " &&  " + idepixFlagBandName + ".F_LAND "
+//                + " &&  " + idepixFlagBandName + ".F_LAND "
+                + " &&  (" + idepixFlagBandName + ".F_LAND || " + idepixFlagBandName + ".F_SEAICE)"
                 + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
                 + " && (" + EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME + "<70))";
         validAotOutExpr.put(supportedInstruments[0], merisValAotOutputExpr);

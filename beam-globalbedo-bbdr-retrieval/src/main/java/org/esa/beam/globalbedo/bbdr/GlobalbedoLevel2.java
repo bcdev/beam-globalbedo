@@ -72,6 +72,7 @@ public class GlobalbedoLevel2 extends Operator {
         }
 
         Product aotProduct;
+        Product collocationProduct = null;
         Product aotSourceProduct = null;
         tileBased = tile != null && !tile.isEmpty();
 
@@ -89,13 +90,16 @@ public class GlobalbedoLevel2 extends Operator {
 
                 if (slaveSourceProduct != null) {
                     // todo: test this case!!!
-                    aotSourceProduct = getTargetProductFromCollocation(geometry, subsetOp);
+                    collocationProduct = getTargetProductFromCollocation(geometry, subsetOp);
+                    aotSourceProduct = getCollocationMasterSubset(collocationProduct);
                 } else {
                     aotSourceProduct = subsetOp.getTargetProduct();
                 }
             } else {
                 if (slaveSourceProduct != null) {
-                    aotSourceProduct = getTargetProductFromCollocation(null, null);
+                    collocationProduct = getTargetProductFromCollocation(null, null);
+                    aotSourceProduct = getCollocationMasterSubset(collocationProduct);
+//                    throw new OperatorException("MERIS/AATSR synergy approach must be processed in tileBased mode!");
                 } else {
                     aotSourceProduct = masterSourceProduct;
                 }
@@ -116,10 +120,17 @@ public class GlobalbedoLevel2 extends Operator {
             if (computeL1ToAotProductOnly) {
                 setTargetProduct(aotProduct);
             } else {
-                BbdrOp bbdrOp = new BbdrOp();
-                bbdrOp.setSourceProduct(aotProduct);
-                bbdrOp.setParameter("sensor", sensor);
-                Product bbdrProduct = bbdrOp.getTargetProduct();
+                Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
+                fillSourceProds.put("sourceProduct", aotProduct);
+                Map<String, Object> bbdrParams = new HashMap<String, Object>();
+                bbdrParams.put("sensor", sensor);
+                bbdrParams.put("bbdrSeaIce", slaveSourceProduct != null);
+
+                Product bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
+
+                ProductUtils.copyBand("reflec_nadir_1600", collocationProduct, bbdrProduct, true);
+                ProductUtils.copyBand("reflec_fward_1600", collocationProduct, bbdrProduct, true);
+
                 if (tileBased) {
                     setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
                 } else {
@@ -127,6 +138,32 @@ public class GlobalbedoLevel2 extends Operator {
                 }
             }
         }
+    }
+
+    private Product getCollocationMasterSubset(Product collocationProduct) {
+        Product masterSubsetProduct = new Product(collocationProduct.getName(),
+                                                  collocationProduct.getProductType(),
+                                                  collocationProduct.getSceneRasterWidth(),
+                                                  collocationProduct.getSceneRasterHeight());
+        ProductUtils.copyMetadata(collocationProduct, masterSubsetProduct);
+        ProductUtils.copyTiePointGrids(collocationProduct, masterSubsetProduct);
+        ProductUtils.copyGeoCoding(collocationProduct, masterSubsetProduct);
+        ProductUtils.copyFlagCodings(collocationProduct, masterSubsetProduct);
+        ProductUtils.copyFlagBands(collocationProduct, masterSubsetProduct, true);
+        ProductUtils.copyMasks(collocationProduct, masterSubsetProduct);
+        masterSubsetProduct.setStartTime(collocationProduct.getStartTime());
+        masterSubsetProduct.setEndTime(collocationProduct.getEndTime());
+        // copy all  master bands from collocation product
+        for (Band bColloc : masterSourceProduct.getBands()) {
+            System.out.println("bColloc = " + bColloc.getName());
+            if (!masterSubsetProduct.containsBand(bColloc.getName()) &&
+                    !masterSubsetProduct.containsTiePointGrid(bColloc.getName())) {
+                ProductUtils.copyBand(bColloc.getName(), collocationProduct, masterSubsetProduct, true);
+                ProductUtils.copyRasterDataNodeProperties(bColloc, masterSubsetProduct.getBand(bColloc.getName()));
+            }
+        }
+
+        return masterSubsetProduct;
     }
 
     private Product getTargetProductFromCollocation(Geometry geometry, SubsetOp subsetOp) {
@@ -144,7 +181,7 @@ public class GlobalbedoLevel2 extends Operator {
             // create collocation product...
             collocateInput.put("masterProduct", subsettedMasterProduct);
             collocateInput.put("slaveProduct", subsettedSlaveProduct);
-        }  else {
+        } else {
             collocateInput.put("masterProduct", masterSourceProduct);
             collocateInput.put("slaveProduct", slaveSourceProduct);
         }
@@ -160,18 +197,21 @@ public class GlobalbedoLevel2 extends Operator {
                 GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), idepixParameters, idepixInput);
 
         // remove all other than master bands from collocation product
-        for (Band bColloc : collocateProduct.getBands()) {
-            boolean isMasterBand = false;
-            for (Band bMaster : masterSourceProduct.getBands()) {
-                if (bMaster.getName().equals(bColloc.getName())) {
-                    isMasterBand = true;
-                    break;
-                }
-            }
-            if (!isMasterBand) {
-                collocateProduct.removeBand(bColloc);
-            }
-        }
+//        for (Band bColloc : collocateProduct.getBands()) {
+//            boolean isMasterBand = false;
+//            for (Band bMaster : masterSourceProduct.getBands()) {
+//                if (bMaster.getName().equals(bColloc.getName())) {
+//                    isMasterBand = true;
+//                    break;
+//                }
+//            }
+////            if (!isMasterBand) {
+//            if (!isMasterBand &&
+//                    !bColloc.getName().equalsIgnoreCase("reflec_nadir_1600") &&
+//                    !bColloc.getName().equalsIgnoreCase("reflec_fward_1600")) {
+//                collocateProduct.removeBand(bColloc);
+//            }
+//        }
 
         // copy Idepix 'cloud_classif_flags' to collocation product
         ProductUtils.copyFlagBands(idepixProduct, collocateProduct, true);
