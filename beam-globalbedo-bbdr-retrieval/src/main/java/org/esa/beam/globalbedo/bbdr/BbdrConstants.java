@@ -19,7 +19,7 @@ public class BbdrConstants {
     };
 
     public final static float[] AATSR_WAVELENGHTS = {
-         550.0f, 665.0f, 865.0f, 1610.0f
+         550.0f, 670.0f, 870.0f, 1600.0f
     };
 
     public final static float[] AATSR_CALIBRATION_COEFFS = {

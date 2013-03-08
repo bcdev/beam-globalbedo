@@ -124,12 +124,20 @@ public class GlobalbedoLevel2 extends Operator {
                 fillSourceProds.put("sourceProduct", aotProduct);
                 Map<String, Object> bbdrParams = new HashMap<String, Object>();
                 bbdrParams.put("sensor", sensor);
-                bbdrParams.put("bbdrSeaIce", slaveSourceProduct != null);
+                final boolean isBbdsSeaIce = (sensor == Sensor.AATSR_NADIR || slaveSourceProduct != null);
+                bbdrParams.put("bbdrSeaIce", isBbdsSeaIce);
 
-                Product bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
+                Product bbdrProduct;
+                if (sensor == Sensor.AATSR) {
+                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), GPF.NO_PARAMS, fillSourceProds);
+                } else {
+                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
+                }
 
-                ProductUtils.copyBand("reflec_nadir_1600", collocationProduct, bbdrProduct, true);
-                ProductUtils.copyBand("reflec_fward_1600", collocationProduct, bbdrProduct, true);
+                if (collocationProduct != null) {
+                    ProductUtils.copyBand("reflec_nadir_1600", collocationProduct, bbdrProduct, true);
+                    ProductUtils.copyBand("reflec_fward_1600", collocationProduct, bbdrProduct, true);
+                }
 
                 if (tileBased) {
                     setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));

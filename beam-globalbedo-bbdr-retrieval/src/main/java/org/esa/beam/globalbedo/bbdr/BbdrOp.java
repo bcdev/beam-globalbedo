@@ -112,7 +112,6 @@ public class BbdrOp extends PixelOperator {
     @Parameter
     private String landExpression;
 
-
     // Auxdata
     private Matrix nb_coef_arr_all; // = fltarr(n_spc, num_bd)
     private Matrix nb_intcp_arr_all; // = fltarr(n_spc)
@@ -206,8 +205,10 @@ public class BbdrOp extends PixelOperator {
 
             targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
-            if (sensor == Sensor.MERIS && bbdrSeaIce) {
-                addMerisSdrBands(targetProduct);
+            if (bbdrSeaIce) {
+                if (sensor == Sensor.MERIS) {
+                    addMerisSdrBands(targetProduct);
+                }
             }
 
             String[] bandNames = {
@@ -336,11 +337,7 @@ public class BbdrOp extends PixelOperator {
         if (landExpression != null && !landExpression.isEmpty()) {
             commonLandExpr = landExpression;
         } else {
-            if (sensor == Sensor.AATSR_FWARD) {
-                commonLandExpr = "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
-            } else {
-                commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW OR cloud_classif_flags.F_SEAICE";
-            }
+            commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW OR cloud_classif_flags.F_SEAICE";
         }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
         final String seaIceMaskExpression = "cloud_classif_flags.F_SEAICE";
@@ -368,35 +365,6 @@ public class BbdrOp extends PixelOperator {
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
                              BbdrConstants.MERIS_TOA_BAND_NAMES.length);
-        } else if (sensor == Sensor.AATSR_NADIR) {
-            landExpr = commonLandExpr;
-
-            configurator.defineSample(SRC_VZA, "view_elev_nadir");
-            configurator.defineSample(SRC_VAA, "view_azimuth_nadir");
-            configurator.defineSample(SRC_SZA, "sun_elev_nadir");
-            configurator.defineSample(SRC_SAA, "sun_azimuth_nadir");
-            configurator.defineSample(SRC_DEM, "elevation");
-            configurator.defineSample(SRC_AOT, "aot");
-            configurator.defineSample(SRC_AOT_ERR, "aot_err");
-
-            toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
-            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
-
-        } else if (sensor == Sensor.AATSR_FWARD) {
-            landExpr = commonLandExpr;
-
-            configurator.defineSample(SRC_VZA, "view_elev_fward");
-            configurator.defineSample(SRC_VAA, "view_azimuth_fward");
-            configurator.defineSample(SRC_SZA, "sun_elev_fward");
-            configurator.defineSample(SRC_SAA, "sun_azimuth_fward");
-            configurator.defineSample(SRC_DEM, "elevation");
-            configurator.defineSample(SRC_AOT, "aot");
-            configurator.defineSample(SRC_AOT_ERR, "aot_err");
-
-            toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
-            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         } else if (sensor == Sensor.VGT) {
 
             landExpr =
@@ -529,7 +497,7 @@ public class BbdrOp extends PixelOperator {
             configurator.defineSample(TRG_AODERR, "sig_AOD550");
 
             int index = TRG_AODERR + 1;
-            if (sensor == Sensor.MERIS && bbdrSeaIce) {
+            if (bbdrSeaIce) {
                 // we want to have as well the SDRs in this case
                 for (int i = 0; i < sensor.getNumBands(); i++) {
                     configurator.defineSample(index++, "sdr_" + (i + 1));
@@ -586,10 +554,6 @@ public class BbdrOp extends PixelOperator {
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        if (sensor == Sensor.AATSR_FWARD || sensor == Sensor.AATSR_NADIR) {
-            sza = 90.0 - sza;
-            vza = 90.0 - vza;
-        }
         double aot;
         if (sensor == Sensor.MERIS && bbdrSeaIce && sourceSamples[SRC_SEAICE_MASK].getBoolean()) {
             aot = 0.0;  // todo: for sea ice case, provide climatological value if available (GA CCN, T6)
@@ -632,14 +596,9 @@ public class BbdrOp extends PixelOperator {
 
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
 //      MERIS: OZO per-pixel, CWV as constant value
-//      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
         if (sensor == Sensor.MERIS) {
             ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
-            cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
-            gas = ozo;
-        } else if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
-            ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
             cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
             gas = ozo;
         } else if (sensor == Sensor.VGT) {
@@ -665,9 +624,6 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[sensor.getNumBands() * 2 + 2].set(0);
             }
             toaRefl /= sensor.getCal2Meris()[i];
-            if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
-                toaRefl *= 0.01 / mus;
-            }
             toa_rfl[i] = toaRefl;
         }
 
