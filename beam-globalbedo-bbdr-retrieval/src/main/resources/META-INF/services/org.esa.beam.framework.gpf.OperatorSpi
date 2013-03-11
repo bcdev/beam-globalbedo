@@ -1,5 +1,6 @@
 org.esa.beam.globalbedo.bbdr.ImageVarianceOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrOp$Spi
+org.esa.beam.globalbedo.bbdr.BbdrAatsrOp$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.LandcoverLevel2$Spi
 org.esa.beam.globalbedo.bbdr.TileExtractor$Spi

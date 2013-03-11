@@ -124,12 +124,13 @@ public class GlobalbedoLevel2 extends Operator {
                 fillSourceProds.put("sourceProduct", aotProduct);
                 Map<String, Object> bbdrParams = new HashMap<String, Object>();
                 bbdrParams.put("sensor", sensor);
-                final boolean isBbdsSeaIce = (sensor == Sensor.AATSR_NADIR || slaveSourceProduct != null);
+                final boolean isBbdsSeaIce = ((sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) ||
+                        slaveSourceProduct != null);
                 bbdrParams.put("bbdrSeaIce", isBbdsSeaIce);
 
                 Product bbdrProduct;
-                if (sensor == Sensor.AATSR) {
-                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), GPF.NO_PARAMS, fillSourceProds);
+                if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
                 } else {
                     bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
                 }

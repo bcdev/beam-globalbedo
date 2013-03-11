@@ -83,6 +83,11 @@ public class BbdrAatsrOp extends PixelOperator {
     @Parameter
     private String landExpression;
 
+    @Parameter
+    private Sensor sensor;
+
+    private String viewDirection;
+
     // Auxdata
     private Matrix nb_coef_arr_all; // = fltarr(n_spc, num_bd)
     private Matrix nb_intcp_arr_all; // = fltarr(n_spc)
@@ -121,6 +126,12 @@ public class BbdrAatsrOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
 
+        if (sensor == Sensor.AATSR_NADIR) {
+            viewDirection = "nadir";
+        } else if (sensor == Sensor.AATSR_FWARD) {
+            viewDirection = "fward";
+        }
+
         final Product targetProduct = productConfigurer.getTargetProduct();
 
         addAatsrSdrBands(targetProduct);
@@ -136,6 +147,9 @@ public class BbdrAatsrOp extends PixelOperator {
                 "VZA", "SZA", "RAA", "DEM",
         };
         for (String bandName : bandNames) {
+            if (bandName.contains("BB_") || bandName.contains("BRDF_")) {
+                bandName.concat("_" + viewDirection);
+            }
             Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
@@ -150,35 +164,17 @@ public class BbdrAatsrOp extends PixelOperator {
     private void addAatsrSdrBands(Product targetProduct) {
         for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            Band srcBand = sourceProduct.getBand("reflec_nadir_" + wvl);
-            Band band = targetProduct.addBand("sdr_nadir_" + wvl, ProductData.TYPE_FLOAT32);
+            Band srcBand = sourceProduct.getBand("reflec_" + viewDirection + "_" + wvl);
+            Band band = targetProduct.addBand("sdr_" + viewDirection + "_" + wvl, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
         for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            Band srcBand = sourceProduct.getBand("reflec_fward_" + wvl);
-            Band band = targetProduct.addBand("sdr_fward_" + wvl, ProductData.TYPE_FLOAT32);
+            Band band = targetProduct.addBand("sdr_error_" + viewDirection + "_" + wvl, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
-            ProductUtils.copySpectralBandProperties(srcBand, band);
-        }
-        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            Band srcBand = sourceProduct.getBand("reflec_nadir_" + wvl);
-            Band band = targetProduct.addBand("sdr_error_nadir_" + wvl, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-            ProductUtils.copySpectralBandProperties(srcBand, band);
-        }
-        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            Band srcBand = sourceProduct.getBand("reflec_fward_" + wvl);
-            Band band = targetProduct.addBand("sdr_error_fward_" + wvl, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
-            band.setNoDataValueUsed(true);
-            ProductUtils.copySpectralBandProperties(srcBand, band);
         }
     }
 
@@ -256,31 +252,22 @@ public class BbdrAatsrOp extends PixelOperator {
 
         landExpr = commonLandExpr;
 
-        // todo: do both nadir and fward!
-        configurator.defineSample(SRC_VZA, "view_elev_nadir");
-        configurator.defineSample(SRC_VAA, "view_azimuth_nadir");
-        configurator.defineSample(SRC_SZA, "sun_elev_nadir");
-        configurator.defineSample(SRC_SAA, "sun_azimuth_nadir");
+        configurator.defineSample(SRC_VZA, "view_elev_" + viewDirection);
+        configurator.defineSample(SRC_VAA, "view_azimuth_" + viewDirection);
+        configurator.defineSample(SRC_SZA, "sun_elev_" + viewDirection);
+        configurator.defineSample(SRC_SAA, "sun_azimuth_" + viewDirection);
         configurator.defineSample(SRC_DEM, "elevation");
         configurator.defineSample(SRC_AOT, "aot");
         configurator.defineSample(SRC_AOT_ERR, "aot_err");
 
         toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
-        System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                         BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
-
-        configurator.defineSample(SRC_VZA, "view_elev_fward");
-        configurator.defineSample(SRC_VAA, "view_azimuth_fward");
-        configurator.defineSample(SRC_SZA, "sun_elev_fward");
-        configurator.defineSample(SRC_SAA, "sun_azimuth_fward");
-        configurator.defineSample(SRC_DEM, "elevation");
-        configurator.defineSample(SRC_AOT, "aot");
-        configurator.defineSample(SRC_AOT_ERR, "aot_err");
-
-        toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length];
-        System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                         BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
-
+        if (viewDirection.equals("nadir")) {
+            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
+        } else {
+            System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
+                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
+        }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
         Product landMaskProduct = landOp.getTargetProduct();
@@ -304,23 +291,23 @@ public class BbdrAatsrOp extends PixelOperator {
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) {
 
-        configurator.defineSample(0, "BB_VIS");
-        configurator.defineSample(1, "BB_NIR");
-        configurator.defineSample(2, "BB_SW");
+        configurator.defineSample(0, "BB_VIS" + "_" + viewDirection);
+        configurator.defineSample(1, "BB_NIR" + "_" + viewDirection);
+        configurator.defineSample(2, "BB_SW" + "_" + viewDirection);
 
-        configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS");
-        configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
-        configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW");
-        configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR");
-        configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW");
-        configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW");
+        configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW" + "_" + viewDirection);
 
-        configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
-        configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
-        configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
-        configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
-        configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
-        configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
+        configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW" + "_" + viewDirection);
 
         configurator.defineSample(TRG_NDVI, "NDVI");
         configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
@@ -339,19 +326,11 @@ public class BbdrAatsrOp extends PixelOperator {
 
         for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            configurator.defineSample(index++, "sdr_nadir_" + wvl);
+            configurator.defineSample(index++, "sdr_" + viewDirection + "_" + wvl);
         }
         for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            configurator.defineSample(index++, "sdr_fward_" + wvl);
-        }
-        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            configurator.defineSample(index++, "sdr_error_nadir_" + wvl);
-        }
-        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-            configurator.defineSample(index++, "sdr_error_fward_" + wvl);
+            configurator.defineSample(index++, "sdr_error_" + viewDirection + "_" + wvl);
         }
     }
 
