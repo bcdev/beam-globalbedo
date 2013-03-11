@@ -79,9 +79,9 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13.1</ceres.version>
+        <ceres.version>0.13.2-SNAPSHOT</ceres.version>
         <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.10.3</beam.version>
+        <beam.version>4.10.4-SNAPSHOT</beam.version>
     </properties>
 
     <dependencyManagement>
@@ -134,6 +134,11 @@
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
                 <version>1.2.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-collocation</artifactId>
+                <version>1.4.1</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
