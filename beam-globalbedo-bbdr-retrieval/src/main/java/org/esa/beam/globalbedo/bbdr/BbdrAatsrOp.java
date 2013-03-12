@@ -148,7 +148,7 @@ public class BbdrAatsrOp extends PixelOperator {
         };
         for (String bandName : bandNames) {
             if (bandName.contains("BB_") || bandName.contains("BRDF_")) {
-                bandName.concat("_" + viewDirection);
+                bandName = bandName.concat("_" + viewDirection);
             }
             Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);

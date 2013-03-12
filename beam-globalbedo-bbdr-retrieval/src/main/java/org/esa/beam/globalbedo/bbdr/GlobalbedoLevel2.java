@@ -29,6 +29,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
+import org.esa.beam.gpf.operators.standard.MergeOp;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.util.ProductUtils;
@@ -123,15 +124,28 @@ public class GlobalbedoLevel2 extends Operator {
                 Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
                 fillSourceProds.put("sourceProduct", aotProduct);
                 Map<String, Object> bbdrParams = new HashMap<String, Object>();
-                bbdrParams.put("sensor", sensor);
+
                 final boolean isBbdsSeaIce = ((sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) ||
                         slaveSourceProduct != null);
                 bbdrParams.put("bbdrSeaIce", isBbdsSeaIce);
 
-                Product bbdrProduct;
+                Product bbdrProduct = null;
                 if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+                    bbdrParams.put("sensor", sensor);
                     bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+                } else if (sensor == Sensor.AATSR) {
+                    bbdrParams.put("sensor", Sensor.AATSR_NADIR);
+                    Product bbdrNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+                    bbdrParams.clear();
+                    bbdrParams.put("sensor", Sensor.AATSR_FWARD);
+                    Product bbdrFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+                    // merge fward into nadir product...
+                    MergeOp mergeOp = new MergeOp();
+                    mergeOp.setSourceProduct("masterProduct", bbdrNadirProduct);
+                    mergeOp.setSourceProduct("fward", bbdrFwardProduct);
+                    bbdrProduct = mergeOp.getTargetProduct();
                 } else {
+                    bbdrParams.put("sensor", sensor);
                     bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
                 }
 
@@ -151,9 +165,9 @@ public class GlobalbedoLevel2 extends Operator {
 
     private Product getCollocationMasterSubset(Product collocationProduct) {
         Product masterSubsetProduct = new Product(collocationProduct.getName(),
-                                                  collocationProduct.getProductType(),
-                                                  collocationProduct.getSceneRasterWidth(),
-                                                  collocationProduct.getSceneRasterHeight());
+                collocationProduct.getProductType(),
+                collocationProduct.getSceneRasterWidth(),
+                collocationProduct.getSceneRasterHeight());
         ProductUtils.copyMetadata(collocationProduct, masterSubsetProduct);
         ProductUtils.copyTiePointGrids(collocationProduct, masterSubsetProduct);
         ProductUtils.copyGeoCoding(collocationProduct, masterSubsetProduct);
