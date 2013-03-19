@@ -50,7 +50,12 @@ public class Modis29ProductReaderPlugIn implements ProductReaderPlugIn {
             inputFile = inputFile.getParentFile();
         }
 
-        return VirtualDir.create(inputFile);
+        VirtualDir virtualDir = VirtualDir.create(inputFile);
+        if (virtualDir == null) {
+            // todo: move VirtualDirBz2 into a utility package! appears now several times!!!
+            virtualDir = new VirtualDirBz2(inputFile);
+        }
+        return virtualDir;
     }
 
     static File getFileInput(Object input) {
@@ -75,9 +80,7 @@ public class Modis29ProductReaderPlugIn implements ProductReaderPlugIn {
 
     private boolean isInputValid(Object input) {
         File inputFile = new File(input.toString());
-        return isInputZipFileNameValid(inputFile.getName()) ||
-                isInputTarFileNameValid(inputFile.getName()) ||
-                isInputHdfFileNameValid(inputFile.getName());
+        return isInputTarFileNameValid(inputFile.getName());
     }
 
     private boolean isInputHdfFileNameValid(String fileName) {
