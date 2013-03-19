@@ -43,11 +43,13 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l2")
 public class GlobalbedoLevel2 extends Operator {
 
+    // todo: add the case 'AATSR BBDR' with sea ice flag from MERIS/AATSR synergy (not from AATSR alone)
+
     @SourceProduct(alias = "master")
     private Product masterSourceProduct;
 
     @SourceProduct(alias = "slave", optional = true)
-    // this shall be an AATSR L1b for MERIS/AATSR synergy Idepix approach
+    // this shall be a MERIS OR AATSR L1b for MERIS/AATSR synergy Idepix approach
     private Product slaveSourceProduct;
 
     @Parameter(defaultValue = "MERIS")
