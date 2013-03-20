@@ -19,10 +19,10 @@ import java.util.Locale;
  */
 public class MisrProductReaderPlugIn implements ProductReaderPlugIn {
 
-    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-METEOSAT-SURFACE-ALBEDO";
+    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-MISR";
 
     private static final Class[] SUPPORTED_INPUT_TYPES = new Class[]{String.class, File.class};
-    private static final String DESCRIPTION = "METEOSAT MSA Format";
+    private static final String DESCRIPTION = "MISR Format";
     private static final String FILE_EXTENSION = ".hdf";
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FILE_EXTENSION};
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME_METEOSAT_MSA};
@@ -50,7 +50,12 @@ public class MisrProductReaderPlugIn implements ProductReaderPlugIn {
             inputFile = inputFile.getParentFile();
         }
 
-        return VirtualDir.create(inputFile);
+        VirtualDir virtualDir = VirtualDir.create(inputFile);
+        if (virtualDir == null) {
+            // todo: move VirtualDirBz2 into a utility package! appears now several times!!!
+            virtualDir = new VirtualDirBz2(inputFile);
+        }
+        return virtualDir;
     }
 
     static File getFileInput(Object input) {
@@ -75,16 +80,12 @@ public class MisrProductReaderPlugIn implements ProductReaderPlugIn {
 
     private boolean isInputValid(Object input) {
         File inputFile = new File(input.toString());
-        return isInputBz2FileNameValid(inputFile.getName()) || isInputTarFileNameValid(inputFile.getName());
-    }
-
-    private boolean isInputBz2FileNameValid(String fileName) {
-        return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar.(?i)(bz2)"));
+        return isInputTarFileNameValid(inputFile.getName());
     }
 
     private boolean isInputTarFileNameValid(String fileName) {
-        return (fileName.matches("METEOSAT7-MVIRI-MTPMSA1-NA-1-[0-9]{14}.[0-9]{9}Z-[0-9]{7}.tar") ||
-                (fileName.startsWith("MSA_L2.0_V") && fileName.endsWith(".tar"))); // for MSSL 're-packed' tar files  :-(
+//      e.g.  MISR_AM1_GRP_ELLIPSOID_GM_P119_O061188_AA_F03_0024.tar
+        return (fileName.matches("MISR_AM1_GRP_ELLIPSOID_GM_P[0-9]{3}_O[0-9]{6}_AA_F[0-9]{2}_[0-9]{4}.(?i)(tar)"));
     }
 
     @Override
