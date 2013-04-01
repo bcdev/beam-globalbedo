@@ -68,11 +68,11 @@ public class GMTED2010ElevationModelDescriptor extends AbstractElevationModelDes
         return null; // no online installation
     }
 
-    @Override
-    @Deprecated
-    public ElevationModel createDem() {
-        return createDem(Resampling.BILINEAR_INTERPOLATION);
-    }
+//    @Override
+//    @Deprecated
+//    public ElevationModel createDem() {
+//        return createDem(Resampling.BILINEAR_INTERPOLATION);
+//    }
 
     @Override
     public ElevationModel createDem(Resampling resampling) {

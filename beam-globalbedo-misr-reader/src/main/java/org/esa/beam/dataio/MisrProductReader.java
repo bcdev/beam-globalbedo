@@ -89,7 +89,8 @@ public class MisrProductReader extends AbstractProductReader {
 
     static boolean misrFileNameMatches(String fileName) {
         //      e.g.  MISR_AM1_GRP_ELLIPSOID_GM_P119_O061188_AA_F03_0024.dim
-        if (!(fileName.matches("MISR_AM1_GRP_ELLIPSOID_GM_P[0-9]{3}_O[0-9]{6}_AA_F[0-9]{2}_[0-9]{4}.(?i)(dim)"))) {
+        if (!(fileName.matches("MISR_AM1_GRP_ELLIPSOID_GM_P[0-9]{3}_O[0-9]{6}_AA_F[0-9]{2}_[0-9]{4}.(?i)(dim)")) &&
+                !(fileName.matches("MISR_AM1_GRP_ELLIPSOID_GM_P[0-9]{3}_O[0-9]{6}_AA_F[0-9]{2}_[0-9]{4}_small.(?i)(dim)"))) {
             throw new IllegalArgumentException("Input MISR Dimap file name '" + fileName + "' does not match naming convention.");
         }
         return true;
@@ -141,13 +142,13 @@ public class MisrProductReader extends AbstractProductReader {
         // implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
         // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
         // --> special solution for Meteosat, but general solution is still under discussion
-        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
+//        product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // this does not work correctly!
         // todo!
-//        final Band latBandT = product.getBand("latitude");
-//        latBandT.setValidPixelExpression("'latitude' != -99999.0");
-//        final Band lonBandT = product.getBand("longitude");
-//        lonBandT.setValidPixelExpression("'longitude' != -99999.0");
-//        product.setGeoCoding(new MisrGeoCoding(latBandT, lonBandT, ""));
+        final Band latBandT = product.getBand("latitude");
+        latBandT.setValidPixelExpression("'latitude' != -99999.0");
+        final Band lonBandT = product.getBand("longitude");
+        lonBandT.setValidPixelExpression("'longitude' != -99999.0");
+        product.setGeoCoding(new MisrGeoCoding(latBandT, lonBandT, ""));
     }
 
     private File getInputFile() {

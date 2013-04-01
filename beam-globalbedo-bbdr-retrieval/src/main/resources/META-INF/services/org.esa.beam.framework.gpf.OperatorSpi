@@ -4,6 +4,9 @@ org.esa.beam.globalbedo.bbdr.BbdrAatsrOp$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.LandcoverLevel2$Spi
 org.esa.beam.globalbedo.bbdr.TileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.PolarStereographicOp$Spi
+org.esa.beam.globalbedo.bbdr.ProductScaleOp$Spi
+org.esa.beam.globalbedo.bbdr.ProductCropOp$Spi
 org.esa.beam.landcover.UclCloudOperator$Spi
 org.esa.beam.landcover.LcQaOp$Spi
 org.esa.beam.landcover.LcUclCloudBuffer$Spi

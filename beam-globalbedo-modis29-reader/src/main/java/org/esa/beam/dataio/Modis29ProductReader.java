@@ -81,23 +81,23 @@ public class Modis29ProductReader extends AbstractProductReader {
 //            }
         } catch (IOException e) {
             throw new IllegalStateException("MOD29 Seaice product '" + getInputFile().getName() +
-                                                    "' cannot be read.");
+                    "' cannot be read.");
         }
 
         Product product = new Product(getInputFile().getName(),
-                                      seaiceInputProduct.getProductType(),
-                                      seaiceInputProduct.getSceneRasterWidth(),
-                                      seaiceInputProduct.getSceneRasterHeight(),
-                                      this);
+                seaiceInputProduct.getProductType(),
+                seaiceInputProduct.getSceneRasterWidth(),
+                seaiceInputProduct.getSceneRasterHeight(),
+                this);
 
         product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
         product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
         ProductUtils.copyMetadata(seaiceInputProduct.getMetadataRoot().getElement("Global_Attributes"),
-                                  product.getMetadataRoot().getElement("Global_Attributes"));
+                product.getMetadataRoot().getElement("Global_Attributes"));
         ProductUtils.copyMetadata(seaiceInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                                  product.getMetadataRoot().getElement("Variable_Attributes"));
+                product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(geoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                                  product.getMetadataRoot().getElement("Variable_Attributes"));
+                product.getMetadataRoot().getElement("Variable_Attributes"));
 
         attachSeaiceDataToProduct(product, seaiceInputProduct);
         attachGeoCodingToProduct(product, geoInputProduct);
@@ -160,7 +160,10 @@ public class Modis29ProductReader extends AbstractProductReader {
     }
 
     static boolean seaiceFileNameMatches(String fileName) {
-        if (!(fileName.matches("MOD29.[0-9]{7}.[0-9]{4}.(?i)(hdf)"))) {
+//        if (!(fileName.matches("MOD29.[0-9]{7}.[0-9]{4}.(?i)(hdf)"))) {
+//        e.g. MOD29.A2002076.0140.005.2010080092148.hdf
+        if (!(fileName.matches("MOD29.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)")) &&
+                !(fileName.matches("MOD29.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}_HEGOUT.(?i)(hdf)"))) {
             throw new IllegalArgumentException("Input MOD29.5 file name '" + fileName + "' does not match naming convention.");
         }
         return true;
@@ -195,7 +198,7 @@ public class Modis29ProductReader extends AbstractProductReader {
             albedoProduct = ProductIO.readProduct(inputFile);
             if (albedoProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                                           inputFile.getName());
+                        inputFile.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -211,7 +214,7 @@ public class Modis29ProductReader extends AbstractProductReader {
             navigationProduct = ProductIO.readProduct(file);
             if (navigationProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                                           file.getName());
+                        file.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {

@@ -19,13 +19,13 @@ import java.util.Locale;
  */
 public class MisrProductReaderPlugIn implements ProductReaderPlugIn {
 
-    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-MISR";
+    public static final String FORMAT_NAME_MISR = "GLOBALBEDO-MISR";
 
     private static final Class[] SUPPORTED_INPUT_TYPES = new Class[]{String.class, File.class};
     private static final String DESCRIPTION = "MISR Format";
     private static final String FILE_EXTENSION = ".hdf";
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FILE_EXTENSION};
-    private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME_METEOSAT_MSA};
+    private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME_MISR};
 
     @Override
     public DecodeQualification getDecodeQualification(Object input) {
