@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.bbdr;
+package org.esa.beam.globalbedo.bbdr.seaice;
 
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;

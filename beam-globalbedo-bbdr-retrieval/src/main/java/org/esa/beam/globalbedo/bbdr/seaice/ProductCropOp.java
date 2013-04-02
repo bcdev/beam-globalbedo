@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.bbdr;
+package org.esa.beam.globalbedo.bbdr.seaice;
 
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.Band;
@@ -11,15 +11,11 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.util.ProductUtils;
 
-import javax.media.jai.Interpolation;
 import javax.media.jai.JAI;
 import javax.media.jai.RenderedOp;
-import javax.media.jai.operator.CropDescriptor;
-import javax.media.jai.operator.ScaleDescriptor;
 import java.awt.*;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
-import java.awt.image.renderable.RenderableImage;
 
 /**
  * Crops an input product

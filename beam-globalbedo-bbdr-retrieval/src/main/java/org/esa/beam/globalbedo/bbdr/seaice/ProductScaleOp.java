@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.bbdr;
+package org.esa.beam.globalbedo.bbdr.seaice;
 
 import com.bc.ceres.glevel.MultiLevelImage;
 import org.esa.beam.framework.datamodel.Band;
