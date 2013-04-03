@@ -21,7 +21,7 @@ import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
 /**
  * Encapsulates the differences between the 3 sensors and the 2 different views for AATSR
  */
-enum Sensor {
+public enum Sensor {
 
     MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
     AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),

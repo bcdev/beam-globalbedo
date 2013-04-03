@@ -19,16 +19,22 @@ import java.io.IOException;
 import java.util.*;
 
 /**
- * Collocates MERIS L1b products with a fitting AATSR L1b products
+ * Computes BBDR products over sea ice from MERIS and AATSR L1b input products.
+ *
+ * As input, we expect directories of MERIS and AATSR L1b input. For each of the MERIS L1b products,
+ * the overlapping AATSR products are determined, and each MERIS/AATSR pair is put into
+ * {@link MerisAatsrBbdrSeaiceOp}, which is the 'sea ice equivalent' operator to the standard
+ * 'GlobalbedoLevel2' in parent directory.
+ * --> still todo : generation of a 'AATSR BBDR' product with AATSR L1b as master
  *
  * @author Olaf Danne
  */
-@OperatorMetadata(alias = "ga.seaice.merisaatsr.colloc",
-                  description = "Collocates MERIS L1b products with a fitting AATSR L1b products.",
+@OperatorMetadata(alias = "ga.l2.seaice",
+                  description = "Computes BBDR products over sea ice from MERIS and AATSR L1b input products.",
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2013 by Brockmann Consult")
-public class MerisAatsrCollocationOp extends Operator {
+public class GlobalbedoLevel2Seaice extends Operator {
     @Parameter(defaultValue = "", description = "MERIS input data directory")
     private File merisInputDataDir;
 
@@ -36,7 +42,10 @@ public class MerisAatsrCollocationOp extends Operator {
     private File aatsrInputDataDir;
 
     @Parameter(defaultValue = "", description = "Collocation output data directory")
-    private File collocOutputDataDir;
+    private File bbdrOutputDataDir;
+
+    @Parameter(defaultValue = "false", description = "If set to true, reproject to Polar Stereographic")
+    private boolean reprojectPst;
 
     private Product[] aatsrSourceProducts;
 
@@ -54,24 +63,32 @@ public class MerisAatsrCollocationOp extends Operator {
 
             for (Product aatsrSourceProduct : aatsrSourceProducts) {
                 if (aatsrSourceProduct != null) {
-                    System.out.println("Collocating '" + merisSourceProduct.getName() + "', '" + aatsrSourceProduct.getName() + "'...");
-                    Map<String, Product> collocateInput = new HashMap<String, Product>(2);
-                    collocateInput.put("masterProduct", merisSourceProduct);
-                    collocateInput.put("slaveProduct", aatsrSourceProduct);
-                    Product collocateProduct =
-                            GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
+                    System.out.println("Computing BBDR Seaice product from '" + merisSourceProduct.getName() + "', '" + aatsrSourceProduct.getName() + "'...");
+                    Map<String, Product> bbdrSeaiceInput = new HashMap<String, Product>(2);
+                    bbdrSeaiceInput.put("master", merisSourceProduct);
+                    bbdrSeaiceInput.put("slave", aatsrSourceProduct);
+                    Product bbdrSeaiceProduct =
+                            GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), GPF.NO_PARAMS, bbdrSeaiceInput);
 
-                    // name should be COLLOC_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
+                    // name should be BBDR_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
                     final String dateTimeString = merisSourceProduct.getName().substring(14, 22);
                     final String merisTimeString = merisSourceProduct.getName().substring(23, 29);
                     final String aatsrTimeString = aatsrSourceProduct.getName().substring(23, 29);
-                    final String collocTargetFileName = "COLLOC_" + dateTimeString +
+                    final String bbdrTargetFileName = "BBDR_" + dateTimeString +
                             "_MER_" + merisTimeString + "_ATS_" + aatsrTimeString + ".dim";
-                    final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
-                    final File collocTargetFile = new File(collocTargetFilePath);
-                    final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, ProductIO.DEFAULT_FORMAT_NAME);
-                    System.out.println("Writing collocated product '" + collocTargetFileName + "'...");
-                    collocWriteOp.writeProduct(ProgressMonitor.NULL);
+                    final String bbdrTargetFilePath = bbdrOutputDataDir + File.separator + bbdrTargetFileName;
+                    final File bbdrTargetFile = new File(bbdrTargetFilePath);
+
+                    Product targetProduct;
+                    if (reprojectPst) {
+                        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), GPF.NO_PARAMS, bbdrSeaiceProduct);
+                    } else {
+                        targetProduct = bbdrSeaiceProduct;
+                    }
+
+                    final WriteOp bbdrWriteOp = new WriteOp(targetProduct, bbdrTargetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                    System.out.println("Writing BBDR product '" + bbdrTargetFileName + "'...");
+                    bbdrWriteOp.writeProduct(ProgressMonitor.NULL);
                 }
             }
         }
@@ -148,7 +165,7 @@ public class MerisAatsrCollocationOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisAatsrCollocationOp.class);
+            super(GlobalbedoLevel2Seaice.class);
         }
     }
 }
