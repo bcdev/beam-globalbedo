@@ -23,7 +23,7 @@ public class Modis29ProductReaderPlugIn implements ProductReaderPlugIn {
 
     private static final Class[] SUPPORTED_INPUT_TYPES = new Class[]{String.class, File.class};
     private static final String DESCRIPTION = "MODIS29.5 Format";
-    private static final String FILE_EXTENSION = ".hdf";
+    private static final String FILE_EXTENSION = ".tar";
     private static final String[] DEFAULT_FILE_EXTENSIONS = new String[]{FILE_EXTENSION};
     private static final String[] FORMAT_NAMES = new String[]{FORMAT_NAME_METEOSAT_MSA};
 
