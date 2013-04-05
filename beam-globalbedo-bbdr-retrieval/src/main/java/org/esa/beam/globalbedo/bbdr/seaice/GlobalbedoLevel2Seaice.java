@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import java.io.File;
@@ -20,7 +21,7 @@ import java.util.*;
 
 /**
  * Computes BBDR products over sea ice from MERIS and AATSR L1b input products.
- *
+ * <p/>
  * As input, we expect directories of MERIS and AATSR L1b input. For each of the MERIS L1b products,
  * the overlapping AATSR products are determined, and each MERIS/AATSR pair is put into
  * {@link MerisAatsrBbdrSeaiceOp}, which is the 'sea ice equivalent' operator to the standard
@@ -40,6 +41,9 @@ public class GlobalbedoLevel2Seaice extends Operator {
 
     @Parameter(defaultValue = "", description = "AATSR input data directory")
     private File aatsrInputDataDir;
+
+    @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
+    private Sensor sensor;
 
     @Parameter(defaultValue = "", description = "Collocation output data directory")
     private File bbdrOutputDataDir;
@@ -65,17 +69,26 @@ public class GlobalbedoLevel2Seaice extends Operator {
                 if (aatsrSourceProduct != null) {
                     System.out.println("Computing BBDR Seaice product from '" + merisSourceProduct.getName() + "', '" + aatsrSourceProduct.getName() + "'...");
                     Map<String, Product> bbdrSeaiceInput = new HashMap<String, Product>(2);
-                    bbdrSeaiceInput.put("master", merisSourceProduct);
-                    bbdrSeaiceInput.put("slave", aatsrSourceProduct);
+                    final Product masterProduct = sensor == Sensor.MERIS ? merisSourceProduct : aatsrSourceProduct;
+                    final Product slaveProduct = sensor == Sensor.AATSR ? merisSourceProduct : aatsrSourceProduct;
+                    bbdrSeaiceInput.put("master", masterProduct);
+                    bbdrSeaiceInput.put("slave", slaveProduct);
+                    Map<String, Object> bbdrSeaiceParams = new HashMap<String, Object>();
+                    bbdrSeaiceParams.put("sensor", sensor);
                     Product bbdrSeaiceProduct =
-                            GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), GPF.NO_PARAMS, bbdrSeaiceInput);
+                            GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), bbdrSeaiceParams, bbdrSeaiceInput);
 
                     // name should be BBDR_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
                     final String dateTimeString = merisSourceProduct.getName().substring(14, 22);
                     final String merisTimeString = merisSourceProduct.getName().substring(23, 29);
                     final String aatsrTimeString = aatsrSourceProduct.getName().substring(23, 29);
+
+                    final String masterSensorString =
+                            sensor == Sensor.MERIS ? "_MER_" + merisTimeString : "_ATS_" + aatsrTimeString;
+                    final String slaveSensorString =
+                            sensor == Sensor.AATSR ? "_MER_" + merisTimeString : "_ATS_" + aatsrTimeString;
                     final String bbdrTargetFileName = "BBDR_" + dateTimeString +
-                            "_MER_" + merisTimeString + "_ATS_" + aatsrTimeString + ".dim";
+                            masterSensorString + slaveSensorString + ".dim";
                     final String bbdrTargetFilePath = bbdrOutputDataDir + File.separator + bbdrTargetFileName;
                     final File bbdrTargetFile = new File(bbdrTargetFilePath);
 

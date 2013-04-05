@@ -236,7 +236,8 @@ public class BbdrAatsrOp extends PixelOperator {
         if (landExpression != null && !landExpression.isEmpty()) {
             commonLandExpr = landExpression;
         } else {
-            commonLandExpr = "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
+//            commonLandExpr = "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
+            commonLandExpr = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
         }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
         final String seaIceMaskExpression = "cloud_classif_flags.F_SEAICE";

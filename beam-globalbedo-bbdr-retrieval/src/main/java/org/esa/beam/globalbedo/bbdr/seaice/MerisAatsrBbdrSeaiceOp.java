@@ -17,10 +17,10 @@
 package org.esa.beam.globalbedo.bbdr.seaice;
 
 
-import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.collocation.CollocateOp;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -31,10 +31,8 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.bbdr.BbdrAatsrOp;
 import org.esa.beam.globalbedo.bbdr.BbdrOp;
 import org.esa.beam.globalbedo.bbdr.Sensor;
-import org.esa.beam.globalbedo.bbdr.TileExtractor;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.gpf.operators.standard.MergeOp;
-import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -67,7 +65,6 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
 
     @Parameter(defaultValue = "")
     private String tile;
-    private boolean tileBased;
 
     @Override
     public void initialize() throws OperatorException {
@@ -80,37 +77,14 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
 
         Product aotProduct;
         Product collocationProduct = null;
-        Product aotSourceProduct = null;
-        tileBased = tile != null && !tile.isEmpty();
+        Product aotSourceProduct;
 
         if (computeAotToBbdrProductOnly) {
             aotProduct = masterSourceProduct;
         } else {
-            if (tileBased) {
-                Geometry geometry = TileExtractor.computeProductGeometry(TileExtractor.reproject(masterSourceProduct, tile));
-                if (geometry == null) {
-                    throw new OperatorException("Could not get geometry for product");
-                }
-                SubsetOp subsetOp = new SubsetOp();
-                subsetOp.setGeoRegion(geometry);
-                subsetOp.setSourceProduct(masterSourceProduct);
+            collocationProduct = getTargetProductFromCollocation();
 
-                if (slaveSourceProduct != null) {
-                    // todo: test this case!!!
-                    collocationProduct = getTargetProductFromCollocation(geometry, subsetOp);
-                    aotSourceProduct = getCollocationMasterSubset(collocationProduct);
-                } else {
-                    aotSourceProduct = subsetOp.getTargetProduct();
-                }
-            } else {
-                if (slaveSourceProduct != null) {
-                    collocationProduct = getTargetProductFromCollocation(null, null);
-                    aotSourceProduct = getCollocationMasterSubset(collocationProduct);
-//                    throw new OperatorException("MERIS/AATSR synergy approach must be processed in tileBased mode!");
-                } else {
-                    aotSourceProduct = masterSourceProduct;
-                }
-            }
+            aotSourceProduct = getCollocationMasterSubset(collocationProduct);
 
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameter("copyToaRadBands", false);
@@ -131,11 +105,10 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
                 fillSourceProds.put("sourceProduct", aotProduct);
                 Map<String, Object> bbdrParams = new HashMap<String, Object>();
 
-                final boolean isBbdsSeaIce = ((sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) ||
-                        slaveSourceProduct != null);
-                bbdrParams.put("bbdrSeaIce", isBbdsSeaIce);
+                final boolean isBbdrSeaIce = ((sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD));
+                bbdrParams.put("bbdrSeaIce", isBbdrSeaIce);
 
-                Product bbdrProduct = null;
+                Product bbdrProduct;
                 if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
                     bbdrParams.put("sensor", sensor);
                     bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
@@ -160,20 +133,16 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
                     ProductUtils.copyBand("reflec_fward_1600", collocationProduct, bbdrProduct, true);
                 }
 
-                if (tileBased) {
-                    setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
-                } else {
-                    setTargetProduct(bbdrProduct);
-                }
+                setTargetProduct(bbdrProduct);
             }
         }
     }
 
     private Product getCollocationMasterSubset(Product collocationProduct) {
         Product masterSubsetProduct = new Product(collocationProduct.getName(),
-                collocationProduct.getProductType(),
-                collocationProduct.getSceneRasterWidth(),
-                collocationProduct.getSceneRasterHeight());
+                                                  collocationProduct.getProductType(),
+                                                  collocationProduct.getSceneRasterWidth(),
+                                                  collocationProduct.getSceneRasterHeight());
         ProductUtils.copyMetadata(collocationProduct, masterSubsetProduct);
         ProductUtils.copyTiePointGrids(collocationProduct, masterSubsetProduct);
         ProductUtils.copyGeoCoding(collocationProduct, masterSubsetProduct);
@@ -184,7 +153,6 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
         masterSubsetProduct.setEndTime(collocationProduct.getEndTime());
         // copy all  master bands from collocation product
         for (Band bColloc : masterSourceProduct.getBands()) {
-            System.out.println("bColloc = " + bColloc.getName());
             if (!masterSubsetProduct.containsBand(bColloc.getName()) &&
                     !masterSubsetProduct.containsTiePointGrid(bColloc.getName())) {
                 ProductUtils.copyBand(bColloc.getName(), collocationProduct, masterSubsetProduct, true);
@@ -195,60 +163,96 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
         return masterSubsetProduct;
     }
 
-    private Product getTargetProductFromCollocation(Geometry geometry, SubsetOp subsetOp) {
+    private Product getTargetProductFromCollocation() {
         Map<String, Product> collocateInput = new HashMap<String, Product>(2);
-        if (tileBased && geometry != null && subsetOp != null) {
-            Product subsettedMasterProduct;
-            Product subsettedSlaveProduct;
-            subsettedMasterProduct = subsetOp.getTargetProduct();
 
-            subsetOp = new SubsetOp();
-            subsetOp.setGeoRegion(geometry);
-            subsetOp.setSourceProduct(slaveSourceProduct);
-            subsettedSlaveProduct = subsetOp.getTargetProduct();
-
-            // create collocation product...
-            collocateInput.put("masterProduct", subsettedMasterProduct);
-            collocateInput.put("slaveProduct", subsettedSlaveProduct);
-        } else {
-            collocateInput.put("masterProduct", masterSourceProduct);
-            collocateInput.put("slaveProduct", slaveSourceProduct);
-        }
+        collocateInput.put("masterProduct", masterSourceProduct);
+        collocateInput.put("slaveProduct", slaveSourceProduct);
         Product collocateProduct =
                 GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
 
-        // create Idepix product...
+        // in any case, we need an input for Idepix with MERIS as master...
+        Product collocateMerisMasterProduct;
+        if (sensor == Sensor.MERIS) {
+            collocateMerisMasterProduct = collocateProduct;
+        } else {
+            collocateMerisMasterProduct = getCollocateMerisMasterProduct(collocateProduct, slaveSourceProduct);
+        }
+
+        // now create the Idepix product...
         Map<String, Product> idepixInput = new HashMap<String, Product>(1);
-        idepixInput.put("source", collocateProduct);
+        idepixInput.put("source", collocateMerisMasterProduct);
         Map<String, Object> idepixParameters = new HashMap<String, Object>(1);
         idepixParameters.put("gaComputeFlagsOnly", true);
         Product idepixProduct =
                 GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), idepixParameters, idepixInput);
 
-        // remove all other than master bands from collocation product
-//        for (Band bColloc : collocateProduct.getBands()) {
-//            boolean isMasterBand = false;
-//            for (Band bMaster : masterSourceProduct.getBands()) {
-//                if (bMaster.getName().equals(bColloc.getName())) {
-//                    isMasterBand = true;
-//                    break;
-//                }
-//            }
-////            if (!isMasterBand) {
-//            if (!isMasterBand &&
-//                    !bColloc.getName().equalsIgnoreCase("reflec_nadir_1600") &&
-//                    !bColloc.getName().equalsIgnoreCase("reflec_fward_1600")) {
-//                collocateProduct.removeBand(bColloc);
-//            }
-//        }
-
         // copy Idepix 'cloud_classif_flags' to collocation product
         ProductUtils.copyFlagBands(idepixProduct, collocateProduct, true);
 
-        // set product type of master source product
+//        final String merisMasterProductType = sensor == Sensor.MERIS ? masterSourceProduct.getProductType() : slaveSourceProduct.getProductType();
         collocateProduct.setProductType(masterSourceProduct.getProductType());
 
+        // band names must not have extensions!
+        for (Band b : collocateProduct.getBands()) {
+            if (b.getName().endsWith("_M") || b.getName().endsWith("_M")) {
+                String bandNameNoExtension = b.getName().substring(0, b.getName().length() - 2);
+                b.setName(bandNameNoExtension);
+            }
+        }
+
         return collocateProduct;
+    }
+
+    static Product getCollocateMerisMasterProduct(Product collocationProduct, Product merisSlaveProduct) {
+        Product merisMasterProduct = new Product(collocationProduct.getName(),
+                                                 collocationProduct.getProductType(),
+                                                 collocationProduct.getSceneRasterWidth(),
+                                                 collocationProduct.getSceneRasterHeight());
+
+        ProductUtils.copyMetadata(collocationProduct, merisMasterProduct);
+        ProductUtils.copyGeoCoding(collocationProduct, merisMasterProduct);
+        ProductUtils.copyFlagCodings(collocationProduct, merisMasterProduct);
+        ProductUtils.copyFlagBands(collocationProduct, merisMasterProduct, true);
+        ProductUtils.copyMasks(collocationProduct, merisMasterProduct);
+        merisMasterProduct.setStartTime(collocationProduct.getStartTime());
+        merisMasterProduct.setEndTime(collocationProduct.getEndTime());
+        // copy all  master bands from collocation product
+        for (Band bColloc : collocationProduct.getBands()) {
+            String bandNameNoExtension = bColloc.getName().substring(0, bColloc.getName().length() - 2);
+            String targetBandName;
+            if (bColloc.getName().endsWith("_M")) {
+                targetBandName = bandNameNoExtension + "_S";
+            } else {
+                targetBandName = bandNameNoExtension + "_M";
+            }
+            // only copy this band if is not originally a MERIS tie point grid...
+            if (merisSlaveProduct.getTiePointGrid(bandNameNoExtension) == null) {
+                ProductUtils.copyBand(bColloc.getName(), collocationProduct, targetBandName, merisMasterProduct, true);
+                ProductUtils.copyRasterDataNodeProperties(bColloc, merisMasterProduct.getBand(targetBandName));
+            }
+        }
+
+        // MERIS tie point grids...
+        for (int i = 0; i < merisSlaveProduct.getTiePointGrids().length; i++) {
+            String tiePointGridName = merisSlaveProduct.getTiePointGrids()[i].getName();
+            for (Band bColloc : collocationProduct.getBands()) {
+                final String bandNameNoExtension = bColloc.getName().substring(0, bColloc.getName().length() - 2);
+                if (bandNameNoExtension.equals(tiePointGridName)) {
+                    final String tmpTpgName = "sun_elev_nadir";
+                    if (collocationProduct.containsTiePointGrid(tmpTpgName) &&
+                            !merisMasterProduct.containsTiePointGrid(tmpTpgName) &&
+                            !merisMasterProduct.containsTiePointGrid(tiePointGridName)) {
+                        System.out.println("tmpTpgName,tiePointGridName = " + tmpTpgName + ", " + tiePointGridName);
+                        ProductUtils.copyTiePointGrid(tmpTpgName, collocationProduct, merisMasterProduct);
+                        merisMasterProduct.getTiePointGrid(tmpTpgName).setName(tiePointGridName);
+                        merisMasterProduct.getTiePointGrid(tiePointGridName).setSourceImage(bColloc.getSourceImage());
+                    }
+                }
+            }
+        }
+
+        return merisMasterProduct;
     }
 
 
