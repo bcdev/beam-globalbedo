@@ -71,26 +71,16 @@ public class GlobalbedoLevel2Seaice extends Operator {
                     Map<String, Product> bbdrSeaiceInput = new HashMap<String, Product>(2);
                     final Product masterProduct = sensor == Sensor.MERIS ? merisSourceProduct : aatsrSourceProduct;
                     final Product slaveProduct = sensor == Sensor.AATSR ? merisSourceProduct : aatsrSourceProduct;
+                    final String bbdrTargetFileName = getBbdrTargetFileName(masterProduct, slaveProduct);
+                    final String bbdrTargetFilePath = bbdrOutputDataDir + File.separator + bbdrTargetFileName;
+                    final File bbdrTargetFile = new File(bbdrTargetFilePath);
+
                     bbdrSeaiceInput.put("master", masterProduct);
                     bbdrSeaiceInput.put("slave", slaveProduct);
                     Map<String, Object> bbdrSeaiceParams = new HashMap<String, Object>();
                     bbdrSeaiceParams.put("sensor", sensor);
                     Product bbdrSeaiceProduct =
                             GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), bbdrSeaiceParams, bbdrSeaiceInput);
-
-                    // name should be BBDR_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
-                    final String dateTimeString = merisSourceProduct.getName().substring(14, 22);
-                    final String merisTimeString = merisSourceProduct.getName().substring(23, 29);
-                    final String aatsrTimeString = aatsrSourceProduct.getName().substring(23, 29);
-
-                    final String masterSensorString =
-                            sensor == Sensor.MERIS ? "_MER_" + merisTimeString : "_ATS_" + aatsrTimeString;
-                    final String slaveSensorString =
-                            sensor == Sensor.AATSR ? "_MER_" + merisTimeString : "_ATS_" + aatsrTimeString;
-                    final String bbdrTargetFileName = "BBDR_" + dateTimeString +
-                            masterSensorString + slaveSensorString + ".dim";
-                    final String bbdrTargetFilePath = bbdrOutputDataDir + File.separator + bbdrTargetFileName;
-                    final File bbdrTargetFile = new File(bbdrTargetFilePath);
 
                     Product targetProduct;
                     if (reprojectPst) {
@@ -106,6 +96,37 @@ public class GlobalbedoLevel2Seaice extends Operator {
             }
         }
         setTargetProduct(new Product("dummy", "dummy", 0, 0));
+    }
+
+    private String getBbdrTargetFileName(Product masterSourceProduct, Product slaveSourceProduct) {
+        final String year = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.YEAR));
+        final String month = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MONTH) + 1);
+        final String day = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.DAY_OF_MONTH));
+
+        final String masterStartHour = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String masterStartMin = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
+        final String masterStartSec = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
+        final String masterEndHour = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String masterEndMin = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
+        final String masterEndSec = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
+
+        final String slaveStartHour = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String slaveStartMin = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
+        final String slaveStartSec = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
+        final String slaveEndHour = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String slaveEndMin = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
+        final String slaveEndSec = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
+
+        // name should be BBDR_yyyyMMdd_MER_hhmmss_hhmmss_ATS_hhmmss_hhmmss.dim
+
+        final String  masterSensorId = sensor == Sensor.MERIS ? "MER" : "ATS";
+        final String  slaveSensorId = sensor == Sensor.MERIS ? "ATS" : "MER";
+        return "BBDR_" + year + month + day +
+                "_" + masterSensorId + "_" +
+                masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
+                "_" + slaveSensorId + "_" +
+                slaveStartHour + slaveStartMin + slaveStartSec + "_" + slaveEndHour + slaveEndMin + slaveEndSec +
+                ".dim";
     }
 
     private Product[] findAatsrProductsToCollocate(Product merisSourceProduct) {
@@ -138,7 +159,10 @@ public class GlobalbedoLevel2Seaice extends Operator {
             @Override
             public boolean accept(File file) {
                 return file.isFile() &&
-                        file.getName().startsWith(productType) && file.getName().endsWith(".N1");
+                        file.getName().startsWith(productType) &&
+//                        file.getName().contains(productType) &&  // test
+                        file.getName().endsWith(".N1");
+//                        file.getName().endsWith(".dim");  // test
             }
         };
 

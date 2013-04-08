@@ -81,23 +81,23 @@ public class Modis29ProductReader extends AbstractProductReader {
 //            }
         } catch (IOException e) {
             throw new IllegalStateException("MOD29 Seaice product '" + getInputFile().getName() +
-                    "' cannot be read.");
+                                                    "' cannot be read.");
         }
 
         Product product = new Product(getInputFile().getName(),
-                seaiceInputProduct.getProductType(),
-                seaiceInputProduct.getSceneRasterWidth(),
-                seaiceInputProduct.getSceneRasterHeight(),
-                this);
+                                      seaiceInputProduct.getProductType(),
+                                      seaiceInputProduct.getSceneRasterWidth(),
+                                      seaiceInputProduct.getSceneRasterHeight(),
+                                      this);
 
         product.getMetadataRoot().addElement(new MetadataElement("Global_Attributes"));
         product.getMetadataRoot().addElement(new MetadataElement("Variable_Attributes"));
         ProductUtils.copyMetadata(seaiceInputProduct.getMetadataRoot().getElement("Global_Attributes"),
-                product.getMetadataRoot().getElement("Global_Attributes"));
+                                  product.getMetadataRoot().getElement("Global_Attributes"));
         ProductUtils.copyMetadata(seaiceInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
         ProductUtils.copyMetadata(geoInputProduct.getMetadataRoot().getElement("Variable_Attributes"),
-                product.getMetadataRoot().getElement("Variable_Attributes"));
+                                  product.getMetadataRoot().getElement("Variable_Attributes"));
 
         attachSeaiceDataToProduct(product, seaiceInputProduct);
         attachGeoCodingToProduct(product, geoInputProduct);
@@ -105,51 +105,6 @@ public class Modis29ProductReader extends AbstractProductReader {
 
         return product;
     }
-
-//    public void decode(ProfileReadContext ctx, Product p) throws IOException {
-//        final List<Variable> variables = ctx.getNetcdfFile().getVariables();
-//        for (Variable variable : variables) {
-//            final List<Dimension> dimensions = variable.getDimensions();
-//            if (dimensions.size() != 2) {
-//                continue;
-//            }
-//            final Dimension dimensionY = dimensions.get(0);
-//            final Dimension dimensionX = dimensions.get(1);
-//            if (dimensionY.getLength() != p.getSceneRasterHeight()
-//                    || dimensionX.getLength() != p.getSceneRasterWidth()) {
-//                //maybe this is a tie point grid
-//                final String tpName = ReaderUtils.getRasterName(variable);
-//                final Attribute offsetX = variable.findAttributeIgnoreCase(OFFSET_X);
-//                final Attribute offsetY = variable.findAttributeIgnoreCase(OFFSET_Y);
-//                final Attribute subSamplingX = variable.findAttributeIgnoreCase(SUBSAMPLING_X);
-//                final Attribute subSamplingY = variable.findAttributeIgnoreCase(SUBSAMPLING_Y);
-//                if (offsetX != null && offsetY != null &&
-//                        subSamplingX != null && subSamplingY != null) {
-//                    final Array array = variable.read();
-//                    final float[] data = new float[(int) array.getSize()];
-//                    for (int i = 0; i < data.length; i++) {
-//                        data[i] = array.getFloat(i);
-//                    }
-//                    final boolean containsAngles = Constants.LON_VAR_NAME.equalsIgnoreCase(tpName) ||
-//                            Constants.LAT_VAR_NAME.equalsIgnoreCase(tpName) ||
-//                            Constants.LONGITUDE_VAR_NAME.equalsIgnoreCase(tpName) ||
-//                            Constants.LATITUDE_VAR_NAME.equalsIgnoreCase(tpName);
-//                    final TiePointGrid grid = new TiePointGrid(tpName,
-//                                                               dimensionX.getLength(),
-//                                                               dimensionY.getLength(),
-//                                                               offsetX.getNumericValue().floatValue(),
-//                                                               offsetY.getNumericValue().floatValue(),
-//                                                               subSamplingX.getNumericValue().floatValue(),
-//                                                               subSamplingY.getNumericValue().floatValue(),
-//                                                               data,
-//                                                               containsAngles);
-//                    CfBandPart.readCfBandAttributes(variable, grid);
-//                    p.addTiePointGrid(grid);
-//                }
-//            }
-//        }
-//    }
-
 
     static boolean geoFileNameMatches(String fileName) {
 //        e.g. MOD03.A2002076.0140.005.2010080092148.hdf
@@ -169,36 +124,13 @@ public class Modis29ProductReader extends AbstractProductReader {
         return true;
     }
 
-//    Product getGeoInputProductFromAuxdataFile(String albedoInputProductName) throws IOException {
-//        Product staticInputProduct;
-//        final String inputParentDirectory = getInputFile().getParent();
-//        String staticFileExt = ".hdf";
-//        String staticInputFileName = "MSA_Static_" + albedoInputProductName.substring(11, 25);
-//        String staticInputFileNameWithExt = staticInputFileName + staticFileExt;
-//        File staticInputFile = new File(inputParentDirectory + File.separator + staticInputFileNameWithExt);
-//
-//        if (staticInputFile.exists()) {
-//            staticInputProduct = createGeoInputProduct(staticInputFile);
-//        } else {
-//            staticInputFile = new File(inputParentDirectory + File.separator + staticInputFileName + staticFileExt.toUpperCase());
-//            if (staticInputFile.exists()) {
-//                staticInputProduct = createGeoInputProduct(staticInputFile);
-//            } else {
-//                throw new IllegalStateException("Static data file '" + staticInputFileName +
-//                                                        "' missing - cannot open Meteosat Surface Albedo product,");
-//            }
-//        }
-//
-//        return staticInputProduct;
-//    }
-
     private Product createSeaiceInputProduct(File inputFile) {
         Product albedoProduct = null;
         try {
             albedoProduct = ProductIO.readProduct(inputFile);
             if (albedoProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        inputFile.getName());
+                                           inputFile.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -214,7 +146,7 @@ public class Modis29ProductReader extends AbstractProductReader {
             navigationProduct = ProductIO.readProduct(file);
             if (navigationProduct == null) {
                 String msg = String.format("Could not read file '%s. No appropriate reader found.",
-                        file.getName());
+                                           file.getName());
                 logger.log(Level.WARNING, msg);
             }
         } catch (IOException e) {
@@ -229,12 +161,8 @@ public class Modis29ProductReader extends AbstractProductReader {
             if (sourceBand.getName().startsWith(SEAICE_BAND_NAME_PREFIX) &&
                     hasSameRasterDimension(product, albedoInputProduct)) {
                 String bandName = sourceBand.getName();
-//                RenderedOp flippedImage = flipImage(sourceBand);
-                String targetBandName = SEAICE_BAND_NAME_PREFIX + "_" +
-                        bandName.substring(bandName.indexOf("/") + 1, bandName.length());
-                targetBandName = targetBandName.replace(" ", "_");
+                String targetBandName = bandName.substring(SEAICE_BAND_NAME_PREFIX.length() + 1, bandName.length());
                 Band targetBand = ProductUtils.copyBand(bandName, albedoInputProduct, targetBandName, product, false);
-//                targetBand.setSourceImage(flippedImage);
                 targetBand.setSourceImage(sourceBand.getSourceImage());
             }
         }
@@ -243,22 +171,15 @@ public class Modis29ProductReader extends AbstractProductReader {
     private void attachGeoCodingToProduct(Product product, Product staticInputProduct) throws IOException {
         final Band latBand = staticInputProduct.getBand("MODIS_Swath_Type_GEO/Geolocation Fields/Latitude");
         final Band lonBand = staticInputProduct.getBand("MODIS_Swath_Type_GEO/Geolocation Fields/Longitude");
-//        lonBand.setScalingFactor(1.0);   // current static data file contains a weird scaling factor for longitude band
-//        RenderedOp flippedLatImage = flipImage(latBand);
-//        RenderedOp flippedLonImage = flipImage(lonBand);
 
         String bandName = latBand.getName();
-        String targetBandName = GEO_BAND_NAME_PREFIX + "_" +
-                bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+        String targetBandName = bandName.substring(GEO_BAND_NAME_PREFIX.length() + 1, bandName.length());
         Band targetBand = ProductUtils.copyBand(bandName, staticInputProduct, targetBandName, product, false);
-//        targetBand.setSourceImage(flippedLatImage);
         targetBand.setSourceImage(latBand.getSourceImage());
 
         bandName = lonBand.getName();
-        targetBandName = GEO_BAND_NAME_PREFIX + "_" +
-                bandName.substring(bandName.indexOf("/") + 1, bandName.length());
+        targetBandName = bandName.substring(GEO_BAND_NAME_PREFIX.length() + 1, bandName.length());
         targetBand = ProductUtils.copyBand(lonBand.getName(), staticInputProduct, targetBandName, product, false);
-//        targetBand.setSourceImage(flippedLonImage);
         targetBand.setSourceImage(lonBand.getSourceImage());
 
         // implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
@@ -271,11 +192,6 @@ public class Modis29ProductReader extends AbstractProductReader {
 //        final Band lonBandT = product.getBand("Navigation_Longitude");
 //        lonBandT.setValidPixelExpression("'Navigation_Latitude' != -9999.0");
 //        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MFG_0deg"));
-    }
-
-    private RenderedOp flipImage(Band sourceBand) {
-        final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceBand.getSourceImage(), TransposeDescriptor.FLIP_VERTICAL, null);
-        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
 
     private boolean hasSameRasterDimension(Product productOne, Product productTwo) {

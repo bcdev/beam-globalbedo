@@ -17,22 +17,13 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.ColorPaletteDef;
-import org.esa.beam.framework.datamodel.ImageInfo;
-import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.Sample;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
-import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
 import org.esa.beam.landcover.UclCloudDetection;
@@ -40,19 +31,10 @@ import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
 import org.esa.beam.util.math.LookupTable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 
-import static java.lang.Math.PI;
-import static java.lang.Math.abs;
-import static java.lang.Math.acos;
-import static java.lang.Math.cos;
-import static java.lang.Math.max;
-import static java.lang.Math.min;
-import static java.lang.Math.pow;
-import static java.lang.Math.sin;
-import static java.lang.Math.sqrt;
-import static java.lang.Math.tan;
+import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
@@ -60,10 +42,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr",
-                  description = "Computes BBDRs and kernel parameters",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -364,7 +346,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.MERIS_TOA_BAND_NAMES.length);
+                    BbdrConstants.MERIS_TOA_BAND_NAMES.length);
         } else if (sensor == Sensor.VGT) {
 
             landExpr =
@@ -382,7 +364,7 @@ public class BbdrOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.VGT_TOA_BAND_NAMES.length);
+                    BbdrConstants.VGT_TOA_BAND_NAMES.length);
         } else {
             throw new OperatorException("BbdrOp: invalid sensor '" + sensor.toString() + "' - cannot continue.");
         }
@@ -512,6 +494,9 @@ public class BbdrOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status = 0;
+        if (x == 466 && y == 1178) {
+            System.out.println("hier 1 x = " + x);
+        }
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
             if (status == 2) {
@@ -543,8 +528,15 @@ public class BbdrOp extends PixelOperator {
             }
             targetSamples[sensor.getNumBands() * 2 + 2].set(status);
         } else {
-            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-                // only compute over land
+            final boolean isInvalid = bbdrSeaIce ? !sourceSamples[SRC_SEAICE_MASK].getBoolean() :
+                    !sourceSamples[SRC_LAND_MASK].getBoolean();
+
+            if (isInvalid) {
+                if (x == 466 && y == 1178) {
+                    System.out.println("hier 2 x = " + x);
+                }
+                // for seaice mode, compute only over sea ice,
+                // otherwise only compute over clear land or clear snow
                 fillTargetSampleWithNoDataValue(targetSamples);
                 return;
             }
@@ -572,6 +564,9 @@ public class BbdrOp extends PixelOperator {
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
+            if (x == 466 && y == 1178) {
+                System.out.println("hier 3 x = " + x);
+            }
             fillTargetSampleWithNoDataValue(targetSamples);
             if (sdrOnly) {
                 // write status
@@ -582,6 +577,9 @@ public class BbdrOp extends PixelOperator {
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
         } else {
+            if (x == 466 && y == 1178) {
+                System.out.println("hier 4 x = " + x);
+            }
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);

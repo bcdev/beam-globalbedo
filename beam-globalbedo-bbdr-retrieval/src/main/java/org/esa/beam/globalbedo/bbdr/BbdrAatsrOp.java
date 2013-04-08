@@ -17,7 +17,9 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
@@ -25,13 +27,10 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
-import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
 import org.esa.beam.util.math.LookupTable;
 
-import java.awt.*;
 import java.io.IOException;
 
 import static java.lang.Math.*;
@@ -42,10 +41,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr.aatsr",
-                  description = "Computes BBDRs and kernel parameters for AATSR",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2013 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters for AATSR",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2013 by Brockmann Consult")
 public class BbdrAatsrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -85,6 +84,9 @@ public class BbdrAatsrOp extends PixelOperator {
 
     @Parameter
     private Sensor sensor;
+
+    @Parameter(defaultValue = "true")  // currently, we only need AATSR BBDR for sea ice mode
+    private boolean bbdrSeaIce;  // mode for MERIS SDR/BBDR computation including seaice areas (GA CCN, 2013)
 
     private String viewDirection;
 
@@ -264,10 +266,10 @@ public class BbdrAatsrOp extends PixelOperator {
         toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
         if (viewDirection.equals("nadir")) {
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
         } else {
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
@@ -339,8 +341,12 @@ public class BbdrAatsrOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status = 0;
 
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
+        final boolean isInvalid = bbdrSeaIce ? !sourceSamples[SRC_SEAICE_MASK].getBoolean() :
+                !sourceSamples[SRC_LAND_MASK].getBoolean();
+
+        if (isInvalid) {
+            // for seaice mode, compute only over sea ice,
+            // otherwise only compute over clear land or clear snow
             fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }

@@ -47,12 +47,12 @@ public class MerisAatsrIdepixOp extends Operator {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
+            pixelClassParam.put("gaCopyRadiances", false);
+            pixelClassParam.put("gaCopySubsetOfRadiances", true);
             Product idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, collocSourceProduct);
             idepixProduct.setProductType("MER_ATS_IDEPIX_");
 
-            // name should be COLLOC_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
-            final int collocNameLength = collocSourceProduct.getName().length();
-            final String idepixTargetFileName = "IDEPIX_" + collocSourceProduct.getName().substring(7, collocNameLength);
+            final String idepixTargetFileName = "IDEPIX_" + collocSourceProduct.getName();
             final String idepixTargetFilePath = idepixOutputDataDir + File.separator + idepixTargetFileName;
             final File idepixTargetFile = new File(idepixTargetFilePath);
             final WriteOp idepixWriteOp = new WriteOp(idepixProduct, idepixTargetFile, ProductIO.DEFAULT_FORMAT_NAME);
@@ -69,7 +69,7 @@ public class MerisAatsrIdepixOp extends Operator {
             public boolean accept(File file) {
                 // e.g. COLLOC_20070621_MER_134157_ATS_134155.dim
                 return file.isFile() &&
-                        file.getName().startsWith("COLLOC_") && file.getName().endsWith(".dim");
+                        file.getName().contains("COLLOC_") && file.getName().endsWith(".dim");
             }
         };
 

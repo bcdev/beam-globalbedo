@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import java.io.File;
@@ -24,49 +25,51 @@ import java.util.*;
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.seaice.merisaatsr.colloc",
-                  description = "Collocates MERIS L1b products with a fitting AATSR L1b products.",
+                  description = "Collocates MERIS/AATSR L1b products with fitting AATSR/MERIS L1b products.",
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2013 by Brockmann Consult")
 public class MerisAatsrCollocationOp extends Operator {
-    @Parameter(defaultValue = "", description = "MERIS input data directory")
-    private File merisInputDataDir;
+    @Parameter(defaultValue = "", description = "Master sensor input data directory")
+    private File masterInputDataDir;
 
-    @Parameter(defaultValue = "", description = "AATSR input data directory")
-    private File aatsrInputDataDir;
+    @Parameter(defaultValue = "", description = "Slave sensor input data directory")
+    private File slaveInputDataDir;
 
     @Parameter(defaultValue = "", description = "Collocation output data directory")
     private File collocOutputDataDir;
 
-    private Product[] aatsrSourceProducts;
+    @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
+    private Sensor masterSensor;
+
+    private Product[] masterSourceProducts;
+    private Product[] slaveSourceProducts;
 
     @Override
     public void initialize() throws OperatorException {
 
-        Product[] merisSourceProducts = getInputProducts(merisInputDataDir, "MER_RR__1P");
-        aatsrSourceProducts = getInputProducts(aatsrInputDataDir, "ATS_TOA_1P");
+        final String  masterProductPrefix = masterSensor == Sensor.MERIS ? "MER_RR__1P" : "ATS_TOA_1P";
+        final String  slaveProductPrefix  = masterSensor == Sensor.MERIS ? "ATS_TOA_1P" : "MER_RR__1P";
 
-        Arrays.sort(merisSourceProducts, new ProductNameComparator());
-        Arrays.sort(aatsrSourceProducts, new ProductNameComparator());
+        masterSourceProducts = getInputProducts(masterInputDataDir, masterProductPrefix);
+        slaveSourceProducts = getInputProducts(slaveInputDataDir, slaveProductPrefix);
 
-        for (Product merisSourceProduct : merisSourceProducts) {
-            Product[] aatsrSourceProducts = findAatsrProductsToCollocate(merisSourceProduct);
+        Arrays.sort(masterSourceProducts, new ProductNameComparator());
+        Arrays.sort(slaveSourceProducts, new ProductNameComparator());
 
-            for (Product aatsrSourceProduct : aatsrSourceProducts) {
-                if (aatsrSourceProduct != null) {
-                    System.out.println("Collocating '" + merisSourceProduct.getName() + "', '" + aatsrSourceProduct.getName() + "'...");
+        for (Product masterSourceProduct : masterSourceProducts) {
+            Product[] slaveSourceProducts = findSlaveProductsToCollocate(masterSourceProduct);
+
+            for (Product slaveSourceProduct : slaveSourceProducts) {
+                if (slaveSourceProduct != null) {
+                    System.out.println("Collocating '" + masterSourceProduct.getName() + "', '" + slaveSourceProduct.getName() + "'...");
                     Map<String, Product> collocateInput = new HashMap<String, Product>(2);
-                    collocateInput.put("masterProduct", merisSourceProduct);
-                    collocateInput.put("slaveProduct", aatsrSourceProduct);
+                    collocateInput.put("masterProduct", masterSourceProduct);
+                    collocateInput.put("slaveProduct", slaveSourceProduct);
                     Product collocateProduct =
                             GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
 
-                    // name should be COLLOC_yyyyMMdd_MER_hhmmss_ATS_hhmmss.dim
-                    final String dateTimeString = merisSourceProduct.getName().substring(14, 22);
-                    final String merisTimeString = merisSourceProduct.getName().substring(23, 29);
-                    final String aatsrTimeString = aatsrSourceProduct.getName().substring(23, 29);
-                    final String collocTargetFileName = "COLLOC_" + dateTimeString +
-                            "_MER_" + merisTimeString + "_ATS_" + aatsrTimeString + ".dim";
+                    final String collocTargetFileName = getCollocTargetFileName(masterSourceProduct, slaveSourceProduct);
                     final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
                     final File collocTargetFile = new File(collocTargetFilePath);
                     final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, ProductIO.DEFAULT_FORMAT_NAME);
@@ -78,7 +81,39 @@ public class MerisAatsrCollocationOp extends Operator {
         setTargetProduct(new Product("dummy", "dummy", 0, 0));
     }
 
-    private Product[] findAatsrProductsToCollocate(Product merisSourceProduct) {
+    private String getCollocTargetFileName(Product masterSourceProduct, Product slaveSourceProduct) {
+        final String year = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.YEAR));
+        final String month = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MONTH) + 1);
+        final String day = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.DAY_OF_MONTH));
+
+        final String masterStartHour = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String masterStartMin = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
+        final String masterStartSec = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
+        final String masterEndHour = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String masterEndMin = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
+        final String masterEndSec = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
+
+        final String slaveStartHour = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
+        final String slaveStartMin = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
+        final String slaveStartSec = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
+        final String slaveEndHour = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR));
+        final String slaveEndMin = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
+        final String slaveEndSec = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
+
+        // name should be COLLOC_yyyyMMdd_MER_hhmmss_hhmmss_ATS_hhmmss_hhmmss.dim
+
+        final String  masterSensorId = masterSensor == Sensor.MERIS ? "MER" : "ATS";
+        final String  slaveSensorId = masterSensor == Sensor.MERIS ? "ATS" : "MER";
+        return "COLLOC_" + year + month + day +
+                "_" + masterSensorId + "_" +
+                masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
+                "_" + slaveSensorId + "_" +
+                slaveStartHour + slaveStartMin + slaveStartSec + "_" + slaveEndHour + slaveEndMin + slaveEndSec +
+                ".dim";
+    }
+
+
+    private Product[] findSlaveProductsToCollocate(Product merisSourceProduct) {
         final ProductData.UTC merisStartTime = merisSourceProduct.getStartTime();
         final ProductData.UTC merisEndTime = merisSourceProduct.getEndTime();
         final long merisStartTimeSecs = merisStartTime.getAsCalendar().getTimeInMillis() / 1000;
@@ -86,7 +121,7 @@ public class MerisAatsrCollocationOp extends Operator {
 
         List<Product> aatsrCollocProductsList = new ArrayList<Product>();
 
-        for (Product aatsrSourceProduct : aatsrSourceProducts) {
+        for (Product aatsrSourceProduct : slaveSourceProducts) {
             final ProductData.UTC aatsrStartTime = aatsrSourceProduct.getStartTime();
             final ProductData.UTC aatsrEndTime = aatsrSourceProduct.getEndTime();
             final long aatsrStartTimeSecs = aatsrStartTime.getAsCalendar().getTimeInMillis() / 1000;
@@ -132,7 +167,7 @@ public class MerisAatsrCollocationOp extends Operator {
             }
         }
         if (productIndex == 0) {
-            System.out.println("No source products found in directory " + merisInputDataDir + " - nothing to do.");
+            System.out.println("No source products found in directory " + masterInputDataDir + " - nothing to do.");
         }
 
         return sourceProductsList.toArray(new Product[sourceProductsList.size()]);

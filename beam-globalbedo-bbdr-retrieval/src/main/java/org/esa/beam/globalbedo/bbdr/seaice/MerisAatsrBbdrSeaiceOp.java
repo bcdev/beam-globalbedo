@@ -104,9 +104,7 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
                 Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
                 fillSourceProds.put("sourceProduct", aotProduct);
                 Map<String, Object> bbdrParams = new HashMap<String, Object>();
-
-                final boolean isBbdrSeaIce = ((sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD));
-                bbdrParams.put("bbdrSeaIce", isBbdrSeaIce);
+                bbdrParams.put("bbdrSeaIce", true);
 
                 Product bbdrProduct;
                 if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
@@ -190,7 +188,6 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
         // copy Idepix 'cloud_classif_flags' to collocation product
         ProductUtils.copyFlagBands(idepixProduct, collocateProduct, true);
 
-//        final String merisMasterProductType = sensor == Sensor.MERIS ? masterSourceProduct.getProductType() : slaveSourceProduct.getProductType();
         collocateProduct.setProductType(masterSourceProduct.getProductType());
 
         // band names must not have extensions!
