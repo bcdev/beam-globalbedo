@@ -29,7 +29,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.bbdr.BbdrAatsrOp;
-import org.esa.beam.globalbedo.bbdr.BbdrOp;
+import org.esa.beam.globalbedo.bbdr.seaice.BbdrSeaiceOp;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.gpf.operators.standard.MergeOp;
@@ -45,12 +45,10 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l2.bbdr.seaice")
 public class MerisAatsrBbdrSeaiceOp extends Operator {
 
-    // todo: add the case 'AATSR BBDR' with sea ice flag from MERIS/AATSR synergy (not from AATSR alone)
-
     @SourceProduct(alias = "master")
     private Product masterSourceProduct;
 
-    @SourceProduct(alias = "slave", optional = true)
+    @SourceProduct(alias = "slave")
     // this shall be a MERIS OR AATSR L1b for MERIS/AATSR synergy Idepix approach
     private Product slaveSourceProduct;
 
@@ -123,7 +121,7 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
                     bbdrProduct = mergeOp.getTargetProduct();
                 } else {
                     bbdrParams.put("sensor", sensor);
-                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrOp.class), bbdrParams, fillSourceProds);
+                    bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrSeaiceOp.class), bbdrParams, fillSourceProds);
                 }
 
                 if (collocationProduct != null) {
@@ -240,7 +238,6 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
                     if (collocationProduct.containsTiePointGrid(tmpTpgName) &&
                             !merisMasterProduct.containsTiePointGrid(tmpTpgName) &&
                             !merisMasterProduct.containsTiePointGrid(tiePointGridName)) {
-                        System.out.println("tmpTpgName,tiePointGridName = " + tmpTpgName + ", " + tiePointGridName);
                         ProductUtils.copyTiePointGrid(tmpTpgName, collocationProduct, merisMasterProduct);
                         merisMasterProduct.getTiePointGrid(tmpTpgName).setName(tiePointGridName);
                         merisMasterProduct.getTiePointGrid(tiePointGridName).setSourceImage(bColloc.getSourceImage());

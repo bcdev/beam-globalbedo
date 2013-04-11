@@ -62,7 +62,7 @@ public enum Sensor {
         return instrument;
     }
 
-    int getNumBands() {
+    public int getNumBands() {
         return numBands;
     }
 
@@ -73,11 +73,11 @@ public enum Sensor {
         return radiometricError;
     }
 
-    int getIndexRed() {
+    public int getIndexRed() {
         return indexRed;
     }
 
-    int getIndexNIR() {
+    public int getIndexNIR() {
         return indexNIR;
     }
 

@@ -26,7 +26,6 @@ import java.util.*;
  * the overlapping AATSR products are determined, and each MERIS/AATSR pair is put into
  * {@link MerisAatsrBbdrSeaiceOp}, which is the 'sea ice equivalent' operator to the standard
  * 'GlobalbedoLevel2' in parent directory.
- * --> still todo : generation of a 'AATSR BBDR' product with AATSR L1b as master
  *
  * @author Olaf Danne
  */
@@ -75,6 +74,8 @@ public class GlobalbedoLevel2Seaice extends Operator {
                     final String bbdrTargetFilePath = bbdrOutputDataDir + File.separator + bbdrTargetFileName;
                     final File bbdrTargetFile = new File(bbdrTargetFilePath);
 
+                    System.out.println("masterProduct = " + masterProduct.getName());
+                    System.out.println("slaveProduct = " + slaveProduct.getName());
                     bbdrSeaiceInput.put("master", masterProduct);
                     bbdrSeaiceInput.put("slave", slaveProduct);
                     Map<String, Object> bbdrSeaiceParams = new HashMap<String, Object>();
@@ -84,7 +85,7 @@ public class GlobalbedoLevel2Seaice extends Operator {
 
                     Product targetProduct;
                     if (reprojectPst) {
-                        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisAatsrBbdrSeaiceOp.class), GPF.NO_PARAMS, bbdrSeaiceProduct);
+                        targetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(PolarStereographicOp.class), GPF.NO_PARAMS, bbdrSeaiceProduct);
                     } else {
                         targetProduct = bbdrSeaiceProduct;
                     }
@@ -121,12 +122,13 @@ public class GlobalbedoLevel2Seaice extends Operator {
 
         final String  masterSensorId = sensor == Sensor.MERIS ? "MER" : "ATS";
         final String  slaveSensorId = sensor == Sensor.MERIS ? "ATS" : "MER";
+        final String  projectionId = reprojectPst ? "_PST" : "";
         return "BBDR_" + year + month + day +
                 "_" + masterSensorId + "_" +
                 masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
                 "_" + slaveSensorId + "_" +
                 slaveStartHour + slaveStartMin + slaveStartSec + "_" + slaveEndHour + slaveEndMin + slaveEndSec +
-                ".dim";
+                projectionId + ".dim";
     }
 
     private Product[] findAatsrProductsToCollocate(Product merisSourceProduct) {

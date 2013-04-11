@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-class GasLookupTable {
+public class GasLookupTable {
 
     private float gas2val = 1.5f; // keep variable name from breadboard
     private final Sensor sensor;
@@ -23,11 +23,11 @@ class GasLookupTable {
     private float[] gasArray;
     private float[] ozoArray;
 
-    GasLookupTable(Sensor sensor) {
+    public GasLookupTable(Sensor sensor) {
         this.sensor = sensor;
     }
 
-    void load(Product sourceProduct) throws IOException {
+    public void load(Product sourceProduct) throws IOException {
         if (sourceProduct != null && sensor == Sensor.VGT) {
             float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
             setGasVal(ozoMeanValue);
@@ -187,7 +187,7 @@ class GasLookupTable {
         }
     }
 
-    float[] getTg(float amf, float gas) {
+    public float[] getTg(float amf, float gas) {
         int ind_amf = BbdrUtils.getIndexBefore(amf, amfArray);
         float amf_p = (amf - amfArray[ind_amf]) / (amfArray[ind_amf + 1] - amfArray[ind_amf]);
 
@@ -209,7 +209,7 @@ class GasLookupTable {
 //        lookupTable.getValue(amf, gas);
 //    }
 
-    float[][][] getKxTg(float amf, float gas) {
+    public float[][][] getKxTg(float amf, float gas) {
         int ind_amf = BbdrUtils.getIndexBefore(amf, amfArray);
         float amf_p = (amf - amfArray[ind_amf]) / (amfArray[ind_amf + 1] - amfArray[ind_amf]);
 

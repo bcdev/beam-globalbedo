@@ -81,9 +81,10 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13.2-SNAPSHOT</ceres.version>
+        <ceres.version>0.13.2</ceres.version>
         <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.10.4-SNAPSHOT</beam.version>
+        <beam.version>4.11</beam.version>
+        <hadoop.version>0.20.205.0</hadoop.version>
     </properties>
 
     <dependencyManagement>
@@ -135,7 +136,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.2.1</version>
+                <version>1.2.2</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
@@ -145,7 +146,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5.1</version>
+                <version>1.5.2</version>
             </dependency>
             <!--<dependency>-->
             <!--<groupId>org.esa.beam</groupId>-->
@@ -167,9 +168,9 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <!--<version>1.0.101</version>-->
-                <version>1.1.1</version>
+                <version>1.1.2</version>
             </dependency>
+
         </dependencies>
     </dependencyManagement>
 

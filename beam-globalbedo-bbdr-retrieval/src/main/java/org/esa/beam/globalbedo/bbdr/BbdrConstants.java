@@ -57,6 +57,13 @@ public class BbdrConstants {
             "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"
     };
 
+    public final static String[] MERIS_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
+            "latitude", "longitude", "dem_alt", "dem_rough", "lat_corr", "lon_corr",
+            "sun_zenith", "sun_azimuth", "view_zenith", "view_azimuth", "zonal_wind", "merid_wind",
+            "atm_press", "ozone", "rel_hum"
+    };
+
+
     public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
                     "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
 
