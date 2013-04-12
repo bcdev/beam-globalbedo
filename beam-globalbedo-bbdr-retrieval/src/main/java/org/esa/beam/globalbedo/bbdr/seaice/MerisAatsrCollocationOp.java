@@ -42,6 +42,9 @@ public class MerisAatsrCollocationOp extends Operator {
     @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
     private Sensor masterSensor;
 
+    @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-CF"})
+    private String formatName;
+
     private Product[] masterSourceProducts;
     private Product[] slaveSourceProducts;
 
@@ -72,7 +75,7 @@ public class MerisAatsrCollocationOp extends Operator {
                     final String collocTargetFileName = getCollocTargetFileName(masterSourceProduct, slaveSourceProduct);
                     final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
                     final File collocTargetFile = new File(collocTargetFilePath);
-                    final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, ProductIO.DEFAULT_FORMAT_NAME);
+                    final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, formatName);
                     System.out.println("Writing collocated product '" + collocTargetFileName + "'...");
                     collocWriteOp.writeProduct(ProgressMonitor.NULL);
                 }
@@ -104,12 +107,13 @@ public class MerisAatsrCollocationOp extends Operator {
 
         final String  masterSensorId = masterSensor == Sensor.MERIS ? "MER" : "ATS";
         final String  slaveSensorId = masterSensor == Sensor.MERIS ? "ATS" : "MER";
+        final String  extension = formatName.equals(ProductIO.DEFAULT_FORMAT_NAME) ? ".dim" : ".nc";
         return "COLLOC_" + year + month + day +
                 "_" + masterSensorId + "_" +
                 masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
                 "_" + slaveSensorId + "_" +
                 slaveStartHour + slaveStartMin + slaveStartSec + "_" + slaveEndHour + slaveEndMin + slaveEndSec +
-                ".dim";
+                extension;
     }
 
 
