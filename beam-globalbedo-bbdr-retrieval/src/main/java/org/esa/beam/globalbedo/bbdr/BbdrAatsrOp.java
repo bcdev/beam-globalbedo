@@ -41,10 +41,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr.aatsr",
-                  description = "Computes BBDRs and kernel parameters for AATSR",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2013 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters for AATSR",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2013 by Brockmann Consult")
 public class BbdrAatsrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -87,8 +87,6 @@ public class BbdrAatsrOp extends PixelOperator {
 
     @Parameter(defaultValue = "true")  // currently, we only need AATSR BBDR for sea ice mode
     private boolean bbdrSeaIce;  // mode for MERIS SDR/BBDR computation including seaice areas (GA CCN, 2013)
-    @Parameter(defaultValue = "false")
-    private boolean seaiceWriteSdr;
 
     private String viewDirection;
 
@@ -116,6 +114,16 @@ public class BbdrAatsrOp extends PixelOperator {
     private double hsfMin;
     private double hsfMax;
 
+    private static final double[] PATH_RADIANCE = new double[]{
+            0.134, 0.103, 0.070, 0.059, 0.040,
+            0.027, 0.022, 0.021, 0.018, 0.015,
+            Double.NaN, 0.014, 0.010, 0.009, 0.008};
+    private static final double[] TRANSMISSION = new double[]{
+            0.65277, 0.71155, 0.77224, 0.78085, 0.78185,
+            0.81036, 0.86705, 0.88244, 0.88342, 0.92075,
+            Double.NaN, 0.93152, 0.9444, 0.9422, 0.58212
+    };
+
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
@@ -128,9 +136,7 @@ public class BbdrAatsrOp extends PixelOperator {
 
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        if (bbdrSeaIce && seaiceWriteSdr) {
-            addAatsrSdrBands(targetProduct);
-        }
+        addAatsrSdrBands(targetProduct);
 
         String[] bandNames = {
                 "BB_VIS", "BB_NIR", "BB_SW",
@@ -142,16 +148,13 @@ public class BbdrAatsrOp extends PixelOperator {
                 "NDVI", "sig_NDVI",
                 "VZA", "SZA", "RAA", "DEM",
         };
-
-        if (!(bbdrSeaIce && seaiceWriteSdr)) {
-            for (String bandName : bandNames) {
-                if (bandName.contains("BB_") || bandName.contains("BRDF_")) {
-                    bandName = bandName.concat("_" + viewDirection);
-                }
-                Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
-                band.setNoDataValueUsed(true);
+        for (String bandName : bandNames) {
+            if (bandName.contains("BB_") || bandName.contains("BRDF_")) {
+                bandName = bandName.concat("_" + viewDirection);
             }
+            Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+            band.setNoDataValue(Float.NaN);
+            band.setNoDataValueUsed(true);
         }
         targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
 
@@ -263,10 +266,10 @@ public class BbdrAatsrOp extends PixelOperator {
         toaBandNames = new String[BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length];
         if (viewDirection.equals("nadir")) {
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_NADIR.length);
         } else {
             System.arraycopy(BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD, 0, toaBandNames, 0,
-                             BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
+                    BbdrConstants.AATSR_TOA_BAND_NAMES_FWARD.length);
         }
 
         BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
@@ -290,47 +293,47 @@ public class BbdrAatsrOp extends PixelOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) {
-        if (!(bbdrSeaIce && seaiceWriteSdr)) {
-            configurator.defineSample(0, "BB_VIS" + "_" + viewDirection);
-            configurator.defineSample(1, "BB_NIR" + "_" + viewDirection);
-            configurator.defineSample(2, "BB_SW" + "_" + viewDirection);
 
-            configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS" + "_" + viewDirection);
-            configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR" + "_" + viewDirection);
-            configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW" + "_" + viewDirection);
-            configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR" + "_" + viewDirection);
-            configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW" + "_" + viewDirection);
-            configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW" + "_" + viewDirection);
+        configurator.defineSample(0, "BB_VIS" + "_" + viewDirection);
+        configurator.defineSample(1, "BB_NIR" + "_" + viewDirection);
+        configurator.defineSample(2, "BB_SW" + "_" + viewDirection);
 
-            configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS" + "_" + viewDirection);
-            configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS" + "_" + viewDirection);
-            configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR" + "_" + viewDirection);
-            configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR" + "_" + viewDirection);
-            configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW" + "_" + viewDirection);
-            configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW" + "_" + viewDirection);
 
-            configurator.defineSample(TRG_NDVI, "NDVI");
-            configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
+        configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW" + "_" + viewDirection);
+        configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW" + "_" + viewDirection);
 
-            configurator.defineSample(TRG_VZA, "VZA");
-            configurator.defineSample(TRG_SZA, "SZA");
-            configurator.defineSample(TRG_RAA, "RAA");
-            configurator.defineSample(TRG_DEM, "DEM");
-            configurator.defineSample(TRG_SNOW, "snow_mask");
-            configurator.defineSample(TRG_AOD, "AOD550");
-            configurator.defineSample(TRG_AODERR, "sig_AOD550");
+        configurator.defineSample(TRG_NDVI, "NDVI");
+        configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
+
+        configurator.defineSample(TRG_VZA, "VZA");
+        configurator.defineSample(TRG_SZA, "SZA");
+        configurator.defineSample(TRG_RAA, "RAA");
+        configurator.defineSample(TRG_DEM, "DEM");
+        configurator.defineSample(TRG_SNOW, "snow_mask");
+        configurator.defineSample(TRG_AOD, "AOD550");
+        configurator.defineSample(TRG_AODERR, "sig_AOD550");
+
+        int index = TRG_AODERR + 1;
+
+        // we want to have as well the SDRs
+
+        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
+            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
+            configurator.defineSample(index++, "sdr_" + viewDirection + "_" + wvl);
         }
-        int index = 0;
-        if (bbdrSeaIce && seaiceWriteSdr) {
-            // we want to have as well the SDRs
-            for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-                final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-                configurator.defineSample(index++, "sdr_" + viewDirection + "_" + wvl);
-            }
-            for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-                final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
-                configurator.defineSample(index++, "sdr_error_" + viewDirection + "_" + wvl);
-            }
+        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
+            final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
+            configurator.defineSample(index++, "sdr_error_" + viewDirection + "_" + wvl);
         }
     }
 
@@ -436,19 +439,15 @@ public class BbdrAatsrOp extends PixelOperator {
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
-            if (sensor == Sensor.MERIS && bbdrSeaIce && seaiceWriteSdr) {
-                int offset = 0;
-                targetSamples[offset + i].set(rfl_pix[i]);
-            }
+            int offset = TRG_AODERR + 1;
+            targetSamples[offset + i].set(rfl_pix[i]);
         }
 
         double rfl_red = rfl_pix[Sensor.AATSR.getIndexRed()];
         double rfl_nir = rfl_pix[Sensor.AATSR.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (Sensor.AATSR.getBndvi() * rfl_nir - Sensor.AATSR.getAndvi() * rfl_red) * norm_ndvi;
-        if (!(bbdrSeaIce && seaiceWriteSdr)) {
-            targetSamples[TRG_NDVI].set(ndvi_land);
-        }
+        targetSamples[TRG_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[Sensor.AATSR.getNumBands()];
         double[] err_aod = new double[Sensor.AATSR.getNumBands()];
@@ -484,11 +483,9 @@ public class BbdrAatsrOp extends PixelOperator {
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
                 err_rad_cov).plusEquals(err_coreg_cov);
 
-        if (bbdrSeaIce && seaiceWriteSdr) {
-            int offset = 0;
-            for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
-                targetSamples[offset + Sensor.AATSR.getNumBands() + i].set(err2_tot_cov.get(i, i));
-            }
+        int offset = TRG_AODERR + 1;
+        for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
+            targetSamples[offset + Sensor.AATSR.getNumBands() + i].set(err2_tot_cov.get(i, i));
         }
         // end of implementation needed for 'SDR only'
 

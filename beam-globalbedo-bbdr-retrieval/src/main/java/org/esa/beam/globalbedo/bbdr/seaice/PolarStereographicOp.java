@@ -5,6 +5,7 @@ import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 
@@ -19,6 +20,12 @@ public class PolarStereographicOp extends Operator {
     @SourceProduct(alias = "source", description = "The source product to reproject.")
     private Product sourceProduct;
 
+    @Parameter(defaultValue = "true")
+    private boolean doLatlon;
+
+    @Parameter(defaultValue = "true")
+    private boolean doPst;
+
     @Override
     public void initialize() throws OperatorException {
 
@@ -26,8 +33,21 @@ public class PolarStereographicOp extends Operator {
         // 1. sat coords --> Geographic lat/lon
         // 2. Geographic lat/lon --> Polar Stereographic, resize to RR (1200m/pixel)
 
-        final Product latlonProduct = reprojectToGeographicLatLon(sourceProduct);
-        setTargetProduct(reprojectToPolarStereographic(latlonProduct));
+        Product latlonProduct = null;
+        Product pstProduct = sourceProduct;
+        if (doLatlon) {
+            latlonProduct = reprojectToGeographicLatLon(sourceProduct);
+            if (doPst) {
+                pstProduct = reprojectToPolarStereographic(latlonProduct);
+            } else {
+                pstProduct = latlonProduct;
+            }
+        } else {
+            if (doPst) {
+                pstProduct = reprojectToPolarStereographic(sourceProduct);
+            }
+        }
+        setTargetProduct(pstProduct);
     }
 
     static Product reprojectToGeographicLatLon(Product origProduct) {

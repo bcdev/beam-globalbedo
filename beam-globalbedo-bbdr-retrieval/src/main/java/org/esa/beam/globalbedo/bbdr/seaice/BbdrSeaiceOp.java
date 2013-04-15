@@ -43,10 +43,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr.seaice",
-                  description = "Computes BBDRs and kernel parameters",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrSeaiceOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;
@@ -88,8 +88,6 @@ public class BbdrSeaiceOp extends PixelOperator {
     private boolean sdrOnly;
     @Parameter(defaultValue = "false")
     private boolean bbdrSeaIce;  // mode for MERIS SDR/BBDR computation including seaice areas (GA CCN, 2013)
-    @Parameter(defaultValue = "false")
-    private boolean seaiceWriteSdr;
     @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
     @Parameter(defaultValue = "true")
@@ -191,7 +189,7 @@ public class BbdrSeaiceOp extends PixelOperator {
             targetProduct.setAutoGrouping("sdr_error:sdr");
         } else {
             if (bbdrSeaIce) {
-                if (sensor == Sensor.MERIS && seaiceWriteSdr) {
+                if (sensor == Sensor.MERIS) {
                     addMerisSdrBands(targetProduct);
                 }
             }
@@ -206,12 +204,10 @@ public class BbdrSeaiceOp extends PixelOperator {
                     "NDVI", "sig_NDVI",
                     "VZA", "SZA", "RAA", "DEM",
             };
-            if (!(bbdrSeaIce && seaiceWriteSdr)) {
-                for (String bandName : bandNames) {
-                    Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
-                    band.setNoDataValue(Float.NaN);
-                    band.setNoDataValueUsed(true);
-                }
+            for (String bandName : bandNames) {
+                Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
             }
             targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
 
@@ -351,7 +347,7 @@ public class BbdrSeaiceOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.MERIS_TOA_BAND_NAMES.length);
+                    BbdrConstants.MERIS_TOA_BAND_NAMES.length);
         } else if (sensor == Sensor.VGT) {
 
             landExpr =
@@ -369,7 +365,7 @@ public class BbdrSeaiceOp extends PixelOperator {
 
             toaBandNames = new String[BbdrConstants.VGT_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.VGT_TOA_BAND_NAMES, 0, toaBandNames, 0,
-                             BbdrConstants.VGT_TOA_BAND_NAMES.length);
+                    BbdrConstants.VGT_TOA_BAND_NAMES.length);
         } else {
             throw new OperatorException("BbdrOp: invalid sensor '" + sensor.toString() + "' - cannot continue.");
         }
@@ -454,39 +450,37 @@ public class BbdrSeaiceOp extends PixelOperator {
             configurator.defineSample(index++, "aod");
             configurator.defineSample(index, "status");
         } else {
-            if (!(bbdrSeaIce && seaiceWriteSdr)) {
-                configurator.defineSample(0, "BB_VIS");
-                configurator.defineSample(1, "BB_NIR");
-                configurator.defineSample(2, "BB_SW");
+            configurator.defineSample(0, "BB_VIS");
+            configurator.defineSample(1, "BB_NIR");
+            configurator.defineSample(2, "BB_SW");
 
-                configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS");
-                configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
-                configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW");
-                configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR");
-                configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW");
-                configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW");
+            configurator.defineSample(TRG_ERRORS, "sig_BB_VIS_VIS");
+            configurator.defineSample(TRG_ERRORS + 1, "sig_BB_VIS_NIR");
+            configurator.defineSample(TRG_ERRORS + 2, "sig_BB_VIS_SW");
+            configurator.defineSample(TRG_ERRORS + 3, "sig_BB_NIR_NIR");
+            configurator.defineSample(TRG_ERRORS + 4, "sig_BB_NIR_SW");
+            configurator.defineSample(TRG_ERRORS + 5, "sig_BB_SW_SW");
 
-                configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
-                configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
-                configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
-                configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
-                configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
-                configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
+            configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
+            configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
+            configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
+            configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
+            configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
+            configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
 
-                configurator.defineSample(TRG_NDVI, "NDVI");
-                configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
+            configurator.defineSample(TRG_NDVI, "NDVI");
+            configurator.defineSample(TRG_NDVI + 1, "sig_NDVI");
 
-                configurator.defineSample(TRG_VZA, "VZA");
-                configurator.defineSample(TRG_SZA, "SZA");
-                configurator.defineSample(TRG_RAA, "RAA");
-                configurator.defineSample(TRG_DEM, "DEM");
-                configurator.defineSample(TRG_SNOW, "snow_mask");
-                configurator.defineSample(TRG_AOD, "AOD550");
-                configurator.defineSample(TRG_AODERR, "sig_AOD550");
-            }
+            configurator.defineSample(TRG_VZA, "VZA");
+            configurator.defineSample(TRG_SZA, "SZA");
+            configurator.defineSample(TRG_RAA, "RAA");
+            configurator.defineSample(TRG_DEM, "DEM");
+            configurator.defineSample(TRG_SNOW, "snow_mask");
+            configurator.defineSample(TRG_AOD, "AOD550");
+            configurator.defineSample(TRG_AODERR, "sig_AOD550");
 
-            int index = 0;
-            if (bbdrSeaIce && seaiceWriteSdr) {
+            int index = TRG_AODERR + 1;
+            if (bbdrSeaIce) {
                 // we want to have as well the SDRs in this case
                 for (int i = 0; i < sensor.getNumBands(); i++) {
                     configurator.defineSample(index++, "sdr_" + (i + 1));
@@ -501,6 +495,9 @@ public class BbdrSeaiceOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status = 0;
+        if (x == 466 && y == 1178) {
+            System.out.println("hier 1 x = " + x);
+        }
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
             if (status == 2) {
@@ -536,6 +533,9 @@ public class BbdrSeaiceOp extends PixelOperator {
                     !sourceSamples[SRC_LAND_MASK].getBoolean();
 
             if (isInvalid) {
+                if (x == 466 && y == 1178) {
+                    System.out.println("hier 2 x = " + x);
+                }
                 // for seaice mode, compute only over sea ice,
                 // otherwise only compute over clear land or clear snow
                 fillTargetSampleWithNoDataValue(targetSamples);
@@ -565,6 +565,9 @@ public class BbdrSeaiceOp extends PixelOperator {
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
+            if (x == 466 && y == 1178) {
+                System.out.println("hier 3 x = " + x);
+            }
             fillTargetSampleWithNoDataValue(targetSamples);
             if (sdrOnly) {
                 // write status
@@ -575,6 +578,9 @@ public class BbdrSeaiceOp extends PixelOperator {
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
         } else {
+            if (x == 466 && y == 1178) {
+                System.out.println("hier 4 x = " + x);
+            }
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);
@@ -655,8 +661,8 @@ public class BbdrSeaiceOp extends PixelOperator {
             if (sdrOnly) {
                 targetSamples[i].set(rfl_pix[i]);
             }
-            if (sensor == Sensor.MERIS && bbdrSeaIce && seaiceWriteSdr) {
-                int offset = 0;
+            if (sensor == Sensor.MERIS && bbdrSeaIce) {
+                int offset = TRG_AODERR + 1;
                 targetSamples[offset + i].set(rfl_pix[i]);
             }
         }
@@ -692,9 +698,7 @@ public class BbdrSeaiceOp extends PixelOperator {
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2].set(ndvi_land);
         } else {
-            if (!(bbdrSeaIce && seaiceWriteSdr)) {
-                targetSamples[TRG_NDVI].set(ndvi_land);
-            }
+            targetSamples[TRG_NDVI].set(ndvi_land);
         }
 
         double[] err_rad = new double[sensor.getNumBands()];
@@ -737,8 +741,8 @@ public class BbdrSeaiceOp extends PixelOperator {
             }
             return;
         }
-        if (sensor == Sensor.MERIS && bbdrSeaIce && seaiceWriteSdr) {
-            int offset = 0;
+        if (sensor == Sensor.MERIS && bbdrSeaIce) {
+            int offset = TRG_AODERR + 1;
             for (int i = 0; i < sensor.getNumBands(); i++) {
                 targetSamples[offset + sensor.getNumBands() + i].set(err2_tot_cov.get(i, i));
             }

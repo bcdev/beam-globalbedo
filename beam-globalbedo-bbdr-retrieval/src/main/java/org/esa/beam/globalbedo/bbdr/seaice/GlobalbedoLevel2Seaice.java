@@ -161,10 +161,10 @@ public class GlobalbedoLevel2Seaice extends Operator {
             @Override
             public boolean accept(File file) {
                 return file.isFile() &&
-                        file.getName().startsWith(productType) &&
-//                        file.getName().contains(productType) &&  // test
-                        file.getName().endsWith(".N1");
-//                        file.getName().endsWith(".dim");  // test
+//                        file.getName().startsWith(productType) &&
+                        file.getName().contains(productType) &&  // test
+//                        file.getName().endsWith(".N1");
+                        file.getName().endsWith(".dim");  // test
             }
         };
 
