@@ -1,0 +1,27 @@
+#set( $pathlength = $inputPath.length() )
+#set( $filelength = $inputPath.name.length() - 11 )
+#set( $filename = $inputPath.name.substring(0, $filelength) )
+#set( $slavefilepathlength = $pathlength - $filelength )
+#set( $slavefilepath = $inputPath.substring(0, $slavefilepathlength) )
+<graph id="g">
+    <version>1.0</version>
+
+    <header>
+      <target refid="collocateNode" />
+      <source name="masterP">${inputPath}</source>
+      <source name="slaveP">${slavefilepath}/ATS_TOA_1P_test.N1</source>
+    </header>
+
+    <node id="collocateNode">
+        <operator>Collocate</operator>
+        <sources>
+            <master>masterP</master>
+            <slave>slaveP</slave>
+        </sources>
+
+        <parameters>
+            <targetProductType>'test_colloc'</targetProductType>
+        </parameters>
+
+    </node>
+</graph>
