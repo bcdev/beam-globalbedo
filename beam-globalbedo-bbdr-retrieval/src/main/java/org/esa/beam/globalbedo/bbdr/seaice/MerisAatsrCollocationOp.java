@@ -42,7 +42,7 @@ public class MerisAatsrCollocationOp extends Operator {
     @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
     private Sensor masterSensor;
 
-    @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-CF"})
+    @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-BEAM"})
     private String formatName;
 
     private Product[] masterSourceProducts;

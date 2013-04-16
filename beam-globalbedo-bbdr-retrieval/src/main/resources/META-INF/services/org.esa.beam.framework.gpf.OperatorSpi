@@ -7,6 +7,7 @@ org.esa.beam.globalbedo.bbdr.TileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.seaice.GlobalbedoLevel2Seaice$Spi
 org.esa.beam.globalbedo.bbdr.seaice.PolarStereographicOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrSeaiceOp$Spi
+org.esa.beam.globalbedo.bbdr.seaice.GaPassThroughOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrCollocationOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrIdepixOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrBbdrSeaiceOp$Spi
