@@ -88,6 +88,7 @@ public class MerisAatsrBbdrSeaiceOp extends Operator {
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
+            gaMasterOp.setParameter("isBbdrSeaice", true);
             gaMasterOp.setSourceProduct(aotSourceProduct);
             aotProduct = gaMasterOp.getTargetProduct();
         }

@@ -99,7 +99,7 @@ public class MerisAatsrCollocationOp extends Operator {
         final String slaveStartHour = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
         final String slaveStartMin = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
         final String slaveStartSec = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
-        final String slaveEndHour = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR));
+        final String slaveEndHour = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
         final String slaveEndMin = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
         final String slaveEndSec = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
 

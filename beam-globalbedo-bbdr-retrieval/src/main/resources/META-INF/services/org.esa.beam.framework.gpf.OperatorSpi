@@ -12,6 +12,8 @@ org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrCollocationOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrIdepixOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrBbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.CollocToBbdrSeaiceOp$Spi
+org.esa.beam.globalbedo.bbdr.seaice.CollocToAotSeaiceOp$Spi
+org.esa.beam.globalbedo.bbdr.seaice.AotToBbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.ProductScaleOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.ProductCropOp$Spi
 org.esa.beam.landcover.UclCloudOperator$Spi

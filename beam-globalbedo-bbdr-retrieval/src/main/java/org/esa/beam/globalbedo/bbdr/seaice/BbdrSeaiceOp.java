@@ -495,9 +495,6 @@ public class BbdrSeaiceOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status = 0;
-        if (x == 466 && y == 1178) {
-            System.out.println("hier 1 x = " + x);
-        }
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
             if (status == 2) {
@@ -533,9 +530,6 @@ public class BbdrSeaiceOp extends PixelOperator {
                     !sourceSamples[SRC_LAND_MASK].getBoolean();
 
             if (isInvalid) {
-                if (x == 466 && y == 1178) {
-                    System.out.println("hier 2 x = " + x);
-                }
                 // for seaice mode, compute only over sea ice,
                 // otherwise only compute over clear land or clear snow
                 fillTargetSampleWithNoDataValue(targetSamples);
@@ -565,9 +559,6 @@ public class BbdrSeaiceOp extends PixelOperator {
                 sza < szaMin || sza > szaMax ||
                 aot < aotMin || aot > aotMax ||
                 hsf < hsfMin || hsf > hsfMax) {
-            if (x == 466 && y == 1178) {
-                System.out.println("hier 3 x = " + x);
-            }
             fillTargetSampleWithNoDataValue(targetSamples);
             if (sdrOnly) {
                 // write status
@@ -578,9 +569,6 @@ public class BbdrSeaiceOp extends PixelOperator {
         if (sdrOnly) {
             targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
         } else {
-            if (x == 466 && y == 1178) {
-                System.out.println("hier 4 x = " + x);
-            }
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
             targetSamples[TRG_VZA].set(vza);
             targetSamples[TRG_SZA].set(sza);

@@ -33,7 +33,7 @@ public class PolarStereographicOp extends Operator {
         // 1. sat coords --> Geographic lat/lon
         // 2. Geographic lat/lon --> Polar Stereographic, resize to RR (1200m/pixel)
 
-        Product latlonProduct = null;
+        Product latlonProduct;
         Product pstProduct = sourceProduct;
         if (doLatlon) {
             latlonProduct = reprojectToGeographicLatLon(sourceProduct);
@@ -54,18 +54,33 @@ public class PolarStereographicOp extends Operator {
 
         ReprojectionOp repro = new ReprojectionOp();
 
+//        repro.setParameter("easting", 0.0);
+//        repro.setParameter("northing", 80.0);
+//        repro.setParameter("crs", "EPSG:4326");
+//        repro.setParameter("resampling", "Nearest");
+//        repro.setParameter("includeTiePointGrids", true);
+//        repro.setParameter("referencePixelX", 16200.5);
+//        repro.setParameter("referencePixelY", 900.5);
+//        repro.setParameter("orientation", 0.0);
+//        repro.setParameter("pixelSizeX", 0.01111111);
+//        repro.setParameter("pixelSizeY", 0.01111111);
+//        repro.setParameter("width", 32400);
+//        repro.setParameter("height", 1800);
+//        repro.setParameter("orthorectify", true);
+//        repro.setSourceProduct(origProduct);
+
         repro.setParameter("easting", 0.0);
         repro.setParameter("northing", 80.0);
         repro.setParameter("crs", "EPSG:4326");
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", true);
-        repro.setParameter("referencePixelX", 16200.5);
-        repro.setParameter("referencePixelY", 900.5);
+        repro.setParameter("referencePixelX", 8100.5);
+        repro.setParameter("referencePixelY", 450.5);
         repro.setParameter("orientation", 0.0);
-        repro.setParameter("pixelSizeX", 0.01111111);
-        repro.setParameter("pixelSizeY", 0.01111111);
-        repro.setParameter("width", 32400);
-        repro.setParameter("height", 1800);
+        repro.setParameter("pixelSizeX", 0.02222222);
+        repro.setParameter("pixelSizeY", 0.02222222);
+        repro.setParameter("width", 16200);
+        repro.setParameter("height", 900);
         repro.setParameter("orthorectify", true);
         repro.setSourceProduct(origProduct);
 
