@@ -89,7 +89,7 @@ public class CollocToAotSeaiceOp extends Operator {
             logger.log(Level.ALL, "No AOT product generated for source product: " + extendedCollocationProduct.getName() +
                     " --> cannot create BBDR product.");
         } else {
-            if (extendedCollocationProduct != null) {
+            if (extendedCollocationProduct != null && !(sensor == Sensor.AATSR)) {
                 ProductUtils.copyBand("reflec_nadir_1600", extendedCollocationProduct, aotProduct, true);
                 ProductUtils.copyBand("reflec_fward_1600", extendedCollocationProduct, aotProduct, true);
             }

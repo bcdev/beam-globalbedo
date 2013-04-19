@@ -147,7 +147,8 @@ public class MerisAatsrCollocationOp extends Operator {
             @Override
             public boolean accept(File file) {
                 return file.isFile() &&
-                        file.getName().startsWith(productType) && file.getName().endsWith(".N1");
+                        (file.getName().contains(productType) && file.getName().endsWith(".N1") ||
+                        file.getName().contains(productType) && file.getName().endsWith(".dim"));
             }
         };
 

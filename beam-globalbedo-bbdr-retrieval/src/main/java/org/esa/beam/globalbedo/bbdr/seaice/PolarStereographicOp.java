@@ -84,6 +84,21 @@ public class PolarStereographicOp extends Operator {
         repro.setParameter("orthorectify", true);
         repro.setSourceProduct(origProduct);
 
+        repro.setParameter("easting", 0.0);
+        repro.setParameter("northing", 80.0);
+        repro.setParameter("crs", "EPSG:4326");
+        repro.setParameter("resampling", "Nearest");
+        repro.setParameter("includeTiePointGrids", true);
+        repro.setParameter("referencePixelX", 4050.5);
+        repro.setParameter("referencePixelY", 225.5);
+        repro.setParameter("orientation", 0.0);
+        repro.setParameter("pixelSizeX", 0.04444444);
+        repro.setParameter("pixelSizeY", 0.04444444);
+        repro.setParameter("width", 8100);
+        repro.setParameter("height", 450);
+        repro.setParameter("orthorectify", true);
+        repro.setSourceProduct(origProduct);
+
         final Product reprojectedProduct = repro.getTargetProduct();
         reprojectedProduct.setName(origProduct.getName());
         reprojectedProduct.setProductType(origProduct.getProductType());
