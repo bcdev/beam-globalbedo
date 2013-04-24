@@ -150,6 +150,53 @@ public class PolarStereographicOp extends Operator {
         return reprojectedProduct;
     }
 
+    static Product reprojectToPolarStereographic(Product latlonProduct,
+                                                 double referencePixelX, double referencePixelY,
+                                                 double pixelSizeX, double pixelSizeY,
+                                                 int width, int height) {
+
+        ReprojectionOp repro = new ReprojectionOp();
+
+        repro.setParameter("crs", "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
+                "GEOGCS[\"World Geodetic System 1984\"," +
+                " DATUM[\"World Geodetic System 1984\"," +
+                "  SPHEROID[\"WGS 84\",6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]," +
+                "   AUTHORITY[\"EPSG\",\"6326\"]]," +
+                "  PRIMEM[\"Greenwich\",0.0, AUTHORITY[\"EPSG\",\"8901\"]]," +
+                "  UNIT[\"degree\",0.01745329251994328]," +
+                "   AXIS[\"Geodetic longitude\", EAST]," +
+                "   AXIS[\"Geodetic latitude\", NORTH]]," +
+                "PROJECTION[\"Polar_Stereographic\"]," +
+                "PARAMETER[\"semi_minor\",6378137.0]," +
+                "PARAMETER[\"central_meridian\",0.0]," +
+                "PARAMETER[\"latitude_of_origin\",90.0]," +
+                "PARAMETER[\"scale_factor\",1.0]," +
+                "PARAMETER[\"false_easting\",0.0]," +
+                "PARAMETER[\"false_northing\",0.0]," +
+                "UNIT[\"m\",1.0]," +
+                "AXIS[\"Easting\", EAST]," +
+                "AXIS[\"Northing\", NORTH]]");
+
+        repro.setParameter("easting", 89.999999999);
+        repro.setParameter("northing", 0.0);
+        repro.setParameter("includeTiePointGrids", true);
+        repro.setParameter("referencePixelX", referencePixelX);   // 0.0 or 2250.0
+        repro.setParameter("referencePixelY", referencePixelY);   // 0.0 or 2250.0
+        repro.setParameter("orientation", 0.0);
+        repro.setParameter("pixelSizeX", pixelSizeX);             // 1000.0
+        repro.setParameter("pixelSizeY", pixelSizeY);             // 1000.0
+        repro.setParameter("width", width);                       // 4500
+        repro.setParameter("height", height);                     // 4500
+        repro.setParameter("orthorectify", true);
+        repro.setSourceProduct(latlonProduct);
+
+        final Product reprojectedProduct = repro.getTargetProduct();
+        reprojectedProduct.setName(latlonProduct.getName());
+        reprojectedProduct.setProductType(latlonProduct.getProductType());
+
+        return reprojectedProduct;
+    }
+
     public static class Spi extends OperatorSpi {
 
         public Spi() {
