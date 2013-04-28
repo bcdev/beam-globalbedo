@@ -248,13 +248,21 @@ public class TileExtractor extends Operator implements Output {
         return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
-    private static class TileProduct {
+    public static class TileProduct {
         private final Product product;
         private final String tileName;
 
-        private TileProduct(Product product, String tileName) {
+        public TileProduct(Product product, String tileName) {
             this.product = product;
             this.tileName = tileName;
+        }
+
+        public Product getProduct() {
+            return product;
+        }
+
+        public String getTileName() {
+            return tileName;
         }
     }
 

@@ -77,5 +77,10 @@ public class BbdrConstants {
 
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
+
+    public static final int SEAICE_PST_QUADRANT_PRODUCT_WIDTH = 2250;
+    public static final int SEAICE_PST_QUADRANT_PRODUCT_HEIGHT = 2250;
+    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
+    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
 }
 
