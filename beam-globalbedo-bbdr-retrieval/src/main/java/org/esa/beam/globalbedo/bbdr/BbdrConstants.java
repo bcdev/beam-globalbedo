@@ -63,6 +63,12 @@ public class BbdrConstants {
             "atm_press", "ozone", "rel_hum"
     };
 
+    public final static String[] AATSR_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
+            "latitude", "longitude", "altitude",
+            "lat_corr_nadir", "lon_corr_nadir", "sun_elev_nadir", "view_elev_nadir", "sun_azimuth_nadir", "view_azimuth_nadir",
+            "lat_corr_fward", "lon_corr_fward", "sun_elev_fward", "view_elev_fward", "sun_azimuth_fward", "view_azimuth_fward"
+    };
+
 
     public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
                     "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
