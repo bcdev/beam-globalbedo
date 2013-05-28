@@ -3,21 +3,25 @@ package org.esa.beam.globalbedo.bbdr.seaice;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.collocation.CollocateOp;
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.bbdr.BbdrConstants;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.WriteOp;
+import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.io.FileUtils;
 
+import java.awt.image.DataBuffer;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.*;
+import java.util.logging.Level;
 
 /**
  * Collocates MERIS L1b products with a fitting AATSR L1b products
@@ -45,14 +49,20 @@ public class MerisAatsrCollocationOp extends Operator {
     @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-BEAM"})
     private String formatName;
 
+    @Parameter(defaultValue = "false")
+    private boolean doCoregistration;
+
+    @Parameter(defaultValue = "false")
+    private boolean coregAvailable;
+
     private Product[] masterSourceProducts;
     private Product[] slaveSourceProducts;
 
     @Override
     public void initialize() throws OperatorException {
 
-        final String  masterProductPrefix = masterSensor == Sensor.MERIS ? "MER_RR__1P" : "ATS_TOA_1P";
-        final String  slaveProductPrefix  = masterSensor == Sensor.MERIS ? "ATS_TOA_1P" : "MER_RR__1P";
+        final String masterProductPrefix = masterSensor == Sensor.MERIS ? "MER_RR__1P" : "ATS_TOA_1P";
+        final String slaveProductPrefix = masterSensor == Sensor.MERIS ? "ATS_TOA_1P" : "MER_RR__1P";
 
         masterSourceProducts = getInputProducts(masterInputDataDir, masterProductPrefix);
         slaveSourceProducts = getInputProducts(slaveInputDataDir, slaveProductPrefix);
@@ -65,16 +75,68 @@ public class MerisAatsrCollocationOp extends Operator {
 
             for (Product slaveSourceProduct : slaveSourceProducts) {
                 if (slaveSourceProduct != null) {
-                    System.out.println("Collocating '" + masterSourceProduct.getName() + "', '" + slaveSourceProduct.getName() + "'...");
-                    Map<String, Product> collocateInput = new HashMap<String, Product>(2);
-                    collocateInput.put("masterProduct", masterSourceProduct);
-                    collocateInput.put("slaveProduct", slaveSourceProduct);
-                    Product collocateProduct =
-                            GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
-
                     final String collocTargetFileName = getCollocTargetFileName(masterSourceProduct, slaveSourceProduct);
                     final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
                     final File collocTargetFile = new File(collocTargetFilePath);
+                    Product collocateProduct = null;
+                    if (doCoregistration) {
+                        // todo: integrate MSSL coregistration
+                        // create netcdf files for python input:
+                        final Product masterNcProduct =
+                                GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, masterSourceProduct);
+                        final String masterNcDir = masterSourceProduct.getFileLocation().getParent();
+                        final String masterNcFilename = FileUtils.getFilenameWithoutExtension(masterSourceProduct.getFileLocation()) + ".nc";
+                        final File masterNcFile = new File(masterNcDir + File.separator + masterNcFilename);
+                        final WriteOp masterWriteOp = new WriteOp(masterNcProduct, masterNcFile, "NetCDF-CF");
+                        System.out.println("Writing master netcdf product '" + masterNcFile.getName() + "'...");
+                        masterWriteOp.writeProduct(ProgressMonitor.NULL);
+
+                        final Product slaveNcProduct =
+                                GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, slaveSourceProduct);
+                        final String slaveNcDir = slaveSourceProduct.getFileLocation().getParent();
+                        final String slaveNcFilename = FileUtils.getFilenameWithoutExtension(slaveSourceProduct.getFileLocation()) + ".nc";
+                        final File slaveNcFile = new File(slaveNcDir + File.separator + slaveNcFilename);
+                        final WriteOp slaveWriteOp = new WriteOp(slaveNcProduct, slaveNcFile, "NetCDF-CF");
+                        System.out.println("Writing slave netcdf product '" + slaveNcFile.getName() + "'...");
+                        slaveWriteOp.writeProduct(ProgressMonitor.NULL);
+
+                        // call Python coregistration
+                        final String pythonCoregCall =
+                                "python ./coregistered/python_scripts/AatsrMerisCoregisterNc4.py " +
+                                        slaveNcFile.getParent() + File.separator + " " +      // todo: make sure AATSR is passed first in any case
+                                        slaveNcFile.getName() + " " +
+                                        masterNcFile.getParent() + File.separator + " " +
+                                        masterNcFile.getName() + " " +
+                                        "/tmp" + " " +
+                                        collocOutputDataDir + File.separator;
+                        System.out.println("pythonCoregCall = " + pythonCoregCall);
+                        try {
+                            System.out.println("Starting Python coregistration...");
+                            if (coregAvailable) {
+                                System.out.println("...coregistration was done earlier - go ahead...");
+                            } else {
+                                final Process p = Runtime.getRuntime().exec(pythonCoregCall);
+                                p.waitFor();
+                                System.out.println("Finished Python coregistration.");
+                            }
+                            collocateProduct = getCollocFromCoregProduct(masterSourceProduct, slaveSourceProduct);
+                        } catch (IOException e) {
+                            // todo
+                            e.printStackTrace();
+                        } catch (InterruptedException e) {
+                            // todo
+                            e.printStackTrace();
+                        }
+                    } else {
+                        // standard collocation
+                        System.out.println("Collocating '" + masterSourceProduct.getName() + "', '" + slaveSourceProduct.getName() + "'...");
+                        Map<String, Product> collocateInput = new HashMap<String, Product>(2);
+                        collocateInput.put("masterProduct", masterSourceProduct);
+                        collocateInput.put("slaveProduct", slaveSourceProduct);
+                        collocateProduct =
+                                GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
+
+                    }
                     final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, formatName);
                     System.out.println("Writing collocated product '" + collocTargetFileName + "'...");
                     collocWriteOp.writeProduct(ProgressMonitor.NULL);
@@ -82,6 +144,128 @@ public class MerisAatsrCollocationOp extends Operator {
             }
         }
         setTargetProduct(new Product("dummy", "dummy", 0, 0));
+    }
+
+    private Product getCollocFromCoregProduct(Product merisL1bProduct,
+                                              Product aatsrL1bProduct) throws IOException {
+
+//        outDir = sys.argv[6] + aatsrData[:-3] + '_warped.nc'
+        final String coregFilepath = collocOutputDataDir +
+                File.separator + FileUtils.getFilenameWithoutExtension(aatsrL1bProduct.getFileLocation()) + "_warped.nc";
+        Product coregProduct = getCoregProduct(new File(coregFilepath));
+        Product collocProduct = new Product(coregProduct.getName(),
+                                            "COLLOCATED",
+                                            coregProduct.getSceneRasterWidth(),
+                                            coregProduct.getSceneRasterHeight());
+
+        ProductUtils.copyMetadata(coregProduct, collocProduct);
+        ProductUtils.copyFlagCodings(merisL1bProduct, collocProduct);
+        ProductUtils.copyFlagCodings(aatsrL1bProduct, collocProduct);
+        ProductUtils.copyMasks(coregProduct, collocProduct);
+
+        final ProductData.UTC startTime =
+                masterSensor == Sensor.MERIS ? merisL1bProduct.getStartTime() : aatsrL1bProduct.getStartTime();
+        final ProductData.UTC endTime =
+                masterSensor == Sensor.MERIS ? merisL1bProduct.getEndTime() : aatsrL1bProduct.getEndTime();
+
+        collocProduct.setStartTime(startTime);
+        collocProduct.setEndTime(endTime);
+
+        // copy all bands from collocation product which are no flag bands and no original MERIS tie points
+        for (Band bCoreg : coregProduct.getBands()) {
+            String bandNameNoExtension = bCoreg.getName().substring(0, bCoreg.getName().length() - 2);
+            if (!isMerisTpg(bandNameNoExtension) &&
+                    !bandNameNoExtension.contains("flag") &&
+                    !bCoreg.getName().startsWith("lat_") &&
+                    !bCoreg.getName().startsWith("lon_") &&
+                    !bandNameNoExtension.contains("detector")) {
+                if (!collocProduct.containsBand(bCoreg.getName())) {
+                    System.out.println("copy: " + bCoreg.getName());
+                    ProductUtils.copyBand(bCoreg.getName(), coregProduct, collocProduct, true);
+                    ProductUtils.copyRasterDataNodeProperties(bCoreg, collocProduct.getBand(bCoreg.getName()));
+                    if (bandNameNoExtension.startsWith("radiance")) {
+                        final String spectralBandIndex = bandNameNoExtension.substring(9, bandNameNoExtension.length());
+                        collocProduct.getBand(bCoreg.getName()).setSpectralBandIndex(Integer.parseInt(spectralBandIndex) - 1);
+                    }
+                }
+            } else {
+                final int width = collocProduct.getSceneRasterWidth();
+                final int height = collocProduct.getSceneRasterHeight();
+                if (bandNameNoExtension.contains("flag")) {
+                    // restore flag bands with int values...
+                    System.out.println("adding flag band: " + bCoreg.getName());
+                    Band flagBand = collocProduct.addBand(bCoreg.getName(), ProductData.TYPE_INT32);
+                    flagBand.setSampleCoding(collocProduct.getFlagCodingGroup().get(bandNameNoExtension));
+                    DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
+                    final int[] flagData = new int[dataBuffer.getSize()];
+                    for (int i = 0; i < dataBuffer.getSize(); i++) {
+                        final float elemFloatAt = dataBuffer.getElemFloat(i);
+                        flagData[i] = (int) elemFloatAt;
+                    }
+                    flagBand.setDataElems(flagData);
+                    flagBand.getSourceImage();
+                } else if (bandNameNoExtension.contains("detector")) {     // MERIS detector index band
+                    // restore detector index band with short values...
+                    System.out.println("adding detector index band: " + bCoreg.getName());
+                    Band detectorIndexBand = collocProduct.addBand(bCoreg.getName(), ProductData.TYPE_INT16);
+                    DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
+                    final short[] detectorIndexData = new short[dataBuffer.getSize()];
+                    for (int i = 0; i < dataBuffer.getSize(); i++) {
+                        final float elemFloatAt = dataBuffer.getElemFloat(i);
+                        detectorIndexData[i] = (short) elemFloatAt;
+                    }
+                    detectorIndexBand.setDataElems(detectorIndexData);
+                    detectorIndexBand.getSourceImage();
+                } else if (isMerisTpg(bandNameNoExtension)) {
+                    // restore tie point grids...
+                    DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
+                    float[] tpgData = new float[dataBuffer.getSize()];
+                    for (int i = 0; i < dataBuffer.getSize(); i++) {
+                        tpgData[i] = dataBuffer.getElemFloat(i);
+                    }
+                    TiePointGrid tpg = new TiePointGrid(bandNameNoExtension,
+                                                        width,
+                                                        height,
+                                                        0.0f, 0.0f, 1.0f, 1.0f, tpgData);
+                    tpg.setSourceImage(bCoreg.getSourceImage());
+                    System.out.println("adding tpg: " + bandNameNoExtension);
+                    collocProduct.addTiePointGrid(tpg);
+                }
+            }
+        }
+        final TiePointGrid latTpg = collocProduct.getTiePointGrid("latitude");
+        final TiePointGrid lonTpg = collocProduct.getTiePointGrid("longitude");
+        if (latTpg == null || lonTpg == null) {
+            throw new OperatorException("latitude or longitude tie point grid missing - cannot proceed.");
+        }
+        collocProduct.setGeoCoding(new TiePointGeoCoding(latTpg, lonTpg));
+
+        return collocProduct;
+    }
+
+    private Product getCoregProduct(File coregFile) {
+        Product coregProduct = null;
+        try {
+            coregProduct = ProductIO.readProduct(coregFile);
+            if (coregProduct == null) {
+                String msg = String.format("Could not read file '%s. No appropriate reader found.",
+                                           coregFile.getName());
+                System.out.println(msg);
+            }
+        } catch (IOException e) {
+            String msg = String.format("Not able to read file '%s.", coregFile.getName());
+            System.out.println(msg);
+        }
+        return coregProduct;
+    }
+
+    private static boolean isMerisTpg(String bandName) {
+        for (String merisTpgName : BbdrConstants.MERIS_TIE_POINT_GRID_NAMES) {
+            if (merisTpgName.equals(bandName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private String getCollocTargetFileName(Product masterSourceProduct, Product slaveSourceProduct) {
@@ -105,9 +289,9 @@ public class MerisAatsrCollocationOp extends Operator {
 
         // name should be COLLOC_yyyyMMdd_MER_hhmmss_hhmmss_ATS_hhmmss_hhmmss.dim
 
-        final String  masterSensorId = masterSensor == Sensor.MERIS ? "MER" : "ATS";
-        final String  slaveSensorId = masterSensor == Sensor.MERIS ? "ATS" : "MER";
-        final String  extension = formatName.equals(ProductIO.DEFAULT_FORMAT_NAME) ? ".dim" : ".nc";
+        final String masterSensorId = masterSensor == Sensor.MERIS ? "MER" : "ATS";
+        final String slaveSensorId = masterSensor == Sensor.MERIS ? "ATS" : "MER";
+        final String extension = formatName.equals(ProductIO.DEFAULT_FORMAT_NAME) ? ".dim" : ".nc";
         return "COLLOC_" + year + month + day +
                 "_" + masterSensorId + "_" +
                 masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
@@ -148,7 +332,7 @@ public class MerisAatsrCollocationOp extends Operator {
             public boolean accept(File file) {
                 return file.isFile() &&
                         (file.getName().contains(productType) && file.getName().endsWith(".N1") ||
-                        file.getName().contains(productType) && file.getName().endsWith(".dim"));
+                                file.getName().contains(productType) && file.getName().endsWith(".dim"));
             }
         };
 
