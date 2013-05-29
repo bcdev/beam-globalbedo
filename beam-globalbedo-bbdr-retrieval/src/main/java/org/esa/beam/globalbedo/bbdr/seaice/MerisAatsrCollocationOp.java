@@ -80,7 +80,6 @@ public class MerisAatsrCollocationOp extends Operator {
                     final File collocTargetFile = new File(collocTargetFilePath);
                     Product collocateProduct = null;
                     if (doCoregistration) {
-                        // todo: integrate MSSL coregistration
                         // create netcdf files for python input:
                         final Product masterNcProduct =
                                 GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, masterSourceProduct);
@@ -88,7 +87,7 @@ public class MerisAatsrCollocationOp extends Operator {
                         final String masterNcFilename = FileUtils.getFilenameWithoutExtension(masterSourceProduct.getFileLocation()) + ".nc";
                         final File masterNcFile = new File(masterNcDir + File.separator + masterNcFilename);
                         final WriteOp masterWriteOp = new WriteOp(masterNcProduct, masterNcFile, "NetCDF-CF");
-                        System.out.println("Writing master netcdf product '" + masterNcFile.getName() + "'...");
+                        System.out.println("Writing master netcdf product '" + masterNcFile.getAbsolutePath() + "'...");
                         masterWriteOp.writeProduct(ProgressMonitor.NULL);
 
                         final Product slaveNcProduct =
@@ -97,7 +96,7 @@ public class MerisAatsrCollocationOp extends Operator {
                         final String slaveNcFilename = FileUtils.getFilenameWithoutExtension(slaveSourceProduct.getFileLocation()) + ".nc";
                         final File slaveNcFile = new File(slaveNcDir + File.separator + slaveNcFilename);
                         final WriteOp slaveWriteOp = new WriteOp(slaveNcProduct, slaveNcFile, "NetCDF-CF");
-                        System.out.println("Writing slave netcdf product '" + slaveNcFile.getName() + "'...");
+                        System.out.println("Writing slave netcdf product '" + slaveNcFile.getAbsolutePath() + "'...");
                         slaveWriteOp.writeProduct(ProgressMonitor.NULL);
 
                         // call Python coregistration
@@ -108,7 +107,7 @@ public class MerisAatsrCollocationOp extends Operator {
                                         masterNcFile.getParent() + File.separator + " " +
                                         masterNcFile.getName() + " " +
                                         "/tmp" + " " +
-                                        collocOutputDataDir + File.separator;
+                                        slaveNcFile.getParent() + File.separator;
                         System.out.println("pythonCoregCall = " + pythonCoregCall);
                         try {
                             System.out.println("Starting Python coregistration...");
@@ -119,6 +118,7 @@ public class MerisAatsrCollocationOp extends Operator {
                                 p.waitFor();
                                 System.out.println("Finished Python coregistration.");
                             }
+                            // todo: make sure correct slave is used
                             collocateProduct = getCollocFromCoregProduct(masterSourceProduct, slaveSourceProduct);
                         } catch (IOException e) {
                             // todo
@@ -149,9 +149,9 @@ public class MerisAatsrCollocationOp extends Operator {
     private Product getCollocFromCoregProduct(Product merisL1bProduct,
                                               Product aatsrL1bProduct) throws IOException {
 
-//        outDir = sys.argv[6] + aatsrData[:-3] + '_warped.nc'
-        final String coregFilepath = collocOutputDataDir +
+        final String coregFilepath = aatsrL1bProduct.getFileLocation().getParent() +
                 File.separator + FileUtils.getFilenameWithoutExtension(aatsrL1bProduct.getFileLocation()) + "_warped.nc";
+        System.out.println("Coregistration product filepath: '" + coregFilepath + "'...");
         Product coregProduct = getCoregProduct(new File(coregFilepath));
         Product collocProduct = new Product(coregProduct.getName(),
                                             "COLLOCATED",
