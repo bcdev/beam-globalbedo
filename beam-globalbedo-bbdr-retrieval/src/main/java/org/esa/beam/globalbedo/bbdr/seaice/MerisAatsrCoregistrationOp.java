@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.bbdr.seaice;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.collocation.CollocateOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
@@ -10,6 +9,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.bbdr.BbdrConstants;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.WriteOp;
@@ -27,18 +27,15 @@ import java.util.*;
  *
  * @author Olaf Danne
  */
-@OperatorMetadata(alias = "ga.seaice.merisaatsr.colloc",
-        description = "Collocates MERIS/AATSR L1b products with fitting AATSR/MERIS L1b products.",
+@OperatorMetadata(alias = "ga.seaice.merisaatsr.coreg",
+        description = "Coregistrates and collocates MERIS/AATSR L1b products.",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2013 by Brockmann Consult")
-public class MerisAatsrCollocationOp extends Operator {
+public class MerisAatsrCoregistrationOp extends Operator {
 
-    // todo: provide single master input product instead of whole directory
-    // todo: remove 'doCoregistration' option, is now done by MerisAatsrCoregistrationOp
-
-    @Parameter(defaultValue = "", description = "Master sensor input data directory")
-    private File masterInputDataDir;
+    @SourceProduct
+    private Product sourceProduct;
 
     @Parameter(defaultValue = "", description = "Slave sensor input data directory")
     private File slaveInputDataDir;
@@ -46,123 +43,96 @@ public class MerisAatsrCollocationOp extends Operator {
     @Parameter(defaultValue = "", description = "Collocation output data directory")
     private File collocOutputDataDir;
 
-    @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
-    private Sensor masterSensor;
+    //    @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
+    private Sensor masterSensor = Sensor.MERIS;
 
     @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-BEAM"})
     private String formatName;
 
     @Parameter(defaultValue = "false")
-    private boolean doCoregistration;
-
-    @Parameter(defaultValue = "false")
     private boolean coregAvailable;
 
-    private Product[] masterSourceProducts;
     private Product[] slaveSourceProducts;
 
     @Override
     public void initialize() throws OperatorException {
 
-        final String masterProductPrefix = masterSensor == Sensor.MERIS ? "MER_RR__1P" : "ATS_TOA_1P";
-        final String slaveProductPrefix = masterSensor == Sensor.MERIS ? "ATS_TOA_1P" : "MER_RR__1P";
-
-        masterSourceProducts = getInputProducts(masterInputDataDir, masterProductPrefix);
+        final String slaveProductPrefix = "ATS_TOA_1P";
         slaveSourceProducts = getInputProducts(slaveInputDataDir, slaveProductPrefix);
-
-        Arrays.sort(masterSourceProducts, new ProductNameComparator());
         Arrays.sort(slaveSourceProducts, new ProductNameComparator());
+        Product[] slaveSourceProducts = findSlaveProductsToCollocate(sourceProduct);
 
-        for (Product masterSourceProduct : masterSourceProducts) {
-            Product[] slaveSourceProducts = findSlaveProductsToCollocate(masterSourceProduct);
+        for (Product slaveSourceProduct : slaveSourceProducts) {
+            if (slaveSourceProduct != null) {
+                final String collocTargetFileName = getCollocTargetFileName(sourceProduct, slaveSourceProduct);
+                final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
+                final File collocTargetFile = new File(collocTargetFilePath);
+                Product collocateProduct = null;
+                if (!(masterSensor == Sensor.MERIS)) {
+                    throw new OperatorException("MERIS must be master sensor to apply coregistration.");
+                }
+                // create netcdf files for python input:
+                final Product masterNcProduct =
+                        GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, sourceProduct);
+                final String masterNcDir = sourceProduct.getFileLocation().getParent();
+                final String masterNcFilename = FileUtils.getFilenameWithoutExtension(sourceProduct.getFileLocation()) + ".nc";
+                final File masterNcFile = new File(masterNcDir + File.separator + masterNcFilename);
+                final WriteOp masterWriteOp = new WriteOp(masterNcProduct, masterNcFile, "NetCDF-CF");
+                System.out.println("Writing master netcdf product '" + masterNcFile.getAbsolutePath() + "'...");
+                masterWriteOp.writeProduct(ProgressMonitor.NULL);
 
-            for (Product slaveSourceProduct : slaveSourceProducts) {
-                if (slaveSourceProduct != null) {
-                    final String collocTargetFileName = getCollocTargetFileName(masterSourceProduct, slaveSourceProduct);
-                    final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
-                    final File collocTargetFile = new File(collocTargetFilePath);
-                    Product collocateProduct = null;
-                    if (doCoregistration) {
-                        if (!(masterSensor == Sensor.MERIS)) {
-                            throw new OperatorException("MERIS must be master sensor to apply coregistration.");
-                        }
-                        // create netcdf files for python input:
-                        final Product masterNcProduct =
-                                GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, masterSourceProduct);
-                        final String masterNcDir = masterSourceProduct.getFileLocation().getParent();
-                        final String masterNcFilename = FileUtils.getFilenameWithoutExtension(masterSourceProduct.getFileLocation()) + ".nc";
-                        final File masterNcFile = new File(masterNcDir + File.separator + masterNcFilename);
-                        final WriteOp masterWriteOp = new WriteOp(masterNcProduct, masterNcFile, "NetCDF-CF");
-                        System.out.println("Writing master netcdf product '" + masterNcFile.getAbsolutePath() + "'...");
-                        masterWriteOp.writeProduct(ProgressMonitor.NULL);
+                final Product slaveNcProduct =
+                        GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, slaveSourceProduct);
+                final String slaveNcDir = slaveSourceProduct.getFileLocation().getParent();
+                final String slaveNcFilename = FileUtils.getFilenameWithoutExtension(slaveSourceProduct.getFileLocation()) + ".nc";
+                final File slaveNcFile = new File(slaveNcDir + File.separator + slaveNcFilename);
+                final WriteOp slaveWriteOp = new WriteOp(slaveNcProduct, slaveNcFile, "NetCDF-CF");
+                System.out.println("Writing slave netcdf product '" + slaveNcFile.getAbsolutePath() + "'...");
+                slaveWriteOp.writeProduct(ProgressMonitor.NULL);
 
-                        final Product slaveNcProduct =
-                                GPF.createProduct(OperatorSpi.getOperatorAlias(GaPassThroughOp.class), GPF.NO_PARAMS, slaveSourceProduct);
-                        final String slaveNcDir = slaveSourceProduct.getFileLocation().getParent();
-                        final String slaveNcFilename = FileUtils.getFilenameWithoutExtension(slaveSourceProduct.getFileLocation()) + ".nc";
-                        final File slaveNcFile = new File(slaveNcDir + File.separator + slaveNcFilename);
-                        final WriteOp slaveWriteOp = new WriteOp(slaveNcProduct, slaveNcFile, "NetCDF-CF");
-                        System.out.println("Writing slave netcdf product '" + slaveNcFile.getAbsolutePath() + "'...");
-                        slaveWriteOp.writeProduct(ProgressMonitor.NULL);
-
-                        // call Python coregistration
-                        final String pythonCoregCall =
-                                "python ./coregistered/python_scripts/AatsrMerisCoregisterNc4.py " +
-                                        slaveNcFile.getParent() + File.separator + " " +      // AATSR is passed first
-                                        slaveNcFile.getName() + " " +
-                                        masterNcFile.getParent() + File.separator + " " +
-                                        masterNcFile.getName() + " " +
-                                        "/tmp" + " " +
-                                        slaveNcFile.getParent() + File.separator;
-                        System.out.println("pythonCoregCall = " + pythonCoregCall);
-                        try {
-                            System.out.println("Starting Python coregistration...");
-                            if (coregAvailable) {
-                                System.out.println("...coregistration was done earlier - go ahead...");
-                            } else {
-                                final Process p = Runtime.getRuntime().exec(pythonCoregCall);
-                                p.waitFor();
-                                System.out.println("Finished Python coregistration.");
-                            }
-                            collocateProduct = getCollocFromCoregProduct(masterSourceProduct, slaveSourceProduct);
-                        } catch (IOException e) {
-                            // todo
-                            e.printStackTrace();
-                            collocateProduct = doStandardCollocation(masterSourceProduct, slaveSourceProduct);
-                        } catch (InterruptedException e) {
-                            // todo
-                            e.printStackTrace();
-                            collocateProduct = doStandardCollocation(masterSourceProduct, slaveSourceProduct);
-                        } catch (OperatorException e) {
-                            // todo
-                            e.printStackTrace();
-                            System.out.println("Coregistration failed - try standard collocation...");
-                            collocateProduct = doStandardCollocation(masterSourceProduct, slaveSourceProduct);
-                        }
+                // call Python coregistration
+                final String pythonCoregCall =
+                        "python ./coregistered/python_scripts/AatsrMerisCoregisterNc4.py " +
+                                slaveNcFile.getParent() + File.separator + " " +      // AATSR is passed first
+                                slaveNcFile.getName() + " " +
+                                masterNcFile.getParent() + File.separator + " " +
+                                masterNcFile.getName() + " " +
+                                "/tmp" + " " +
+                                slaveNcFile.getParent() + File.separator;
+                System.out.println("pythonCoregCall = " + pythonCoregCall);
+                try {
+                    System.out.println("Starting Python coregistration...");
+                    if (coregAvailable) {
+                        System.out.println("...coregistration was done earlier - go ahead...");
                     } else {
-                        // standard collocation
-                        collocateProduct = doStandardCollocation(masterSourceProduct, slaveSourceProduct);
+                        final Process p = Runtime.getRuntime().exec(pythonCoregCall);
+                        p.waitFor();
+                        System.out.println("Finished Python coregistration.");
                     }
-                    if (collocateProduct != null) {
-                        final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, formatName);
-                        System.out.println("Writing collocated product '" + collocTargetFileName + "'...");
-                        collocWriteOp.writeProduct(ProgressMonitor.NULL);
-                    }
+                    collocateProduct = getCollocFromCoregProduct(sourceProduct, slaveSourceProduct);
+                } catch (IOException e) {
+                    // todo
+                    e.printStackTrace();
+                } catch (InterruptedException e) {
+                    // todo
+                    e.printStackTrace();
+                } catch (OperatorException e) {
+                    // todo
+                    e.printStackTrace();
+                    System.out.println("Coregistration failed for " +
+                            sourceProduct.getName() + " / " +
+                            slaveSourceProduct.getName() + " / " +
+                            " - no collocation output written.");
+                }
+
+                if (collocateProduct != null) {
+                    final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, formatName);
+                    System.out.println("Writing collocated product '" + collocTargetFileName + "'...");
+                    collocWriteOp.writeProduct(ProgressMonitor.NULL);
                 }
             }
         }
         setTargetProduct(new Product("dummy", "dummy", 0, 0));
-    }
-
-    private Product doStandardCollocation(Product masterSourceProduct, Product slaveSourceProduct) {
-        Product collocateProduct;
-        System.out.println("Collocating '" + masterSourceProduct.getName() + "', '" + slaveSourceProduct.getName() + "'...");
-        Map<String, Product> collocateInput = new HashMap<String, Product>(2);
-        collocateInput.put("masterProduct", masterSourceProduct);
-        collocateInput.put("slaveProduct", slaveSourceProduct);
-        collocateProduct =
-                GPF.createProduct(OperatorSpi.getOperatorAlias(CollocateOp.class), GPF.NO_PARAMS, collocateInput);
-        return collocateProduct;
     }
 
     private Product getCollocFromCoregProduct(Product merisL1bProduct,
@@ -194,14 +164,6 @@ public class MerisAatsrCollocationOp extends Operator {
                     !bCoreg.getName().startsWith("lon_") &&
                     !bandNameNoExtension.contains("detector")) {
                 if (!collocProduct.containsBand(bCoreg.getName())) {
-//                    System.out.println("copy: " + bCoreg.getName());
-//                    ProductUtils.copyBand(bCoreg.getName(), coregProduct, collocProduct, true);
-//                    ProductUtils.copyRasterDataNodeProperties(bCoreg, collocProduct.getBand(bCoreg.getName()));
-//                    if (bandNameNoExtension.startsWith("radiance")) {
-//                        final String spectralBandIndex = bandNameNoExtension.substring(9, bandNameNoExtension.length());
-//                        collocProduct.getBand(bCoreg.getName()).setSpectralBandIndex(Integer.parseInt(spectralBandIndex) - 1);
-//                    }
-
                     if (bandNameNoExtension.startsWith("radiance")) {
                         // MERIS
                         ProductUtils.copyBand(bandNameNoExtension, merisL1bProduct, bCoreg.getName(), collocProduct, true);
@@ -221,7 +183,7 @@ public class MerisAatsrCollocationOp extends Operator {
                         collocProduct.getFlagCodingGroup().get("l1_flags").setName("l1_flags_M");
                     } else {
                         // restore flag bands with int values...
-                        System.out.println("adding flag band: " + bCoreg.getName());
+//                        System.out.println("adding flag band: " + bCoreg.getName());
                         Band flagBand = collocProduct.addBand(bCoreg.getName(), ProductData.TYPE_INT32);
                         flagBand.setSampleCoding(collocProduct.getFlagCodingGroup().get(bandNameNoExtension));
                         DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
@@ -234,18 +196,6 @@ public class MerisAatsrCollocationOp extends Operator {
                         flagBand.getSourceImage();
                     }
                 } else if (bandNameNoExtension.equals("detector_index")) {     // MERIS detector index band
-                    // restore detector index band with short values...
-//                    System.out.println("adding detector index band: " + bCoreg.getName());
-//                    Band detectorIndexBand = collocProduct.addBand(bCoreg.getName(), ProductData.TYPE_INT16);
-//                    DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
-//                    final short[] detectorIndexData = new short[dataBuffer.getSize()];
-//                    for (int i = 0; i < dataBuffer.getSize(); i++) {
-//                        final float elemFloatAt = dataBuffer.getElemFloat(i);
-//                        detectorIndexData[i] = (short) elemFloatAt;
-//                    }
-//                    detectorIndexBand.setDataElems(detectorIndexData);
-//                    detectorIndexBand.getSourceImage();
-
                     // take source image from L1b product
                     ProductUtils.copyBand(bandNameNoExtension, merisL1bProduct, bCoreg.getName(), collocProduct, true);
                 } else if (isMerisTpg(bandNameNoExtension)) {
@@ -260,7 +210,7 @@ public class MerisAatsrCollocationOp extends Operator {
                             height,
                             0.0f, 0.0f, 1.0f, 1.0f, tpgData);
                     tpg.setSourceImage(bCoreg.getSourceImage());
-                    System.out.println("adding tpg: " + bandNameNoExtension);
+//                    System.out.println("adding tpg: " + bandNameNoExtension);
                     collocProduct.addTiePointGrid(tpg);
                 }
             }
@@ -388,7 +338,7 @@ public class MerisAatsrCollocationOp extends Operator {
             }
         }
         if (productIndex == 0) {
-            System.out.println("No source products found in directory " + masterInputDataDir + " - nothing to do.");
+            System.out.println("No source products found in directory " + inputDataDir + " - nothing to do.");
         }
 
         return sourceProductsList.toArray(new Product[sourceProductsList.size()]);
@@ -404,7 +354,7 @@ public class MerisAatsrCollocationOp extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MerisAatsrCollocationOp.class);
+            super(MerisAatsrCoregistrationOp.class);
         }
     }
 }

@@ -9,11 +9,11 @@ org.esa.beam.globalbedo.bbdr.seaice.PolarStereographicOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.GaPassThroughOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrCollocationOp$Spi
+org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrCoregistrationOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrIdepixOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrBbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.CollocToBbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.CollocToAotSeaiceOp$Spi
-org.esa.beam.globalbedo.bbdr.seaice.CoregToAotSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrToPstQuadrantsOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrToPstSingleQuadrantOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.AotToBbdrSeaiceOp$Spi
