@@ -17,8 +17,6 @@
 package org.esa.beam.globalbedo.bbdr.seaice;
 
 
-import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
@@ -28,16 +26,12 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.bbdr.BbdrAatsrOp;
-import org.esa.beam.globalbedo.bbdr.BbdrConstants;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.MergeOp;
-import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.logging.BeamLogManager;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.logging.Logger;
 
 /**
  * Computes SDR/BBDR from AOT input product.
@@ -62,10 +56,6 @@ public class AotToBbdrSeaiceOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-//        if (sourceProduct.getPreferredTileSize() == null) {
-//            sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
-//            System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
-//        }
 
         Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
         fillSourceProds.put("sourceProduct", sourceProduct);

@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.bbdr.seaice;
+package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
@@ -8,7 +8,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.util.ProductUtils;
 
 /**
@@ -16,6 +15,7 @@ import org.esa.beam.util.ProductUtils;
  * Useful i.e. to convert product formats, such as BEAM-DIMAP to NetCDF-BEAM, as this does currently
  * not work correctly if WriteOp with -PformatName is directly called from gpt command line.
  * This works basically the same as the BEAM 'PassThroughOp', but that does not correctly copy the source images...
+ * todo:  BEAM 'PassThroughOp' should be used once it is fixed, and this one should be removed
  *
  * @author olafd
  */

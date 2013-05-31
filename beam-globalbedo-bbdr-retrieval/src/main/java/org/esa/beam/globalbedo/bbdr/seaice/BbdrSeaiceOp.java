@@ -39,11 +39,13 @@ import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
+ * Computes BBDRs and kernel parameters for sea ice pixels
+ *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr.seaice",
-        description = "Computes BBDRs and kernel parameters",
+        description = "Computes BBDRs and kernel parameters for sea ice pixels",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")
@@ -500,7 +502,7 @@ public class BbdrSeaiceOp extends PixelOperator {
             if (status == 2) {
                 fillTargetSampleWithNoDataValue(targetSamples);
                 // water, do simple atmospheric correction
-                double sdr13 = 0.0;
+                double sdr13;
                 if (sensor == Sensor.MERIS) {
                     if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
                         // dem_alt from TP includes sea depth
@@ -543,7 +545,7 @@ public class BbdrSeaiceOp extends PixelOperator {
         double saa = sourceSamples[SRC_SAA].getDouble();
         double aot;
         if (sensor == Sensor.MERIS && bbdrSeaIce && sourceSamples[SRC_SEAICE_MASK].getBoolean()) {
-            aot = 0.0;  // todo: for sea ice case, provide climatological value if available (GA CCN, T6)
+            aot = 0.0;  // todo: for sea ice case, we may provide climatological value if available (GA CCN, T6)
         } else {
             aot = sourceSamples[SRC_AOT].getDouble();
         }

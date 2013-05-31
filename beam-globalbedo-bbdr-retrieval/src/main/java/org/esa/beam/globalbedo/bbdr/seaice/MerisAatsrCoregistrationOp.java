@@ -1,6 +1,7 @@
 package org.esa.beam.globalbedo.bbdr.seaice;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
@@ -11,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.bbdr.BbdrConstants;
+import org.esa.beam.globalbedo.bbdr.GaPassThroughOp;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.ProductUtils;
@@ -18,17 +20,17 @@ import org.esa.beam.util.io.FileUtils;
 
 import java.awt.image.DataBuffer;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
- * Collocates MERIS L1b products with a fitting AATSR L1b products
+ * Coregistrates and collocates a MERIS L1b product with fitting AATSR L1b products.
  *
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.seaice.merisaatsr.coreg",
-        description = "Coregistrates and collocates MERIS/AATSR L1b products.",
+        description = "Coregistrates and collocates a MERIS L1b product with fitting AATSR L1b products.",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2013 by Brockmann Consult")
@@ -43,32 +45,31 @@ public class MerisAatsrCoregistrationOp extends Operator {
     @Parameter(defaultValue = "", description = "Collocation output data directory")
     private File collocOutputDataDir;
 
-    //    @Parameter(defaultValue = "MERIS", valueSet = {"MERIS", "AATSR"})
-    private Sensor masterSensor = Sensor.MERIS;
-
     @Parameter(defaultValue = ProductIO.DEFAULT_FORMAT_NAME, valueSet = {"BEAM-DIMAP", "NetCDF4-BEAM"})
     private String formatName;
 
     @Parameter(defaultValue = "false")
     private boolean coregAvailable;
 
-    private Product[] slaveSourceProducts;
-
     @Override
     public void initialize() throws OperatorException {
 
         final String slaveProductPrefix = "ATS_TOA_1P";
-        slaveSourceProducts = getInputProducts(slaveInputDataDir, slaveProductPrefix);
+        Product[] slaveSourceProducts = MerisAatsrCollocationOp.getInputProducts(slaveInputDataDir, slaveProductPrefix);
         Arrays.sort(slaveSourceProducts, new ProductNameComparator());
-        Product[] slaveSourceProducts = findSlaveProductsToCollocate(sourceProduct);
 
-        for (Product slaveSourceProduct : slaveSourceProducts) {
+        Product[] slaveProductsToCollocate = MerisAatsrCollocationOp.findSlaveProductsToCollocate(sourceProduct, slaveSourceProducts);
+
+        for (Product slaveSourceProduct : slaveProductsToCollocate) {
             if (slaveSourceProduct != null) {
-                final String collocTargetFileName = getCollocTargetFileName(sourceProduct, slaveSourceProduct);
+                final String collocTargetFileName = MerisAatsrCollocationOp.getCollocTargetFileName(sourceProduct,
+                                                                                                    slaveSourceProduct,
+                                                                                                    Sensor.MERIS,
+                                                                                                    formatName);
                 final String collocTargetFilePath = collocOutputDataDir + File.separator + collocTargetFileName;
                 final File collocTargetFile = new File(collocTargetFilePath);
                 Product collocateProduct = null;
-                if (!(masterSensor == Sensor.MERIS)) {
+                if (!(EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(sourceProduct.getProductType()).matches())) {
                     throw new OperatorException("MERIS must be master sensor to apply coregistration.");
                 }
                 // create netcdf files for python input:
@@ -91,6 +92,7 @@ public class MerisAatsrCoregistrationOp extends Operator {
                 slaveWriteOp.writeProduct(ProgressMonitor.NULL);
 
                 // call Python coregistration
+                // (on Linux machine! On windows, take coregistration product (*_warped.nc) and set coregAvailable=true)
                 final String pythonCoregCall =
                         "python ./coregistered/python_scripts/AatsrMerisCoregisterNc4.py " +
                                 slaveNcFile.getParent() + File.separator + " " +      // AATSR is passed first
@@ -110,14 +112,7 @@ public class MerisAatsrCoregistrationOp extends Operator {
                         System.out.println("Finished Python coregistration.");
                     }
                     collocateProduct = getCollocFromCoregProduct(sourceProduct, slaveSourceProduct);
-                } catch (IOException e) {
-                    // todo
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    // todo
-                    e.printStackTrace();
-                } catch (OperatorException e) {
-                    // todo
+                } catch (Exception e) {
                     e.printStackTrace();
                     System.out.println("Coregistration failed for " +
                             sourceProduct.getName() + " / " +
@@ -183,7 +178,6 @@ public class MerisAatsrCoregistrationOp extends Operator {
                         collocProduct.getFlagCodingGroup().get("l1_flags").setName("l1_flags_M");
                     } else {
                         // restore flag bands with int values...
-//                        System.out.println("adding flag band: " + bCoreg.getName());
                         Band flagBand = collocProduct.addBand(bCoreg.getName(), ProductData.TYPE_INT32);
                         flagBand.setSampleCoding(collocProduct.getFlagCodingGroup().get(bandNameNoExtension));
                         DataBuffer dataBuffer = bCoreg.getSourceImage().getData().getDataBuffer();
@@ -210,7 +204,6 @@ public class MerisAatsrCoregistrationOp extends Operator {
                             height,
                             0.0f, 0.0f, 1.0f, 1.0f, tpgData);
                     tpg.setSourceImage(bCoreg.getSourceImage());
-//                    System.out.println("adding tpg: " + bandNameNoExtension);
                     collocProduct.addTiePointGrid(tpg);
                 }
             }
@@ -248,100 +241,6 @@ public class MerisAatsrCoregistrationOp extends Operator {
             }
         }
         return false;
-    }
-
-    private String getCollocTargetFileName(Product masterSourceProduct, Product slaveSourceProduct) {
-        final String year = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.YEAR));
-        final String month = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MONTH) + 1);
-        final String day = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.DAY_OF_MONTH));
-
-        final String masterStartHour = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
-        final String masterStartMin = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
-        final String masterStartSec = String.format("%02d", masterSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
-        final String masterEndHour = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
-        final String masterEndMin = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
-        final String masterEndSec = String.format("%02d", masterSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
-
-        final String slaveStartHour = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
-        final String slaveStartMin = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.MINUTE));
-        final String slaveStartSec = String.format("%02d", slaveSourceProduct.getStartTime().getAsCalendar().get(Calendar.SECOND));
-        final String slaveEndHour = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.HOUR_OF_DAY));
-        final String slaveEndMin = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.MINUTE));
-        final String slaveEndSec = String.format("%02d", slaveSourceProduct.getEndTime().getAsCalendar().get(Calendar.SECOND));
-
-        // name should be COLLOC_yyyyMMdd_MER_hhmmss_hhmmss_ATS_hhmmss_hhmmss.dim
-
-        final String masterSensorId = masterSensor == Sensor.MERIS ? "MER" : "ATS";
-        final String slaveSensorId = masterSensor == Sensor.MERIS ? "ATS" : "MER";
-        final String extension = formatName.equals(ProductIO.DEFAULT_FORMAT_NAME) ? ".dim" : ".nc";
-        return "COLLOC_" + year + month + day +
-                "_" + masterSensorId + "_" +
-                masterStartHour + masterStartMin + masterStartSec + "_" + masterEndHour + masterEndMin + masterEndSec +
-                "_" + slaveSensorId + "_" +
-                slaveStartHour + slaveStartMin + slaveStartSec + "_" + slaveEndHour + slaveEndMin + slaveEndSec +
-                extension;
-    }
-
-
-    private Product[] findSlaveProductsToCollocate(Product merisSourceProduct) {
-        final ProductData.UTC merisStartTime = merisSourceProduct.getStartTime();
-        final ProductData.UTC merisEndTime = merisSourceProduct.getEndTime();
-        final long merisStartTimeSecs = merisStartTime.getAsCalendar().getTimeInMillis() / 1000;
-        final long merisEndTimeSecs = merisEndTime.getAsCalendar().getTimeInMillis() / 1000;
-
-        List<Product> aatsrCollocProductsList = new ArrayList<Product>();
-
-        for (Product aatsrSourceProduct : slaveSourceProducts) {
-            final ProductData.UTC aatsrStartTime = aatsrSourceProduct.getStartTime();
-            final ProductData.UTC aatsrEndTime = aatsrSourceProduct.getEndTime();
-            final long aatsrStartTimeSecs = aatsrStartTime.getAsCalendar().getTimeInMillis() / 1000;
-            final long aatsrEndTimeSecs = aatsrEndTime.getAsCalendar().getTimeInMillis() / 1000;
-
-            if ((merisStartTimeSecs < aatsrStartTimeSecs && aatsrStartTimeSecs < merisEndTimeSecs) ||
-                    (merisStartTimeSecs < aatsrEndTimeSecs && aatsrEndTimeSecs < merisEndTimeSecs) ||
-                    (aatsrStartTimeSecs < merisStartTimeSecs && merisStartTimeSecs < aatsrEndTimeSecs) ||
-                    (aatsrStartTimeSecs < merisEndTimeSecs && merisEndTimeSecs < aatsrEndTimeSecs)) {
-                aatsrCollocProductsList.add(aatsrSourceProduct);
-            }
-        }
-
-        return aatsrCollocProductsList.toArray(new Product[aatsrCollocProductsList.size()]);
-    }
-
-    private Product[] getInputProducts(File inputDataDir, final String productType) {
-        final FileFilter productsFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isFile() &&
-                        (file.getName().contains(productType) && file.getName().endsWith(".N1") ||
-                                file.getName().contains(productType) && file.getName().endsWith(".dim"));
-            }
-        };
-
-        final File[] sourceProductFiles = (new File(inputDataDir.getAbsolutePath())).listFiles(productsFilter);
-        List<Product> sourceProductsList = new ArrayList<Product>();
-
-        int productIndex = 0;
-        if (sourceProductFiles != null && sourceProductFiles.length > 0) {
-            for (File sourceProductFile : sourceProductFiles) {
-                try {
-                    final Product product = ProductIO.readProduct(sourceProductFile.getAbsolutePath());
-                    if (product != null && product.getProductType().equals(productType) &&
-                            product.getStartTime() != null && product.getEndTime() != null) {
-                        sourceProductsList.add(product);
-                        productIndex++;
-                    }
-                } catch (IOException e) {
-                    System.err.println("WARNING: Source file '" +
-                            sourceProductFile.getName() + "' could not be read - skipping.");
-                }
-            }
-        }
-        if (productIndex == 0) {
-            System.out.println("No source products found in directory " + inputDataDir + " - nothing to do.");
-        }
-
-        return sourceProductsList.toArray(new Product[sourceProductsList.size()]);
     }
 
     private class ProductNameComparator implements Comparator<Product> {

@@ -512,7 +512,7 @@ public class BbdrOp extends PixelOperator {
             if (status == 2) {
                 fillTargetSampleWithNoDataValue(targetSamples);
                 // water, do simple atmospheric correction
-                double sdr13 = 0.0;
+                double sdr13;
                 if (sensor == Sensor.MERIS) {
                     if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
                         // dem_alt from TP includes sea depth

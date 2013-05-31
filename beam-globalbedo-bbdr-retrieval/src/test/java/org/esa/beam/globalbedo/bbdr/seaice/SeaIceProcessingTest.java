@@ -34,8 +34,7 @@ public class SeaIceProcessingTest {
 
     @Test
     public void testGetCollocateMerisMasterProduct() {
-        final Product targetProduct = MerisAatsrBbdrSeaiceOp.getCollocateMerisMasterProduct(createCollocAatsrMasterProduct(),
-                                                                                                          createMerisL1bProduct());
+        final Product targetProduct = CollocToAotSeaiceOp.getCollocationMerisMasterProduct(createCollocAatsrMasterProduct());
         assertNotNull(targetProduct);
         int numBands = targetProduct.getNumBands();
         assertEquals(15 + 2 + 2, numBands);

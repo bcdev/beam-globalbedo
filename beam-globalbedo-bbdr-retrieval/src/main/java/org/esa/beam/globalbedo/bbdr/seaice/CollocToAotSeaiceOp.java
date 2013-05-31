@@ -31,7 +31,6 @@ import org.esa.beam.globalbedo.bbdr.BbdrConstants;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
-import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -41,12 +40,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Applies IDEPIX to a MERIS/AATSR collocation product and then computes AOT.
+ * Applies IDEPIX to a MERIS/AATSR collocation/coregistration product and then computes AOT.
  *
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.l2.colloc.aot",
-        description = "Applies IDEPIX to a MERIS/AATSR collocation product and then computes AOT.",
+        description = "Applies IDEPIX to a MERIS/AATSR collocation/coregistration product and then computes AOT.",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2013 by Brockmann Consult")
@@ -64,11 +63,6 @@ public class CollocToAotSeaiceOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
-
-//        if (sourceProduct.getPreferredTileSize() == null) {
-//            sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
-//            System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
-//        }
 
         Product aotProduct;
         Product aotSourceProduct;
