@@ -40,6 +40,9 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
+
     @Override
     public void initialize() throws OperatorException {
 
@@ -58,6 +61,8 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            } else if (computeSeaice) {
+                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator);
             } else {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
             }
@@ -71,6 +76,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
+            accumulationOp.setParameter("computeSeaice", computeSeaice);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();
 

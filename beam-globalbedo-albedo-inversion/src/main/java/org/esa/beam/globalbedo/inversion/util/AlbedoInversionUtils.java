@@ -59,6 +59,27 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * Adds a land mask sample definition to a configurator used in a point operator
+     *
+     * @param configurator  - the configurator
+     * @param index         - the sample index
+     * @param sourceProduct - the source product
+     */
+    public static void setSeaiceMaskSourceSample(SampleConfigurer configurator, int index,
+                                               Product sourceProduct) {
+        if (sourceProduct.getProductType().startsWith("MER") ||
+                sourceProduct.getProductType().startsWith("ATS") ) {
+            BandMathsOp seaiceOp = BandMathsOp.createBooleanExpressionBand
+                    (AlbedoInversionConstants.seaiceMaskExpression, sourceProduct);
+            Product seaiceProduct = seaiceOp.getTargetProduct();
+            configurator.defineSample(index, seaiceProduct.getBandAt(0).getName(), seaiceProduct);
+        } else if (sourceProduct.getProductType().startsWith("VGT")) {
+            // VGT - no actions
+        }
+    }
+
+
+    /**
      * Returns a matrix which contains on the diagonal the original elements, and zeros elsewhere
      * Input must be a nxm matrix with n = m
      *

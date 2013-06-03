@@ -35,8 +35,9 @@ import java.util.logging.Logger;
 public class GlobalbedoLevel3FullAccumulation extends Operator implements Output {
 
     private static final double HALFLIFE = 11.54;
-    private static final int RASTER_WIDTH = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-    private static final int RASTER_HEIGHT = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+
+    private int rasterWidth;
+    private int rasterHeight;
 
     @Parameter(defaultValue = "", description = "GA root directory")
     private String gaRootDir;
@@ -59,6 +60,10 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
+
+
     private Logger logger;
 
     @Override
@@ -71,6 +76,13 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             doys[i] = startDoy + 8 * i;
         }
 
+        if (computeSeaice) {
+            rasterWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
+            rasterHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
+        } else {
+            rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+            rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+        }
 
         // STEP 1: get Daily Accumulator input files...
         final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
@@ -79,7 +91,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         for (int i = 0; i < doys.length; i++) {
             inputProducts[i] = IOUtils.getAlbedoInputProduct(accumulatorDir, true, doys[i], year, tile,
                                                              wings,
-                                                             computeSnow);
+                                                             computeSnow, computeSeaice);
         }
 
         // merge input products to single object...
@@ -97,6 +109,8 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+        } else if (computeSeaice) {
+            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
         } else {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
@@ -139,18 +153,18 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return filenameList.toArray(new String[filenameList.size()]);
     }
 
-    private static FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
+    private FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
                                                                             AlbedoInput[] inputProducts,
                                                                             int[] doys,
                                                                             int numBands) {
         final int numDoys = doys.length;
         final int numFiles = sourceBinaryFilenames.length;
 
-        float[][][] daysToTheClosestSample = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
-        float[][][][] sumMatrices = new float[numDoys][numBands][RASTER_WIDTH][RASTER_HEIGHT];
-        float[][][] mask = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+        float[][][] daysToTheClosestSample = new float[numDoys][rasterWidth][rasterHeight];
+        float[][][][] sumMatrices = new float[numDoys][numBands][rasterWidth][rasterHeight];
+        float[][][] mask = new float[numDoys][rasterWidth][rasterHeight];
 
-        int size = numBands * RASTER_WIDTH * RASTER_HEIGHT;
+        int size = numBands * rasterWidth * rasterHeight;
 
         final boolean[][] accumulate = new boolean[numFiles][numDoys];
         final int[][] dayDifference = new int[numFiles][numDoys];
@@ -198,10 +212,10 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                             }
                             // find the right indices for sumMatrices array...
                             kk++;
-                            if (kk == RASTER_WIDTH) {
+                            if (kk == rasterWidth) {
                                 jj++;
                                 kk = 0;
-                                if (jj == RASTER_HEIGHT) {
+                                if (jj == rasterHeight) {
                                     ii++;
                                     jj = 0;
                                 }
@@ -271,14 +285,14 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return false;
     }
 
-    private static float[][] updateDoYOfClosestSampleArray(float[][] doyOfClosestSampleOld,
+    private float[][] updateDoYOfClosestSampleArray(float[][] doyOfClosestSampleOld,
                                                            float[][] mask,
                                                            int dayDifference,
                                                            int productIndex) {
         // this is done at the end of 'Accumulator' routine in breadboard...
-        float[][] doyOfClosestSample = new float[RASTER_WIDTH][RASTER_HEIGHT];
-        for (int i = 0; i < RASTER_WIDTH; i++) {
-            for (int j = 0; j < RASTER_HEIGHT; j++) {
+        float[][] doyOfClosestSample = new float[rasterWidth][rasterHeight];
+        for (int i = 0; i < rasterWidth; i++) {
+            for (int j = 0; j < rasterHeight; j++) {
                 float doy;
                 final float bbdrDaysToDoY = (float) (Math.abs(dayDifference) + 1);
                 if (productIndex == 0) {

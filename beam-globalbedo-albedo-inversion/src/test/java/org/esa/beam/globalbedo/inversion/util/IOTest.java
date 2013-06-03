@@ -99,31 +99,6 @@ public class IOTest extends TestCase {
         assertEquals("Kernels.129.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(2));
     }
 
-    public void testGetInversionTargetFileName() throws Exception {
-        final int year = 2005;
-        final int doy = 123;
-        final String tile = "h18v04";
-
-        boolean computeSnow = true;
-        boolean usePrior = true;
-
-        String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
-        assertNotNull(targetFileName);
-        assertEquals("GlobAlbedo.2005123.h18v04.Snow.bin", targetFileName);
-
-        computeSnow = false;
-        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
-        assertEquals("GlobAlbedo.2005123.h18v04.NoSnow.bin", targetFileName);
-
-        usePrior = false;
-        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
-        assertEquals("GlobAlbedo.2005123.h18v04.NoSnow.NoPrior.bin", targetFileName);
-
-        computeSnow = true;
-        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
-        assertEquals("GlobAlbedo.2005123.h18v04.Snow.NoPrior.bin", targetFileName);
-    }
-
     public void testGetInversionParameterBandnames() throws Exception {
         String[] bandNames = IOUtils.getInversionParameterBandNames();
         assertNotNull(bandNames);

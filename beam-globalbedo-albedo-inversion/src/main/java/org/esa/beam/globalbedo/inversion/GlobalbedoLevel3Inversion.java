@@ -6,6 +6,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -22,6 +23,9 @@ import java.util.logging.Logger;
  */
 @OperatorMetadata(alias = "ga.l3.inversion")
 public class GlobalbedoLevel3Inversion extends Operator {
+
+    @SourceProduct(description = "Dummy product")
+    private Product dummyProduct;
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
@@ -47,6 +51,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
+
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
@@ -64,40 +71,46 @@ public class GlobalbedoLevel3Inversion extends Operator {
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 
-        // STEP 1: get Prior input file...
-        final String priorDir = priorRootDir + File.separator + tile +
-                File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+        Product priorProduct = null;
+        if (usePrior) {
+            // STEP 1: get Prior input file...
+            final String priorDir = priorRootDir + File.separator + tile +
+                    File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
 
-        logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
+            logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
-        Product priorProduct;
-        try {
-            priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
-        } catch (IOException e) {
-            throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                                                " - cannot proceed...: " + e.getMessage());
+            try {
+                priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
+            } catch (IOException e) {
+                throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
+                                                    " - cannot proceed...: " + e.getMessage());
+            }
         }
 
-        if (priorProduct != null) {
+        if (computeSeaice || priorProduct != null) {
             // STEP 2: set paths...
             final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
             String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                     + File.separator + year + File.separator + tile;
 
             // STEP 3: we need to reproject the priors for further use...
-            Product reprojectedPriorProduct;
-            try {
-                Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
-                reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                                                                             tileInfoProduct);
-            } catch (IOException e) {
-                throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
+            Product reprojectedPriorProduct = null;
+            if (usePrior) {
+                try {
+                    Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
+                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
+                                                                                 tileInfoProduct);
+                } catch (IOException e) {
+                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
+                }
             }
 
             // STEP 5: do inversion...
             String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
             if (computeSnow) {
                 fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            } else if (computeSeaice) {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
             } else {
                 fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
             }
@@ -105,12 +118,17 @@ public class GlobalbedoLevel3Inversion extends Operator {
             String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
 
             InversionOp inversionOp = new InversionOp();
-            inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+            if (reprojectedPriorProduct != null) {
+                inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+            } else {
+                inversionOp.setSourceProduct("priorProduct", dummyProduct);  // may be null
+            }
             inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
             inversionOp.setParameter("year", year);
             inversionOp.setParameter("tile", tile);
             inversionOp.setParameter("doy", doy);
             inversionOp.setParameter("computeSnow", computeSnow);
+            inversionOp.setParameter("computeSeaice", computeSeaice);
             inversionOp.setParameter("usePrior", usePrior);
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             Product inversionProduct = inversionOp.getTargetProduct();

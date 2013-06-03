@@ -89,7 +89,7 @@ public class IOUtils {
         List<String> dailyBBDRFilenames = new ArrayList<String>();
         if (bbdrFilenames != null && bbdrFilenames.length > 0 && StringUtils.isNotNullAndNotEmpty(daystring)) {
             for (String s : bbdrFilenames) {
-                if (s.endsWith(".dim") && s.contains(daystring)) {
+                if ((s.endsWith(".dim") || s.endsWith(".nc")) && s.contains(daystring)) {
                     dailyBBDRFilenames.add(s);
                 }
             }
@@ -216,14 +216,15 @@ public class IOUtils {
                                                     boolean useBinaryFiles,
                                                     int doy, int year, String tile,
                                                     int wings,
-                                                    boolean computeSnow) {
+                                                    boolean computeSnow,
+                                                    boolean computeSeaice) {
 
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
                                                                                    tile,
                                                                                    wings,
-                                                                                   computeSnow);
+                                                                                   computeSnow, computeSeaice);
 
         if (albedoInputProductList.size() > 0) {
             inputProduct = new AlbedoInput();
@@ -234,7 +235,8 @@ public class IOUtils {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
                                                                                                      true, doy, year, tile,
                                                                                                      wings,
-                                                                                                     computeSnow);
+                                                                                                     computeSnow,
+                                                                                                     computeSeaice);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -244,6 +246,9 @@ public class IOUtils {
                     if (computeSnow) {
                         productYearRootDir = accumulatorRootDir.concat(
                                 File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
+                    } else if (computeSeaice) {
+                        productYearRootDir = accumulatorRootDir.concat(
+                                File.separator + thisProductYear + File.separator + tile);
                     } else {
                         productYearRootDir = accumulatorRootDir.concat(
                                 File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
@@ -260,41 +265,10 @@ public class IOUtils {
         return inputProduct;
     }
 
-    /**
-     * Returns the filename for an inversion output product
-     *
-     * @param year        - year
-     * @param doy         - day of interest
-     * @param tile        - tile
-     * @param computeSnow - boolean
-     * @param usePrior    - boolean
-     * @return String
-     */
-    public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
-                                                    boolean usePrior) {
-        String targetFileName;
-
-        //  build up a name like this: GlobAlbedo.2005129.h18v04.NoSnow.bin
-        if (computeSnow) {
-            if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.bin";
-            } else {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.NoPrior.bin";
-            }
-        } else {
-            if (usePrior) {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.bin";
-            } else {
-                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.NoPrior.bin";
-            }
-        }
-        return targetFileName;
-    }
-
     static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
                                                        int year, String tile,
                                                        int wings,
-                                                       boolean computeSnow) {
+                                                       boolean computeSnow, boolean computeSeaice) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
@@ -332,6 +306,9 @@ public class IOUtils {
             if (computeSnow) {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + thisYear + File.separator + tile + File.separator + "Snow");
+            } else if (computeSeaice) {
+                thisYearsRootDir = accumulatorRootDir.concat(
+                        File.separator + thisYear + File.separator + tile);
             } else {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + thisYear + File.separator + tile + File.separator + "NoSnow");
@@ -491,9 +468,8 @@ public class IOUtils {
         return bandNames;
     }
 
-    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
-        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands,
+                                                                   int rasterWidth, int rasterHeight) {
 //        int size = numBands * rasterWidth * rasterHeight;         // OLD
         int size = numBands * rasterWidth * rasterHeight * 4; // NEW
         final File fullAccumulatorBinaryFile = new File(filename);
@@ -519,11 +495,11 @@ public class IOUtils {
 
             ch.read(bb);
             for (int ii = 0; ii < numBands - 1; ii++) {
-                for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
+                for (int jj = 0; jj < rasterWidth; jj++) {
                     floatBuffer.get(sumMatrices[ii][jj]);
                 }
             }
-            for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
+            for (int jj = 0; jj < rasterWidth; jj++) {
                 floatBuffer.get(daysToTheClosestSample[jj]);
             }
             bb.clear();

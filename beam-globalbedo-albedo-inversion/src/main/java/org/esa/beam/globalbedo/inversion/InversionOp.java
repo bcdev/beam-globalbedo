@@ -82,6 +82,9 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
+
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
 
@@ -115,9 +118,22 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
 
+        int rasterWidth;
+        int rasterHeight;
+        if (computeSeaice) {
+            rasterWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
+            rasterHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
+        } else {
+            rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+            rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+        }
+
         fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
                 (year, doy, fullAccumulatorFilePath,
-                 IOUtils.getDailyAccumulatorBandNames().length + 1);
+                 IOUtils.getDailyAccumulatorBandNames().length + 1,
+                 rasterWidth, rasterHeight);
+
+        System.out.println("go ahead...");
 
         // prior product:
         // we have:
@@ -162,6 +178,11 @@ public class InversionOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+
+        System.out.println("x,y = " + x + "," + y);
+        if (y % 100 == 0) {
+            System.out.println("y = " + y);
+        }
 
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);
@@ -263,6 +284,7 @@ public class InversionOp extends PixelOperator {
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
                           maskAcc, goodnessOfFit, daysToTheClosestSample);
+        System.out.println("bla");
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -312,7 +334,9 @@ public class InversionOp extends PixelOperator {
         // see python BB equivalent at http://nullege.com/codes/search/numpy.prod
         double productSvdMSRecip = 1.0;
         for (double svdMSingularValue : svdMSingularValues) {
-            productSvdMSRecip *= (1.0 / svdMSingularValue);
+            if (svdMSingularValue != 0.0) {
+                productSvdMSRecip *= (1.0 / svdMSingularValue);
+            }
         }
         return 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
     }
