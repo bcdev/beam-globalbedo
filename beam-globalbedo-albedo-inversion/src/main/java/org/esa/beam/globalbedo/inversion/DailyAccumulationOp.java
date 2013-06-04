@@ -79,6 +79,10 @@ public class DailyAccumulationOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "false", description = "Debug - write more target bands")
+    private boolean debug;
+
+
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
 
@@ -142,9 +146,11 @@ public class DailyAccumulationOp extends PixelOperator {
 
             // get land mask (sensor dependent)
             AlbedoInversionUtils.setLandMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_LAND_MASK,
-                                                         sourceProduct);
-            AlbedoInversionUtils.setSeaiceMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_SEAICE_MASK,
-                                                         sourceProduct);
+                                                         sourceProduct, computeSeaice);
+            if (computeSeaice) {
+                AlbedoInversionUtils.setSeaiceMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_SEAICE_MASK,
+                                                               sourceProduct);
+            }
 
         }
     }
@@ -159,6 +165,19 @@ public class DailyAccumulationOp extends PixelOperator {
         // the target product is not really needed later on, but
         // we need one target band to make sure that computePixel is processed
         // and the binary outout is written after all 1200x1200 pixels are done
+
+        if (debug) {
+            for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                    targetProduct.addBand("M_" + i + "_" + j, ProductData.TYPE_FLOAT32);
+                }
+            }
+            for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                targetProduct.addBand("V_" + i, ProductData.TYPE_FLOAT32);
+            }
+            targetProduct.addBand("E_0", ProductData.TYPE_FLOAT32);
+        }
+
         final String maskBandName = AlbedoInversionConstants.ACC_MASK_NAME;
         targetProduct.addBand(maskBandName, ProductData.TYPE_INT8);
 //        targetProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
@@ -329,6 +348,20 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, Accumulator accumulator) {
+
+        if (debug) {
+            for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                    targetSamples[TRG_M[i][j]].set(accumulator.getM().get(i,j));
+                }
+            }
+            for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                TRG_V[i] = 3 * 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + i;
+                targetSamples[TRG_V[i]].set(accumulator.getV().get(i,0));
+            }
+            targetSamples[TRG_E].set(accumulator.getE().get(0,0));
+        }
+
         // just one target band...
         targetSamples[TRG_MASK].set(accumulator.getMask());
     }
@@ -386,13 +419,8 @@ public class DailyAccumulationOp extends PixelOperator {
     }
 
     private boolean isSeaiceFilter(Sample[] sourceSamples, int sourceProductIndex) {
-        if (sourceProducts[sourceProductIndex].getProductType().startsWith("MER") ||
-                sourceProducts[sourceProductIndex].getProductType().startsWith("ATS")) {
-            if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SEAICE_MASK].getBoolean()) {
-                return true;
-            }
-        } else {
-            // no actions for VGT
+        if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SEAICE_MASK].getBoolean()) {
+            return true;
         }
         return false;
     }

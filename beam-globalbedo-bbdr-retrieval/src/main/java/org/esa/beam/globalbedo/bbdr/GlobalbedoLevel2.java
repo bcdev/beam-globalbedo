@@ -101,6 +101,7 @@ public class GlobalbedoLevel2 extends Operator {
                 } else {
                     setTargetProduct(bbdrProduct);
                 }
+                getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
             }
         }
     }

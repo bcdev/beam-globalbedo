@@ -87,6 +87,7 @@ public class AotToBbdrSeaiceOp extends Operator {
         ProductUtils.copyBand("reflec_fward_1600", sourceProduct, bbdrProduct, true);
 
         setTargetProduct(bbdrProduct);
+        getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
     }
 
     public static class Spi extends OperatorSpi {

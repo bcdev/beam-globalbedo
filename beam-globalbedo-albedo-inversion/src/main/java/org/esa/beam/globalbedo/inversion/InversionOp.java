@@ -128,12 +128,13 @@ public class InversionOp extends PixelOperator {
             rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         }
 
+        System.out.println("Reading full accumulator file...");
         fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
                 (year, doy, fullAccumulatorFilePath,
                  IOUtils.getDailyAccumulatorBandNames().length + 1,
                  rasterWidth, rasterHeight);
 
-        System.out.println("go ahead...");
+        System.out.println("Done reading full accumulator file.");
 
         // prior product:
         // we have:
@@ -179,9 +180,14 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        System.out.println("x,y = " + x + "," + y);
-        if (y % 100 == 0) {
-            System.out.println("y = " + y);
+        if (x == 0 && y == 0) {
+            System.out.println("x,y = " + x + "," + y);
+        }
+        if (x == 1165 && y == 1700) {
+            System.out.println("x,y = " + x + "," + y);
+        }
+        if (x == 1172 && y == 1700) {
+            System.out.println("x,y = " + x + "," + y);
         }
 
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1);
@@ -242,7 +248,8 @@ public class InversionOp extends PixelOperator {
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
 
-                entropy = getEntropy(mAcc);
+//                entropy = getEntropy(mAcc);
+                entropy = INVALID;  // test!!!
                 if (usePrior) {
                     final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
@@ -284,7 +291,6 @@ public class InversionOp extends PixelOperator {
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
                           maskAcc, goodnessOfFit, daysToTheClosestSample);
-        System.out.println("bla");
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {

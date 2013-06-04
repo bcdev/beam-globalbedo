@@ -1,8 +1,10 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
@@ -24,7 +26,6 @@ public class AlbedoInversionUtils {
      *
      * @param year - the year
      * @param doy  - the day of year
-     *
      * @return String - the datestring
      */
     public static String getDateFromDoy(int year, int doy) {
@@ -45,8 +46,8 @@ public class AlbedoInversionUtils {
      * @param sourceProduct - the source product
      */
     public static void setLandMaskSourceSample(SampleConfigurer configurator, int index,
-                                               Product sourceProduct) {
-        if (sourceProduct.getProductType().startsWith("MER")) {
+                                               Product sourceProduct, boolean computeSeaice) {
+        if (sourceProduct.getProductType().startsWith("MER") || computeSeaice) {
             BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
                     (AlbedoInversionConstants.merisLandMaskExpression, sourceProduct);
             Product landMaskProduct = landOp.getTargetProduct();
@@ -66,25 +67,18 @@ public class AlbedoInversionUtils {
      * @param sourceProduct - the source product
      */
     public static void setSeaiceMaskSourceSample(SampleConfigurer configurator, int index,
-                                               Product sourceProduct) {
-        if (sourceProduct.getProductType().startsWith("MER") ||
-                sourceProduct.getProductType().startsWith("ATS") ) {
-            BandMathsOp seaiceOp = BandMathsOp.createBooleanExpressionBand
-                    (AlbedoInversionConstants.seaiceMaskExpression, sourceProduct);
-            Product seaiceProduct = seaiceOp.getTargetProduct();
-            configurator.defineSample(index, seaiceProduct.getBandAt(0).getName(), seaiceProduct);
-        } else if (sourceProduct.getProductType().startsWith("VGT")) {
-            // VGT - no actions
-        }
+                                                 Product sourceProduct) {
+        BandMathsOp seaiceOp = BandMathsOp.createBooleanExpressionBand
+                (AlbedoInversionConstants.seaiceMaskExpression, sourceProduct);
+        Product seaiceProduct = seaiceOp.getTargetProduct();
+        configurator.defineSample(index, seaiceProduct.getBandAt(0).getName(), seaiceProduct);
     }
-
 
     /**
      * Returns a matrix which contains on the diagonal the original elements, and zeros elsewhere
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
-     *
      * @return Matrix - the filtered matrix
      */
     public static Matrix getRectangularDiagonalMatrix(Matrix m) {
@@ -103,7 +97,6 @@ public class AlbedoInversionUtils {
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix
-     *
      * @return Matrix - the nx1 result matrix
      */
     public static Matrix getRectangularDiagonalFlatMatrix(Matrix m) {
@@ -122,7 +115,6 @@ public class AlbedoInversionUtils {
      * Returns a rows x columns matrix with reciprocal elements
      *
      * @param m - the input matrix
-     *
      * @return Matrix - the result matrix
      */
     public static Matrix getReciprocalMatrix(Matrix m) {
@@ -146,7 +138,6 @@ public class AlbedoInversionUtils {
      * (equivalent to Python's numpy.product(m))
      *
      * @param m - the input matrix
-     *
      * @return double - the result
      */
     public static double getMatrixAllElementsProduct(Matrix m) {
@@ -165,7 +156,6 @@ public class AlbedoInversionUtils {
      * Checks if a matrix contains NaN elements
      *
      * @param m - original matrix
-     *
      * @return boolean
      */
     public static boolean matrixHasNanElements(Matrix m) {
@@ -184,7 +174,6 @@ public class AlbedoInversionUtils {
      * Input must be a nxm matrix with n = m
      *
      * @param m - original matrix
-     *
      * @return boolean
      */
     public static boolean matrixHasZerosInDiagonale(Matrix m) {
@@ -202,9 +191,7 @@ public class AlbedoInversionUtils {
      * in the Globalbedo project. These values represent the easting/northing parameters.
      *
      * @param modisTile - the MODIS tile name
-     *
      * @return double[] - the upper left corner coordinate
-     *
      * @throws NumberFormatException -
      */
     public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
@@ -223,8 +210,8 @@ public class AlbedoInversionUtils {
      * Computes solar zenith angle at local noon as function of Geoposition and DoY
      *
      * @param geoPos - geoposition
-     * @param doy - day of year
-     * @return  sza - in degrees!!
+     * @param doy    - day of year
+     * @return sza - in degrees!!
      */
     public static double computeSza(GeoPos geoPos, int doy) {
 
@@ -234,9 +221,28 @@ public class AlbedoInversionUtils {
         final double LST = 12.0;
         // # Now we can calculate the Sun Zenith Angle (SZArad):
         final double h = (12.0 - (LST)) / 12.0 * Math.PI;
-        final double delta = -23.45 * (Math.PI/180.0) * Math.cos (2 * Math.PI/365.0 * (doy+10));
+        final double delta = -23.45 * (Math.PI / 180.0) * Math.cos(2 * Math.PI / 365.0 * (doy + 10));
         double SZArad = Math.acos(Math.sin(latitude) * Math.sin(delta) + Math.cos(latitude) * Math.cos(delta) * Math.cos(h));
 
         return SZArad * MathUtils.RTOD;
     }
+
+    public static Product createSeaiceDummySourceProduct() {
+        Product product = new Product("dummy", "dummy",
+                                      AlbedoInversionConstants.SEAICE_TILE_WIDTH,
+                                      AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+        Band b = product.addBand("b1", ProductData.TYPE_FLOAT32);
+
+        float[] bData = new float[AlbedoInversionConstants.SEAICE_TILE_WIDTH *
+                                   AlbedoInversionConstants.SEAICE_TILE_HEIGHT];
+        for (int i = 0; i < AlbedoInversionConstants.SEAICE_TILE_WIDTH; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.SEAICE_TILE_HEIGHT; j++) {
+                bData[i*AlbedoInversionConstants.SEAICE_TILE_WIDTH + j] = 1.0f;
+            }
+        }
+        b.setDataElems(bData);
+
+        return product;
+    }
+
 }

@@ -89,6 +89,7 @@ public class CollocToAotSeaiceOp extends Operator {
             }
             setTargetProduct(aotProduct);
         }
+        getTargetProduct().setProductType(sourceProduct.getProductType() + "_AOT");
     }
 
     private Product getCollocationMasterSubset(Product collocationProduct) {

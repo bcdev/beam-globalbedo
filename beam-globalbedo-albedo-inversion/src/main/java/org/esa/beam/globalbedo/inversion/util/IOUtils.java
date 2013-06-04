@@ -147,6 +147,41 @@ public class IOUtils {
         return priorProduct;
     }
 
+    public static CrsGeoCoding getSeaicePstGeocoding(String pstTile) {
+        double[] eastingNorthing = getSeaicePstEastingNorthing(pstTile);
+        final double easting = eastingNorthing[0];
+        final double northing = eastingNorthing[1];
+        final String crsString = AlbedoInversionConstants.POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING;
+        final int imageWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
+        final int imageHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
+        final double pixelSizeX = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_X;
+        final double pixelSizeY = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_Y;
+        CrsGeoCoding geoCoding;
+        try {
+            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+            geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+        } catch (Exception e) {
+            throw new OperatorException("Cannot attach geocoding for PST tile ''" + pstTile + " : ", e);
+        }
+
+        return geoCoding;
+
+    }
+
+    private static double[] getSeaicePstEastingNorthing(String tile) {
+        double[] eastingNorthing = new double[2];
+        if (tile.equals("180W_90W")) {
+            eastingNorthing = new double[]{62.0, 135.0};
+        } else if (tile.equals("90W_0")) {
+            eastingNorthing = new double[]{70.0, 90.0};
+        } else if (tile.equals("0_90E")) {
+            eastingNorthing = new double[]{90.0, 0.0};
+        } else if (tile.equals("90E_180E")) {
+            eastingNorthing = new double[]{70.0, 180.0};
+        }
+        return eastingNorthing;
+    }
+
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();
         final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);

@@ -69,6 +69,7 @@ public class MerisAatsrCollocationOp extends Operator {
 
                 // standard collocation, no coregistration
                 Product collocateProduct = doStandardCollocation(sourceProduct, slaveSourceProduct);
+                collocateProduct.setProductType(sourceProduct.getProductType() + "_" + collocateProduct.getProductType());
                 if (collocateProduct != null) {
                     final WriteOp collocWriteOp = new WriteOp(collocateProduct, collocTargetFile, formatName);
                     System.out.println("Writing collocated product '" + collocTargetFileName + "'...");

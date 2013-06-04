@@ -43,6 +43,9 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "false", description = "Debug - write more target bands")
+    private boolean debug;
+
     @Override
     public void initialize() throws OperatorException {
 
@@ -77,6 +80,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("computeSeaice", computeSeaice);
+            accumulationOp.setParameter("debug", debug);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();
 

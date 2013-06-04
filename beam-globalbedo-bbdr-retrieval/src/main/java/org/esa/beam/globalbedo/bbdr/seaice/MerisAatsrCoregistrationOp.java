@@ -138,7 +138,7 @@ public class MerisAatsrCoregistrationOp extends Operator {
         System.out.println("Coregistration product filepath: '" + coregFilepath + "'...");
         Product coregProduct = getCoregProduct(new File(coregFilepath));
         Product collocProduct = new Product(coregProduct.getName(),
-                "COLLOCATED",
+                merisL1bProduct.getProductType() + "COLLOCATED",
                 coregProduct.getSceneRasterWidth(),
                 coregProduct.getSceneRasterHeight());
 

@@ -1,12 +1,14 @@
 package org.esa.beam.globalbedo.inversion;
 
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -23,9 +25,6 @@ import java.util.logging.Logger;
  */
 @OperatorMetadata(alias = "ga.l3.inversion")
 public class GlobalbedoLevel3Inversion extends Operator {
-
-    @SourceProduct(description = "Dummy product")
-    private Product dummyProduct;
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
@@ -89,7 +88,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         if (computeSeaice || priorProduct != null) {
             // STEP 2: set paths...
-            final String bbdrRootDir = gaRootDir + File.separator + "BBDR";
+            final String bbdrString = computeSeaice ? "BBDR_PST" : "BBDR";
+            final String bbdrRootDir = gaRootDir + File.separator + bbdrString;
             String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
                     + File.separator + year + File.separator + tile;
 
@@ -119,9 +119,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
             InversionOp inversionOp = new InversionOp();
             if (reprojectedPriorProduct != null) {
-                inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);  // may be null
+                inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);
             } else {
-                inversionOp.setSourceProduct("priorProduct", dummyProduct);  // may be null
+                inversionOp.setSourceProduct("priorProduct", AlbedoInversionUtils.createSeaiceDummySourceProduct());
             }
             inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
             inversionOp.setParameter("year", year);
@@ -132,6 +132,20 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("usePrior", usePrior);
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             Product inversionProduct = inversionOp.getTargetProduct();
+            inversionProduct.setGeoCoding(IOUtils.getSeaicePstGeocoding(tile));
+
+            // get geocoding
+            for (int i = doy; i < doy+8; i++) {
+                try {
+                    Product[] bbdrpstProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, i);
+                    if (bbdrpstProducts.length > 0) {
+                        inversionProduct.setGeoCoding(bbdrpstProducts[0].getGeoCoding());
+                    }
+                } catch (IOException e) {
+                    throw new OperatorException("Cannot attach geocoding from BBDR PST product: ", e);
+                }
+            }
+
             setTargetProduct(inversionProduct);
 
             // correct for lost pixels due to extreme SIN angles near South Pole

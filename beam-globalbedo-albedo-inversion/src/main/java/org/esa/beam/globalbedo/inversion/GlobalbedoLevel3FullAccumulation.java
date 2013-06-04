@@ -85,7 +85,8 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         }
 
         // STEP 1: get Daily Accumulator input files...
-        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
+        final String bbdrDir = computeSeaice ? "BBDR_PST" : "BBDR";
+        final String accumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles";
 
         AlbedoInput[] inputProducts = new AlbedoInput[doys.length];
         for (int i = 0; i < doys.length; i++) {
@@ -105,7 +106,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                                                                                bandNames.length); // accumulates matrices and extracts mask array
 
         // write accs to files...
-        String fullAccumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles"
+        String fullAccumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);

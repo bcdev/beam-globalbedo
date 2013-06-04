@@ -68,6 +68,7 @@ public class BbdrToPstSingleQuadrantOp extends Operator {
         } else {
             setTargetProduct(new Product("dummy", "dummy", 0, 0));
         }
+        getTargetProduct().setProductType(sourceProduct.getProductType() + "_PST");
     }
 
     private double getReferencePixelY() {
