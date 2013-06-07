@@ -123,39 +123,44 @@ public class IOUtils {
             ProductUtils.copyGeoCoding(tileInfoProduct, priorProduct);
         } else {
             // create geocoding manually in case we do not have a 'tileInfo'...
-            ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
-            int tileIndex = modisTileCoordinates.findTileIndex(tile);
-            if (tileIndex == -1) {
-                throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
-            }
-            final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
-            final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
-            final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-            final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-            final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-            final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
-            final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-            try {
-                final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-                CrsGeoCoding geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-                priorProduct.setGeoCoding(geoCoding);
-            } catch (Exception e) {
-                throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
-            }
+            priorProduct.setGeoCoding(getModisTileGeocoding(tile));
         }
-
         return priorProduct;
     }
 
+    public static CrsGeoCoding getModisTileGeocoding(String tile) {
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+        int tileIndex = modisTileCoordinates.findTileIndex(tile);
+        if (tileIndex == -1) {
+            throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
+        }
+        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
+        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
+        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
+        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
+        CrsGeoCoding geoCoding;
+        try {
+            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+            geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+        } catch (Exception e) {
+            throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
+        }
+        return geoCoding;
+    }
+
     public static CrsGeoCoding getSeaicePstGeocoding(String pstTile) {
-        double[] eastingNorthing = getSeaicePstEastingNorthing(pstTile);
-        final double easting = eastingNorthing[0];
-        final double northing = eastingNorthing[1];
         final String crsString = AlbedoInversionConstants.POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING;
         final int imageWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
         final int imageHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
         final double pixelSizeX = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_Y;
+        final double imageWidthMetres = imageWidth * pixelSizeX;
+        double[] eastingNorthing = getSeaicePstEastingNorthing(pstTile, imageWidthMetres);
+        final double easting = eastingNorthing[0];
+        final double northing = eastingNorthing[1];
         CrsGeoCoding geoCoding;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
@@ -165,26 +170,27 @@ public class IOUtils {
         }
 
         return geoCoding;
-
-    }
-
-    private static double[] getSeaicePstEastingNorthing(String tile) {
-        double[] eastingNorthing = new double[2];
-        if (tile.equals("180W_90W")) {
-            eastingNorthing = new double[]{62.0, 135.0};
-        } else if (tile.equals("90W_0")) {
-            eastingNorthing = new double[]{70.0, 90.0};
-        } else if (tile.equals("0_90E")) {
-            eastingNorthing = new double[]{90.0, 0.0};
-        } else if (tile.equals("90E_180E")) {
-            eastingNorthing = new double[]{70.0, 180.0};
-        }
-        return eastingNorthing;
     }
 
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();
         final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);
+
+        String doyString = getDoyString(doy);
+
+        for (String brdfFileName : brdfFileList) {
+            if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
+                String sourceProductFileName = brdfDir + File.separator + brdfFileName;
+                return ProductIO.readProduct(sourceProductFileName);
+            }
+        }
+
+        return null;
+    }
+
+    public static Product getBrdfSeaiceProduct(String brdfDir, int year, int doy) throws IOException {
+        final String[] brdfFiles = (new File(brdfDir)).list();
+        final List<String> brdfFileList = getBrdfSeaiceProductNames(brdfFiles);
 
         String doyString = getDoyString(doy);
 
@@ -234,17 +240,6 @@ public class IOUtils {
         }
         Collections.sort(snowFilteredPriorList);
         return snowFilteredPriorList;
-    }
-
-    private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
-        List<String> brdfFileList = new ArrayList<String>();
-        for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
-                brdfFileList.add(s);
-            }
-        }
-        Collections.sort(brdfFileList);
-        return brdfFileList;
     }
 
     public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir,
@@ -392,7 +387,7 @@ public class IOUtils {
         return albedoInputProductList;
     }
 
-    private static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
+    static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
 
     static {
         waveBandsOffsetMap.put(0, "VIS");
@@ -700,16 +695,6 @@ public class IOUtils {
 
     }
 
-    private static boolean isAlbedo8DayDimapProduct(String name, String tile) {
-        return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
-                (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim"));
-    }
-
-    private static boolean isAlbedo8DayNetcdfProduct(String name, String tile) {
-        return (name.length() == 35 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".nc")) ||
-                (name.length() == 28 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".nc"));
-    }
-
     public static File[] getTileDirectories(String rootDirString) {
         final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         FileFilter tileFilter = new FileFilter() {
@@ -722,5 +707,52 @@ public class IOUtils {
         File rootDir = new File(rootDirString);
         return rootDir.listFiles(tileFilter);
     }
+
+    private static boolean isAlbedo8DayDimapProduct(String name, String tile) {
+        return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
+                (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim"));
+    }
+
+    private static boolean isAlbedo8DayNetcdfProduct(String name, String tile) {
+        return (name.length() == 35 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".nc")) ||
+                (name.length() == 28 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".nc"));
+    }
+
+    private static double[] getSeaicePstEastingNorthing(String tile, double width) {
+        double[] eastingNorthing = new double[2];
+        if (tile.equals("180W_90W")) {
+            eastingNorthing = new double[]{-width, width};
+        } else if (tile.equals("90W_0")) {
+            eastingNorthing = new double[]{-width, 0.0};
+        } else if (tile.equals("0_90E")) {
+            eastingNorthing = new double[]{0.0, 0.0};
+        } else if (tile.equals("90E_180E")) {
+            eastingNorthing = new double[]{0.0, width};
+        }
+        return eastingNorthing;
+    }
+
+    private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
+        List<String> brdfFileList = new ArrayList<String>();
+        for (String s : brdfFiles) {
+            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
+                brdfFileList.add(s);
+            }
+        }
+        Collections.sort(brdfFileList);
+        return brdfFileList;
+    }
+
+    private static List<String> getBrdfSeaiceProductNames(String[] brdfFiles) {
+        List<String> brdfFileList = new ArrayList<String>();
+        for (String s : brdfFiles) {
+            if (s.contains(".Seaice") && s.endsWith(".dim")) {
+                brdfFileList.add(s);
+            }
+        }
+        Collections.sort(brdfFileList);
+        return brdfFileList;
+    }
+
 
 }

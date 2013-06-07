@@ -35,7 +35,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
     private static final int urMatrixOffset = ((int) pow(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 2.0)
-                                               + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
+            + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
 
     private static final int[] SRC_UNCERTAINTIES = new int[urMatrixOffset];
 
@@ -74,6 +74,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
     @Parameter(description = "doy")
     private int doy;
+
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -169,27 +172,27 @@ public class BrdfToAlbedoOp extends PixelOperator {
         double[] blackSkyAlbedo = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < blackSkyAlbedo.length; i++) {
             blackSkyAlbedo[i] = fParams[(3 * i)] +
-                                fParams[1 + 3 * i] * (-0.007574 + (-0.070887 * Math.pow(SZA,
-                                                                                        2.0)) + (0.307588 * Math.pow(
-                                        SZA,
-                                        3.0))) +
-                                fParams[2 + 3 * i] * (-1.284909 + (-0.166314 * Math.pow(SZA,
-                                                                                        2.0)) + (0.041840 * Math.pow(
-                                        SZA,
-                                        3.0)));
+                    fParams[1 + 3 * i] * (-0.007574 + (-0.070887 * Math.pow(SZA,
+                                                                            2.0)) + (0.307588 * Math.pow(
+                            SZA,
+                            3.0))) +
+                    fParams[2 + 3 * i] * (-1.284909 + (-0.166314 * Math.pow(SZA,
+                                                                            2.0)) + (0.041840 * Math.pow(
+                            SZA,
+                            3.0)));
         }
 
         // # Calculate White-Sky Albedo...
         double[] whiteSkyAlbedo = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         whiteSkyAlbedo[0] = fParams[0] +
-                                (fParams[1] * uWsaVis.get(0, 1)) +
-                                (fParams[2] * uWsaVis.get(0, 2));
+                (fParams[1] * uWsaVis.get(0, 1)) +
+                (fParams[2] * uWsaVis.get(0, 2));
         whiteSkyAlbedo[1] = fParams[3] +
-                                (fParams[4] * uWsaNir.get(0, 4)) +
-                                (fParams[5] * uWsaNir.get(0, 5));
+                (fParams[4] * uWsaNir.get(0, 4)) +
+                (fParams[5] * uWsaNir.get(0, 5));
         whiteSkyAlbedo[2] = fParams[(3 * 2)] +
-                                (fParams[7] * uWsaSw.get(0, 7)) +
-                                (fParams[8] * uWsaSw.get(0, 8));
+                (fParams[7] * uWsaSw.get(0, 7)) +
+                (fParams[8] * uWsaSw.get(0, 8));
 
         // # Cap uncertainties and calculate sqrt
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -346,6 +349,12 @@ public class BrdfToAlbedoOp extends PixelOperator {
         Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
         szaBand.setNoDataValue(Float.NaN);
         szaBand.setNoDataValueUsed(true);
+
+        if (computeSeaice) {
+            for (Band b : targetProduct.getBands()) {
+                b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            }
+        }
     }
 
     @Override

@@ -53,6 +53,8 @@ public class AlbedoInversionConstants {
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
     public static final String seaiceMaskExpression = "cloud_classif_flags.F_SEAICE";
 
+    public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
+
     public static final int NUM_BBDR_WAVE_BANDS = 3;
     public static final int NUM_ALBEDO_PARAMETERS = 3;  // f0, f1, f2
 
@@ -72,8 +74,8 @@ public class AlbedoInversionConstants {
     public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
     public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
 
-    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
-    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
+//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
+//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
 
     public static final String MODIS_SIN_PROJECTION_CRS_STRING =
             "PROJCS[\"MODIS Sinusoidal\"," +

@@ -62,61 +62,74 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "false", description = "Write merged BRDF product only (no albedo compuation)")
     private boolean mergedProductOnly;
 
+    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+    private boolean computeSeaice;
+
 
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
-        // STEP 1: we need the SNOW Prior file for given DoY...
-        final String priorDir = priorRootDir + File.separator + tile +
-                File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
-        logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
-
-        Product priorProduct;
-        try {
-            priorProduct = IOUtils.getPriorProduct(priorDir, doy, true);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot load prior product: " + e.getMessage());
-        }
-
-        if (priorProduct == null) {
-            logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
-        }
-
-        // STEP 2: get BRDF Snow/NoSnow input files...
+        // get BRDF Snow/NoSnow input files...
         final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + tile + File.separator;
 
-        Product brdfSnowProduct;
-        Product brdfNoSnowProduct;
+        Product priorProduct;
         Product brdfMergedProduct = null;
-        try {
-            brdfSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, true);
-            brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, false);
-        } catch (IOException e) {
-            throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
-        }
-
-        if (brdfSnowProduct != null && brdfNoSnowProduct != null && priorProduct != null) {
-            // merge Snow/NoSnow products...
-            MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
-            mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
-            mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
-            mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
-            brdfMergedProduct = mergeBrdfOp.getTargetProduct();
-        } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
-            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
-            // only use Snow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
-        } else if (brdfNoSnowProduct != null && brdfSnowProduct == null) {
-            logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
-            // only use NoSnow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
+        if (computeSeaice) {
+            Product brdfSeaiceProduct;
+            try {
+                brdfSeaiceProduct = IOUtils.getBrdfSeaiceProduct(brdfDir, year, doy);
+            } catch (IOException e) {
+                throw new OperatorException("Cannot load BRDF Seaice product: " + e.getMessage());
+            }
+            brdfMergedProduct = copyFromSingleProduct(brdfSeaiceProduct, 0.0f);
         } else {
-            logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
+            // we need the SNOW Prior file for given DoY...
+            final String priorDir = priorRootDir + File.separator + tile +
+                    File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+            logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
+
+            try {
+                priorProduct = IOUtils.getPriorProduct(priorDir, doy, true);
+            } catch (IOException e) {
+                throw new OperatorException("Cannot load prior product: " + e.getMessage());
+            }
+
+            if (priorProduct == null) {
+                logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
+            }
+
+            Product brdfSnowProduct;
+            Product brdfNoSnowProduct;
+            try {
+                brdfSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, true);
+                brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, false);
+            } catch (IOException e) {
+                throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
+            }
+
+            if (brdfSnowProduct != null && brdfNoSnowProduct != null && priorProduct != null) {
+                // merge Snow/NoSnow products...
+                MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
+                mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
+                mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
+                mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
+                brdfMergedProduct = mergeBrdfOp.getTargetProduct();
+            } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
+                logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
+                        year + ", DoY: " + IOUtils.getDoyString(doy));
+                // only use Snow product...
+                brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
+            } else if (brdfNoSnowProduct != null && brdfSnowProduct == null) {
+                logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
+                        year + ", DoY: " + IOUtils.getDoyString(doy));
+                // only use NoSnow product...
+                brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
+            } else {
+                logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
+                        year + ", DoY: " + IOUtils.getDoyString(doy));
+            }
         }
 
         if (brdfMergedProduct != null) {
@@ -127,6 +140,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
                 albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
                 albedoOp.setParameter("doy", doy);
+                albedoOp.setParameter("computeSeaice", computeSeaice);
                 setTargetProduct(albedoOp.getTargetProduct());
             }
 
@@ -159,7 +173,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         // we need to fill the 'Proportion_NSamples' band: 1.0 if only snow, 0.0 if only no snow
         Band propNSamplesBand = targetProduct.addBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32);
         BufferedImage bi = ConstantDescriptor.create((float) width, (float) height, new Float[]{propNSampleConstantValue},
-                null).getAsBufferedImage();
+                                                     null).getAsBufferedImage();
         propNSamplesBand.setSourceImage(bi);
 
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);

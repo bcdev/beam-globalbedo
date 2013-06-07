@@ -19,6 +19,7 @@ import java.util.Calendar;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
+@SuppressWarnings("StatementWithEmptyBody")
 public class AlbedoInversionUtils {
 
     /**
@@ -227,17 +228,14 @@ public class AlbedoInversionUtils {
         return SZArad * MathUtils.RTOD;
     }
 
-    public static Product createSeaiceDummySourceProduct() {
-        Product product = new Product("dummy", "dummy",
-                                      AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                                      AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+    public static Product createDummySourceProduct(int width, int height) {
+        Product product = new Product("dummy", "dummy", width, height);
         Band b = product.addBand("b1", ProductData.TYPE_FLOAT32);
 
-        float[] bData = new float[AlbedoInversionConstants.SEAICE_TILE_WIDTH *
-                                   AlbedoInversionConstants.SEAICE_TILE_HEIGHT];
-        for (int i = 0; i < AlbedoInversionConstants.SEAICE_TILE_WIDTH; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.SEAICE_TILE_HEIGHT; j++) {
-                bData[i*AlbedoInversionConstants.SEAICE_TILE_WIDTH + j] = 1.0f;
+        float[] bData = new float[width*height];
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                bData[i*width + j] = 1.0f;
             }
         }
         b.setDataElems(bData);

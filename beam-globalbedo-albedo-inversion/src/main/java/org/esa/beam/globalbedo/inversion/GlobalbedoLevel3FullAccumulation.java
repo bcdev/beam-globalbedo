@@ -63,6 +63,9 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "false", description = "Debug - write more target bands")
+    private boolean debug;
+
 
     private Logger logger;
 
@@ -194,14 +197,16 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                     int ii = 0;
                     int jj = 0;
                     int kk = 0;
+                    int count = 0;
                     while ((nRead = ch.read(bb)) != -1) {
                         if (nRead == 0) {
                             continue;
                         }
                         bb.position(0);
                         bb.limit(nRead);
-                        while (bb.hasRemaining()) {
+                        while (bb.hasRemaining() && ii < numBands) {
                             final float value = bb.getFloat();
+                            count++;
                             for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
                                 if (accumulate[fileIndex][doyIndex]) {
                                     // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...

@@ -4,6 +4,7 @@ package org.esa.beam.globalbedo.inversion;
 import Jama.LUDecomposition;
 import Jama.Matrix;
 import Jama.SingularValueDecomposition;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -64,7 +65,7 @@ public class InversionOp extends PixelOperator {
         }
     }
 
-    @SourceProduct(description = "Prior product")
+    @SourceProduct(description = "Prior product", optional = true)
     private Product priorProduct;
 
     @Parameter(description = "Year")
@@ -98,21 +99,34 @@ public class InversionOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         for (String parameterBandName : PARAMETER_BAND_NAMES) {
-            productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, Float.NaN);
+            Band b = productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, Float.NaN);
+            if (computeSeaice) {
+                b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            }
         }
 
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, Float.NaN);
+                Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, Float.NaN);
+                if (computeSeaice) {
+                    b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+                }
             }
         }
 
-        productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bInvEntr = productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bInvRelEntr = productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        if (computeSeaice) {
+            bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            bInvWeighNumSampl.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            bAccDaysClSampl.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            bInvGoodnessFit.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+        }
     }
 
     @Override
@@ -179,17 +193,6 @@ public class InversionOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-
-        if (x == 0 && y == 0) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-        if (x == 1165 && y == 1700) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-        if (x == 1172 && y == 1700) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);
 
@@ -219,8 +222,11 @@ public class InversionOp extends PixelOperator {
 
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
-                    final double m_ii_accum = mAcc.get(i, i);
-                    mAcc.set(i, i, m_ii_accum + prior.getM().get(i, i));
+                    double m_ii_accum = mAcc.get(i, i);
+                    if (prior.getM() != null) {
+                        m_ii_accum += prior.getM().get(i, i);
+                    }
+                    mAcc.set(i, i, m_ii_accum);
                 }
                 vAcc = vAcc.plus(prior.getV());
             }
@@ -248,9 +254,10 @@ public class InversionOp extends PixelOperator {
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
 
+                // todo: reactivate
 //                entropy = getEntropy(mAcc);
-                entropy = INVALID;  // test!!!
-                if (usePrior) {
+                entropy = INVALID;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
+                if (usePrior && prior != null && prior.getM() != null) {
                     final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
                 } else {
@@ -290,7 +297,7 @@ public class InversionOp extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, daysToTheClosestSample);
+                          maskAcc, goodnessOfFit, daysToTheClosestSample, x, y);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -307,7 +314,8 @@ public class InversionOp extends PixelOperator {
 
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample) {
+                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample,
+                                   int x, int y) {
 
         // parameters
         int index = 0;
