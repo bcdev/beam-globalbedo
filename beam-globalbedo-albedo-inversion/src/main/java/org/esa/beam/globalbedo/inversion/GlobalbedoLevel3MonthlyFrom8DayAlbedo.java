@@ -114,9 +114,6 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
                     }
                 }
                 monthlyWeighting[j][day - 1] = sum / nd;
-//                System.out.println("ii, jj, sum, ND, monthlyWeighting[ii, jj]: " +
-//                        ii + ", " + jj + ", " + sum + ", " +
-//                        ", " + nd + ", " + ", " + monthlyWeighting[ii][jj]);
             }
             j++;
         }

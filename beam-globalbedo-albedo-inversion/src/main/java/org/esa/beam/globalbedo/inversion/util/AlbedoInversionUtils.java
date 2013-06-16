@@ -232,13 +232,15 @@ public class AlbedoInversionUtils {
         Product product = new Product("dummy", "dummy", width, height);
         Band b = product.addBand("b1", ProductData.TYPE_FLOAT32);
 
-        float[] bData = new float[width*height];
+        float[] bData = new float[width * height];
         for (int i = 0; i < width; i++) {
             for (int j = 0; j < height; j++) {
-                bData[i*width + j] = 1.0f;
+                bData[i * width + j] = 1.0f;
             }
         }
         b.setDataElems(bData);
+
+        product.setPreferredTileSize(product.getSceneRasterWidth(), 45);
 
         return product;
     }

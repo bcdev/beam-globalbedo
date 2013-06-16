@@ -1,6 +1,7 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -252,9 +253,9 @@ public class IOUtils {
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                                                                                   tile,
-                                                                                   wings,
-                                                                                   computeSnow, computeSeaice);
+                tile,
+                wings,
+                computeSnow, computeSeaice);
 
         if (albedoInputProductList.size() > 0) {
             inputProduct = new AlbedoInput();
@@ -263,10 +264,10 @@ public class IOUtils {
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                                                                                                     true, doy, year, tile,
-                                                                                                     wings,
-                                                                                                     computeSnow,
-                                                                                                     computeSeaice);
+                        true, doy, year, tile,
+                        wings,
+                        computeSnow,
+                        computeSeaice);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -632,7 +633,6 @@ public class IOUtils {
         return doy;
     }
 
-
     public static Product getTileInfoProduct(String dailyAccumulatorDir, String defaultTileInfoFilename) throws IOException {
         String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
         File tileInfoFile = new File(tileInfoFilePath);
@@ -651,6 +651,28 @@ public class IOUtils {
             }
         }
         return ProductIO.readProduct(tileInfoFilePath);
+    }
+
+    public static void copyLandmask(String gaRootDir, String tile, Product targetProduct) {
+        try {
+            final Product seaiceLandmaskProduct = IOUtils.getSeaiceLandmaskProduct(gaRootDir, tile);
+            if (seaiceLandmaskProduct != null) {
+                final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
+                ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
+                        "landmask", targetProduct, true);
+            }
+        } catch (IOException e) {
+            System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
+                    e.getMessage());
+        }
+    }
+
+
+    public static Product getSeaiceLandmaskProduct(String gaRootDir, String tile) throws IOException {
+        String defaultLandmaskFilename = "GlobAlbedo.landmask." + tile + ".dim";
+        String landmaskFilePath = gaRootDir + File.separator + "landmask" + File.separator +
+                defaultLandmaskFilename;
+        return ProductIO.readProduct(landmaskFilePath);
     }
 
     public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
@@ -683,7 +705,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
                     }
                 }
             }

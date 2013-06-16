@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -9,6 +10,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
@@ -84,7 +86,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                                                    " - cannot proceed...: " + e.getMessage());
+                        " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -101,7 +103,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 try {
                     Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                                                                                 tileInfoProduct);
+                            tileInfoProduct);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                 }
@@ -126,10 +128,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
             } else {
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                                                                                                     AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                                                                     AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
@@ -170,6 +172,11 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 correctionOp.setSourceProduct("sourceProduct", inversionProduct);
                 Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
                 setTargetProduct(southPoleCorrectedProduct);
+            }
+
+            if (computeSeaice) {
+                // copy landmask into target product
+                IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
             }
 
         } else {

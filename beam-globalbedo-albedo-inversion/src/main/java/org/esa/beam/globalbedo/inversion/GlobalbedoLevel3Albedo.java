@@ -151,6 +151,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 setTargetProduct(southPoleCorrectedProduct);
             }
 
+            if (computeSeaice) {
+                // copy landmask into target product
+                IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
+            }
+
             logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
         } else {
@@ -173,7 +178,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         // we need to fill the 'Proportion_NSamples' band: 1.0 if only snow, 0.0 if only no snow
         Band propNSamplesBand = targetProduct.addBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32);
         BufferedImage bi = ConstantDescriptor.create((float) width, (float) height, new Float[]{propNSampleConstantValue},
-                                                     null).getAsBufferedImage();
+                null).getAsBufferedImage();
         propNSamplesBand.setSourceImage(bi);
 
         ProductUtils.copyGeoCoding(sourceProduct, targetProduct);

@@ -27,10 +27,10 @@ import java.util.logging.Level;
  */
 @SuppressWarnings({"MismatchedReadAndWriteOfArray", "StatementWithEmptyBody"})
 @OperatorMetadata(alias = "ga.inversion.dailyaccbinary",
-                  description = "Provides daily accumulation of single BBDR observations",
-                  authors = "Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Provides daily accumulation of single BBDR observations",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class DailyAccumulationOp extends PixelOperator {
 
     private static final int SRC_BB_NIR = 1;
@@ -97,59 +97,63 @@ public class DailyAccumulationOp extends PixelOperator {
         for (int i = 0; i < sourceProducts.length; i++) {
             Product sourceProduct = sourceProducts[i];
 
+            if (sourceProduct.getPreferredTileSize() == null) {
+                sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
+            }
+
             configurator.defineSample(sourceSampleOffset * i, AlbedoInversionConstants.BBDR_BB_VIS_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_BB_NIR, AlbedoInversionConstants.BBDR_BB_NIR_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_BB_SW, AlbedoInversionConstants.BBDR_BB_SW_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_VIS,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_NIR,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_VIS_SW,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_NIR_NIR,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_NIR_SW,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_BB_SW_SW,
-                                      AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_VIS,
-                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_NIR,
-                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KVOL_BRDF_SW,
-                                      AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_VIS,
-                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_NIR,
-                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_SW,
-                                      AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_AOD550, AlbedoInversionConstants.BBDR_AOD550_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_NDVI, AlbedoInversionConstants.BBDR_NDVI_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SIG_NDVI,
-                                      AlbedoInversionConstants.BBDR_SIG_NDVI_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SIG_NDVI_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_VZA, AlbedoInversionConstants.BBDR_VZA_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SZA, AlbedoInversionConstants.BBDR_SZA_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_RAA, AlbedoInversionConstants.BBDR_RAA_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_DEM, AlbedoInversionConstants.BBDR_DEM_NAME,
-                                      sourceProduct);
+                    sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_SNOW_MASK,
-                                      AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, sourceProduct);
+                    AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, sourceProduct);
 
             // get land mask (sensor dependent)
             AlbedoInversionUtils.setLandMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_LAND_MASK,
-                                                         sourceProduct, computeSeaice);
+                    sourceProduct, computeSeaice);
             if (computeSeaice) {
                 AlbedoInversionUtils.setSeaiceMaskSourceSample(configurator, (sourceSampleOffset * i) + SRC_SEAICE_MASK,
-                                                               sourceProduct);
+                        sourceProduct);
             }
         }
     }
@@ -197,7 +201,7 @@ public class DailyAccumulationOp extends PixelOperator {
                                 WritableSample[] targetSamples) {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
         Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
@@ -223,8 +227,8 @@ public class DailyAccumulationOp extends PixelOperator {
         if (numPixelsProcessed == sourceProducts[0].getSceneRasterWidth() *
                 sourceProducts[0].getSceneRasterHeight()) {
             BeamLogManager.getSystemLogger().log(Level.INFO,
-                                                 "all pixels processed (" + numPixelsProcessed +
-                                                         ") - writing accumulator result array...");
+                    "all pixels processed (" + numPixelsProcessed +
+                            ") - writing accumulator result array...");
             IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
             BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator result array written.");
         }
@@ -254,7 +258,7 @@ public class DailyAccumulationOp extends PixelOperator {
         Matrix C = new Matrix(
                 AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                  AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         int count = 0;
         int cCount = 0;
@@ -299,7 +303,7 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private Accumulator getZeroAccumulator() {
         final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                        3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
         final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         final Matrix zeroE = new Matrix(1, 1);
 
@@ -354,7 +358,7 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private Matrix getKernels(Sample[] sourceSamples, int sourceProductIndex) {
         Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                    3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
