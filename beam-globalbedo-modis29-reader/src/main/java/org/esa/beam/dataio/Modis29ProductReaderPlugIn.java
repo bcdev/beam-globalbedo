@@ -95,7 +95,8 @@ public class Modis29ProductReaderPlugIn implements ProductReaderPlugIn {
 
     private boolean isInputTarFileNameValid(String fileName) {
 //        MOD29.2002076.0140.zip
-        return (fileName.matches("MOD29.[0-9]{7}.[0-9]{4}.(?i)(tar)"));
+        return (fileName.matches("MOD29.[0-9]{7}.[0-9]{4}.(?i)(tar)") ||
+                fileName.matches("MOD29.A[0-9]{7}.[0-9]{4}.(?i)(tar)"));
     }
 
 
