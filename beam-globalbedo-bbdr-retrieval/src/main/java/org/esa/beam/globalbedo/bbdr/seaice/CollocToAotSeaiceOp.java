@@ -45,10 +45,10 @@ import java.util.logging.Logger;
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.l2.colloc.aot",
-        description = "Applies IDEPIX to a MERIS/AATSR collocation/coregistration product and then computes AOT.",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2013 by Brockmann Consult")
+                  description = "Applies IDEPIX to a MERIS/AATSR collocation/coregistration product and then computes AOT.",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2013 by Brockmann Consult")
 public class CollocToAotSeaiceOp extends Operator {
 
     @SourceProduct
@@ -60,6 +60,9 @@ public class CollocToAotSeaiceOp extends Operator {
     @Parameter(defaultValue = "false")
     private boolean sdrOnly;
 
+    @Parameter(defaultValue = "false")
+    private boolean idepixOnly;
+
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
@@ -68,35 +71,38 @@ public class CollocToAotSeaiceOp extends Operator {
         Product aotSourceProduct;
 
         Product extendedCollocationProduct = getCollocationProductWithIdepix();
-
-        aotSourceProduct = getCollocationMasterSubset(extendedCollocationProduct);
-
-        GaMasterOp gaMasterOp = new GaMasterOp();
-        gaMasterOp.setParameter("copyToaRadBands", false);
-        gaMasterOp.setParameter("copyToaReflBands", true);
-        gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
-        gaMasterOp.setParameter("isBbdrSeaice", true);
-        gaMasterOp.setSourceProduct(aotSourceProduct);
-        aotProduct = gaMasterOp.getTargetProduct();
-
-        if (aotProduct.equals(GaMasterOp.EMPTY_PRODUCT)) {
-            logger.log(Level.ALL, "No AOT product generated for source product: " + extendedCollocationProduct.getName() +
-                    " --> cannot create BBDR product.");
+        if (idepixOnly) {
+            setTargetProduct(extendedCollocationProduct);
         } else {
-            if (extendedCollocationProduct != null && !(sensor == Sensor.AATSR)) {
-                ProductUtils.copyBand("reflec_nadir_1600", extendedCollocationProduct, aotProduct, true);
-                ProductUtils.copyBand("reflec_fward_1600", extendedCollocationProduct, aotProduct, true);
+            aotSourceProduct = getCollocationMasterSubset(extendedCollocationProduct);
+
+            GaMasterOp gaMasterOp = new GaMasterOp();
+            gaMasterOp.setParameter("copyToaRadBands", false);
+            gaMasterOp.setParameter("copyToaReflBands", true);
+            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
+            gaMasterOp.setParameter("isBbdrSeaice", true);
+            gaMasterOp.setSourceProduct(aotSourceProduct);
+            aotProduct = gaMasterOp.getTargetProduct();
+
+            if (aotProduct.equals(GaMasterOp.EMPTY_PRODUCT)) {
+                logger.log(Level.ALL, "No AOT product generated for source product: " + extendedCollocationProduct.getName() +
+                        " --> cannot create BBDR product.");
+            } else {
+                if (extendedCollocationProduct != null && !(sensor == Sensor.AATSR)) {
+                    ProductUtils.copyBand("reflec_nadir_1600", extendedCollocationProduct, aotProduct, true);
+                    ProductUtils.copyBand("reflec_fward_1600", extendedCollocationProduct, aotProduct, true);
+                }
+                setTargetProduct(aotProduct);
             }
-            setTargetProduct(aotProduct);
+            getTargetProduct().setProductType(sourceProduct.getProductType() + "_AOT");
         }
-        getTargetProduct().setProductType(sourceProduct.getProductType() + "_AOT");
     }
 
     private Product getCollocationMasterSubset(Product collocationProduct) {
         Product masterSubsetProduct = new Product(collocationProduct.getName(),
-                collocationProduct.getProductType(),
-                collocationProduct.getSceneRasterWidth(),
-                collocationProduct.getSceneRasterHeight());
+                                                  collocationProduct.getProductType(),
+                                                  collocationProduct.getSceneRasterWidth(),
+                                                  collocationProduct.getSceneRasterHeight());
         ProductUtils.copyMetadata(collocationProduct, masterSubsetProduct);
         ProductUtils.copyTiePointGrids(collocationProduct, masterSubsetProduct);
         ProductUtils.copyGeoCoding(collocationProduct, masterSubsetProduct);
@@ -114,7 +120,7 @@ public class CollocToAotSeaiceOp extends Operator {
                     !masterSubsetProduct.containsTiePointGrid(bandName)) {
                 ProductUtils.copyBand(bandName, collocationProduct, masterSubsetProduct, true);
                 ProductUtils.copyRasterDataNodeProperties(collocationProduct.getBand(bandName),
-                        masterSubsetProduct.getBand(bandName));
+                                                          masterSubsetProduct.getBand(bandName));
             }
         }
 
@@ -157,9 +163,9 @@ public class CollocToAotSeaiceOp extends Operator {
 
     static Product getCollocationMerisMasterProduct(Product collocProduct) {
         Product merisMasterProduct = new Product(collocProduct.getName(),
-                collocProduct.getProductType(),
-                collocProduct.getSceneRasterWidth(),
-                collocProduct.getSceneRasterHeight());
+                                                 collocProduct.getProductType(),
+                                                 collocProduct.getSceneRasterWidth(),
+                                                 collocProduct.getSceneRasterHeight());
 
         ProductUtils.copyMetadata(collocProduct, merisMasterProduct);
         ProductUtils.copyGeoCoding(collocProduct, merisMasterProduct);

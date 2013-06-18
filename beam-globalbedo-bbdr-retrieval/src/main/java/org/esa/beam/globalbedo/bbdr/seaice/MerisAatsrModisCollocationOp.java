@@ -95,7 +95,7 @@ public class MerisAatsrModisCollocationOp extends Operator {
         for (Product slaveSourceProduct : slaveSourceProducts) {
             final Geometry masterGeometry = TileExtractor.computeProductGeometry(masterSourceProduct);
             final Geometry slaveGeometry = TileExtractor.computeProductGeometry(slaveSourceProduct);
-            if (slaveGeometry != null && masterGeometry.intersects(slaveGeometry)) {
+            if (masterGeometry != null && slaveGeometry != null && masterGeometry.intersects(slaveGeometry)) {
                 slaveCollocProductsList.add(slaveSourceProduct);
             }
         }
