@@ -45,7 +45,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     @Parameter(defaultValue = "", description = "Prior root directory")
     String priorRootDir;
 
-    @Parameter(valueSet = {"1", "2"}, description = "Stage of priors to mosaic", defaultValue = "1")
+    @Parameter(valueSet = {"1", "2", "3"}, description = "Stage of priors to mosaic", defaultValue = "1")
     int priorStage;
 
     @Parameter(defaultValue = "false", description = "Compute snow priors")

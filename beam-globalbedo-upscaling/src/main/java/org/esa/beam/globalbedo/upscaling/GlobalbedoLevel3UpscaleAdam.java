@@ -174,7 +174,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
     }
 
     private File findRefTile() {
-        FilenameFilter adamFilter;
+        FilenameFilter adamFilter = null;
         File[] adamFiles;
         if (isPriors) {
             if (priorStage == 1) {
@@ -186,12 +186,21 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
                         return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
                     }
                 };
-            } else {
+            } else if (priorStage == 2) {
                 // e.g. <adamRootDir>/<tile>/stage2prior/background/processed/Kernels.001.005.h18v04.backGround.SnowAndNoSnow.hdr
                 adamFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
                         String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
                         String expectedFilenameSuffix = "backGround.SnowAndNoSnow.hdr";
+                        return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
+                    }
+                };
+            } else if (priorStage == 3) {
+                // e.g. <adamRootDir>/<tile>/background/processed/Kernels.001.005.h18v04.background.SnowAndNoSnow.nc
+                adamFilter = new FilenameFilter() {
+                    public boolean accept(File dir, String name) {
+                        String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
+                        String expectedFilenameSuffix = "background.SnowAndNoSnow.nc";
                         return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
                     }
                 };

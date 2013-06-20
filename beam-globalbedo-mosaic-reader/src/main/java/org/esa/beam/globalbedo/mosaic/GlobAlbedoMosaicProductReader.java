@@ -151,10 +151,10 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         if (mosaicModisPriors) {
             tileDirs = getModisPriorTileDirectories(rootDir.getAbsolutePath());
         } else if (mosaicAdamPriors) {
-            if (adamPriorStage == 1) {
-                tileDirs = getAdamPriorTileDirectories(rootDir.getAbsolutePath(), adamPriorStage);
-            } else {
+            if (adamPriorStage == 2) {
                 tileDirs = getAdamPriorTileDirectories(rootDir.getParentFile().getAbsolutePath(), adamPriorStage);
+            } else {
+                tileDirs = getAdamPriorTileDirectories(rootDir.getAbsolutePath(), adamPriorStage);
             }
         }
 
@@ -211,6 +211,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     public static File[] getAdamPriorTileDirectories(String rootDirString, int stage) {
         // e.g. stage 1: <adamRootDir>/<tile>/stage1prior/processed
         // e.g. stage 2: <adamRootDir>/<tile>/stage2prior/background/processed
+        // e.g. stage 3: <cems adamRootDir>/<tile>/background/processed
         final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         FileFilter tileFilter = new FileFilter() {
             @Override
@@ -223,11 +224,14 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         File[] priorRootDirs = rootDir.listFiles(tileFilter);
         File[] priorDirs = new File[priorRootDirs.length];
         int index = 0;
-        String priorDirNameSuffix;
+        String priorDirNameSuffix = null;
         if (stage == 1) {
             priorDirNameSuffix = "stage1prior" + File.separator + "processed";
-        } else {
+        } else if (stage == 2) {
             priorDirNameSuffix = "stage2prior" + File.separator + "background" + File.separator + "processed";
+        } else if (stage == 3) {
+            // cems priors
+            priorDirNameSuffix = "background" + File.separator + "processed";
         }
         for (File priorDir : priorRootDirs) {
             final String priorDirName = priorDir + File.separator + priorDirNameSuffix;
