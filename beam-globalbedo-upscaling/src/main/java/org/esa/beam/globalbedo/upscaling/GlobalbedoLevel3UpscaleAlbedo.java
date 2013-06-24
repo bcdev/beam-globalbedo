@@ -19,10 +19,7 @@ package org.esa.beam.globalbedo.upscaling;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -35,6 +32,7 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.awt.*;
 import java.awt.geom.AffineTransform;
@@ -63,6 +61,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     private static final String WGS84_CODE = "EPSG:4326";
     private static final int TILE_SIZE = 1200;
 
+    private static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
+    private static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
+
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String gaRootDir;
 
@@ -75,7 +76,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
     private int monthIndex;
 
-    @Parameter(valueSet = {"5", "60"}, description = "Scaling (5 = 5km, 60 = 60km resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "false", description = "True if monthly albedo to upscale")
@@ -90,8 +91,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     private Product reprojectedProduct;
 
-    private File refTile;
-
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] bhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] dhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -101,7 +100,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        refTile = findRefTile();
+        File refTile = findRefTile();
 
         if (refTile == null || !refTile.exists()) {
             throw new OperatorException("No albedo files for mosaicing found.");
@@ -126,8 +125,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             reprojectedProduct = mosaicProduct;
         }
 
-        int width = reprojectedProduct.getSceneRasterWidth() / scaling;
-        int height = reprojectedProduct.getSceneRasterHeight() / scaling;
+        final int width  = 43200 / scaling;
+        final int height = 21600 / scaling;
+
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
@@ -152,7 +152,19 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
             Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
             ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
         } else {
-            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
+            final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
+            try {
+                final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
+                final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
+                CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
+                                                  UPPER_LEFT_TILE_UPPER_LEFT_X,
+                                                  UPPER_LEFT_TILE_UPPER_LEFT_Y,
+                                                  pixelSizeX,
+                                                  pixelSizeY);
+                upscaledProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for SIN mosaic: ", e);
+            }
         }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
@@ -210,21 +222,21 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         if (hasValidPixel(getSourceTile(relEntropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
-            for (int i = 0; i < dhrBandNames.length; i++) {
-                computeNearest(srcTiles.get(dhrBandNames[i]), targetTiles.get(dhrBandNames[i]),
-                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            for (String dhrBandName : dhrBandNames) {
+                computeNearest(srcTiles.get(dhrBandName), targetTiles.get(dhrBandName),
+                               srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
-            for (int i = 0; i < bhrBandNames.length; i++) {
-                computeNearest(srcTiles.get(bhrBandNames[i]), targetTiles.get(bhrBandNames[i]),
-                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            for (String bhrBandName : bhrBandNames) {
+                computeNearest(srcTiles.get(bhrBandName), targetTiles.get(bhrBandName),
+                               srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
-            for (int i = 0; i < dhrSigmaBandNames.length; i++) {
-                computeNearest(srcTiles.get(dhrSigmaBandNames[i]), targetTiles.get(dhrSigmaBandNames[i]),
-                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            for (String dhrSigmaBandName : dhrSigmaBandNames) {
+                computeNearest(srcTiles.get(dhrSigmaBandName), targetTiles.get(dhrSigmaBandName),
+                               srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
-            for (int i = 0; i < bhrSigmaBandNames.length; i++) {
-                computeNearest(srcTiles.get(bhrSigmaBandNames[i]), targetTiles.get(bhrSigmaBandNames[i]),
-                        srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            for (String bhrSigmaBandName : bhrSigmaBandNames) {
+                computeNearest(srcTiles.get(bhrSigmaBandName), targetTiles.get(bhrSigmaBandName),
+                               srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
 
             computeMajority(srcTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
@@ -335,16 +347,20 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
                     final int xCorr = x - targetRectangle.x;
                     final int yCorr = y - targetRectangle.y;
                     if (geoPos.getLon() < 0.0) {
-                        if (correctedSampleWest[xCorr][yCorr] != 0.0) {
-                            target.setSample(x, y, correctedSampleWest[xCorr][yCorr]);
-                        } else {
-                            target.setSample(x, y, sample);
+                        if (correctedSampleWest != null) {
+                            if (correctedSampleWest[xCorr][yCorr] != 0.0) {
+                                target.setSample(x, y, correctedSampleWest[xCorr][yCorr]);
+                            } else {
+                                target.setSample(x, y, sample);
+                            }
                         }
                     } else {
-                        if (correctedSampleEast[xCorr][yCorr] != 0.0) {
-                            target.setSample(x, y, correctedSampleEast[xCorr][yCorr]);
-                        } else {
-                            target.setSample(x, y, sample);
+                        if (correctedSampleEast != null) {
+                            if (correctedSampleEast[xCorr][yCorr] != 0.0) {
+                                target.setSample(x, y, correctedSampleEast[xCorr][yCorr]);
+                            } else {
+                                target.setSample(x, y, sample);
+                            }
                         }
                     }
                 }
@@ -358,7 +374,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
             // go east direction
             int xIndex = sourceRectangle.x;
-            float corrValue = 0.0f;
+            float corrValue;
             float value = src.getSampleFloat(xIndex, y);
             while ((value == 0.0 || Float.isNaN(value))
                     && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
@@ -391,7 +407,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
         for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
             // go west direction
             int xIndex = sourceRectangle.x + sourceRectangle.width - 1;
-            float corrValue = 0.0f;
+            float corrValue;
             float value = src.getSampleFloat(xIndex, y);
             while ((value == 0.0 || Float.isNaN(value))
                     && xIndex > sourceRectangle.x) {

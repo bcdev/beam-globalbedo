@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-mosaic-reader</symbolicName>
-    <version>1.0-MSSL-FPS</version>
+    <version>0.1</version>
     <name>GlobAlbedo Mosaic Reader</name>
 
     <description> </description>
@@ -34,7 +34,7 @@
             <helpId>importGlobAlbedoMosaicProduct</helpId>
             <formatName>GLOBALBEDO-L3-MOSAIC</formatName>
             <useAllFileFilter>false</useAllFileFilter>
-            <text>Import GlobAlbedo Mosaic Product...</text>
+            <text>GlobAlbedo Mosaic</text>
             <mnemonic/>
             <shortDescr>Import a GlobAlbedo Mosaic data product or product subset.
             </shortDescr>
