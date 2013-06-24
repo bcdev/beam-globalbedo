@@ -1,5 +1,6 @@
 package org.esa.beam.dataio.msg;
 
+import org.esa.beam.dataio.mfg.MfgMSAProductReaderPlugIn;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.junit.Before;
 import org.junit.Test;

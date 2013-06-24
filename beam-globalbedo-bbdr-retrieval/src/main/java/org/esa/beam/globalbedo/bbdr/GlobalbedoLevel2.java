@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -50,17 +50,19 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "")
     private String tile;
 
+    private Logger logger;
+
     @Override
     public void initialize() throws OperatorException {
-        Logger logger = BeamLogManager.getSystemLogger();
+        logger = BeamLogManager.getSystemLogger();
 
         if (sourceProduct.getPreferredTileSize() == null) {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
         }
 
-        Product targetProduct;
-        Product aotProduct;
+        Product targetProduct = null;
+        Product aotProduct = null;
         if (computeAotToBbdrProductOnly) {
             aotProduct = sourceProduct;
         } else {
@@ -80,7 +82,6 @@ public class GlobalbedoLevel2 extends Operator {
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
-            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
         }
@@ -101,7 +102,6 @@ public class GlobalbedoLevel2 extends Operator {
                 } else {
                     setTargetProduct(bbdrProduct);
                 }
-                getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
             }
         }
     }

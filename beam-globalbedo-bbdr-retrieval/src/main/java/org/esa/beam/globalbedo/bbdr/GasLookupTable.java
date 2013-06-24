@@ -10,7 +10,7 @@ import java.io.IOException;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class GasLookupTable {
+class GasLookupTable {
 
     private float gas2val = 1.5f; // keep variable name from breadboard
     private final Sensor sensor;
@@ -23,14 +23,16 @@ public class GasLookupTable {
     private float[] gasArray;
     private float[] ozoArray;
 
-    public GasLookupTable(Sensor sensor) {
+    GasLookupTable(Sensor sensor) {
         this.sensor = sensor;
     }
 
-    public void load(Product sourceProduct) throws IOException {
+    void load(Product sourceProduct) throws IOException {
         if (sourceProduct != null && sensor == Sensor.VGT) {
             float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
             setGasVal(ozoMeanValue);
+            // todo: check small deviation from breadboard mean value calculation (0.24251308 vs. 0.242677)
+//            setGasVal(0.242677f); // test!!
         } else {
             setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
         }
@@ -67,6 +69,7 @@ public class GasLookupTable {
     }
 
     private void loadCwvOzoLookupTableArray(Sensor sensor) throws IOException {
+        // todo: test this method!
         ImageInputStream iis = Luts.getCwvLutData(sensor.getInstrument());
         try {
             int nAng = iis.readInt();
@@ -121,6 +124,7 @@ public class GasLookupTable {
     }
 
     private void loadCwvOzoKxLookupTableArray(Sensor sensor) throws IOException {
+        // todo: test this method!!
         ImageInputStream iis = Luts.getCwvKxLutData(sensor.getInstrument());
         try {
             // read LUT dimensions and values
@@ -187,7 +191,7 @@ public class GasLookupTable {
         }
     }
 
-    public float[] getTg(float amf, float gas) {
+    float[] getTg(float amf, float gas) {
         int ind_amf = BbdrUtils.getIndexBefore(amf, amfArray);
         float amf_p = (amf - amfArray[ind_amf]) / (amfArray[ind_amf + 1] - amfArray[ind_amf]);
 
@@ -209,7 +213,7 @@ public class GasLookupTable {
 //        lookupTable.getValue(amf, gas);
 //    }
 
-    public float[][][] getKxTg(float amf, float gas) {
+    float[][][] getKxTg(float amf, float gas) {
         int ind_amf = BbdrUtils.getIndexBefore(amf, amfArray);
         float amf_p = (amf - amfArray[ind_amf]) / (amfArray[ind_amf + 1] - amfArray[ind_amf]);
 

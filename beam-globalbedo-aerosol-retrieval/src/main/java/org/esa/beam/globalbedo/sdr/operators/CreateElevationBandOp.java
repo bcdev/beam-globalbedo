@@ -15,7 +15,12 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.dataop.dem.ElevationModel;
 import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
 import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
@@ -29,7 +34,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 
 /**
  * Operator that creates the one and only elevation band
@@ -59,6 +64,19 @@ public class CreateElevationBandOp extends Operator {
     public CreateElevationBandOp() {
     }
 
+    /**
+     * Initializes this operator and sets the one and only target product.
+     * <p>The target product can be either defined by a field of type {@link org.esa.beam.framework.datamodel.Product} annotated with the
+     * {@link org.esa.beam.framework.gpf.annotations.TargetProduct TargetProduct} annotation or
+     * by calling {@link #setTargetProduct(org.esa.beam.framework.datamodel.Product)} method.</p>
+     * <p>The framework calls this method after it has created this operator.
+     * Any client code that must be performed before computation of tile data
+     * should be placed here.</p>
+     *
+     * @throws org.esa.beam.framework.gpf.OperatorException
+     *          If an error occurs during operator initialisation.
+     * @see #getTargetProduct()
+     */
     @Override
     public void initialize() throws OperatorException {
         final int rasterWidth = sourceProduct.getSceneRasterWidth();
@@ -83,6 +101,7 @@ public class CreateElevationBandOp extends Operator {
         noDataValue = dem.getDescriptor().getNoDataValue();
         String elevName = "elevation";
         Band elevBand = targetProduct.addBand(elevName, ProductData.TYPE_INT16);
+        elevBand.setSynthetic(true);
         elevBand.setNoDataValue(noDataValue);
         elevBand.setNoDataValueUsed(true);
         elevBand.setUnit("meters");

@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -29,7 +29,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
-import org.esa.beam.landcover.LcUclCloudBuffer;
 
 import javax.media.jai.OpImage;
 import javax.media.jai.TileCache;
@@ -39,6 +38,7 @@ import java.io.File;
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
 
+    private static final String[] BRR_BANDS = new String[]{"brr_1", "brr_2"};
     @SourceProduct
     private Product sourceProduct;
 
@@ -53,12 +53,6 @@ public class LandcoverLevel2 extends Operator {
 
     @Parameter(defaultValue = "true")
     private boolean useFileTileCache;
-
-    // for testing purpose
-    @Parameter(defaultValue = "true")
-    private boolean doUclCloudDetection;
-    @Parameter(defaultValue = "true")
-    private boolean doSchillerCloudDetection;
 
     @Override
     public void initialize() throws OperatorException {
@@ -78,6 +72,11 @@ public class LandcoverLevel2 extends Operator {
         Product bbdrProduct;
         if (step2) {
             bbdrProduct = processBbdr(aotProduct);
+            if (sensor == Sensor.MERIS) {
+                for (String rayleighBandName : BRR_BANDS) {
+                    bbdrProduct.addBand(aotProduct.getBand(rayleighBandName));
+                }
+            }
         } else {
             bbdrProduct = aotProduct;
         }
@@ -90,6 +89,8 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
+        gaMasterOp.setParameter("gaOutputRayleigh", BRR_BANDS);
+        gaMasterOp.setParameter("pressureOutputP1Lise", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
@@ -100,17 +101,8 @@ public class LandcoverLevel2 extends Operator {
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
-        bbdrOp.setParameter("doUclCloudDetection", doUclCloudDetection);
-        bbdrOp.setParameter("doSchillerCloudDetection", doSchillerCloudDetection);
         bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
-        Product bbdr = bbdrOp.getTargetProduct();
-        if (doUclCloudDetection) {
-            LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
-            lcUclCloudBuffer.setSourceProduct(bbdr);
-            return lcUclCloudBuffer.getTargetProduct();
-        } else {
-            return bbdr;
-        }
+        return bbdrOp.getTargetProduct();
     }
 
     private void attachFileTileCache(Product product) {

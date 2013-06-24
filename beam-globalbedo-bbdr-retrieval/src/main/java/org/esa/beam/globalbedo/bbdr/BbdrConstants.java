@@ -18,12 +18,24 @@ public class BbdrConstants {
         1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
 
+    // taken from LUT 'MERIS_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
+    public final static float[] MERIS_SOLAR_IRRADIANCES = {
+        1714.49f,1879.69f, 1929.27f, 1928.54f, 1803.06f,
+        1650.77f, 1531.52f, 1472.16f, 1407.89f, 1266.08f,
+        1254.74f, 1177.28f, 958.059f, 930.005f, 895.347f
+    };
+
     public final static float[] AATSR_WAVELENGHTS = {
-         550.0f, 670.0f, 870.0f, 1600.0f
+         550.0f, 665.0f, 865.0f, 1610.0f
     };
 
     public final static float[] AATSR_CALIBRATION_COEFFS = {
         1.0253f, 1.0093f, 1.0265f, 1.0f
+    };
+
+    // taken from LUT 'AATSR_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
+    public final static float[] AATSR_SOLAR_IRRADIANCES = {
+         1819.54f, 1521.89f, 950.683f, 254.484f
     };
 
     public final static float[] VGT_WAVELENGHTS = {
@@ -34,6 +46,10 @@ public class BbdrConstants {
         1.012f, 0.953f, 0.971f, 1.0f
     };
 
+    // taken from LUT 'VGT_LUT_MOMO_ABSORB_SDR_noG_v2.bin' (make sure these values are up to date)
+    public final static float[] VGT_SOLAR_IRRADIANCES = {
+         1938.27f, 1582.68f, 1036.09f, 224.581f
+    };
 
     // MERIS has ozone, but no water vapour image
     // AATSR has neither ozone nor water vapour image
@@ -57,18 +73,17 @@ public class BbdrConstants {
             "reflectance_11", "reflectance_12", "reflectance_13", "reflectance_14", "reflectance_15"
     };
 
-    public final static String[] MERIS_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
-            "latitude", "longitude", "dem_alt", "dem_rough", "lat_corr", "lon_corr",
-            "sun_zenith", "sun_azimuth", "view_zenith", "view_azimuth", "zonal_wind", "merid_wind",
-            "atm_press", "ozone", "rel_hum"
-    };
-
-//    public final static String[] AATSR_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
-//            "latitude", "longitude", "altitude",
-//            "lat_corr_nadir", "lon_corr_nadir", "sun_elev_nadir", "view_elev_nadir", "sun_azimuth_nadir", "view_azimuth_nadir",
-//            "lat_corr_fward", "lon_corr_fward", "sun_elev_fward", "view_elev_fward", "sun_azimuth_fward", "view_azimuth_fward"
-//    };
-
+    public final static String AATSR_VZA_NADIR_TP_NAME = "view_elev_nadir";
+    public final static String AATSR_VAA_NADIR_TP_NAME = "view_azimuth_nadir";
+    public final static String AATSR_SZA_NADIR_TP_NAME = "sun_elev_nadir";
+    public final static String AATSR_SAA_NADIR_TP_NAME = "sun_azimuth_nadir";
+    public final static String AATSR_VZA_FWARD_TP_NAME = "view_elev_nadir";
+    public final static String AATSR_VAA_FWARD_TP_NAME = "view_azimuth_nadir";
+    public final static String AATSR_SZA_FWARD_TP_NAME = "sun_elev_nadir";
+    public final static String AATSR_SAA_FWARD_TP_NAME = "sun_azimuth_nadir";
+    public final static String AATSR_DEM_TP_NAME = "altitude";
+    public final static String AATSR_AOT_BAND_NAME = "aot";
+    public final static String AATSR_AOTERR_BAND_NAME = "aot_err";
 
     public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
                     "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
@@ -76,17 +91,19 @@ public class BbdrConstants {
     public final static String[] AATSR_TOA_BAND_NAMES_FWARD = new String[]{
                     "reflec_fward_0550", "reflec_fward_0670", "reflec_fward_0870", "reflec_fward_1600"};
 
+    public final static String VGT_VZA_BAND_NAME = "VZA";
+    public final static String VGT_VAA_BAND_NAME = "VAA";
+    public final static String VGT_SZA_BAND_NAME = "SZA";
+    public final static String VGT_SAA_BAND_NAME = "SAA";
+    public final static String VGT_DEM_BAND_NAME = "elevation";
     public final static String VGT_OZO_BAND_NAME = "OG";
+    public final static String VGT_AOT_BAND_NAME = "aot";
+    public final static String VGT_AOTERR_BAND_NAME = "aot_err";
 
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
                     "B0", "B2", "B3", "MIR"};
 
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
-
-    public static final int SEAICE_PST_QUADRANT_PRODUCT_WIDTH = 2250;
-    public static final int SEAICE_PST_QUADRANT_PRODUCT_HEIGHT = 2250;
-    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
-    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
 }
 

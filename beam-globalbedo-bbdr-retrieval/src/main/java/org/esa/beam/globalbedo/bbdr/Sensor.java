@@ -21,10 +21,9 @@ import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
 /**
  * Encapsulates the differences between the 3 sensors and the 2 different views for AATSR
  */
-public enum Sensor {
+enum Sensor {
 
     MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
-    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
     AATSR_NADIR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
     AATSR_FWARD("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4),
     VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1);
@@ -62,7 +61,7 @@ public enum Sensor {
         return instrument;
     }
 
-    public int getNumBands() {
+    int getNumBands() {
         return numBands;
     }
 
@@ -73,11 +72,11 @@ public enum Sensor {
         return radiometricError;
     }
 
-    public int getIndexRed() {
+    int getIndexRed() {
         return indexRed;
     }
 
-    public int getIndexNIR() {
+    int getIndexNIR() {
         return indexNIR;
     }
 

@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-bbdr-retrieval</symbolicName>
-    <version>0.1</version>
+    <version>1.0-MSSL-FPS</version>
     <name>Globalbedo BBDR Retrieval</name>
     <description>
         Calculates SDR and BBDR from MERIs, AATSR and SPOT-VGT L1 data.
@@ -29,27 +29,4 @@
 	<dependency>
         <module>beam-envisat-reader</module>
     </dependency>
-
-    <extension point="beam-ui:actions">
-        <action>
-            <id>cccloud</id>
-            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
-            <operatorName>lc.l2</operatorName>
-            <dialogTitle>lcl2</dialogTitle>
-            <targetProductNameSuffix>_sdr</targetProductNameSuffix>
-            <text>LC-CCI SDR...</text>
-            <shortDescr>Lc</shortDescr>
-            <parent>tool</parent>
-        </action>
-        <action>
-            <id>foobar</id>
-            <helpId>clusterAnalysisEM</helpId>
-            <class>org.esa.beam.visat.actions.DefaultOperatorAction</class>
-            <text>PixelGeocodingAnalyzer...</text>
-            <operatorName>PixelGeocodingAnalyzer</operatorName>
-            <dialogTitle>PixelGeocodingAnalyzer</dialogTitle>
-            <targetProductNameSuffix>_pixgeo</targetProductNameSuffix>
-        </action>
-    </extension>
-
 </module>

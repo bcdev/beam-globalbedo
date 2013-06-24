@@ -40,16 +40,13 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
-    private boolean computeSeaice;
-
-    @Parameter(defaultValue = "false", description = "Debug - write more target bands")
-    private boolean debug;
+    private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
 
-        Logger logger = BeamLogManager.getSystemLogger();
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
+        logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
@@ -64,8 +61,6 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-            } else if (computeSeaice) {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator);
             } else {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
             }
@@ -79,8 +74,6 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
-            accumulationOp.setParameter("computeSeaice", computeSeaice);
-            accumulationOp.setParameter("debug", debug);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();
 

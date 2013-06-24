@@ -64,13 +64,6 @@ public class ImageVarianceOp extends Operator {
                 if (band.getName().startsWith("reflectance")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
-            } else if (sensor == Sensor.AATSR) {
-                if (band.getName().startsWith("reflec_nadir")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
-                if (band.getName().startsWith("reflec_fward")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
             } else if (sensor == Sensor.AATSR_NADIR) {
                 if (band.getName().startsWith("reflec_nadir")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);

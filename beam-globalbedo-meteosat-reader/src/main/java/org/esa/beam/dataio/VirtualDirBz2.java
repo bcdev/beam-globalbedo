@@ -15,7 +15,6 @@ import java.io.*;
  *
  * @author Olaf Danne
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class VirtualDirBz2 extends VirtualDir {
     private final File archiveFile;
     private File extractDir;
@@ -137,11 +136,7 @@ public class VirtualDirBz2 extends VirtualDir {
         if (extractDir == null) {
             extractDir = createTargetDirInTemp(archiveFile.getName());
             final TarInputStream tis = new TarInputStream(new BufferedInputStream(new FileInputStream(archiveFile)));
-            try {
-                writeTempFilesFromTarInputStream(tis);
-            } finally {
-                tis.close();
-            }
+            writeTempFilesFromTarInputStream(tis);
         }
     }
 
@@ -173,11 +168,7 @@ public class VirtualDirBz2 extends VirtualDir {
             // note that this will take quite a while for large datasets
             // in this case, bunzip2'ing the products externally in advance might be more appropriate...
             final TarInputStream tis = new TarInputStream(new BufferedInputStream(new CBZip2InputStream(bis)));
-            try {
-                writeTempFilesFromTarInputStream(tis);
-            } finally {
-                tis.close();
-            }
+            writeTempFilesFromTarInputStream(tis);
         }
     }
 

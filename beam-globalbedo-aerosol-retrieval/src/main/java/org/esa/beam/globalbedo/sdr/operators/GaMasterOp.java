@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -24,7 +24,6 @@ package org.esa.beam.globalbedo.sdr.operators;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -37,7 +36,8 @@ import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.RenderingHints;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -45,11 +45,11 @@ import java.util.Map;
  * Main Operator producing AOT for GlobAlbedo
  */
 @OperatorMetadata(alias = "ga.MasterOp",
-        description = "",
-        authors = "Andreas Heckel",
-        version = "1.1",
-        copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
-public class GaMasterOp extends Operator {
+                  description = "",
+                  authors = "Andreas Heckel",
+                  version = "1.1",
+                  copyright = "(C) 2010 by University Swansea (a.heckel@swansea.ac.uk)")
+public class GaMasterOp  extends Operator {
 
     public static final Product EMPTY_PRODUCT = new Product("empty", "empty", 0, 0);
 
@@ -57,38 +57,46 @@ public class GaMasterOp extends Operator {
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue="false")
     private boolean copyToaRadBands;
-    @Parameter(defaultValue = "true")
+    @Parameter(defaultValue="true")
     private boolean copyToaReflBands;
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue="false")
     private boolean noFilling;
-    @Parameter(defaultValue = "false")
+    @Parameter(defaultValue="false")
     private boolean noUpscaling;
-    @Parameter(defaultValue = "1")
+/*
+    @Parameter(defaultValue="false")
+    private boolean tc1G;
+    @Parameter(defaultValue="true")
+    private boolean retrieveAOT = true;
+    @Parameter(defaultValue="false")
+    private boolean saveSdrBands = false;
+    @Parameter(defaultValue="false")
+    private boolean saveModelBands = false;
+*/
+    @Parameter(defaultValue="1")
     private int soilSpecId;
-    @Parameter(defaultValue = "5")
+    @Parameter(defaultValue="5")
     private int vegSpecId;
-    @Parameter(defaultValue = "9")
+    @Parameter(defaultValue="9")
     private int scale;
-    @Parameter(defaultValue = "0.3")
+    @Parameter(defaultValue="0.3")
     private float ndviThr;
 
     @Parameter(defaultValue = "true",
-            label = "Perform equalization",
-            description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
+               label = "Perform equalization",
+               description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
     private boolean doEqualization;
     @Parameter(defaultValue = "true",
-            label = " Use land-water flag from L1b product instead")
+               label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
+    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
-    @Parameter(defaultValue = "false", label = " If set, we are in BBDR Seaice mode (no AOT retrieval)")
-    private boolean isBbdrSeaice = false;
-//    @Parameter(defaultValue = "GlobAlbedo")
-//    private CloudScreeningSelector idepixAlgorithm;
 
     private String instrument;
 
@@ -99,7 +107,7 @@ public class GaMasterOp extends Operator {
             return;
         }
         Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
-        Dimension aotTS = new Dimension(targetTS.width / 9, targetTS.height / 9);
+        Dimension aotTS = new Dimension(targetTS.width/9, targetTS.height/9);
         RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
         RenderingHints rhAot = new RenderingHints(GPF.KEY_TILE_SIZE, aotTS);
 
@@ -117,12 +125,15 @@ public class GaMasterOp extends Operator {
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             params.put("doEqualization", doEqualization);
             params.put("gaOutputRayleigh", gaOutputRayleigh);
+            params.put("pressureOutputP1Lise", pressureOutputP1Lise);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
-        } else if (isAatsrProduct) {
+        }
+        else if (isAatsrProduct) {
             instrument = "AATSR";
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AatsrPrepOp.class), GPF.NO_PARAMS, sourceProduct);
-        } else if (isVgtProduct) {
+        }
+        else if (isVgtProduct) {
             instrument = "VGT";
 //            if (sourceProduct.getSceneRasterWidth() > 40000) throw new OperatorException("Product too large, who would do a global grid at 0.008deg resolution???");
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
@@ -132,36 +143,29 @@ public class GaMasterOp extends Operator {
             return;
         }
 
-        // if bbdr seaice, just add 2 bands:
-        // - aot
-        // - aot_err
-        // to reflProduct, and set this as targetProduct, and return.
-        // we will set the climatological value (or zero AOT) in BBDR Op
-        if (isBbdrSeaice) {
-            reflProduct.addBand("aot", ProductData.TYPE_FLOAT32);
-            reflProduct.addBand("aot_err", ProductData.TYPE_FLOAT32);
-            setTargetProduct(reflProduct);
-            return;
-        }
-
-
         Map<String, Object> aotParams = new HashMap<String, Object>(4);
         aotParams.put("soilSpecId", soilSpecId);
         aotParams.put("vegSpecId", vegSpecId);
         aotParams.put("scale", scale);
         aotParams.put("ndviThreshold", ndviThr);
-
+        /*
+        aotParams.put("retrieveAOT", retrieveAOT);
+        aotParams.put("saveToaBands", saveToaBands);
+        aotParams.put("saveSdrBands", saveSdrBands);
+        aotParams.put("saveModelBands", saveModelBands);
+         *
+         */
         Product aotDownsclProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AerosolOp2.class), aotParams, reflProduct, rhAot);
 
         Product fillAotProduct = aotDownsclProduct;
-        if (!noFilling) {
+        if (!noFilling){
             Map<String, Product> fillSourceProds = new HashMap<String, Product>(2);
             fillSourceProds.put("aotProduct", aotDownsclProduct);
             fillAotProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GapFillingOp.class), GPF.NO_PARAMS, fillSourceProds);
         }
 
         targetProduct = fillAotProduct;
-        if (!noUpscaling) {
+        if (!noUpscaling){
             Map<String, Product> upsclProducts = new HashMap<String, Product>(2);
             upsclProducts.put("lowresProduct", fillAotProduct);
             upsclProducts.put("hiresProduct", reflProduct);
@@ -187,32 +191,42 @@ public class GaMasterOp extends Operator {
         ProductUtils.copyMetadata(aotHiresProduct, tarP);
         ProductUtils.copyTiePointGrids(reflProduct, tarP);
         ProductUtils.copyGeoCoding(reflProduct, tarP);
-        ProductUtils.copyFlagBands(reflProduct, tarP, true);
-        ProductUtils.copyFlagBands(aotHiresProduct, tarP, true);
+        ProductUtils.copyFlagBands(reflProduct, tarP);
+        ProductUtils.copyFlagBands(aotHiresProduct, tarP);
+        //copyFlagBandsWithMask(reflProduct, tarP);
+        //copyFlagBandsWithMask(aotHiresProduct, tarP);
+        Band tarBand;
         String sourceBandName;
-        if (copyToaRadBands) {
-            for (Band sourceBand : reflProduct.getBands()) {
+        if (copyToaRadBands){
+            for (Band sourceBand : reflProduct.getBands()){
                 sourceBandName = sourceBand.getName();
-                if (sourceBand.getSpectralWavelength() > 0) {
-                    ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
+                if (sourceBand.getSpectralWavelength() > 0){
+                    ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
                 }
             }
         }
-        for (Band sourceBand : reflProduct.getBands()) {
+        for (Band sourceBand : reflProduct.getBands()){
             sourceBandName = sourceBand.getName();
-
+            if (sourceBand.isFlagBand()){
+                tarBand = tarP.getBand(sourceBandName);
+                tarBand.setSourceImage(sourceBand.getSourceImage());
+            }
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
+            copyBand = copyBand || (sourceBandName.equals("p1_lise") && pressureOutputP1Lise);
 
-            if (copyBand) {
-                ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
+            if (copyBand){
+                ProductUtils.copyBand(sourceBandName, reflProduct, tarP);
             }
         }
-        for (Band sourceBand : aotHiresProduct.getBands()) {
+        for (Band sourceBand : aotHiresProduct.getBands()){
             sourceBandName = sourceBand.getName();
-            if (!sourceBand.isFlagBand() && !tarP.containsBand(sourceBandName)) {
-                ProductUtils.copyBand(sourceBandName, aotHiresProduct, tarP, true);
+            if (sourceBand.isFlagBand()){
+                tarBand = tarP.getBand(sourceBandName);
+                tarBand.setSourceImage(sourceBand.getSourceImage());
+            } else if (!tarP.containsBand(sourceBandName)) {
+                ProductUtils.copyBand(sourceBandName, aotHiresProduct, tarP);
             }
         }
         return tarP;

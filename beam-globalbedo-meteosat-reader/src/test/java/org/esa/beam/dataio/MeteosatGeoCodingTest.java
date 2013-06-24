@@ -1,5 +1,6 @@
 package org.esa.beam.dataio;
 
+import org.esa.beam.dataio.MeteosatGeoCoding;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.dataop.maptransf.Datum;
 import org.junit.Test;
@@ -8,6 +9,7 @@ import java.io.IOException;
 
 import static java.lang.Float.NaN;
 import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  * Test class for MeteosatGeoCoding

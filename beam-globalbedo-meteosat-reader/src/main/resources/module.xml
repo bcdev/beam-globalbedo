@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-meteosat-reader</symbolicName>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0-MSSL-FPS</version>
     <name>GlobAlbedo Meteosat Surface Albedo Reader</name>
 
     <description> </description>
@@ -34,7 +34,7 @@
             <helpId>importMeteosatSurfaceAlbedoProduct</helpId>
             <formatName>GLOBALBEDO-METEOSAT-SURFACE-ALBEDO</formatName>
             <useAllFileFilter>true</useAllFileFilter>
-            <text>METEOSAT Surface Albedo</text>
+            <text>Import METEOSAT Surface Albedo Product...</text>
             <mnemonic/>
             <shortDescr>Import a METEOSAT Surface Albedo product.
             </shortDescr>

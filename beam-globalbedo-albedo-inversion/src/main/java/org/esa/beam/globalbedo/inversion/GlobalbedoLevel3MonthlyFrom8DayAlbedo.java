@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.JAI;
 import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -35,9 +36,11 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     private int monthIndex;
 
 
+    private Logger logger;
+
     @Override
     public void initialize() throws OperatorException {
-        Logger logger = BeamLogManager.getSystemLogger();
+        logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Albedo 8-day input files...
@@ -93,12 +96,15 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
         }
 
         int j = 0;
-        for (final int startingDayInMonth : startingDoy) {
+        for (int ii = 0; ii < startingDoy.length; ii++) {
+            final int startingDayInMonth = startingDoy[ii];
             final int numberOfDaysInMonth = nDays[j];
-            for (final int day : daysInYear) {
+            for (int jj = 0; jj < daysInYear.length; jj++) {
+                final int day = daysInYear[jj];
                 float nd = 0.0f;
                 float sum = 0.0f;
-                for (final int doy : eightDayTimePeriod) {
+                for (int kk = 0; kk < eightDayTimePeriod.length; kk++) {
+                    final int doy = eightDayTimePeriod[kk];
                     if (doy >= startingDayInMonth - 8 && doy <= startingDayInMonth + numberOfDaysInMonth + 8) {
                         float monthlyWeight = 1.0f;
                         if (doy >= startingDayInMonth + numberOfDaysInMonth - 8) {
@@ -114,6 +120,9 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
                     }
                 }
                 monthlyWeighting[j][day - 1] = sum / nd;
+//                System.out.println("ii, jj, sum, ND, monthlyWeighting[ii, jj]: " +
+//                        ii + ", " + jj + ", " + sum + ", " +
+//                        ", " + nd + ", " + ", " + monthlyWeighting[ii][jj]);
             }
             j++;
         }

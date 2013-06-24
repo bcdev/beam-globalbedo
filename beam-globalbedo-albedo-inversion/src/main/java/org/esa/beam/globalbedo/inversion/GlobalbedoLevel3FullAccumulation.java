@@ -15,6 +15,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,7 +27,7 @@ import java.util.logging.Logger;
  * --> basically makes 'full' (8-day) binary accumulator files from all the dailies, now
  * with reading the dailies only once!! However, this requires a lot of memory.
  * It seems that not more than 1/2 year (23 DoYs) can be properly processed.
- * Also, final setup will depend on final concept to be provided by GL.
+ * Also, final setup will depend on final concept tp be provided by GL.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -35,9 +36,8 @@ import java.util.logging.Logger;
 public class GlobalbedoLevel3FullAccumulation extends Operator implements Output {
 
     private static final double HALFLIFE = 11.54;
-
-    private int rasterWidth;
-    private int rasterHeight;
+    private static final int RASTER_WIDTH = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+    private static final int RASTER_HEIGHT = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
 
     @Parameter(defaultValue = "", description = "GA root directory")
     private String gaRootDir;
@@ -60,17 +60,11 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
-    private boolean computeSeaice;
-
-    @Parameter(defaultValue = "false", description = "Debug - write more target bands")
-    private boolean debug;
-
-
     private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
+        //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
         logger = BeamLogManager.getSystemLogger();
 
         final int numDoys = (endDoy - startDoy) / 8 + 1;
@@ -79,23 +73,15 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             doys[i] = startDoy + 8 * i;
         }
 
-        if (computeSeaice) {
-            rasterWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
-            rasterHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
-        } else {
-            rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-            rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        }
 
         // STEP 1: get Daily Accumulator input files...
-        final String bbdrDir = computeSeaice ? "BBDR_PST" : "BBDR";
-        final String accumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles";
+        final String accumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles";
 
         AlbedoInput[] inputProducts = new AlbedoInput[doys.length];
         for (int i = 0; i < doys.length; i++) {
             inputProducts[i] = IOUtils.getAlbedoInputProduct(accumulatorDir, true, doys[i], year, tile,
-                                                             wings,
-                                                             computeSnow, computeSeaice);
+                    wings,
+                    computeSnow);
         }
 
         // merge input products to single object...
@@ -104,17 +90,15 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
 
         FullAccumulator[] accsToWrite = getDailyAccFromBinaryFileAndAccumulate(sourceBinaryFilenames,
-                                                                               inputProducts,
-                                                                               doys,
-                                                                               bandNames.length); // accumulates matrices and extracts mask array
+                inputProducts,
+                doys,
+                bandNames.length); // accumulates matrices and extracts mask array
 
         // write accs to files...
-        String fullAccumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles"
+        String fullAccumulatorDir = gaRootDir + File.separator + "BBDR" + File.separator + "AccumulatorFiles"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-        } else if (computeSeaice) {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
         } else {
             fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
         }
@@ -157,18 +141,19 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return filenameList.toArray(new String[filenameList.size()]);
     }
 
-    private FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
+    private static FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
                                                                             AlbedoInput[] inputProducts,
                                                                             int[] doys,
                                                                             int numBands) {
         final int numDoys = doys.length;
         final int numFiles = sourceBinaryFilenames.length;
 
-        float[][][] daysToTheClosestSample = new float[numDoys][rasterWidth][rasterHeight];
-        float[][][][] sumMatrices = new float[numDoys][numBands][rasterWidth][rasterHeight];
-        float[][][] mask = new float[numDoys][rasterWidth][rasterHeight];
+        float[][][] daysToTheClosestSample = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
+        float[][][][] sumMatrices = new float[numDoys][numBands][RASTER_WIDTH][RASTER_HEIGHT];
+        float[][][] mask = new float[numDoys][RASTER_WIDTH][RASTER_HEIGHT];
 
-        int size = numBands * rasterWidth * rasterHeight;
+        int size = numBands * RASTER_WIDTH * RASTER_HEIGHT;     // OLD
+//        int size = numBands * RASTER_WIDTH * RASTER_HEIGHT * 4;         // NEW
 
         final boolean[][] accumulate = new boolean[numFiles][numDoys];
         final int[][] dayDifference = new int[numFiles][numDoys];
@@ -179,80 +164,105 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulation: reading daily acc file = " + filename + " ...");
 
             final File dailyAccumulatorBinaryFile = new File(filename);
-            FileInputStream f;
+            FileInputStream f = null;
             try {
                 f = new FileInputStream(dailyAccumulatorBinaryFile);
-                FileChannel ch = f.getChannel();
-                ByteBuffer bb = ByteBuffer.allocateDirect(size);
-
-                for (int i = 0; i < doys.length; i++) {
-                    accumulate[fileIndex][i] = doAccumulation(filename, inputProducts[i].getProductBinaryFilenames());
-                    dayDifference[fileIndex][i] = getDayDifference(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
-                    weight[fileIndex][i] = getWeight(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
-                }
-
-                try {
-                    long t1 = System.currentTimeMillis();
-                    int nRead;
-                    int ii = 0;
-                    int jj = 0;
-                    int kk = 0;
-                    int count = 0;
-                    while ((nRead = ch.read(bb)) != -1) {
-                        if (nRead == 0) {
-                            continue;
-                        }
-                        bb.position(0);
-                        bb.limit(nRead);
-                        while (bb.hasRemaining() && ii < numBands) {
-                            final float value = bb.getFloat();
-                            count++;
-                            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
-                                if (accumulate[fileIndex][doyIndex]) {
-                                    // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...
-                                    if (ii == numBands - 1) {
-                                        mask[doyIndex][jj][kk] = value;
-                                    }
-                                    sumMatrices[doyIndex][ii][jj][kk] += weight[fileIndex][doyIndex] * value;
-                                }
-                            }
-                            // find the right indices for sumMatrices array...
-                            kk++;
-                            if (kk == rasterWidth) {
-                                jj++;
-                                kk = 0;
-                                if (jj == rasterHeight) {
-                                    ii++;
-                                    jj = 0;
-                                }
-                            }
-                        }
-                        bb.clear();
-                    }
-                    ch.close();
-                    f.close();
-
-                    long t2 = System.currentTimeMillis();
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "daily acc read in: " + (t2 - t1) + " ms");
-
-                    // now update doy of closest sample...
-                    for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
-                        if (accumulate[fileIndex][doyIndex]) {
-                            float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
-                            daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
-                                                                                             mask[doyIndex],
-                                                                                             dayDifference[fileIndex][doyIndex],
-                                                                                             fileIndex);
-                        }
-                    }
-                    fileIndex++;
-                } catch (IOException e) {
-                    BeamLogManager.getSystemLogger().log(Level.SEVERE, "Could not read daily acc " + filename + "  - skipping.");
-                }
             } catch (FileNotFoundException e) {
-                BeamLogManager.getSystemLogger().log(Level.SEVERE, "Could not find daily acc " + filename + "  - skipping.");
+                // todo
+                e.printStackTrace();
+            }
+            FileChannel ch = f.getChannel();
+            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+            FloatBuffer floatBuffer = bb.asFloatBuffer();
+
+            for (int i = 0; i < doys.length; i++) {
+                accumulate[fileIndex][i] = doAccumulation(filename, inputProducts[i].getProductBinaryFilenames());
+                dayDifference[fileIndex][i] = getDayDifference(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
+                weight[fileIndex][i] = getWeight(dailyAccumulatorBinaryFile.getName(), inputProducts[i]);
             }
 
+            try {
+                long t1 = System.currentTimeMillis();
+                // OLD
+                int nRead;
+                int ii = 0;
+                int jj = 0;
+                int kk = 0;
+                while ((nRead = ch.read(bb)) != -1) {
+                    if (nRead == 0) {
+                        continue;
+                    }
+                    bb.position(0);
+                    bb.limit(nRead);
+                    while (bb.hasRemaining()) {
+                        final float value = bb.getFloat();
+                        for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+                            if (accumulate[fileIndex][doyIndex]) {
+                                // last band is the mask. extract array mask[jj][kk] for determination of doyOfClosestSample...
+                                if (ii == numBands - 1) {
+                                    mask[doyIndex][jj][kk] = value;
+                                }
+                                sumMatrices[doyIndex][ii][jj][kk] += weight[fileIndex][doyIndex] * value;
+                            }
+                        }
+                        // find the right indices for sumMatrices array...
+                        kk++;
+                        if (kk == RASTER_WIDTH) {
+                            jj++;
+                            kk = 0;
+                            if (jj == RASTER_HEIGHT) {
+                                ii++;
+                                jj = 0;
+                            }
+                        }
+                    }
+                    bb.clear();
+                }
+                ch.close();
+                f.close();
+                // end OLD
+
+                // NEW, faster
+//                int nRead = ch.read(bb);
+//                float[][][] values = new float[numBands][RASTER_WIDTH][RASTER_HEIGHT];
+//
+//                for (int bandIndex = 0; bandIndex < numBands; bandIndex++) {
+//                    for (int jj = 0; jj < RASTER_WIDTH; jj++) {
+//                        floatBuffer.get(values[bandIndex][jj]);
+//                        for (int kk = 0; kk < RASTER_HEIGHT; kk++) {
+//                            for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+//                                if (accumulate[fileIndex][doyIndex]) {
+//                                    mask[doyIndex][jj][kk] = values[bandIndex][jj][kk];
+//                                    sumMatrices[doyIndex][bandIndex][jj][kk] += weight[fileIndex][doyIndex] * values[bandIndex][jj][kk];
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//
+//                bb.clear();
+//                floatBuffer.clear();
+//                ch.close();
+//                f.close();
+                // end NEW
+                long t2 = System.currentTimeMillis();
+                BeamLogManager.getSystemLogger().log(Level.INFO, "daily acc read in: " + (t2 - t1) + " ms");
+
+                // now update doy of closest sample...
+                for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {
+                    if (accumulate[fileIndex][doyIndex]) {
+                        float[][] dayOfClosestSampleOld = daysToTheClosestSample[doyIndex];
+                        daysToTheClosestSample[doyIndex] = updateDoYOfClosestSampleArray(dayOfClosestSampleOld,
+                                mask[doyIndex],
+                                dayDifference[fileIndex][doyIndex],
+                                fileIndex);
+                    }
+                }
+                fileIndex++;
+            } catch (IOException e) {
+                // todo
+                e.printStackTrace();
+            }
         }
 
         FullAccumulator[] accumulators = new FullAccumulator[numDoys];
@@ -260,8 +270,8 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             accumulators[i] = null;
             if (inputProducts[i] != null) {
                 accumulators[i] = new FullAccumulator(inputProducts[i].getReferenceYear(),
-                                                      inputProducts[i].getReferenceDoy(),
-                                                      sumMatrices[i], daysToTheClosestSample[i]);
+                        inputProducts[i].getReferenceDoy(),
+                        sumMatrices[i], daysToTheClosestSample[i]);
             }
         }
         return accumulators;
@@ -291,14 +301,14 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return false;
     }
 
-    private float[][] updateDoYOfClosestSampleArray(float[][] doyOfClosestSampleOld,
+    private static float[][] updateDoYOfClosestSampleArray(float[][] doyOfClosestSampleOld,
                                                            float[][] mask,
                                                            int dayDifference,
                                                            int productIndex) {
         // this is done at the end of 'Accumulator' routine in breadboard...
-        float[][] doyOfClosestSample = new float[rasterWidth][rasterHeight];
-        for (int i = 0; i < rasterWidth; i++) {
-            for (int j = 0; j < rasterHeight; j++) {
+        float[][] doyOfClosestSample = new float[RASTER_WIDTH][RASTER_HEIGHT];
+        for (int i = 0; i < RASTER_WIDTH; i++) {
+            for (int j = 0; j < RASTER_HEIGHT; j++) {
                 float doy;
                 final float bbdrDaysToDoY = (float) (Math.abs(dayDifference) + 1);
                 if (productIndex == 0) {

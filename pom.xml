@@ -7,7 +7,7 @@
     <name>Globalbedo</name>
     <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.0-MSSL-FPS-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -71,20 +71,16 @@
         <module>beam-globalbedo-albedo-inversion</module>
         <module>beam-globalbedo-mosaic-reader</module>
         <module>beam-globalbedo-meteosat-reader</module>
-		<module>beam-globalbedo-modis29-reader</module>
-		<module>beam-globalbedo-misr-reader</module>
         <module>beam-globalbedo-upscaling</module>
         <module>beam-globalbedo-gmted2010</module>
-        <module>beam-tiff-directory-reader</module>
     </modules>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13.2</ceres.version>
+        <ceres.version>0.13-SNAPSHOT</ceres.version>
         <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.11</beam.version>
-        <hadoop.version>0.20.205.0</hadoop.version>
+        <beam.version>4.10-SNAPSHOT</beam.version>
     </properties>
 
     <dependencyManagement>
@@ -135,23 +131,13 @@
 
             <dependency>
                 <groupId>org.esa.beam</groupId>
-                <artifactId>beam-geotiff</artifactId>
-                <version>1.2.2</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-collocation</artifactId>
-                <version>1.4.1</version>
-            </dependency>
-            <dependency>
-                <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5.2</version>
+                <version>1.5-SNAPSHOT</version>
             </dependency>
             <!--<dependency>-->
-            <!--<groupId>org.esa.beam</groupId>-->
-            <!--<artifactId>beam-envi-reader</artifactId>-->
-            <!--<version>1.1</version>-->
+                <!--<groupId>org.esa.beam</groupId>-->
+                <!--<artifactId>beam-envi-reader</artifactId>-->
+                <!--<version>1.1</version>-->
             <!--</dependency>-->
 
             <!-- JUnit Libraries ############################################# -->
@@ -168,9 +154,9 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1.2</version>
+                <!--<version>1.0.101</version>-->
+                <version>1.1-SNAPSHOT</version>
             </dependency>
-
         </dependencies>
     </dependencyManagement>
 
@@ -187,12 +173,5 @@
                 </configuration>
             </plugin>
         </plugins>
-        <extensions>
-            <extension>
-                <groupId>org.apache.maven.wagon</groupId>
-                <artifactId>wagon-ssh</artifactId>
-                <version>1.0-beta-7</version>
-            </extension>
-        </extensions>
     </build>
 </project>

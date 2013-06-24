@@ -41,6 +41,14 @@ public class InputPixelData {
         return diffuseFrac;
     }
 
+    public synchronized PixelGeometry getGeom() {
+        return geom;
+    }
+
+    public synchronized float[] getSpecWvl() {
+        return specWvl;
+    }
+
     public synchronized double[][] getSurfReflec() {
         return surfReflec;
     }

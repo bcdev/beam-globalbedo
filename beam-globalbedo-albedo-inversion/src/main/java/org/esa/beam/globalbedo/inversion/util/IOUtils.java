@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -90,7 +89,7 @@ public class IOUtils {
         List<String> dailyBBDRFilenames = new ArrayList<String>();
         if (bbdrFilenames != null && bbdrFilenames.length > 0 && StringUtils.isNotNullAndNotEmpty(daystring)) {
             for (String s : bbdrFilenames) {
-                if ((s.endsWith(".dim") || s.endsWith(".nc")) && s.contains(daystring)) {
+                if (s.endsWith(".dim") && s.contains(daystring)) {
                     dailyBBDRFilenames.add(s);
                 }
             }
@@ -110,7 +109,8 @@ public class IOUtils {
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith("Kernels." + doyString)) {
                 String sourceProductFileName = priorDir + File.separator + priorFileName;
-                return ProductIO.readProduct(sourceProductFileName);
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                return product;
             }
         }
 
@@ -119,58 +119,36 @@ public class IOUtils {
 
     public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
                                                      Product tileInfoProduct) throws IOException {
-        if (tileInfoProduct != null) {
+        Product geoCodingReferenceProduct = tileInfoProduct;
+        if (geoCodingReferenceProduct != null) {
             // we just need to copy the geooding, not to reproject...
-            ProductUtils.copyGeoCoding(tileInfoProduct, priorProduct);
+            ProductUtils.copyGeoCoding(geoCodingReferenceProduct, priorProduct);
         } else {
             // create geocoding manually in case we do not have a 'tileInfo'...
-            priorProduct.setGeoCoding(getModisTileGeocoding(tile));
-        }
-        return priorProduct;
-    }
-
-    public static CrsGeoCoding getModisTileGeocoding(String tile) {
-        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
-        int tileIndex = modisTileCoordinates.findTileIndex(tile);
-        if (tileIndex == -1) {
-            throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
-        }
-        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
-        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
-        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
-        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-        CrsGeoCoding geoCoding;
-        try {
-            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-        } catch (Exception e) {
-            throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
-        }
-        return geoCoding;
-    }
-
-    public static CrsGeoCoding getSeaicePstGeocoding(String pstTile) {
-        final String crsString = AlbedoInversionConstants.POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING;
-        final int imageWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
-        final int imageHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
-        final double pixelSizeX = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_X;
-        final double pixelSizeY = AlbedoInversionConstants.SEAICE_PST_PIXEL_SIZE_Y;
-        final double imageWidthMetres = imageWidth * pixelSizeX;
-        double[] eastingNorthing = getSeaicePstEastingNorthing(pstTile, imageWidthMetres);
-        final double easting = eastingNorthing[0];
-        final double northing = eastingNorthing[1];
-        CrsGeoCoding geoCoding;
-        try {
-            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-        } catch (Exception e) {
-            throw new OperatorException("Cannot attach geocoding for PST tile ''" + pstTile + " : ", e);
+            ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+            int tileIndex = modisTileCoordinates.findTileIndex(tile);
+            if (tileIndex == -1) {
+                throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
+            }
+            final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
+            final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
+            final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+            final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+            final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+            final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
+            final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
+            try {
+                final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+                CrsGeoCoding geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+                priorProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
+            }
         }
 
-        return geoCoding;
+        Product reprojectedProduct = priorProduct;
+
+        return reprojectedProduct;
     }
 
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
@@ -182,23 +160,8 @@ public class IOUtils {
         for (String brdfFileName : brdfFileList) {
             if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
-                return ProductIO.readProduct(sourceProductFileName);
-            }
-        }
-
-        return null;
-    }
-
-    public static Product getBrdfSeaiceProduct(String brdfDir, int year, int doy) throws IOException {
-        final String[] brdfFiles = (new File(brdfDir)).list();
-        final List<String> brdfFileList = getBrdfSeaiceProductNames(brdfFiles);
-
-        String doyString = getDoyString(doy);
-
-        for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
-                String sourceProductFileName = brdfDir + File.separator + brdfFileName;
-                return ProductIO.readProduct(sourceProductFileName);
+                Product product = ProductIO.readProduct(sourceProductFileName);
+                return product;
             }
         }
 
@@ -243,31 +206,72 @@ public class IOUtils {
         return snowFilteredPriorList;
     }
 
+    private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
+        List<String> brdfFileList = new ArrayList<String>();
+        for (String s : brdfFiles) {
+            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
+                brdfFileList.add(s);
+            }
+        }
+        Collections.sort(brdfFileList);
+        return brdfFileList;
+    }
+
     public static AlbedoInput getAlbedoInputProduct(String accumulatorRootDir,
                                                     boolean useBinaryFiles,
                                                     int doy, int year, String tile,
                                                     int wings,
-                                                    boolean computeSnow,
-                                                    boolean computeSeaice) {
+                                                    boolean computeSnow) {
 
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                tile,
-                wings,
-                computeSnow, computeSeaice);
+                                                                                   tile,
+                                                                                   wings,
+                                                                                   computeSnow);
 
         if (albedoInputProductList.size() > 0) {
+            String[] albedoInputProductFilenames = new String[albedoInputProductList.size()];
+
+            int[] albedoInputProductDoys = new int[albedoInputProductList.size()];
+            int[] albedoInputProductYears = new int[albedoInputProductList.size()];
+
+            int productIndex = 0;
+
+            for (String albedoInputProductName : albedoInputProductList) {
+
+                String productYearRootDir;
+                // e.g. get '2006' from 'matrices_2006_doy.dim'...
+                final String thisProductYear = albedoInputProductName.substring(9, 13);
+                final String thisProductDoy = albedoInputProductName.substring(13, 16); // changed to 'matrices_yyyydoy.dim'
+                if (computeSnow) {
+                    productYearRootDir = accumulatorRootDir.concat(
+                            File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
+                } else {
+                    productYearRootDir = accumulatorRootDir.concat(
+                            File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
+                }
+
+                String sourceProductFileName = productYearRootDir + File.separator + albedoInputProductName;
+                albedoInputProductFilenames[productIndex] = sourceProductFileName;
+                albedoInputProductDoys[productIndex] = Integer.parseInt(
+                        thisProductDoy) - (doy + 8) - 365 * (year - Integer.parseInt(thisProductYear));
+                albedoInputProductYears[productIndex] = Integer.parseInt(thisProductYear);
+                productIndex++;
+            }
+
             inputProduct = new AlbedoInput();
+            inputProduct.setProductFilenames(albedoInputProductFilenames);
+            inputProduct.setProductDoys(albedoInputProductDoys);
+            inputProduct.setProductYears(albedoInputProductYears);
             inputProduct.setReferenceYear(year);
             inputProduct.setReferenceDoy(doy);
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                        true, doy, year, tile,
-                        wings,
-                        computeSnow,
-                        computeSeaice);
+                                                                                                     true, doy, year, tile,
+                                                                                                     wings,
+                                                                                                     computeSnow);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -277,9 +281,6 @@ public class IOUtils {
                     if (computeSnow) {
                         productYearRootDir = accumulatorRootDir.concat(
                                 File.separator + thisProductYear + File.separator + tile + File.separator + "Snow");
-                    } else if (computeSeaice) {
-                        productYearRootDir = accumulatorRootDir.concat(
-                                File.separator + thisProductYear + File.separator + tile);
                     } else {
                         productYearRootDir = accumulatorRootDir.concat(
                                 File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
@@ -296,17 +297,48 @@ public class IOUtils {
         return inputProduct;
     }
 
+    /**
+     * Returns the filename for an inversion output product
+     *
+     * @param year        - year
+     * @param doy         - day of interest
+     * @param tile        - tile
+     * @param computeSnow - boolean
+     * @param usePrior    - boolean
+     * @return String
+     */
+    public static String getInversionTargetFileName(int year, int doy, String tile, boolean computeSnow,
+                                                    boolean usePrior) {
+        String targetFileName;
+
+        //  build up a name like this: GlobAlbedo.2005129.h18v04.NoSnow.bin
+        if (computeSnow) {
+            if (usePrior) {
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.bin";
+            } else {
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".Snow.NoPrior.bin";
+            }
+        } else {
+            if (usePrior) {
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.bin";
+            } else {
+                targetFileName = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + tile + ".NoSnow.NoPrior.bin";
+            }
+        }
+        return targetFileName;
+    }
+
     static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
                                                        int year, String tile,
                                                        int wings,
-                                                       boolean computeSnow, boolean computeSeaice) {
+                                                       boolean computeSnow) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only years between 1995 and 2010 (GA period), but allow 2011 wings!
+                // accept only years between 1995 and 2010 (GA period)
                 int startYear = 1995;
-                for (int i = 0; i <= 16; i++) {
+                for (int i = 0; i < 16; i++) {
                     String thisYear = (new Integer(startYear + i)).toString();
                     if (name.equals(thisYear)) {
                         return true;
@@ -337,9 +369,6 @@ public class IOUtils {
             if (computeSnow) {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + thisYear + File.separator + tile + File.separator + "Snow");
-            } else if (computeSeaice) {
-                thisYearsRootDir = accumulatorRootDir.concat(
-                        File.separator + thisYear + File.separator + tile);
             } else {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + thisYear + File.separator + tile + File.separator + "NoSnow");
@@ -388,7 +417,7 @@ public class IOUtils {
         return albedoInputProductList;
     }
 
-    static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
+    private static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
 
     static {
         waveBandsOffsetMap.put(0, "VIS");
@@ -413,7 +442,7 @@ public class IOUtils {
         }
 
         bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
-        bandNames[index] = AlbedoInversionConstants.ACC_MASK_NAME;
+        bandNames[index++] = AlbedoInversionConstants.ACC_MASK_NAME;
 
         return bandNames;
     }
@@ -499,12 +528,13 @@ public class IOUtils {
         return bandNames;
     }
 
-    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands,
-                                                                   int rasterWidth, int rasterHeight) {
+    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands) {
+        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
 //        int size = numBands * rasterWidth * rasterHeight;         // OLD
         int size = numBands * rasterWidth * rasterHeight * 4; // NEW
         final File fullAccumulatorBinaryFile = new File(filename);
-        FileInputStream f;
+        FileInputStream f = null;
         try {
             f = new FileInputStream(fullAccumulatorBinaryFile);
         } catch (FileNotFoundException e) {
@@ -523,29 +553,64 @@ public class IOUtils {
 
         try {
             long t1 = System.currentTimeMillis();
+            // OLD
+//            int nRead;
+//            int ii = 0;
+//            int jj = 0;
+//            int kk = 0;
+//            while ((nRead = ch.read(bb)) != -1) {
+//                if (nRead == 0) {
+//                    continue;
+//                }
+//                bb.position(0);
+//                bb.limit(nRead);
+//                while (bb.hasRemaining()) {
+//                    final float value = bb.getFloat();
+//                    // last band is the dayClosestSample. extract array dayClosestSample[jj][kk]...
+//                    if (ii == numBands-1) {
+//                        daysToTheClosestSample[jj][kk] = value;
+//                    } else {
+//                        sumMatrices[ii][jj][kk] = value;
+//                    }
+//                    // find the right indices for sumMatrices array...
+//                    kk++;
+//                    if (kk == rasterHeight) {
+//                        jj++;
+//                        kk = 0;
+//                        if (jj == rasterWidth) {
+//                            ii++;
+//                            jj = 0;
+//                        }
+//                    }
+//                }
+//                bb.clear();
+//            }
+//            ch.close();
+//            f.close();
 
-            ch.read(bb);
+            // NEW, faster
+            int nRead = ch.read(bb);
             for (int ii = 0; ii < numBands - 1; ii++) {
-                for (int jj = 0; jj < rasterWidth; jj++) {
+                for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
                     floatBuffer.get(sumMatrices[ii][jj]);
                 }
             }
-            for (int jj = 0; jj < rasterWidth; jj++) {
+            for (int jj = 0; jj < AlbedoInversionConstants.MODIS_TILE_WIDTH; jj++) {
                 floatBuffer.get(daysToTheClosestSample[jj]);
             }
             bb.clear();
             floatBuffer.clear();
             ch.close();
             f.close();
-
+            // end NEW
             long t2 = System.currentTimeMillis();
             BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulator read in: " + (t2 - t1) + " ms");
 
             accumulator = new FullAccumulator(year, doy, sumMatrices, daysToTheClosestSample);
 
         } catch (IOException e) {
-            BeamLogManager.getSystemLogger().log(Level.SEVERE, "Could not read full accumulator file '" + filename +
-                    "':  " + e.getMessage());
+            // todo
+            e.printStackTrace();
         }
         return accumulator;
     }
@@ -561,7 +626,25 @@ public class IOUtils {
             final int dim1 = values.length;
             final int dim2 = values[0].length;
             final int dim3 = values[0][0].length;
+            final int size = dim1 * dim2 * dim3 * 4;
+            // OLD
+//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//
+//            for (int i = 0; i < dim1; i++) {
+//                for (int j = 0; j < dim2; j++) {
+//                    for (int k = 0; k < dim3; k++) {
+//                        bb.putFloat(index, values[i][j][k]);
+//                        index += 4;
+//                    }
+//                }
+//            }
+//
+//            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+//            // position and the limit is written to the file
+//            wChannel.write(bb);
+            // end OLD
 
+            // NEW, faster:
             ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * dim3 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
@@ -570,6 +653,7 @@ public class IOUtils {
                 }
             }
             wChannel.write(bb);
+            // END NEW
 
             // Close file when finished with it..
             wChannel.close();
@@ -591,7 +675,32 @@ public class IOUtils {
             final int dim1 = sumMatrices.length;
             final int dim2 = sumMatrices[0].length;
             final int dim3 = sumMatrices[0][0].length;
+            final int size = (dim1 + 1) * dim2 * dim3 * 4;
+            // OLD
+//            ByteBuffer bb = ByteBuffer.allocateDirect(size);
+//
+//            for (int i = 0; i < dim1; i++) {
+//                for (int j = 0; j < dim2; j++) {
+//                    for (int k = 0; k < dim3; k++) {
+//                        bb.putFloat(index, sumMatrices[i][j][k]);
+//                        index += 4;
+//                    }
+//                }
+//            }
+//
+//            for (int j = 0; j < dim2; j++) {
+//                for (int k = 0; k < dim3; k++) {
+//                    bb.putFloat(index, daysClosestSample[j][k]);
+//                    index += 4;
+//                }
+//            }
+//
+//            // Write the ByteBuffer contents; the bytes between the ByteBuffer's
+//            // position and the limit is written to the file
+//            wChannel.write(bb);
+            // end OLD
 
+            // NEW, faster:
             ByteBuffer bb = ByteBuffer.allocateDirect((dim1 + 1) * dim2 * dim3 * 4);
             FloatBuffer floatBuffer = bb.asFloatBuffer();
             for (int i = 0; i < dim1; i++) {
@@ -603,6 +712,7 @@ public class IOUtils {
                 floatBuffer.put(daysClosestSample[j], 0, dim3);
             }
             wChannel.write(bb);
+            // END NEW
 
             // Close file when finished with it..
             wChannel.close();
@@ -626,6 +736,7 @@ public class IOUtils {
         } else {
             return -1;
         }
+//        System.out.println("productName, doystring = " + productName + "," + doyString);
         int doy = Integer.parseInt(doyString);
         if (doy < 0 || doy > 366) {
             return -1;
@@ -633,8 +744,10 @@ public class IOUtils {
         return doy;
     }
 
+
     public static Product getTileInfoProduct(String dailyAccumulatorDir, String defaultTileInfoFilename) throws IOException {
         String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
+//        System.out.println("tileInfoFilePath = " + tileInfoFilePath);
         File tileInfoFile = new File(tileInfoFilePath);
         if (!tileInfoFile.exists()) {
             int index = 1;
@@ -648,35 +761,34 @@ public class IOUtils {
             }
             if (!exists) {
                 return null;
+//                throw new OperatorException("No info file found for given tile - cannot proceed.");
             }
         }
-        return ProductIO.readProduct(tileInfoFilePath);
-    }
-
-    public static void copyLandmask(String gaRootDir, String tile, Product targetProduct) {
-        try {
-            final Product seaiceLandmaskProduct = IOUtils.getSeaiceLandmaskProduct(gaRootDir, tile);
-            if (seaiceLandmaskProduct != null) {
-                final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
-                ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                        "landmask", targetProduct, true);
-            }
-        } catch (IOException e) {
-            System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                    e.getMessage());
-        }
+//        return tileInfoFilePath;
+        Product tileInfoProduct = ProductIO.readProduct(tileInfoFilePath);
+        return tileInfoProduct;
     }
 
 
-    public static Product getSeaiceLandmaskProduct(String gaRootDir, String tile) throws IOException {
-        String defaultLandmaskFilename = "GlobAlbedo.landmask." + tile + ".dim";
-        String landmaskFilePath = gaRootDir + File.separator + "landmask" + File.separator +
-                defaultLandmaskFilename;
-        return ProductIO.readProduct(landmaskFilePath);
+    public static boolean isLeapYear(int year) {
+        if (year < 0) {
+            return false;
+        }
+
+        if (year % 400 == 0) {
+            return true;
+        } else if (year % 100 == 0) {
+            return false;
+        } else if (year % 4 == 0) {
+            return true;
+        } else {
+            return false;
+        }
     }
 
     public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
         final int difference = 365 * (year - referenceYear) + (doy - referenceDoy);
+        // todo: consider leap years
         return Math.abs(difference);
     }
 
@@ -684,7 +796,8 @@ public class IOUtils {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return isAlbedo8DayDimapProduct(name, tile) || isAlbedo8DayNetcdfProduct(name, tile);
+                return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
+                        (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
             }
         };
 
@@ -694,8 +807,8 @@ public class IOUtils {
             Product[] albedoProducts = new Product[albedoFiles.length];
 
             int productIndex = 0;
-            for (String albedoFile : albedoFiles) {
-                String albedoProductFileName = albedoDir + File.separator + albedoFile;
+            for (int i = 0; i < albedoFiles.length; i++) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
 
                 if ((new File(albedoProductFileName)).exists()) {
                     Product product;
@@ -705,7 +818,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
@@ -729,52 +842,5 @@ public class IOUtils {
         File rootDir = new File(rootDirString);
         return rootDir.listFiles(tileFilter);
     }
-
-    private static boolean isAlbedo8DayDimapProduct(String name, String tile) {
-        return (name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
-                (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim"));
-    }
-
-    private static boolean isAlbedo8DayNetcdfProduct(String name, String tile) {
-        return (name.length() == 35 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".nc")) ||
-                (name.length() == 28 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".nc"));
-    }
-
-    private static double[] getSeaicePstEastingNorthing(String tile, double width) {
-        double[] eastingNorthing = new double[2];
-        if (tile.equals("180W_90W")) {
-            eastingNorthing = new double[]{-width, width};
-        } else if (tile.equals("90W_0")) {
-            eastingNorthing = new double[]{-width, 0.0};
-        } else if (tile.equals("0_90E")) {
-            eastingNorthing = new double[]{0.0, 0.0};
-        } else if (tile.equals("90E_180E")) {
-            eastingNorthing = new double[]{0.0, width};
-        }
-        return eastingNorthing;
-    }
-
-    private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
-        List<String> brdfFileList = new ArrayList<String>();
-        for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
-                brdfFileList.add(s);
-            }
-        }
-        Collections.sort(brdfFileList);
-        return brdfFileList;
-    }
-
-    private static List<String> getBrdfSeaiceProductNames(String[] brdfFiles) {
-        List<String> brdfFileList = new ArrayList<String>();
-        for (String s : brdfFiles) {
-            if (s.contains(".Seaice") && s.endsWith(".dim")) {
-                brdfFileList.add(s);
-            }
-        }
-        Collections.sort(brdfFileList);
-        return brdfFileList;
-    }
-
 
 }

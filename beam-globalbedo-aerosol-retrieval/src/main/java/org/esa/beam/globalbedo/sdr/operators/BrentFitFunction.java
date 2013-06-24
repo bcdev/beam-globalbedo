@@ -80,7 +80,7 @@ class BrentFitFunction implements Function {
             double[] p = initStartVector(model);
             double xi[][] = initParameterBasis(p.length);
             double ftol = 2e-3;   // limit for optimization
-            MvFunction surfModel;
+            MvFunction surfModel = null;
             switch (model){
                 case 1:
                     surfModel = new EmodAng(inPixData.getDiffuseFrac(), inPixData.getSurfReflec(), specWeights);
@@ -100,10 +100,15 @@ class BrentFitFunction implements Function {
         return fmin;
     }
 
-//     inversion can lead to overcorrection of atmosphere
-//     and thus to too small surface reflectances
-//     this function defines a steep but smooth function
-//     to guide the optimization
+    /**
+     * inversion can lead to overcorrection of atmosphere
+     * and thus to too small surface reflectances
+     * this function defins a steep but smooth function
+     * to guide the optimization
+     *
+     * @param sdr
+     * @return
+     */
     private static double isSdrNegativ(double[][] sdr) {
         double fmin = 0;
         for (int iView = 0; iView < sdr.length; iView++) {
@@ -116,8 +121,12 @@ class BrentFitFunction implements Function {
         return fmin;
     }
 
-//     define initial vector p to start Powell optimization
-//     according to the selected surface spectral model
+    /**
+     * define initial vector p to start Powell optimization
+     * according to the selected surface spectral model
+     * @param model
+     * @return p - start vector for Powell
+     */
     private static double[] initStartVector(int model) {
         switch (model) {
             case ANGULAR_MODEL:
@@ -130,8 +139,12 @@ class BrentFitFunction implements Function {
         }
     }
 
-//     defining unit matrix as base of the parameter space
-//     needed for Powell
+    /**
+     * defining unit matrix as base of the parameter space
+     * needed for Powell
+     * @param length of parameter vector <b>p</b>
+     * @return a unit matrix <b>xi</b> as orthonormal basis
+     */
     private static double[][] initParameterBasis(int length) {
         double xi[][] = new double[length][length];
         for (int i = 0; i < length; i++) xi[i][i] = 1.0;

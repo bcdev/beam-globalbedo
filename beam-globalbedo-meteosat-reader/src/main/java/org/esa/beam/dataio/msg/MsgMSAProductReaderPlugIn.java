@@ -69,13 +69,15 @@ public class MsgMSAProductReaderPlugIn implements ProductReaderPlugIn {
 
     static boolean isCompressedFile(File file) {
         final String extension = FileUtils.getExtension(file);
-        if (!StringUtils.isNullOrEmpty(extension)) {
-            if ((extension.contains("zip") || extension.contains("tar") || extension.contains("tgz") ||
-                    extension.contains("gz") || extension.contains("bz2"))) {
-                return true;
-            }
+        if (StringUtils.isNullOrEmpty(extension)) {
+            return false;
         }
-        return false;
+
+        return extension.contains("zip")
+                || extension.contains("tar")
+                || extension.contains("tgz")
+                || extension.contains("gz")
+                || extension.contains("bz2");
     }
 
 

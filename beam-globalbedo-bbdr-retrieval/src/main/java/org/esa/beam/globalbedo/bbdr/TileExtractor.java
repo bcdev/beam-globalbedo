@@ -161,7 +161,7 @@ public class TileExtractor extends Operator implements Output {
         return false;
     }
 
-    public static Product reproject(Product bbdrProduct, String tileName) {
+    static Product reproject(Product bbdrProduct, String tileName) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tileName);
         if (tileIndex == -1) {
@@ -207,7 +207,7 @@ public class TileExtractor extends Operator implements Output {
         return repro.getTargetProduct();
     }
 
-    public static Geometry computeProductGeometry(Product product) {
+    static Geometry computeProductGeometry(Product product) {
         try {
             final GeneralPath[] paths = ProductUtils.createGeoBoundaryPaths(product);
             final Polygon[] polygons = new Polygon[paths.length];
@@ -248,21 +248,13 @@ public class TileExtractor extends Operator implements Output {
         return factory.createPolygon(factory.createLinearRing(coordinates), null);
     }
 
-    public static class TileProduct {
+    private static class TileProduct {
         private final Product product;
         private final String tileName;
 
-        public TileProduct(Product product, String tileName) {
+        private TileProduct(Product product, String tileName) {
             this.product = product;
             this.tileName = tileName;
-        }
-
-        public Product getProduct() {
-            return product;
-        }
-
-        public String getTileName() {
-            return tileName;
         }
     }
 

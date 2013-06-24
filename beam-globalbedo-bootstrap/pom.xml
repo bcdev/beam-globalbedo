@@ -7,7 +7,7 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.0-MSSL-FPS-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -25,36 +25,21 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
+            <version>1.0-SNAPSHOT</version>
+         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-bbdr-retrieval</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
+            <version>1.0-SNAPSHOT</version>
+         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-albedo-inversion</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
+            <version>1.0-SNAPSHOT</version>
+         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-meteosat-reader</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam.globalbedo</groupId>
-            <artifactId>beam-globalbedo-misr-reader</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam.globalbedo</groupId>
-            <artifactId>beam-globalbedo-modis29-reader</artifactId>
-            <version>1.1-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam.globalbedo</groupId>
-            <artifactId>beam-tiff-directory-reader</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
     </dependencies>

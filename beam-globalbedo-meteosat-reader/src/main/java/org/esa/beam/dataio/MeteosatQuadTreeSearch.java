@@ -16,12 +16,14 @@ public class MeteosatQuadTreeSearch {
     private final float[] latData;
     private final float[] lonData;
     private final int width;
+    private final int height;
     private String regionID;
 
-    public MeteosatQuadTreeSearch(float[] latData, float[] lonData, int width, String regionID) {
+    public MeteosatQuadTreeSearch(float[] latData, float[] lonData, int width, int height, String regionID) {
         this.latData = latData;
         this.lonData = lonData;
         this.width = width;
+        this.height = height;
         this.regionID = regionID;
     }
 
@@ -35,18 +37,21 @@ public class MeteosatQuadTreeSearch {
             return false;
         }
 
-        final int x2 = x + w - 1;
-        final int y2 = y + h - 1;
+        final int x1 = x;
+        final int x2 = x1 + w - 1;
+
+        final int y1 = y;
+        final int y2 = y1 + h - 1;
 
         // todo - solve 180° longitude problem here
         GeoPos geoPos = new GeoPos();
-        getGeoPosInternal(x, y, geoPos);
+        getGeoPosInternal(x1, y1, geoPos);
         final float lat0 = geoPos.lat;
         final float lon0 = geoPos.lon;
-        getGeoPosInternal(x, y2, geoPos);
+        getGeoPosInternal(x1, y2, geoPos);
         final float lat1 = geoPos.lat;
         final float lon1 = geoPos.lon;
-        getGeoPosInternal(x2, y, geoPos);
+        getGeoPosInternal(x2, y1, geoPos);
         final float lat2 = geoPos.lat;
         final float lon2 = geoPos.lon;
         getGeoPosInternal(x2, y2, geoPos);
@@ -74,20 +79,20 @@ public class MeteosatQuadTreeSearch {
         if (!definitelyOutside) {
             if (w == 2 && h == 2) {
                 final float f = (float) Math.cos(lat * MathUtils.DTOR);
-                if (result.update(x, y, sqr(lat - lat0, f * (lon - lon0)))) {
+                if (result.update(x1, y1, sqr(lat - lat0, f * (lon - lon0)))) {
                     pixelFound = true;
                 }
-                if (result.update(x, y2, sqr(lat - lat1, f * (lon - lon1)))) {
+                if (result.update(x1, y2, sqr(lat - lat1, f * (lon - lon1)))) {
                     pixelFound = true;
                 }
-                if (result.update(x2, y, sqr(lat - lat2, f * (lon - lon2)))) {
+                if (result.update(x2, y1, sqr(lat - lat2, f * (lon - lon2)))) {
                     pixelFound = true;
                 }
                 if (result.update(x2, y2, sqr(lat - lat3, f * (lon - lon3)))) {
                     pixelFound = true;
                 }
             } else if (w >= 2 && h >= 2) {
-                pixelFound = quadTreeRecursion(depth, lat, lon, x, y, w, h, result);
+                pixelFound = quadTreeRecursion(depth, lat, lon, x1, y1, w, h, result);
             }
         }
 

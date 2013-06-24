@@ -165,7 +165,7 @@ public class AlbedoInversionTest extends TestCase {
     public void testGetSunZenith() {
         // run some test data with CreateLatLonGrid_v2_work.py and compare...
 
-        int doy = 1;
+        int doy = 001;
         GeoPos geoPos = new GeoPos(47.3958f, 30.0f);
         double sunZenith = AlbedoInversionUtils.computeSza(geoPos, doy);
         assertEquals(70.426647, sunZenith, 0.3);

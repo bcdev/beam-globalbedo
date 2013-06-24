@@ -18,21 +18,23 @@ package org.esa.beam.globalbedo.mosaic;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.GeoCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.logging.BeamLogManager;
-import org.geotools.referencing.CRS;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import java.awt.*;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.logging.Level;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -48,10 +50,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private final Pattern pattern;
     private final MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
-    private boolean mosaicModisPriors;
-    private boolean mosaicAdam;
-    private boolean mosaicAdamPriors;
-    private int adamPriorStage;
+    private boolean mosaicPriors;
 
     protected GlobAlbedoMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -62,14 +61,8 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final File inputFile = getInputFile();
-        Set<MosaicTile> mosaicTiles;
-        if (mosaicModisPriors) {
-            mosaicTiles = createPriorMosaicTiles(inputFile);
-        } else if (mosaicAdam) {
-            mosaicDefinition.setTileSize(120);
-            mosaicTiles = createMosaicTiles(inputFile);
-        } else if (mosaicAdamPriors) {
-            mosaicDefinition.setTileSize(120);
+        Set<MosaicTile> mosaicTiles = null;
+        if (mosaicPriors) {
             mosaicTiles = createPriorMosaicTiles(inputFile);
         } else {
             mosaicTiles = createMosaicTiles(inputFile);
@@ -80,23 +73,14 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
         Product firstMosaicProduct = mosaicTiles.iterator().next().getProduct();
 
-        final String productName = getProductName(inputFile);
-        final Product product = new Product(productName, PRODUCT_TYPE, width, height);
+        final Product product = new Product(getProductName(inputFile), PRODUCT_TYPE, width, height);
         product.setPreferredTileSize(mosaicDefinition.getTileSize() / 4, mosaicDefinition.getTileSize() / 4);
         product.setFileLocation(inputFile);
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
 
-        if (firstMosaicProduct.getGeoCoding() != null && !mosaicModisPriors && !mosaicAdam) {
+        if (!mosaicPriors) {
             addGeoCoding(firstMosaicProduct, product);
-        } else {
-            CrsGeoCoding crsGeoCoding = null;
-            if (mosaicAdam || mosaicAdamPriors) {
-                crsGeoCoding = getMosaicGeocoding(10);
-            } else if (mosaicModisPriors) {
-                crsGeoCoding = getMosaicGeocoding(1);
-            }
-            product.setGeoCoding(crsGeoCoding);
         }
 
         Band[] bands = firstMosaicProduct.getBands();
@@ -124,7 +108,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         String regex = getMosaicFileRegex(refFile.getName());
         final File[] tileDirs = rootDir.listFiles(new TileDirFilter());
         for (File tileDir : tileDirs) {
-            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicModisPriors));
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicPriors));
             if (mosaicFiles.length == 1) {
                 mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
             } else {
@@ -147,33 +131,19 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             return mosaicTiles;
         }
         String regex = getMosaicFileRegex(refFile.getName());
-        File[] tileDirs = null;
-        if (mosaicModisPriors) {
-            tileDirs = getModisPriorTileDirectories(rootDir.getAbsolutePath());
-        } else if (mosaicAdamPriors) {
-            if (adamPriorStage == 2) {
-                tileDirs = getAdamPriorTileDirectories(rootDir.getParentFile().getAbsolutePath(), adamPriorStage);
+        final File[] tileDirs = getPriorTileDirectories(rootDir.getAbsolutePath());
+        for (File tileDir : tileDirs) {
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicPriors));
+            if (mosaicFiles.length == 1) {
+                mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
             } else {
-                tileDirs = getAdamPriorTileDirectories(rootDir.getAbsolutePath(), adamPriorStage);
+                // TODO error
             }
-        }
-
-        if (tileDirs != null) {
-            for (File tileDir : tileDirs) {
-                final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex, mosaicModisPriors));
-                if (mosaicFiles.length == 1) {
-                    mosaicTiles.add(createMosaicTile(mosaicFiles[0]));
-                } else {
-                    // TODO error
-                }
-            }
-        } else {
-            // TODO error
         }
         return mosaicTiles;
     }
 
-    public static File[] getModisPriorTileDirectories(String rootDirString) {
+    public static File[] getPriorTileDirectories(String rootDirString) {
         final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         FileFilter tileFilter = new FileFilter() {
             @Override
@@ -195,65 +165,9 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return priorDirs;
     }
 
-    public static File[] getAdamTileDirectories(String rootDirString) {
-        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        FileFilter tileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && pattern.matcher(file.getName()).matches();
-            }
-        };
 
-        File rootDir = new File(rootDirString);
-        return rootDir.listFiles(tileFilter);
-    }
-
-    public static File[] getAdamPriorTileDirectories(String rootDirString, int stage) {
-        // e.g. stage 1: <adamRootDir>/<tile>/stage1prior/processed
-        // e.g. stage 2: <adamRootDir>/<tile>/stage2prior/background/processed
-        // e.g. stage 3: <cems adamRootDir>/<tile>/background/processed
-        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        FileFilter tileFilter = new FileFilter() {
-            @Override
-            public boolean accept(File file) {
-                return file.isDirectory() && pattern.matcher(file.getName()).matches();
-            }
-        };
-
-        File rootDir = new File(rootDirString);
-        File[] priorRootDirs = rootDir.listFiles(tileFilter);
-        File[] priorDirs = new File[priorRootDirs.length];
-        int index = 0;
-        String priorDirNameSuffix = null;
-        if (stage == 1) {
-            priorDirNameSuffix = "stage1prior" + File.separator + "processed";
-        } else if (stage == 2) {
-            priorDirNameSuffix = "stage2prior" + File.separator + "background" + File.separator + "processed";
-        } else if (stage == 3) {
-            // cems priors
-            priorDirNameSuffix = "background" + File.separator + "processed";
-        }
-        for (File priorDir : priorRootDirs) {
-            final String priorDirName = priorDir + File.separator + priorDirNameSuffix;
-            priorDirs[index++] = new File(priorDirName);
-        }
-        return priorDirs;
-    }
-
-    public void setMosaicModisPriors(boolean mosaicModisPriors) {
-        this.mosaicModisPriors = mosaicModisPriors;
-    }
-
-    public void setMosaicAdam(boolean mosaicAdam) {
-        this.mosaicAdam = mosaicAdam;
-    }
-
-    public void setMosaicAdamPriors(boolean mosaicAdamPriors) {
-        this.mosaicAdamPriors = mosaicAdamPriors;
-    }
-
-    public void setAdamPriorStage(int adamPriorStage) {
-        this.adamPriorStage = adamPriorStage;
+    public void setMosaicPriors(boolean mosaicPriors) {
+        this.mosaicPriors = mosaicPriors;
     }
 
     String getProductName(File file) {
@@ -261,13 +175,6 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         Matcher matcher = pattern.matcher(fileName);
         matcher.find();
         return fileName.substring(0, matcher.start() - 1);
-    }
-
-    String getTileName(File file) {
-        String fileName = file.getName();
-        Matcher matcher = pattern.matcher(fileName);
-        matcher.find();
-        return fileName.substring(matcher.start(), matcher.start() + 6);
     }
 
     MosaicTile createMosaicTile(File file) {
@@ -302,35 +209,17 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
         try {
             GeoCoding geocoding = new CrsGeoCoding(mapCRS,
-                                                   rasterWidth,
-                                                   rasterHeight,
-                                                   easting,
-                                                   northing,
-                                                   pixelSizeX,
-                                                   pixelSizeY);
+                    rasterWidth,
+                    rasterHeight,
+                    easting,
+                    northing,
+                    pixelSizeX,
+                    pixelSizeY);
             product.setGeoCoding(geocoding);
         } catch (Exception e) {
             throw new IOException("Cannot create GeoCoding: ", e);
         }
     }
-
-    private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
-        final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
-        final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
-        final String crsString = MosaicConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final int imageWidth = MosaicConstants.MODIS_TILE_WIDTH * 36 / downscalingFactor;
-        final int imageHeight = MosaicConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
-        final double pixelSizeX = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
-        final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
-        try {
-            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-        } catch (Exception e) {
-            BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
-            return null;
-        }
-    }
-
 
     @Override
     protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
@@ -367,7 +256,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
                     }
                 } else {
                     System.out.println("WARNING: band '" + destBand.getName() + "' not found in product '" +
-                                               mosaicTile.getProduct().getName() + "'.");
+                            mosaicTile.getProduct().getName() + "'.");
                     double nodataValue = destBand.getNoDataValue();
                     for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
                         for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
@@ -427,15 +316,15 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             final boolean patternMatches = pattern.matcher(file.getName()).matches();
             final boolean isFile = file.isFile();
 
-            boolean complete = true;
+            boolean priorComplete = true;
             if (patternMatches && isFile && mosaicPriors) {
                 // check if binary file exists for give hdr file...
                 final String fileRootPath = file.getAbsolutePath().substring(0, file.getAbsolutePath().length() - 4);
                 final String binFilePath = fileRootPath + ".bin";
-                complete = new File(binFilePath).exists();
+                priorComplete = new File(binFilePath).exists();
             }
 
-            return isFile && patternMatches && complete;
+            return isFile && patternMatches && priorComplete;
         }
     }
 }

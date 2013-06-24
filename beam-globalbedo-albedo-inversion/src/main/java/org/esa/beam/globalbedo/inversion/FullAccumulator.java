@@ -1,5 +1,8 @@
 package org.esa.beam.globalbedo.inversion;
 
+import Jama.Matrix;
+import org.esa.beam.framework.gpf.pointop.Sample;
+
 /**
  * Class representing a 'full' 8-day accumulator, holding M, V, E (sumMatrices) and
  * daysToTheClosestSample.

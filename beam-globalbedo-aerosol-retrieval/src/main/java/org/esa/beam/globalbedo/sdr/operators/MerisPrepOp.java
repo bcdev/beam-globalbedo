@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -21,7 +21,13 @@
 
 package org.esa.beam.globalbedo.sdr.operators;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
+import org.esa.beam.framework.datamodel.Mask;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.ProductNodeGroup;
+import org.esa.beam.framework.datamodel.VirtualBand;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -31,22 +37,25 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
+import org.esa.beam.idepix.operators.CloudScreeningSelector;
+import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.meris.brr.RayleighCorrectionOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
+import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Dimension;
+import java.awt.Rectangle;
+import java.awt.RenderingHints;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * Create Meris input product for Globalbedo aerosol retrieval and BBDR processor
- * <p/>
- * TODO: check what rad2refl does with the masks and which masks need to be copied.
- * if the sourceProd contains already idepix, what happens with the masks in rad2refl?
  *
+ * TODO: check what rad2refl does with the masks and which masks need to be copied.
+ *       if the sourceProd contains already idepix, what happens with the masks in rad2refl?
  * @author akheckel
  */
 @OperatorMetadata(alias = "ga.MerisPrepOp",
@@ -71,6 +80,8 @@ public class MerisPrepOp extends Operator {
     private boolean gaUseL1bLandWaterFlag;
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
+    @Parameter(defaultValue = "false", label = " 'P1' (LISE, O2 project, all surfaces)")
+    private boolean pressureOutputP1Lise = false;
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
 
@@ -92,7 +103,7 @@ public class MerisPrepOp extends Operator {
             targetProduct = GaMasterOp.EMPTY_PRODUCT;
             return;
         } else {
-            Map<String, Object> subsetParam = new HashMap<String, Object>(3);
+            Map<String,Object> subsetParam = new HashMap<String, Object>(3);
             subsetParam.put("region", szaRegion);
             Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
             RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
@@ -100,15 +111,13 @@ public class MerisPrepOp extends Operator {
         }
 
         // convert radiance bands to reflectance
-        Map<String, Object> relfParam = new HashMap<String, Object>(3);
+        Map<String,Object> relfParam = new HashMap<String, Object>(3);
         relfParam.put("doRadToRefl", true);
         relfParam.put("doEqualization", doEqualization);
         Product reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisRadiometryCorrectionOp.class), relfParam, szaSubProduct);
 
         // subset might have set ptype to null, thus:
-        if (szaSubProduct.getDescription() == null) {
-            szaSubProduct.setDescription("MERIS Radiance product");
-        }
+        if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("MERIS Radiance product");
 
         // setup target product primarily as copy of sourceProduct
         final int rasterWidth = szaSubProduct.getSceneRasterWidth();
@@ -120,22 +129,34 @@ public class MerisPrepOp extends Operator {
         targetProduct.setEndTime(szaSubProduct.getEndTime());
         targetProduct.setPointingFactory(szaSubProduct.getPointingFactory());
         ProductUtils.copyTiePointGrids(szaSubProduct, targetProduct);
-        ProductUtils.copyFlagBands(szaSubProduct, targetProduct, true);
+        ProductUtils.copyFlagBands(szaSubProduct, targetProduct);
         ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
+        Mask mask;
+        for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
+            mask = szaSubProduct.getMaskGroup().get(i);
+            targetProduct.getMaskGroup().add(mask);
+        }
 
         // create pixel calssification if missing in sourceProduct
         // and add flag band to targetProduct
-        Product idepixProduct;
+        Product idepixProduct = null;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
+            pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);
             pixelClassParam.put("gaCopyRadiances", false);
+            pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaCloudBufferWidth", 3);
-            pixelClassParam.put("gaCopyRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
+            pixelClassParam.put("gaOutputRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            pixelClassParam.put("pressureOutputP1Lise", pressureOutputP1Lise);
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
-            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
+            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            ProductUtils.copyFlagBands(idepixProduct, targetProduct);
+            for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
+                mask = szaSubProduct.getMaskGroup().get(i);
+                targetProduct.getMaskGroup().add(mask);
+            }
             if (gaOutputRayleigh != null) {
                 for (String rayleighBandName : gaOutputRayleigh) {
                     Band band = idepixProduct.getBand(rayleighBandName);
@@ -153,48 +174,70 @@ public class MerisPrepOp extends Operator {
                     idepixProduct.removeBand(band);
                 }
             }
+            if (pressureOutputP1Lise) {
+                    Band band = idepixProduct.getBand("p1_lise");
+                    if (band != null) {
+                        targetProduct.addBand(band);
+                    }
+            }
         }
 
         // create elevation product if band is missing in sourceProduct
         Product elevProduct = null;
-        if (needElevation && !szaSubProduct.containsBand(ALTITUDE_BAND_NAME)) {
+        if (needElevation && !szaSubProduct.containsBand(ALTITUDE_BAND_NAME)){
             elevProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(CreateElevationBandOp.class), GPF.NO_PARAMS, szaSubProduct);
         }
 
         // create surface pressure estimate product if band is missing in sourceProduct
         VirtualBand surfPresBand = null;
-        if (needSurfacePres) {
+        if (needSurfacePres){
             String presExpr = "(1013.25 * exp(-elevation/8400))";
             surfPresBand = new VirtualBand(instrC.getSurfPressureName("MERIS"),
-                                           ProductData.TYPE_FLOAT32,
-                                           rasterWidth, rasterHeight, presExpr);
+                                                       ProductData.TYPE_FLOAT32,
+                                                       rasterWidth, rasterHeight, presExpr);
             surfPresBand.setDescription("estimated sea level pressure (p0=1013.25hPa, hScale=8.4km)");
             surfPresBand.setNoDataValue(0);
             surfPresBand.setNoDataValueUsed(true);
             surfPresBand.setUnit("hPa");
         }
 
+
+
         // copy all non-radiance bands from sourceProduct and
         // copy reflectance bands from reflProduct
-        for (Band srcBand : szaSubProduct.getBands()) {
+        Band tarBand;
+        for (Band srcBand : szaSubProduct.getBands()){
             String srcName = srcBand.getName();
-            if (!srcBand.isFlagBand()) {
-                if (srcName.startsWith("radiance")) {
-                    String reflName = "reflec_" + srcName.split("_")[1];
-                    String tarName = "reflectance_" + srcName.split("_")[1];
-                    ProductUtils.copyBand(reflName, reflProduct, tarName, targetProduct, true);
-                } else if (!targetProduct.containsBand(srcName)) {
-                    ProductUtils.copyBand(srcName, szaSubProduct, targetProduct, true);
-                }
+            if (srcBand.isFlagBand()){
+                tarBand = targetProduct.getBand(srcName);
+                tarBand.setSourceImage(srcBand.getSourceImage());
+            } else if (srcName.startsWith("radiance")){
+                String reflName = "reflec_" + srcName.split("_")[1];
+                String tarName = "reflectance_" + srcName.split("_")[1];
+                tarBand = ProductUtils.copyBand(reflName, reflProduct, targetProduct);
+                tarBand.setName(tarName);
+            } else if (!targetProduct.containsBand(srcName)) {
+                tarBand = ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
             }
         }
 
+        // add idepix flag band data if needed
+        if (needPixelClassif){
+            Guardian.assertNotNull("idepixProduct", idepixProduct);
+            Band srcBand = idepixProduct.getBand(instrC.getIdepixFlagBandName());
+            Guardian.assertNotNull("idepix Band", srcBand);
+            tarBand = targetProduct.getBand(srcBand.getName());
+            tarBand.setSourceImage(srcBand.getSourceImage());
+        }
+
         // add elevation band if needed
-        if (needElevation) {
+        if (needElevation){
             if (elevProduct != null) {
-                ProductUtils.copyBand(instrC.getElevationBandName(), elevProduct, targetProduct, true);
-            } else if (szaSubProduct.containsBand(ALTITUDE_BAND_NAME)) {
-                ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct, true);
+                Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
+                Guardian.assertNotNull("elevation band", srcBand);
+                tarBand = ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
+            } else if (sourceProduct.containsBand(ALTITUDE_BAND_NAME)) {
+                ProductUtils.copyBand(ALTITUDE_BAND_NAME, szaSubProduct, instrC.getElevationBandName(), targetProduct);
             }
         }
 

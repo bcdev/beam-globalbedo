@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-gmted2010</symbolicName>
-    <version>1.0</version>
+    <version>1.0-MSSL-FPS</version>
     <name>GMTED2010  DEM Reader</name>
 
 

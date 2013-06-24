@@ -18,6 +18,10 @@ package org.esa.beam.globalbedo.bbdr;
 
 
 import com.bc.ceres.core.ProgressMonitor;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LinearRing;
+import com.vividsolutions.jts.geom.Polygon;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
@@ -29,7 +33,6 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class LandCoverProcessing {
     public static void main(String[] args) throws IOException {
         JAI.enableDefaultTileCache();
@@ -102,18 +105,17 @@ public class LandCoverProcessing {
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
-    // currently not needed
-//    private static Polygon createBBOX(double x, double y, double w, double h) {
-//        GeometryFactory factory = new GeometryFactory();
-//        final LinearRing ring = factory.createLinearRing(new Coordinate[]{
-//                new Coordinate(x, y),
-//                new Coordinate(x + w, y),
-//                new Coordinate(x + w, y + h),
-//                new Coordinate(x, y + h),
-//                new Coordinate(x, y)
-//        });
-//        return factory.createPolygon(ring, null);
-//    }
+    private static Polygon createBBOX(double x, double y, double w, double h) {
+        GeometryFactory factory = new GeometryFactory();
+        final LinearRing ring = factory.createLinearRing(new Coordinate[]{
+                new Coordinate(x, y),
+                new Coordinate(x + w, y),
+                new Coordinate(x + w, y + h),
+                new Coordinate(x, y + h),
+                new Coordinate(x, y)
+        });
+        return factory.createPolygon(ring, null);
+    }
 
     private static void printProductSize(Product aProduct) {
         System.out.println("SceneRasterWidth  = " + aProduct.getSceneRasterWidth());

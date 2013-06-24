@@ -5,6 +5,9 @@ import junit.framework.TestCase;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.URL;
+import java.net.URLDecoder;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
@@ -14,7 +17,6 @@ import java.util.List;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@SuppressWarnings("ResultOfMethodCallIgnored")
 public class IOTest extends TestCase {
 
     private int dim1;
@@ -99,6 +101,31 @@ public class IOTest extends TestCase {
         assertEquals("Kernels.129.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(2));
     }
 
+    public void testGetInversionTargetFileName() throws Exception {
+        final int year = 2005;
+        final int doy = 123;
+        final String tile = "h18v04";
+
+        boolean computeSnow = true;
+        boolean usePrior = true;
+
+        String targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+        assertNotNull(targetFileName);
+        assertEquals("GlobAlbedo.2005123.h18v04.Snow.bin", targetFileName);
+
+        computeSnow = false;
+        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+        assertEquals("GlobAlbedo.2005123.h18v04.NoSnow.bin", targetFileName);
+
+        usePrior = false;
+        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+        assertEquals("GlobAlbedo.2005123.h18v04.NoSnow.NoPrior.bin", targetFileName);
+
+        computeSnow = true;
+        targetFileName = IOUtils.getInversionTargetFileName(year, doy, tile, computeSnow, usePrior);
+        assertEquals("GlobAlbedo.2005123.h18v04.Snow.NoPrior.bin", targetFileName);
+    }
+
     public void testGetInversionParameterBandnames() throws Exception {
         String[] bandNames = IOUtils.getInversionParameterBandNames();
         assertNotNull(bandNames);
@@ -178,6 +205,20 @@ public class IOTest extends TestCase {
         assertNull(bandNames[4][2]);
         assertNull(bandNames[5][4]);
         assertNull(bandNames[6][1]);
+    }
+
+    private File setTestfile(String filename) throws UnsupportedEncodingException {
+        final URL url = IOUtils.class.getResource(filename);
+        assertNotNull(url);
+        assertEquals("file", url.getProtocol());
+
+        final String path = URLDecoder.decode(url.getPath(), "UTF-8");
+        assertTrue(path.endsWith(filename));
+
+        final File file = new File(path);
+
+        assertEquals(file.getName(), filename);
+        return file;
     }
 
     public void testGetDayDifference() throws Exception {
@@ -328,7 +369,7 @@ public class IOTest extends TestCase {
         ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
         FloatBuffer floatBuffer = bb.asFloatBuffer();
 
-        ch.read(bb);
+        int nRead = ch.read(bb);
 
         float[][] fArray = new float[dim1][dim2];
 
@@ -360,7 +401,7 @@ public class IOTest extends TestCase {
         ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
         FloatBuffer floatBuffer = bb.asFloatBuffer();
         for (int i = 0; i < dim1; i++) {
-            ch.read(bb);
+            int nRead = ch.read(bb);
             floatBuffer.get(fArray[i]);
         }
 
@@ -382,6 +423,7 @@ public class IOTest extends TestCase {
         FileChannel ch = finStream.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
         byte[] barray = new byte[1200];
+        long checkSum = 0L;
         int nRead, nGet;
         while ((nRead = ch.read(bb)) != -1) {
             if (nRead == 0)
@@ -391,6 +433,8 @@ public class IOTest extends TestCase {
             while (bb.hasRemaining()) {
                 nGet = Math.min(bb.remaining(), 1200);
                 bb.get(barray, 0, nGet);
+                for (int i = 0; i < nGet; i++)
+                    checkSum += barray[i];
             }
             bb.clear();
         }
@@ -404,6 +448,7 @@ public class IOTest extends TestCase {
         FileChannel ch = finStream.getChannel();
         ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
         byte[] barray = new byte[dim1];
+        long checkSum = 0L;
         int nRead, nGet;
         while ((nRead = ch.read(bb)) != -1) {
             if (nRead == 0)
@@ -413,6 +458,8 @@ public class IOTest extends TestCase {
             while (bb.hasRemaining()) {
                 nGet = Math.min(bb.remaining(), dim1);
                 bb.get(barray, 0, nGet);
+                for (int i = 0; i < nGet; i++)
+                    checkSum += barray[i];
             }
             bb.clear();
         }
@@ -470,7 +517,7 @@ public class IOTest extends TestCase {
         ByteBuffer bb = ByteBuffer.allocateDirect(dim1 * dim2 * 4);
         FloatBuffer floatBuffer = bb.asFloatBuffer();
 
-        ch.read(bb);
+        int nRead = ch.read(bb);
 
         float[][][] fArray = new float[1][dim1][dim2];
 
@@ -491,6 +538,18 @@ public class IOTest extends TestCase {
         expected = (dim1 - 1) * dim1 + (dim2 - 1) * 1.0f;
         assertEquals(expected, fArray[0][dim1 - 1][dim2 - 1]);
     }
+
+
+//    public void testGetTileInfoFilepath() throws Exception {
+//        String tileDir = System.getProperty("user.home");
+//        String existingTileInfoFileName = "tileInfo_3.dim";
+//        String existingTileInfoFilePath = tileDir + File.separator + existingTileInfoFileName;
+//        existingTileInfoFile = new File(existingTileInfoFilePath);
+//        existingTileInfoFile.createNewFile();
+//        String defaultTileInfoFileName = "tileInfo_0.dim";
+//        String tileInfoFilepath = IOUtils.getTileInfoProduct(tileDir, defaultTileInfoFileName);
+//        assertEquals(existingTileInfoFilePath, tileInfoFilepath);
+//    }
 
     public void testGetTileDirectories() throws Exception {
         String rootDir = System.getProperty("user.home");

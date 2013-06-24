@@ -51,9 +51,6 @@ public class AlbedoInversionConstants {
     public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
 
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
-    public static final String seaiceMaskExpression = "cloud_classif_flags.F_SEAICE";
-
-    public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
 
     public static final int NUM_BBDR_WAVE_BANDS = 3;
     public static final int NUM_ALBEDO_PARAMETERS = 3;  // f0, f1, f2
@@ -63,22 +60,10 @@ public class AlbedoInversionConstants {
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
 
-    public static final int SEAICE_TILE_WIDTH = 2250;
-    public static final int SEAICE_TILE_HEIGHT = 2250;
-//    public static final int SEAICE_TILE_WIDTH = 50;   // test!!
-//    public static final int SEAICE_TILE_HEIGHT = 50;
-
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_X = 926.6254330558;
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_Y = 926.6254330558;
 
-    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
-    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
-
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
-
-    public static final String MODIS_SIN_PROJECTION_CRS_STRING =
-            "PROJCS[\"MODIS Sinusoidal\"," +
+    public static final String MODIS_SIN_PROJECTION_CRS_STRING = "PROJCS[\"MODIS Sinusoidal\"," +
             "GEOGCS[\"WGS 84\"," +
             "  DATUM[\"WGS_1984\"," +
             "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
@@ -102,25 +87,4 @@ public class AlbedoInversionConstants {
     public static final double INVALID = -9999.0;
 
     public static final double HALFLIFE = 11.54;
-
-    public static final String POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING =
-            "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
-            "GEOGCS[\"World Geodetic System 1984\"," +
-            " DATUM[\"World Geodetic System 1984\"," +
-            "  SPHEROID[\"WGS 84\",6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]," +
-            "   AUTHORITY[\"EPSG\",\"6326\"]]," +
-            "  PRIMEM[\"Greenwich\",0.0, AUTHORITY[\"EPSG\",\"8901\"]]," +
-            "  UNIT[\"degree\",0.01745329251994328]," +
-            "   AXIS[\"Geodetic longitude\", EAST]," +
-            "   AXIS[\"Geodetic latitude\", NORTH]]," +
-            "PROJECTION[\"Polar_Stereographic\"]," +
-            "PARAMETER[\"semi_minor\",6378137.0]," +
-            "PARAMETER[\"central_meridian\",0.0]," +
-            "PARAMETER[\"latitude_of_origin\",90.0]," +
-            "PARAMETER[\"scale_factor\",1.0]," +
-            "PARAMETER[\"false_easting\",0.0]," +
-            "PARAMETER[\"false_northing\",0.0]," +
-            "UNIT[\"m\",1.0]," +
-            "AXIS[\"Easting\", EAST]," +
-            "AXIS[\"Northing\", NORTH]]";
 }

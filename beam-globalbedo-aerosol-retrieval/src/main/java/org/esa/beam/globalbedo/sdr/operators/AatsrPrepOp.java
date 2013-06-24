@@ -1,20 +1,4 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 3 of the License, or (at your option)
- * any later version.
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, see http://www.gnu.org/licenses/
- */
-
-/*
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
@@ -23,6 +7,7 @@ package org.esa.beam.globalbedo.sdr.operators;
 
 import org.esa.beam.aatsrrecalibration.operators.RecalibrateAATSRReflectancesOp;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Mask;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.VirtualBand;
@@ -34,11 +19,12 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
-import org.esa.beam.idepix.algorithms.globalbedo.GlobAlbedoOp;
+import org.esa.beam.idepix.operators.CloudScreeningSelector;
+import org.esa.beam.idepix.operators.ComputeChainOp;
 import org.esa.beam.util.Guardian;
 import org.esa.beam.util.ProductUtils;
 
-import java.awt.*;
+import java.awt.Rectangle;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -80,9 +66,7 @@ public class AatsrPrepOp extends Operator {
         }
 
         // subset might have set ptype to null, thus:
-        if (szaSubProduct.getDescription() == null) {
-            szaSubProduct.setDescription("aatsr product");
-        }
+        if (szaSubProduct.getDescription() == null) szaSubProduct.setDescription("aatsr product");
 
         // recalibrate AATSR
         Product recalProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RecalibrateAATSRReflectancesOp.class), GPF.NO_PARAMS, szaSubProduct);
@@ -99,23 +83,34 @@ public class AatsrPrepOp extends Operator {
         ProductUtils.copyMetadata(szaSubProduct, targetProduct);
         ProductUtils.copyTiePointGrids(szaSubProduct, targetProduct);
         ProductUtils.copyGeoCoding(szaSubProduct, targetProduct);
-        ProductUtils.copyFlagBands(szaSubProduct, targetProduct, true);
+        ProductUtils.copyFlagBands(szaSubProduct, targetProduct);
+        Mask mask;
+        for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
+            mask = szaSubProduct.getMaskGroup().get(i);
+            targetProduct.getMaskGroup().add(mask);
+        }
 
         // create pixel calssification if missing in szaSubProduct
         // and add flag band to targetProduct
-        Product idepixNadirProduct;
-        Product idepixFwardProduct;
+        Product idepixNadirProduct = null;
+        Product idepixFwardProduct = null;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
+            pixelClassParam.put("algorithm", CloudScreeningSelector.GlobAlbedo);
             pixelClassParam.put("gaCopyRadiances", false);
+            pixelClassParam.put("gaCopyAnnotations", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
             pixelClassParam.put("gaUseAatsrFwardForClouds", false);
             pixelClassParam.put("gaCloudBufferWidth", 3);
-            idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyFlagBands(idepixNadirProduct, targetProduct, true);
+            idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            ProductUtils.copyFlagBands(idepixNadirProduct, targetProduct);
+            for (int i=0; i<szaSubProduct.getMaskGroup().getNodeCount(); i++){
+                mask = szaSubProduct.getMaskGroup().get(i);
+                targetProduct.getMaskGroup().add(mask);
+            }
             pixelClassParam.put("gaUseAatsrFwardForClouds", true);
-            idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct, true);
+            idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ComputeChainOp.class), pixelClassParam, szaSubProduct);
+            ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct);
         }
 
         // create elevation product if band is missing in szaSubProduct
@@ -140,15 +135,35 @@ public class AatsrPrepOp extends Operator {
 
         // copy all non-reflec bands from szaSubProduct and
         // copy reflectance bands from recalProduct
+        Band tarBand;
         for (Band srcBand : szaSubProduct.getBands()){
             String srcName = srcBand.getName();
-            if (!srcBand.isFlagBand()) {
-                if (srcName.startsWith("reflec")){
-                    ProductUtils.copyBand(srcName, recalProduct, targetProduct, true);
-                } else {
-                    ProductUtils.copyBand(srcName, szaSubProduct, targetProduct, true);
-                }
+            if (srcBand.isFlagBand()){
+                tarBand = targetProduct.getBand(srcName);
+                tarBand.setSourceImage(srcBand.getSourceImage());
             }
+            else if (srcName.startsWith("reflec")){
+                ProductUtils.copyBand(srcName, recalProduct, targetProduct);
+            }
+            else {
+                ProductUtils.copyBand(srcName, szaSubProduct, targetProduct);
+
+            }
+        }
+
+        // add idepix flag band data if needed
+        if (needPixelClassif){
+            Guardian.assertNotNull("idepixProduct", idepixNadirProduct);
+            Band srcBand = idepixNadirProduct.getBand(instrC.getIdepixFlagBandName());
+            Guardian.assertNotNull("idepix Band", srcBand);
+            tarBand = targetProduct.getBand(srcBand.getName());
+            tarBand.setSourceImage(srcBand.getSourceImage());
+
+            Guardian.assertNotNull("idepixProduct", idepixFwardProduct);
+            srcBand = idepixFwardProduct.getBand(instrC.getIdepixFlagBandName());
+            Guardian.assertNotNull("idepix Band", srcBand);
+            tarBand = targetProduct.getBand(instrC.getIdepixFwardFlagBandName());
+            tarBand.setSourceImage(srcBand.getSourceImage());
         }
 
         // add elevation band if needed
@@ -156,7 +171,7 @@ public class AatsrPrepOp extends Operator {
             Guardian.assertNotNull("elevProduct", elevProduct);
             Band srcBand = elevProduct.getBand(instrC.getElevationBandName());
             Guardian.assertNotNull("elevation band", srcBand);
-            ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct, true);
+            ProductUtils.copyBand(srcBand.getName(), elevProduct, targetProduct);
         }
 
         // add vitrual surface pressure band if needed
