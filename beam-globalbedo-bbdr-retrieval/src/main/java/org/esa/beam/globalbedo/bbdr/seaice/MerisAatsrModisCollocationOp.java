@@ -113,8 +113,9 @@ public class MerisAatsrModisCollocationOp extends Operator {
             }
 
             private boolean isInTimeRange(File file) {
+//                IDEPIX_COLLOC_20070621_MER_015745_020516_ATS_015748_020441.dim
                 final String masterProductTimestring =
-                        FileUtils.getFilenameWithoutExtension(sourceProduct.getFileLocation().getName()).substring(20, 24);
+                        FileUtils.getFilenameWithoutExtension(sourceProduct.getFileLocation().getName()).substring(27, 31);
                 final int masterHH = Integer.parseInt(masterProductTimestring.substring(0, 2));
                 final int masterMM = Integer.parseInt(masterProductTimestring.substring(2, 4));
                 final int masterMinutesOfDay = 60 * masterHH + masterMM;

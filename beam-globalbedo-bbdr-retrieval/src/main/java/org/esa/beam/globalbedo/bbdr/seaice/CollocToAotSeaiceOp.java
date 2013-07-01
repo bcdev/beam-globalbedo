@@ -72,6 +72,7 @@ public class CollocToAotSeaiceOp extends Operator {
 
         Product extendedCollocationProduct = getCollocationProductWithIdepix();
         if (idepixOnly) {
+            removeDuplicatedLatLon(extendedCollocationProduct);
             setTargetProduct(extendedCollocationProduct);
         } else {
             aotSourceProduct = getCollocationMasterSubset(extendedCollocationProduct);
@@ -95,6 +96,20 @@ public class CollocToAotSeaiceOp extends Operator {
                 setTargetProduct(aotProduct);
             }
             getTargetProduct().setProductType(sourceProduct.getProductType() + "_AOT");
+        }
+    }
+
+    private void removeDuplicatedLatLon(Product product) {
+        // TODO: this method might be very useful as BEAM utility method...
+        if (product.containsBand("latitude") &&
+                product.containsTiePointGrid("latitude")) {
+            final Band b = product.getBand("latitude");
+            product.removeBand(b);
+        }
+        if (product.containsBand("longitude") &&
+                product.containsTiePointGrid("longitude")) {
+            final Band b = product.getBand("longitude");
+            product.removeBand(b);
         }
     }
 

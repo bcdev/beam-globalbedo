@@ -126,7 +126,10 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
 
         // we need ALL bands...
         for (Band srcBand : reprojectedProduct.getBands()) {
-            Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
+            String targetBandName = srcBand.getName();
+            targetBandName.replace(':','_');
+            targetBandName.replace(' ','_');
+            Band band = upscaledProduct.addBand(targetBandName, srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
@@ -154,7 +157,10 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
 
         if (hasValidPixel(getSourceTile(nsamplesBand, srcRect), nsamplesBand.getNoDataValue())) {
             for (Band srcBand : reprojectedProduct.getBands()) {
-                computeNearest(srcTiles.get(srcBand.getName()), targetTiles.get(srcBand.getName()),
+                String targetBandName = srcBand.getName();
+                targetBandName.replace(':','_');
+                targetBandName.replace(' ','_');
+                computeNearest(srcTiles.get(srcBand.getName()), targetTiles.get(targetBandName),
                                srcTiles.get(nsamplesBand.getName()), scaling);
             }
         } else {
