@@ -105,7 +105,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
 
         setReprojectedProduct(mosaicProduct, MosaicConstants.ADAM_TILE_SIZE);
 
-        final int width  = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling);
+        final int width = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling);
         final int height = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling);
         final int tileWidth = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
         final int tileHeight = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
@@ -126,9 +126,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
 
         // we need ALL bands...
         for (Band srcBand : reprojectedProduct.getBands()) {
-            String targetBandName = srcBand.getName();
-            targetBandName.replace(':','_');
-            targetBandName.replace(' ','_');
+            String targetBandName = getTargetBandName(srcBand);
             Band band = upscaledProduct.addBand(targetBandName, srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
             band.setNoDataValue(Float.NaN);
@@ -157,9 +155,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
 
         if (hasValidPixel(getSourceTile(nsamplesBand, srcRect), nsamplesBand.getNoDataValue())) {
             for (Band srcBand : reprojectedProduct.getBands()) {
-                String targetBandName = srcBand.getName();
-                targetBandName.replace(':','_');
-                targetBandName.replace(' ','_');
+                String targetBandName = getTargetBandName(srcBand);
                 computeNearest(srcTiles.get(srcBand.getName()), targetTiles.get(targetBandName),
                                srcTiles.get(nsamplesBand.getName()), scaling);
             }
@@ -177,6 +173,16 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
                 }
             }
         }
+    }
+
+    private String getTargetBandName(Band srcBand) {
+        String targetBandName = srcBand.getName();
+        // if we have weird band names with colons and blanks, replace those with '_' ...
+        if (targetBandName.contains(":") || srcBand.getName().contains(" ")) {
+            final String s1 = targetBandName.replace(':', '_');
+            targetBandName = s1.replace(' ', '_');
+        }
+        return targetBandName;
     }
 
     private File findRefTile() {
