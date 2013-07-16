@@ -72,7 +72,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-    @Parameter(valueSet = {"5", "60"}, defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "true", description = "If True product will be reprojected")
