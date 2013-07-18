@@ -9,6 +9,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 /**
@@ -65,11 +66,10 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
     @SourceProducts(description = "Albedo 8-day products")
     private Product[] albedo8DayProduct;
 
-    @Parameter(description = "Monthly weighting coeffs")
-    private float[][] monthlyWeighting;
-
     @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
+
+    private float[][] monthlyWeighting;
 
 
     @Override
@@ -269,6 +269,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK, dataMaskBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SZA, szaBandName, albedo8DayProduct[j]);
         }
+
+        monthlyWeighting = AlbedoInversionUtils.getMonthlyWeighting();
     }
 
     @Override

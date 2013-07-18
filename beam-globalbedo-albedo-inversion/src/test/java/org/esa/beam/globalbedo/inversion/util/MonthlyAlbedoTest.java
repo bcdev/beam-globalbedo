@@ -13,7 +13,7 @@ public class MonthlyAlbedoTest extends TestCase {
 
     public void testGetMonthlyWeighting() throws Exception {
 
-        float[][] monthlyWeighting = GlobalbedoLevel3MonthlyFrom8DayAlbedo.getMonthlyWeighting();
+        float[][] monthlyWeighting = AlbedoInversionUtils.getMonthlyWeighting();
 
         // expected results from breadboard
         assertEquals(12, monthlyWeighting.length);
