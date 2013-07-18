@@ -245,4 +245,59 @@ public class AlbedoInversionUtils {
         return product;
     }
 
+    public static float[][] getMonthlyWeighting() {
+        final int[] startingDoy = new int[]{1, 32, 60, 91, 121, 152, 182, 213, 244, 274, 305, 335};
+        final int[] nDays = new int[]{31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
+        int[] eightDayTimePeriod = new int[46];
+        int[] eightDayTimePeriodExtended = new int[47];
+        for (int i = 0; i < eightDayTimePeriod.length; i++) {
+            eightDayTimePeriod[i] = 1 + 8 * i;
+            eightDayTimePeriodExtended[i] = 1 + 8 * i;
+        }
+        eightDayTimePeriodExtended[46] = 369;
+
+        int[] daysInYear = new int[365];
+        for (int i = 0; i < daysInYear.length; i++) {
+            daysInYear[i] = 1 + i;
+        }
+        float[][] monthlyWeighting = new float[12][daysInYear.length];  // the result array
+
+        float[][] weight = new float[47][365];
+        int[] deltaTime = new int[365];
+        for (int i = 0; i < eightDayTimePeriodExtended.length; i++) {
+            for (int j = 0; j < deltaTime.length; j++) {
+                deltaTime[j] = daysInYear[j] - eightDayTimePeriodExtended[i];
+                weight[i][j] = (float) Math.exp(-1.0 * Math.abs(deltaTime[j]) / AlbedoInversionConstants.HALFLIFE);
+            }
+        }
+
+        int j = 0;
+        for (final int startingDayInMonth : startingDoy) {
+            final int numberOfDaysInMonth = nDays[j];
+            for (final int day : daysInYear) {
+                float nd = 0.0f;
+                float sum = 0.0f;
+                for (final int doy : eightDayTimePeriod) {
+                    if (doy >= startingDayInMonth - 8 && doy <= startingDayInMonth + numberOfDaysInMonth + 8) {
+                        float monthlyWeight = 1.0f;
+                        if (doy >= startingDayInMonth + numberOfDaysInMonth - 8) {
+                            final float distance = (startingDayInMonth + numberOfDaysInMonth - doy) / 8.0f;
+                            monthlyWeight = distance * 0.5f + 0.5f;
+                        }
+                        if (doy <= startingDayInMonth + 8) {
+                            final float distance = (startingDayInMonth + 8 - doy) / 8.0f;
+                            monthlyWeight = distance * 0.5f + 0.5f;
+                        }
+                        nd += monthlyWeight;
+                        sum += weight[(doy + 8 - 1) / 8][day - 1] * monthlyWeight;
+                    }
+                }
+                monthlyWeighting[j][day - 1] = sum / nd;
+            }
+            j++;
+        }
+        return monthlyWeighting;
+    }
+
 }
