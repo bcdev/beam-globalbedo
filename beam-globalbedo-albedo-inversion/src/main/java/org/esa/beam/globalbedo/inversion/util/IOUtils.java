@@ -792,16 +792,34 @@ public class IOUtils {
         return Math.abs(difference);
     }
 
-    public static Product[] getAlbedo8DayProducts(String albedoDir, final String tile) {
+    public static Product[] getAlbedo8DayProducts(String albedoDir, final String tile, boolean getMosaicProducts,
+                                                  final int year, final int monthIndex) {
 
-        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
+        final FilenameFilter inputTileProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
+//                e.g. GlobAlbedo.albedo.2005121.h18v04.dim
                 return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
                         (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
             }
         };
 
-        final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
+        final FilenameFilter inputMosaicProductNameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+//                e.g. GlobAlbedo.2005089.mosaic.5
+                final int productDoy = getDoyFromAlbedoProductName(name);
+                final int productMonthIndex = AlbedoInversionUtils.getMonthIndexFromDoy(year, productDoy);
+                return (name.startsWith("GlobAlbedo." + year + productDoy + "mosaic") &&
+                        (name.endsWith(tile + ".dim") || name.endsWith(tile + ".nc")) &&
+                        productMonthIndex == monthIndex);
+            }
+        };
+
+        String[] albedoFiles;
+        if (getMosaicProducts) {
+            albedoFiles = (new File(albedoDir)).list(inputMosaicProductNameFilter);
+        } else {
+            albedoFiles = (new File(albedoDir)).list(inputTileProductNameFilter);
+        }
 
         if (albedoFiles != null && albedoFiles.length > 0) {
             Product[] albedoProducts = new Product[albedoFiles.length];

@@ -35,6 +35,9 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
 
+    @Parameter(defaultValue = "true", description = "If set, 8-day products are already mosaics")
+    private boolean isInputMosaic;
+
 
     private Logger logger;
 
@@ -44,9 +47,8 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Albedo 8-day input files...
-        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
+        Product[] albedo8DayProduct = getEightDayInputProducts();
 
-        Product[] albedo8DayProduct = IOUtils.getAlbedo8DayProducts(albedoDir, tile);
         if (albedo8DayProduct != null && albedo8DayProduct.length > 0) {
 
             // STEP 2: get Albedo monthly product...
@@ -61,6 +63,18 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
         } else {
             logger.log(Level.WARNING, "No monthly albedos computated for tile: " + tile + ", year: " + year +
                     ", month: " + monthIndex);
+        }
+    }
+
+    private Product[] getEightDayInputProducts() {
+        Product[] inputProducts;
+        String albedoDir;
+        if (isInputMosaic) {
+            albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" + File.separator;
+            return IOUtils.getAlbedo8DayProducts(albedoDir, tile, true, year, monthIndex);
+        } else {
+            albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
+            return IOUtils.getAlbedo8DayProducts(albedoDir, tile, false, year, -1);
         }
     }
 

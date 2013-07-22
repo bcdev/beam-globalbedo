@@ -39,6 +39,22 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * Converts a day of year to a datestring in yyyyMMdd format
+     *
+     * @param year - the year
+     * @param doy  - the day of year
+     *
+     * @return String - the datestring
+     */
+    public static int getMonthIndexFromDoy(int year, int doy) {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.DAY_OF_YEAR, doy);
+        calendar.set(Calendar.YEAR, year);
+        return calendar.get(Calendar.MONTH);
+    }
+
+
+    /**
      * Adds a land mask sample definition to a configurator used in a point operator
      *
      * @param configurator  - the configurator
