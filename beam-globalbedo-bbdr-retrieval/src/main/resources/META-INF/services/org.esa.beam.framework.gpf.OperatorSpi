@@ -13,6 +13,7 @@ org.esa.beam.globalbedo.bbdr.seaice.MerisAatsrCoregistrationOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.CollocToAotSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrToPstSingleQuadrantOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.AotToBbdrSeaiceOp$Spi
+org.esa.beam.globalbedo.bbdr.UtFromSzaOp$Spi
 org.esa.beam.landcover.UclCloudOperator$Spi
 org.esa.beam.landcover.LcQaOp$Spi
 org.esa.beam.landcover.LcUclCloudBuffer$Spi

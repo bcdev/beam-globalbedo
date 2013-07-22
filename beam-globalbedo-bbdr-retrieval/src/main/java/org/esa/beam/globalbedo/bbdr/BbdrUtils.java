@@ -10,6 +10,7 @@ import javax.media.jai.PlanarImage;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.IOException;
+import java.util.Calendar;
 
 /**
  * Utility class for BBDR retrieval
@@ -270,4 +271,22 @@ public class BbdrUtils {
 
         return (float) mean[0];
     }
+
+    public static int getDoyFromYYYYMMDD(String yyyymmdd) {
+        Calendar cal = Calendar.getInstance();
+        int doy = -1;
+        try {
+            final int year = Integer.parseInt(yyyymmdd.substring(0, 4));
+            final int month = Integer.parseInt(yyyymmdd.substring(4, 6)) - 1;
+            final int day = Integer.parseInt(yyyymmdd.substring(6, 8));
+            cal.set(year, month, day);
+            doy = cal.get(Calendar.DAY_OF_YEAR);
+        } catch (StringIndexOutOfBoundsException e) {
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            e.printStackTrace();
+        }
+        return doy;
+    }
+
 }
