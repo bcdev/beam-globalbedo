@@ -21,7 +21,9 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -29,11 +31,14 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
+import javax.media.jai.BorderExtender;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -72,10 +77,10 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"6", "30", "60"}, description = "Scaling (6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
-    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
+    @Parameter(defaultValue = "true", description = "If True product will be reprojected to PlateCarree")
     private boolean reprojectToPlateCarre;
 
     @TargetProduct
@@ -116,16 +121,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
             reprojectedProduct = mosaicProduct;
         }
 
-        /////////////////////////////////////////////////////////////////////////////////////////////////
-        // not needed any more
-//        SubsetOp subsetOp = new SubsetOp();
-//        subsetOp.setSourceProduct(reprojectedProduct);
-//        subsetOp.setRegion(new Rectangle(17 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE));
-//        reprojectedProduct = subsetOp.getTargetProduct();
-        /////////////////////////////////////////////////////////////////////////////////////////////////
+        final int width = 43200 / scaling;
+        final int height = 21600 / scaling;
 
-        int width = reprojectedProduct.getSceneRasterWidth() / scaling;
-        int height = reprojectedProduct.getSceneRasterHeight() / scaling;
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
@@ -134,7 +132,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
+        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 2, TILE_SIZE / scaling / 2);
 
         if (reprojectToPlateCarre) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
@@ -150,7 +148,19 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
             Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
             ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
         } else {
-            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
+            final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
+            try {
+                final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
+                final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
+                CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
+                                                          UPPER_LEFT_TILE_UPPER_LEFT_X,
+                                                          UPPER_LEFT_TILE_UPPER_LEFT_Y,
+                                                          pixelSizeX,
+                                                          pixelSizeY);
+                upscaledProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for SIN mosaic: ", e);
+            }
         }
 
         brdfModelBandNames = IOUtils.getInversionParameterBandNames();
@@ -172,11 +182,14 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
         String mergeDirString = gaRootDir + File.separator + "Merge";
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
-        for (File mergeFile : mergeFiles) {
-            File[] tileFiles = mergeFile.listFiles(mergeFilter);
-            for (File tileFile : tileFiles) {
-                if (tileFile.exists()) {
-                    return tileFile;
+        if (mergeFiles != null) {
+            System.out.println("mergeFiles = " + mergeFiles[0]);
+            for (File mergeFile : mergeFiles) {
+                File[] tileFiles = mergeFile.listFiles(mergeFilter);
+                for (File tileFile : tileFiles) {
+                    if (tileFile.exists()) {
+                        return tileFile;
+                    }
                 }
             }
         }
@@ -185,11 +198,12 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
-//        System.out.println("targetRectangle = " + targetRect);
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                targetRect.y * scaling,
-                targetRect.width * scaling,
-                targetRect.height * scaling);
+                                          targetRect.y * scaling,
+                                          targetRect.width * scaling,
+                                          targetRect.height * scaling);
+//        System.out.println("calling computeTileStack: targetRect = " + targetRect);
+//        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
         if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
@@ -263,7 +277,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
                 for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
                     for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
                         Matrix m = getM(mSrcTiles, sx, sy);
-                        if (containsData(m)) {
+                        if (m.det() != 0.0 && containsData(m)) {
                             Matrix mInv = m.inverse();
                             Matrix f = getF(fSrcTiles, sx, sy);
                             Matrix fmInv = f.times(mInv);
@@ -272,7 +286,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
                         }
                     }
                 }
-                if (containsData(mInvSum)) {
+                if (mInvSum.det() != 0.0 && containsData(mInvSum)) {
                     Matrix mt = mInvSum.inverse();
                     setM(mt, mTargetTiles, x, y);
                     Matrix ft = fmInvsum.times(mt);

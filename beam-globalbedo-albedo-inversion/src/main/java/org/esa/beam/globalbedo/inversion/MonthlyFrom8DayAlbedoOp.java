@@ -20,10 +20,10 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.albedo.monthly",
-        description = "Provides monthly albedos from 8-day periods",
-        authors = "Olaf Danne",
-        version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+                  description = "Provides monthly albedos from 8-day periods",
+                  authors = "Olaf Danne",
+                  version = "1.0",
+                  copyright = "(C) 2011 by Brockmann Consult")
 public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -70,6 +70,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
     private int monthIndex;
 
     private float[][] monthlyWeighting;
+    private int[] doy;
 
 
     @Override
@@ -91,8 +92,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
             if (dataMask > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
-                int doy = IOUtils.getDoyFromAlbedoProductName(albedo8DayProduct[j].getName());
-                final float thisWeight = monthlyWeighting[monthIndex - 1][doy - 1];
+
+                final float thisWeight = monthlyWeighting[monthIndex - 1][doy[j] - 1];
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                     monthlyDHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i]].getDouble();
                     monthlyBHR[i] += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i]].getDouble();
@@ -125,8 +126,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         }
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyBHR, monthlyDHRSigma, monthlyBHRSigma,
-                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                monthlyDataMask, monthlySza);
+                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
+                                               monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -207,7 +208,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                ProductData.TYPE_FLOAT32);
+                                                                 ProductData.TYPE_FLOAT32);
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
@@ -245,6 +246,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         // 3x DHR, 3x BHR, 3x DHR_sigma, 3x BHR_sigma, weightedNumSamples, relEntropy, goodnessOfFit,#
         // snowFraction, datamask, SZA
 
+        doy = new int[albedo8DayProduct.length];
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                 configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i], dhrBandNames[i], albedo8DayProduct[j]);
@@ -268,6 +270,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK, dataMaskBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SZA, szaBandName, albedo8DayProduct[j]);
+
+            doy[j] = IOUtils.getDoyFromAlbedoProductName(albedo8DayProduct[j].getName());
         }
 
         monthlyWeighting = AlbedoInversionUtils.getMonthlyWeighting();

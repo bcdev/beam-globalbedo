@@ -736,7 +736,6 @@ public class IOUtils {
         } else {
             return -1;
         }
-//        System.out.println("productName, doystring = " + productName + "," + doyString);
         int doy = Integer.parseInt(doyString);
         if (doy < 0 || doy > 366) {
             return -1;
@@ -806,11 +805,16 @@ public class IOUtils {
         final FilenameFilter inputMosaicProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
 //                e.g. GlobAlbedo.2005089.mosaic.5
-                final int productDoy = getDoyFromAlbedoProductName(name);
-                final int productMonthIndex = AlbedoInversionUtils.getMonthIndexFromDoy(year, productDoy);
-                return (name.startsWith("GlobAlbedo." + year + productDoy + "mosaic") &&
-                        (name.endsWith(tile + ".dim") || name.endsWith(tile + ".nc")) &&
-                        productMonthIndex == monthIndex);
+                boolean filenameOk = name.startsWith("GlobAlbedo." + year) && name.contains(".mosaic") &&
+                        (name.endsWith(".dim") || name.endsWith(".nc"));
+                if (filenameOk) {
+                    final int productDoy = getDoyFromAlbedoProductName(name);
+                    final int productMonthIndex = AlbedoInversionUtils.getMonthIndexFromDoy(year, productDoy);
+                    // consider products within same month +- 1
+                    return (filenameOk && Math.abs(productMonthIndex - monthIndex) <= 1);
+                } else {
+                    return false;
+                }
             }
         };
 
@@ -827,6 +831,7 @@ public class IOUtils {
             int productIndex = 0;
             for (int i = 0; i < albedoFiles.length; i++) {
                 String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
+//                System.out.println("albedoProductFileName = " + albedoProductFileName);
 
                 if ((new File(albedoProductFileName)).exists()) {
                     Product product;

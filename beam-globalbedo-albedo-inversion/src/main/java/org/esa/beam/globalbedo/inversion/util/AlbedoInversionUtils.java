@@ -50,7 +50,7 @@ public class AlbedoInversionUtils {
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_YEAR, doy);
         calendar.set(Calendar.YEAR, year);
-        return calendar.get(Calendar.MONTH);
+        return calendar.get(Calendar.MONTH) + 1;  // returned index is in [1,12]
     }
 
 

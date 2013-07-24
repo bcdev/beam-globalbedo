@@ -38,12 +38,12 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     @Parameter(defaultValue = "true", description = "If set, 8-day products are already mosaics")
     private boolean isInputMosaic;
 
-
-    private Logger logger;
+    @Parameter(defaultValue = "", description = "Resolution in case of mosaic")
+    private String resolution;
 
     @Override
     public void initialize() throws OperatorException {
-        logger = BeamLogManager.getSystemLogger();
+        Logger logger = BeamLogManager.getSystemLogger();
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // STEP 1: get Albedo 8-day input files...
@@ -67,10 +67,9 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     }
 
     private Product[] getEightDayInputProducts() {
-        Product[] inputProducts;
         String albedoDir;
         if (isInputMosaic) {
-            albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" + File.separator;
+            albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" + File.separator + resolution + File.separator;
             return IOUtils.getAlbedo8DayProducts(albedoDir, tile, true, year, monthIndex);
         } else {
             albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
