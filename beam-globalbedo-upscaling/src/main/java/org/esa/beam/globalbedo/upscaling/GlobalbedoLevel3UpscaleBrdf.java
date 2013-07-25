@@ -175,8 +175,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
-                return name.equals(expectedFilename);
+                String expectedDimFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                String expectedNcFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                return (name.equals(expectedDimFilename) || name.equals(expectedNcFilename));
             }
         };
 
