@@ -83,6 +83,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(defaultValue = "true", description = "If True product will be reprojected to PlateCarree")
     private boolean reprojectToPlateCarre;
 
+    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
+    private String inputFormat;
+
     @TargetProduct
     private Product targetProduct;
 
@@ -175,9 +178,13 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String expectedDimFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
-                String expectedNcFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
-                return (name.equals(expectedDimFilename) || name.equals(expectedNcFilename));
+                String expectedFilename;
+                if (inputFormat.equals("DIMAP")) {
+                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                } else {
+                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                }
+                return name.equals(expectedFilename);
             }
         };
 
