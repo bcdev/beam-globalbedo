@@ -49,6 +49,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private final MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
     private boolean mosaicModisPriors;
+    private boolean mosaicNewModisPriors;
     private boolean mosaicAdam;
     private boolean mosaicAdamPriors;
     private int adamPriorStage;
@@ -71,7 +72,10 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         } else if (mosaicAdamPriors) {
             mosaicDefinition.setTileSize(120);
             mosaicTiles = createPriorMosaicTiles(inputFile);
-        } else {
+        } else if (mosaicNewModisPriors) {
+            mosaicDefinition.setTileSize(1200);
+            mosaicTiles = createPriorMosaicTiles(inputFile);
+        }else {
             mosaicTiles = createMosaicTiles(inputFile);
         }
         mosaicGrid = new MosaicGrid(mosaicDefinition, mosaicTiles);
@@ -93,7 +97,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
             CrsGeoCoding crsGeoCoding = null;
             if (mosaicAdam || mosaicAdamPriors) {
                 crsGeoCoding = getMosaicGeocoding(10);
-            } else if (mosaicModisPriors) {
+            } else if (mosaicModisPriors || mosaicNewModisPriors) {
                 crsGeoCoding = getMosaicGeocoding(1);
             }
             product.setGeoCoding(crsGeoCoding);
@@ -150,11 +154,11 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         File[] tileDirs = null;
         if (mosaicModisPriors) {
             tileDirs = getModisPriorTileDirectories(rootDir.getAbsolutePath());
-        } else if (mosaicAdamPriors) {
+        } else if (mosaicAdamPriors || mosaicNewModisPriors) {
             if (adamPriorStage == 2) {
-                tileDirs = getAdamPriorTileDirectories(rootDir.getParentFile().getAbsolutePath(), adamPriorStage);
+                tileDirs = getPriorTileDirectories(rootDir.getParentFile().getAbsolutePath(), adamPriorStage);
             } else {
-                tileDirs = getAdamPriorTileDirectories(rootDir.getAbsolutePath(), adamPriorStage);
+                tileDirs = getPriorTileDirectories(rootDir.getAbsolutePath(), adamPriorStage);
             }
         }
 
@@ -208,7 +212,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return rootDir.listFiles(tileFilter);
     }
 
-    public static File[] getAdamPriorTileDirectories(String rootDirString, int stage) {
+    public static File[] getPriorTileDirectories(String rootDirString, int stage) {
         // e.g. stage 1: <adamRootDir>/<tile>/stage1prior/processed
         // e.g. stage 2: <adamRootDir>/<tile>/stage2prior/background/processed
         // e.g. stage 3: <cems adamRootDir>/<tile>/background/processed
@@ -244,6 +248,10 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         this.mosaicModisPriors = mosaicModisPriors;
     }
 
+    public void setMosaicNewModisPriors(boolean mosaicNewModisPriors) {
+        this.mosaicNewModisPriors = mosaicNewModisPriors;
+    }
+
     public void setMosaicAdam(boolean mosaicAdam) {
         this.mosaicAdam = mosaicAdam;
     }
@@ -252,7 +260,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         this.mosaicAdamPriors = mosaicAdamPriors;
     }
 
-    public void setAdamPriorStage(int adamPriorStage) {
+    public void setPriorStage(int adamPriorStage) {
         this.adamPriorStage = adamPriorStage;
     }
 

@@ -39,37 +39,38 @@ import java.io.IOException;
 import java.util.Map;
 
 /**
- * Reprojects and upscales the GlobAlbedo product
+ * Upscales and mosaics new MODIS priors (Aug. 2013)
  * that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.
  *
  * @author MarcoZ
  */
 @OperatorMetadata(
-        alias = "ga.l3.upscale.adam",
+        alias = "ga.l3.upscale.priors.new",
         authors = "Olaf Danne",
         copyright = "2011 Brockmann Consult",
         version = "0.1",
         internal = true,
-        description = "Upscales and mosaics ADAM products (pretty similar to the MODIS priors) \n" +
-                " that exist in multiple Sinusoidal tiles into a 0.1 degree  Plate Caree product.")
-public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp {
+        description = "Upscales and mosaics new MODIS priors (Aug. 2013) \n" +
+                " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
+public class GlobalbedoLevel3UpscaleNewModisPriors extends GlobalbedoLevel3UpscaleBasisOp {
 
-    @Parameter(defaultValue = "", description = "ADAM root directory")
-    private String adamRootDir;
     // products at MSSL are like /disk/Globalbedo90/adam/processed/Monthly/h23v06/Adam.nr.200506.h23v06.dim
     //   general:                /disk/Globalbedo90/adam/processed/Monthly/hXXvYy/Adam.nr.yyyyMM.hXXvYY.dim
 
-    @Parameter(valueSet = {"1.2"}, description = "Scaling (1.2 = 1/10deg resolution)", defaultValue = "1.2")
-    private double scaling;
+    @Parameter(valueSet = {"6", "60"}, description = "Scaling (6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
+    private int scaling;
 
+    @Parameter(valueSet = {"Snow", "NoSnow", "SnowAndNoSnow"}, description = "Snow Mode, must be 'Snow', 'NoSnow, or 'SnowAndNoSnow",
+               defaultValue = "NoSnow")
+    private String snowMode;
 
     @TargetProduct
     private Product targetProduct;
 
 
     private static final String ADAM_NSAMPLES_NAME = "GROUND_N_SAMPLES";
-    private static final String ADAM_STAGE1_PRIOR_NSAMPLES_NAME = "Weighted number of samples";
-    private static final String ADAM_STAGE2_PRIOR_NSAMPLES_NAME = "N samples";
+    private static final String STAGE1_PRIOR_NSAMPLES_NAME = "Weighted number of samples";
+    private static final String STAGE2_PRIOR_NSAMPLES_NAME = "N samples";
 
     private Band nsamplesBand;
 
@@ -77,7 +78,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
     public void initialize() throws OperatorException {
         final File refTile = findRefTile();
         if (refTile == null || !refTile.exists()) {
-            throw new OperatorException("No ADAM files for mosaicing found.");
+            throw new OperatorException("No Prior files for mosaicing found.");
         }
 
         final ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
@@ -85,14 +86,9 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
         if (productReader instanceof GlobAlbedoMosaicProductReader) {
-            if (isPriors) {
-                ((GlobAlbedoMosaicProductReader) productReader).setMosaicAdamPriors(true);
-                ((GlobAlbedoMosaicProductReader) productReader).setPriorStage(priorStage);
-            } else {
-                ((GlobAlbedoMosaicProductReader) productReader).setMosaicAdam(true);
-            }
+            ((GlobAlbedoMosaicProductReader) productReader).setPriorStage(priorStage);
+            ((GlobAlbedoMosaicProductReader) productReader).setMosaicNewModisPriors(true);
         }
-
         Product mosaicProduct;
         try {
             mosaicProduct = productReader.readProductNodes(refTile, null);
@@ -100,21 +96,21 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
-        setReprojectedProduct(mosaicProduct, MosaicConstants.ADAM_TILE_SIZE);
+        setReprojectedProduct(mosaicProduct, MosaicConstants.MODIS_TILE_SIZE);
 
-        final int width = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling);
-        final int height = (int) (MosaicConstants.ADAM_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling);
-        final int tileWidth = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
-        final int tileHeight = (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 2);
+        final int width = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling;
+        final int height = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling;
+        final int tileWidth = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
+        final int tileHeight = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
 
         String nsamplesBandName;
         if (isPriors) {
             if (priorStage == 1) {
-                nsamplesBandName = ADAM_STAGE1_PRIOR_NSAMPLES_NAME;
+                nsamplesBandName = STAGE1_PRIOR_NSAMPLES_NAME;
             } else {
-                nsamplesBandName = ADAM_STAGE2_PRIOR_NSAMPLES_NAME;
+                nsamplesBandName = STAGE2_PRIOR_NSAMPLES_NAME;
             }
         } else {
             nsamplesBandName = ADAM_NSAMPLES_NAME;
@@ -133,8 +129,8 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize((int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4),
-                                             (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4));
+        upscaledProduct.setPreferredTileSize((int) (MosaicConstants.MODIS_TILE_SIZE / scaling / 4),
+                                             (int) (MosaicConstants.MODIS_TILE_SIZE / scaling / 4));
 
         attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, true);
 
@@ -183,54 +179,54 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
     }
 
     private File findRefTile() {
-        FilenameFilter adamFilter = null;
-        File[] adamFiles;
+        FilenameFilter priorFilter = null;
+        File[] priorFiles;
         if (isPriors) {
             if (priorStage == 1) {
-                // e.g. <adamRootDir>/<tile>/stage1prior/processed/Kernels.001.005.h18v04.SnowAndNoSnow.hdr
-                adamFilter = new FilenameFilter() {
+                // e.g. <priorRootDir>/<tile>/stage1prior/processed/Kernels.001.005.h18v04.SnowAndNoSnow.hdr
+                priorFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
                         String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
-                        String expectedFilenameSuffix = "SnowAndNoSnow.hdr";
+                        String expectedFilenameSuffix = "." + snowMode + ".hdr";
                         return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
                     }
                 };
             } else if (priorStage == 2) {
-                // e.g. <adamRootDir>/<tile>/stage2prior/background/processed/Kernels.001.005.h18v04.backGround.SnowAndNoSnow.hdr
-                adamFilter = new FilenameFilter() {
+                // e.g. <priorRootDir>/<tile>/stage2prior/background/processed/Kernels.001.005.h18v04.backGround.SnowAndNoSnow.hdr
+                priorFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
                         String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
-                        String expectedFilenameSuffix = "backGround.SnowAndNoSnow.hdr";
+                        String expectedFilenameSuffix = "backGround." + snowMode + ".hdr";
                         return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
                     }
                 };
             } else if (priorStage == 3) {
-                // e.g. <adamRootDir>/<tile>/background/processed/Kernels.001.005.h18v04.background.SnowAndNoSnow.nc
-                adamFilter = new FilenameFilter() {
+                // e.g. <priorRootDir>/<tile>/background/processed/Kernels.001.005.h18v04.background.SnowAndNoSnow.nc
+                priorFilter = new FilenameFilter() {
                     public boolean accept(File dir, String name) {
                         String expectedFilenamePrefix = "Kernels." + IOUtils.getDoyString(doy);
-                        String expectedFilenameSuffix = "background.SnowAndNoSnow.nc";
+                        String expectedFilenameSuffix = "." + snowMode + ".nc";
                         return name.startsWith(expectedFilenamePrefix) && name.endsWith(expectedFilenameSuffix);
                     }
                 };
             }
-            adamFiles = GlobAlbedoMosaicProductReader.getPriorTileDirectories(adamRootDir, priorStage);
+            priorFiles = GlobAlbedoMosaicProductReader.getPriorTileDirectories(priorRootDir, priorStage);
         } else {
-            adamFilter = new FilenameFilter() {
+            priorFilter = new FilenameFilter() {
                 public boolean accept(File dir, String name) {
                     // Adam.nr.yyyyMM.hXXvYY.dim
                     String expectedFilename = "Adam.nr." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".dim";
                     return name.equalsIgnoreCase(expectedFilename);
                 }
             };
-            adamFiles = GlobAlbedoMosaicProductReader.getAdamTileDirectories(adamRootDir);
+            priorFiles = GlobAlbedoMosaicProductReader.getAdamTileDirectories(priorRootDir);
         }
 
-        for (File adamFile : adamFiles) {
-            File[] adamTileFiles = adamFile.listFiles(adamFilter);
-            for (File adamTileFile : adamTileFiles) {
-                if (adamTileFile.exists()) {
-                    return adamTileFile;
+        for (File priorFile : priorFiles) {
+            File[] priorTileFiles = priorFile.listFiles(priorFilter);
+            for (File priorTileFile : priorTileFiles) {
+                if (priorTileFile.exists()) {
+                    return priorTileFile;
                 }
             }
         }
@@ -240,7 +236,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3UpscaleAdam.class);
+            super(GlobalbedoLevel3UpscaleNewModisPriors.class);
         }
     }
 }
