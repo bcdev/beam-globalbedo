@@ -59,6 +59,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
+    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
+    private String inputFormat;
+
     @TargetProduct
     private Product targetProduct;
 
@@ -88,7 +91,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
 
         setReprojectedProduct(mosaicProduct, MosaicConstants.MODIS_TILE_SIZE);
 
-        final int width  = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling;
+        final int width = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling;
         final int height = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling;
         final int tileWidth = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
         final int tileHeight = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
@@ -112,24 +115,26 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                targetRect.y * scaling,
-                targetRect.width * scaling,
-                targetRect.height * scaling);
-
+                                          targetRect.y * scaling,
+                                          targetRect.width * scaling,
+                                          targetRect.height * scaling);
+//        System.out.println("calling computeTileStack: targetRect = " + targetRect);
+//        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
-
-        if (hasValidPixel(getSourceTile(entropyBand, srcRect), entropyBand.getNoDataValue())) {
+        if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
-            computeBrdfUncertainty(srcTiles, targetTiles, targetRect);
-            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
-            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
-            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
-            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
-            computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
-            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME), scaling);
+
+            computeUncertainty(srcTiles, targetTiles, targetRect);
+            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
+
                 Tile targetTile = tileEntry.getValue();
                 String bandName = tileEntry.getKey();
                 double noDataValue = getTargetProduct().getBand(bandName).getNoDataValue();
@@ -143,27 +148,50 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     }
 
     private File findRefTile() {
+
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                String expectedFilename;
+                if (inputFormat.equals("DIMAP")) {
+                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                } else {
+                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                }
                 return name.equals(expectedFilename);
             }
         };
 
         String mergeDirString = gaRootDir + File.separator + "Merge";
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
-        for (File mergeFile : mergeFiles) {
-            File[] tileFiles = mergeFile.listFiles(mergeFilter);
-            for (File tileFile : tileFiles) {
-                if (tileFile.exists()) {
-                    return tileFile;
+        if (mergeFiles != null) {
+            System.out.println("mergeFiles = " + mergeFiles[0]);
+            for (File mergeFile : mergeFiles) {
+                File[] tileFiles = mergeFile.listFiles(mergeFilter);
+                for (File tileFile : tileFiles) {
+                    if (tileFile.exists()) {
+                        return tileFile;
+                    }
                 }
             }
         }
         return null;
     }
 
-    private void computeBrdfUncertainty(Map<String, Tile> srcTiles, Map<String, Tile> targetTiles, Rectangle targetRectangle) {
+    private boolean hasValidPixel(Tile entropy) {
+        double noDataValue = entropyBand.getNoDataValue();
+        Rectangle rect = entropy.getRectangle();
+        for (int y = rect.y; y < rect.y + rect.height; y++) {
+            for (int x = rect.x; x < rect.x + rect.width; x++) {
+                double sample = entropy.getSampleDouble(x, y);
+                if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private void computeUncertainty(Map<String, Tile> srcTiles, Map<String, Tile> targetTiles, Rectangle targetRectangle) {
         Tile[] fSrcTiles = getFTiles(srcTiles);
         Tile[][] mSrcTiles = getMTiles(srcTiles);
         Tile[] fTargetTiles = getFTiles(targetTiles);
@@ -178,7 +206,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                 for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
                     for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
                         Matrix m = getM(mSrcTiles, sx, sy);
-                        if (matrixContainsData(m)) {
+                        if (m.det() != 0.0 && containsData(m)) {
                             Matrix mInv = m.inverse();
                             Matrix f = getF(fSrcTiles, sx, sy);
                             Matrix fmInv = f.times(mInv);
@@ -187,7 +215,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                         }
                     }
                 }
-                if (matrixContainsData(mInvSum)) {
+                if (mInvSum.det() != 0.0 && containsData(mInvSum)) {
                     Matrix mt = mInvSum.inverse();
                     setM(mt, mTargetTiles, x, y);
                     Matrix ft = fmInvsum.times(mt);
@@ -200,10 +228,11 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         }
     }
 
-    private static boolean matrixContainsData(Matrix m) {
-        for (double[] array : m.getArray()) {
-            for (double d : array) {
-                if (d != 0.0) {
+    private static boolean containsData(Matrix m) {
+        double[][] array = m.getArray();
+        for (int i = 0; i < array.length; i++) {
+            for (int j = 0; j < array[i].length; j++) {
+                if (array[i][j] != 0.0) {
                     return true;
                 }
             }
@@ -279,6 +308,43 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     private void setFNodata(Tile[] fTiles, int x, int y) {
         for (Tile fTile : fTiles) {
             fTile.setSample(x, y, matrixNodataValue);
+        }
+    }
+
+    private void computeNearest(Tile src, Tile target, Tile mask) {
+        Rectangle targetRectangle = target.getRectangle();
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
+                    sample = Float.NaN;
+                }
+                target.setSample(x, y, sample);
+            }
+        }
+    }
+
+    private void computeMajority(Tile src, Tile target, Tile mask) {
+        Rectangle targetRectangle = target.getRectangle();
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                Rectangle pixelSrc = new Rectangle(x * scaling, y * scaling, scaling, scaling);
+                int max = -1;
+                for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
+                    for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
+                        max = Math.max(max, src.getSampleInt(sx, sy));
+                    }
+                }
+                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+                if (sampleMask > 0.0) {
+                    target.setSample(x, y, max);
+                } else {
+                    target.setSample(x, y, Float.NaN);
+                }
+            }
         }
     }
 

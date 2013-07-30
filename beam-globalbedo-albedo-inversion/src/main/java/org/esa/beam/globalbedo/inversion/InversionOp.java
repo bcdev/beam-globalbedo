@@ -143,10 +143,10 @@ public class InversionOp extends PixelOperator {
         }
 
         System.out.println("Reading full accumulator file...");
-        fullAccumulator = IOUtils.getFullAccumulatorFromBinaryFile
+        fullAccumulator = IOUtils.getAccumulatorFromBinaryFile
                 (year, doy, fullAccumulatorFilePath,
                  IOUtils.getDailyAccumulatorBandNames().length + 1,
-                 rasterWidth, rasterHeight);
+                 rasterWidth, rasterHeight, true);
 
         System.out.println("Done reading full accumulator file.");
 

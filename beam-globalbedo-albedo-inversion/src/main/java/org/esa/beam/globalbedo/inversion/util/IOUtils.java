@@ -253,9 +253,9 @@ public class IOUtils {
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                tile,
-                wings,
-                computeSnow, computeSeaice);
+                                                                                   tile,
+                                                                                   wings,
+                                                                                   computeSnow, computeSeaice);
 
         if (albedoInputProductList.size() > 0) {
             inputProduct = new AlbedoInput();
@@ -264,10 +264,10 @@ public class IOUtils {
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                        true, doy, year, tile,
-                        wings,
-                        computeSnow,
-                        computeSeaice);
+                                                                                                     true, doy, year, tile,
+                                                                                                     wings,
+                                                                                                     computeSnow,
+                                                                                                     computeSeaice);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -499,16 +499,16 @@ public class IOUtils {
         return bandNames;
     }
 
-    public static FullAccumulator getFullAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands,
-                                                                   int rasterWidth, int rasterHeight) {
+    public static FullAccumulator getAccumulatorFromBinaryFile(int year, int doy, String filename, int numBands,
+                                                               int rasterWidth, int rasterHeight, boolean isFullAcc) {
 //        int size = numBands * rasterWidth * rasterHeight;         // OLD
         int size = numBands * rasterWidth * rasterHeight * 4; // NEW
-        final File fullAccumulatorBinaryFile = new File(filename);
+        final File accumulatorBinaryFile = new File(filename);
         FileInputStream f;
         try {
-            f = new FileInputStream(fullAccumulatorBinaryFile);
+            f = new FileInputStream(accumulatorBinaryFile);
         } catch (FileNotFoundException e) {
-            BeamLogManager.getSystemLogger().log(Level.ALL, "No full accumulator file found for year: " + year + ", DoY: " +
+            BeamLogManager.getSystemLogger().log(Level.ALL, "No accumulator file found for year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " - will use data from MODIS priors...");
             return null;
         }
@@ -530,8 +530,11 @@ public class IOUtils {
                     floatBuffer.get(sumMatrices[ii][jj]);
                 }
             }
-            for (int jj = 0; jj < rasterWidth; jj++) {
-                floatBuffer.get(daysToTheClosestSample[jj]);
+            if (isFullAcc) {
+                // skip this for 'daily' accumulators
+                for (int jj = 0; jj < rasterWidth; jj++) {
+                    floatBuffer.get(daysToTheClosestSample[jj]);
+                }
             }
             bb.clear();
             floatBuffer.clear();
@@ -659,11 +662,11 @@ public class IOUtils {
             if (seaiceLandmaskProduct != null) {
                 final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
                 ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                        "landmask", targetProduct, true);
+                                      "landmask", targetProduct, true);
             }
         } catch (IOException e) {
             System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                    e.getMessage());
+                                       e.getMessage());
         }
     }
 
@@ -705,7 +708,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
