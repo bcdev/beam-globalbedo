@@ -11,11 +11,13 @@ import Jama.Matrix;
 public class AlbedoResult {
 
     private double[] bsa;
-    private double[] wsa;
+    private double[] bsaAlpha;
     private Matrix[] bsaSigma;
     private double[] bsaSigmaArray;
-    private double[] wsaSigmaArray;
+    private double[] wsa;
+    private double[] wsaAlpha;
     private Matrix[] wsaSigma;
+    private double[] wsaSigmaArray;
     private double weightedNumberOfSamples;
     private double relEntropy;
     private double goodnessOfFit;
@@ -23,10 +25,14 @@ public class AlbedoResult {
     private double dataMask;
     private double sza;
 
-    public AlbedoResult(double[] bsa, double[] wsa, Matrix[] bsaSigma, Matrix[] wsaSigma, double weightedNumberOfSamples,
+    public AlbedoResult(double[] bsa, double[] bsaAlpha, Matrix[] bsaSigma,
+                        double[] wsa, double[] wsaAlpha, Matrix[] wsaSigma,
+                        double weightedNumberOfSamples,
                         double relEntropy, double goodnessOfFit, double snowFraction, double dataMask, double sza) {
         this.bsa = bsa;
+        this.bsaAlpha = bsaAlpha;
         this.wsa = wsa;
+        this.wsaAlpha = wsaAlpha;
         this.bsaSigma = bsaSigma;
         this.wsaSigma = wsaSigma;
         this.weightedNumberOfSamples = weightedNumberOfSamples;
@@ -37,10 +43,14 @@ public class AlbedoResult {
         this.sza = sza;
     }
 
-public AlbedoResult(double[] bsa, double[] wsa, double[] bsaSigma, double[] wsaSigma, double weightedNumberOfSamples,
+    public AlbedoResult(double[] bsa, double[] bsaAlpha, double[] bsaSigma,
+                        double[] wsa, double[] wsaAlpha, double[] wsaSigma,
+                        double weightedNumberOfSamples,
                         double relEntropy, double goodnessOfFit, double snowFraction, double dataMask, double sza) {
         this.bsa = bsa;
+        this.bsaAlpha = bsaAlpha;
         this.wsa = wsa;
+        this.wsaAlpha = wsaAlpha;
         this.bsaSigmaArray = bsaSigma;
         this.wsaSigmaArray = wsaSigma;
         this.weightedNumberOfSamples = weightedNumberOfSamples;
@@ -60,12 +70,28 @@ public AlbedoResult(double[] bsa, double[] wsa, double[] bsaSigma, double[] wsaS
         this.bsa = bsa;
     }
 
+    public double[] getBsaAlpha() {
+        return bsaAlpha;
+    }
+
+    public void setBsaAlpha(double[] bsaAlpha) {
+        this.bsaAlpha = bsaAlpha;
+    }
+
     public double[] getWsa() {
         return wsa;
     }
 
     public void setWsa(double[] wsa) {
         this.wsa = wsa;
+    }
+
+    public double[] getWsaAlpha() {
+        return wsaAlpha;
+    }
+
+    public void setWsaAlpha(double[] wsaAlpha) {
+        this.wsaAlpha = wsaAlpha;
     }
 
     public Matrix[] getBsaSigma() {

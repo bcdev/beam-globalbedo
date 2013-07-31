@@ -490,6 +490,18 @@ public class IOUtils {
         return bandNames;
     }
 
+    public static String[] getAlbedoDhrAlphaBandNames() {
+        return  new String[]{
+            "DHR_alpha_VIS_NIR","DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW"
+        };
+    }
+
+    public static String[] getAlbedoBhrAlphaBandNames() {
+        return  new String[]{
+                "BHR_alpha_VIS_NIR","BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"
+        };
+    }
+
     public static String[] getAlbedoDhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
