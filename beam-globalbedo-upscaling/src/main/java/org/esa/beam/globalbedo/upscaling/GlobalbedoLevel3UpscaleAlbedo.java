@@ -59,6 +59,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
     @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     int scaling;
 
+    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
+    private String inputFormat;
+
     @TargetProduct
     private Product targetProduct;
 
@@ -180,7 +183,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
 
     private File findRefTile() {
 
-        final FilenameFilter albedoFilter = new FilenameFilter() {
+        final FilenameFilter albedoFilterDimap = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 String expectedFilename;
                 String expectedFilenameOld;
@@ -195,6 +198,22 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             }
         };
 
+        final FilenameFilter albedoFilterNetcdf = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                String expectedFilename;
+                String expectedFilenameOld;
+                if (isMonthlyAlbedo) {
+                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".nc";
+                    expectedFilenameOld = "GlobAlbedo." + year + IOUtils.getMonthString(monthIndex) + "." + dir.getName() + ".nc";
+                } else {
+                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                    expectedFilenameOld = "GlobAlbedo." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                }
+                return (name.equals(expectedFilename) || name.equals(expectedFilenameOld));
+            }
+        };
+
+
         String albedoDirString;
         if (isMonthlyAlbedo) {
             albedoDirString = gaRootDir + File.separator + "MonthlyAlbedo";
@@ -203,7 +222,12 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
         }
         final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString);
         for (File albedoFile : albedoFiles) {
-            File[] tileFiles = albedoFile.listFiles(albedoFilter);
+            File[] tileFiles;
+            if (inputFormat.equals("DIMAP")) {
+                tileFiles = albedoFile.listFiles(albedoFilterDimap);
+            } else {
+                tileFiles = albedoFile.listFiles(albedoFilterNetcdf);
+            }
             for (File tileFile : tileFiles) {
                 if (tileFile.exists()) {
                     return tileFile;

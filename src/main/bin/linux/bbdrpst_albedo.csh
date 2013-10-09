@@ -1,6 +1,6 @@
 #!/bin/tcsh
 
-# example BBDR PST --> Albedo: nohup ./bbdrpst_albedo.csh /data/globalbedo/myGlobalbedoRootdir 2007 180W_90W  > test_bbdrpst_to_albedo.log &
+# example BBDR PST --> Albedo: nohup ./bbdrpst_albedo.csh /data/globalbedo/myGlobalbedoRootdir 2011 180W_90W 169 176 > test_bbdrpst_to_albedo.log &
 
 # provides daily accumulation, full accumulation, inversion, BRDF --> albedo, and albedo dim --> netcdf conversion
 
@@ -8,6 +8,8 @@
 set gaRootDir = $1 
 set year = $2 
 set tile = $3 
+set startDoy = $4 # the start doy of 8day period
+set endDoy = $5 # the end doy of 8day period
 
 set bbdrDir = $gaRootDir/BBDR_PST
 set accumulatorDir = $gaRootDir/BBDR_PST/AccumulatorFiles
@@ -52,31 +54,31 @@ if (! -e "$albedoDir/$tile" ) then
     mkdir $albedoDir/$tile 
 endif
 
-set doy = 169
-while ($doy <= 176)  # fix 8-days for the moment, June 18-25th
+
+# daily accumulation
+#set doy = 169
+#while ($doy <= 176)  # fix 8-days for the moment, June 18-25th
+set doy = $startDoy
+while ($doy <= $endDoy)
     echo "time $BEAMDIR/bin/gpt_8192.sh  ga.l3.dailyacc -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -Pdoy=$doy -PbbdrRootDir="$bbdrDir" -e -t $accumulatorDir/$year/$tile/dailyacc_$doy.dim"
     time $BEAMDIR/bin/gpt_8192.sh  ga.l3.dailyacc -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -Pdoy=$doy -PbbdrRootDir="$bbdrDir" -e -t $accumulatorDir/$year/$tile/dailyacc_$doy.dim
-    if ( -e "$accumulatorDir/$year/$tile/dailyacc_$doy.dim" ) then
-	# a dummy dimap, usually not needed
-        rm -Rf $accumulatorDir/$year/$tile/dailyacc_$doy.*
-    endif
     @ doy = $doy + 1
 end
 
 # full accumulation
-
-set doy = 169
+#set doy = 169
+set doy = $startDoy
 echo "time $BEAMDIR/bin/gpt_8192.sh  ga.l3.fullacc -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -PstartDoy=$doy -PendDoy=$doy -Pwings=32 -PgaRootDir="$gaRootDir" -e -t $accumulatorDir/$year/$tile/fullacc_$doy.dim"
 time $BEAMDIR/bin/gpt_8192.sh  ga.l3.fullacc -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -PstartDoy=$doy -PendDoy=$doy -Pwings=32 -PgaRootDir="$gaRootDir" -e -t $accumulatorDir/$year/$tile/fullacc_$doy.dim
-if ( -e "$accumulatorDir/$year/$tile/fullacc_$doy.dim" ) then
-    # a dummy dimap, usually not needed
-    rm -Rf $accumulatorDir/$year/$tile/fullacc_$doy.*
-endif
 
 # inversion
-
 echo "time $BEAMDIR/bin/gpt_8192.sh  ga.l3.inversion -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -Pdoy=$doy -Pwings=32 -PusePrior=false -PgaRootDir="$gaRootDir" -e -t $inversionDir/$tile/GlobAlbedo.brdf.${year}${doy}.${tile}.Seaice.dim"
 time $BEAMDIR/bin/gpt_8192.sh  ga.l3.inversion -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -Pdoy=$doy -Pwings=32 -PusePrior=false -PgaRootDir="$gaRootDir" -e -t $inversionDir/$tile/GlobAlbedo.brdf.${year}${doy}.${tile}.Seaice.dim
+
+# cleanup of accumulator binary files
+if ( -e "$accumulatorDir" ) then
+    rm -Rf $accumulatorDir
+endif
 
 # brdf --> albedo
 echo "time $BEAMDIR/bin/gpt_8192.sh ga.l3.albedo -PcomputeSeaice=true -Ptile=$tile -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -t $gaRootDir/Albedo/$tile/GlobAlbedo.albedo.$year$doy.$tile.Seaice.dim"

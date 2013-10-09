@@ -20,6 +20,9 @@ echo "Start: `date`"
 if (! -e "$outputRootDir" ) then
     mkdir $outputRootDir 
 endif
+if (! -e "$outputRootDir/$bbdrSensor" ) then
+    mkdir $outputRootDir/$bbdrSensor
+endif
 if (! -e "$collocDir" ) then
     mkdir $collocDir 
 endif
@@ -32,14 +35,20 @@ endif
 if (! -e "$bbdrPstDir" ) then
     mkdir $bbdrPstDir 
 endif
-if (! -e "$bbdrPstDir/nc" ) then
-    mkdir $bbdrPstDir/nc 
-endif
 
 
 # collocation without coregistration...
 echo "time $BEAMDIR/bin/gpt_8192.sh ga.seaice.merisaatsr.colloc -PmasterSensor=$bbdrSensor -PmasterInputDataDir=$masterInputDataDir -PslaveInputDataDir=$slaveInputDataDir -PcollocOutputDataDir=$collocDir"
 time $BEAMDIR/bin/gpt_8192.sh ga.seaice.merisaatsr.colloc -PmasterSensor=$bbdrSensor -PmasterInputDataDir=$masterInputDataDir -PslaveInputDataDir=$slaveInputDataDir -PcollocOutputDataDir=$collocDir
+
+foreach SRCFILE (`ls ${masterInputDataDir}/*.N1`)
+    set SRCBASE = `basename ${SRCFILE} |cut -d'.' -f1`
+    echo "Collocate from MERIS L1b product " ${SRCFILE} "..."
+    echo "time ${BEAMDIR}/bin/gpt_8192.sh ga.seaice.merisaatsr.colloc -SsourceProduct=${SRCFILE} -PmasterSensor=$bbdrSensor -PslaveInputDataDir=$slaveInputDataDir -PcollocOutputDataDir=$collocDir"
+    time ${BEAMDIR}/bin/gpt_8192.sh ga.seaice.merisaatsr.colloc -SsourceProduct=${SRCFILE} -PmasterSensor=$bbdrSensor -PslaveInputDataDir=$slaveInputDataDir -PcollocOutputDataDir=$collocDir
+    echo "Done collocation of product " ${SRCFILE} "."
+end
+
 
 # colloc --> aot...
 
@@ -51,7 +60,7 @@ foreach SRCFILE (`ls ${collocDir}/COLLOC*.dim`)
     echo "Done AOT computation of product " ${SRCFILE} "."
 end
 
-#rm -Rf ${collocDir}
+rm -Rf ${collocDir}
 
 # aot --> bbdr...
 
@@ -63,7 +72,7 @@ foreach SRCFILE (`ls ${aotDir}/AOT*.dim`)
     echo "Done BBDR computation of product " ${SRCFILE} "."
 end
 
-#rm -Rf ${aotDir}
+rm -Rf ${aotDir}
 
 # bbdr --> bbdr_pst...
 
@@ -84,34 +93,48 @@ foreach SRCFILE (`ls ${bbdrDir}/BBDR*.dim`)
     echo "time ${BEAMDIR}/bin/gpt_8192.sh ga.l2.bbdr.pst.single -SsourceProduct=${SRCFILE} -PquadrantName="90E_180E" -t ${bbdrPstDir}/90E_180E/${SRCBASE}_90E_180E_PST.dim"
     time ${BEAMDIR}/bin/gpt_8192.sh ga.l2.bbdr.pst.single -SsourceProduct=${SRCFILE} -PquadrantName="90E_180E" -t ${bbdrPstDir}/90E_180E/${SRCBASE}_90E_180E_PST.dim
 
-    echo "Done reprojecting BBDR product " ${SRCFILE} " to quadrants."
+    # remove BBDRs which are not needed any more
+    echo "Done reprojecting BBDR product " ${SRCFILE} " to quadrants - remove it now..."
+    echo "rm -f ${SRCFILE}" 
+    rm -f ${SRCFILE} 
+    echo "rm -Rf ${bbdrDir}/${SRCBASE}.data"
+    rm -Rf ${bbdrDir}/${SRCBASE}.data
 end
 
-#rm -Rf ${bbdrDir}
+rm -Rf ${bbdrDir}
 
+echo "Convert bbdrpst dim --> nc..."
 # bbdrpst dim --> nc...
 if (! -e "$bbdrPstDir/180W_90W/nc" ) then
     mkdir $bbdrPstDir/180W_90W/nc
 endif
 echo "time ./bbdrpst_dim2nc.csh ${bbdrPstDir}/180W_90W ${bbdrPstDir}/180W_90W/nc bbdr_pst_180W_90W.tar.gz"
 time ./bbdrpst_dim2nc.csh ${bbdrPstDir}/180W_90W ${bbdrPstDir}/180W_90W/nc bbdr_pst_180W_90W.tar.gz
+echo "Cleanup BBDR PST Dimaps for 180W_90W ..."
+rm -Rf ${bbdrPstDir}/180W_90W/*.dim ${bbdrPstDir}/180W_90W/*.data
 
 if (! -e "$bbdrPstDir/90W_0/nc" ) then
     mkdir $bbdrPstDir/90W_0/nc
 endif
 echo "./time bbdrpst_dim2nc.csh ${bbdrPstDir}/90W_0 ${bbdrPstDir}/90W_0/nc bbdr_pst_90W_0.tar.gz"
 time ./bbdrpst_dim2nc.csh ${bbdrPstDir}/90W_0 ${bbdrPstDir}/90W_0/nc bbdr_pst_90W_0.tar.gz
+echo "Cleanup BBDR PST Dimaps for 90W_0 ..."
+rm -Rf ${bbdrPstDir}/90W_0/*.dim ${bbdrPstDir}/90W_0/*.data
 
 if (! -e "$bbdrPstDir/0_90E/nc" ) then
     mkdir $bbdrPstDir/0_90E/nc
 endif
 echo "./time bbdrpst_dim2nc.csh ${bbdrPstDir}/0_90E ${bbdrPstDir}/0_90E/nc bbdr_pst_0_90E.tar.gz"
 time ./bbdrpst_dim2nc.csh ${bbdrPstDir}/0_90E ${bbdrPstDir}/0_90E/nc bbdr_pst_0_90E.tar.gz
+echo "Cleanup BBDR PST Dimaps for 0_90E ..."
+rm -Rf ${bbdrPstDir}/0_90E/*.dim ${bbdrPstDir}/0_90E/*.data
 
 if (! -e "$bbdrPstDir/90E_180E/nc" ) then
     mkdir $bbdrPstDir/90E_180E/nc
 endif
 echo "./time bbdrpst_dim2nc.csh ${bbdrPstDir}/90E_180E ${bbdrPstDir}/90E_180E/nc bbdr_pst_90E_180E.tar.gz"
 time ./bbdrpst_dim2nc.csh ${bbdrPstDir}/90E_180E ${bbdrPstDir}/90E_180E/nc bbdr_pst_90E_180E.tar.gz
+echo "Cleanup BBDR PST Dimaps for 90E_180E ..."
+rm -Rf ${bbdrPstDir}/90E_180E/*.dim ${bbdrPstDir}/90E_180E/*.data
 
 echo "Finished: `date`"

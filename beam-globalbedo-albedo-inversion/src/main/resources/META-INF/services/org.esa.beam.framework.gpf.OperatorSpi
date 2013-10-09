@@ -10,3 +10,4 @@ org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.SouthPoleCorrectionOp$Spi
 org.esa.beam.globalbedo.inversion.util.AccToDimapOp$Spi
 org.esa.beam.globalbedo.inversion.util.ModisTileAttachGeocodingOp$Spi
+org.esa.beam.globalbedo.inversion.util.GaAdaptTileGeocodingOp$Spi
