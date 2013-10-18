@@ -87,4 +87,19 @@ public class AlbedoInversionConstants {
     public static final double INVALID = -9999.0;
 
     public static final double HALFLIFE = 11.54;
+
+    public static final String[][] doysOfMonth = {
+            {"001","009","017","025"},    // Jan
+            {"033","041","049","057"},    // Feb
+            {"065","073","081","089"},    // Mar
+            {"097","105","113"},          // Apr
+            {"121","129","137","145"},    // May
+            {"153","161","169","177"},    // Jun
+            {"185","193","201","209"},    // Jul
+            {"217","225","233","241"},    // Aug
+            {"249","257","265","273"},    // Sep
+            {"281","289","297"},          // Oct
+            {"305","313","321","329"},    // Nov
+            {"337","345","353","361"}     // Dec
+    };
 }

@@ -76,7 +76,8 @@ public class GlobalbedoLevel3UpscaleAlbedo extends Operator {
     @Parameter(defaultValue = "01", description = "MonthIndex", interval = "[1,12]")
     private int monthIndex;
 
-    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "30", "60"},
+               description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "false", description = "True if monthly albedo to upscale")

@@ -55,6 +55,8 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         super(readerPlugIn);
         this.pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         this.mosaicDefinition = new MosaicDefinition(36, 18, 1200);
+        this.mosaicPriors = false;
+        this.mosaicAdam = false;
     }
 
     @Override

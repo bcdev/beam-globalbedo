@@ -21,9 +21,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -31,14 +29,12 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
-import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.ProductUtils;
-import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
-import javax.media.jai.BorderExtender;
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.io.File;
@@ -77,14 +73,12 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
     @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-    @Parameter(valueSet = {"6", "30", "60"}, description = "Scaling (6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "30", "60"},
+               description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
-    @Parameter(defaultValue = "true", description = "If True product will be reprojected to PlateCarree")
+    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
     private boolean reprojectToPlateCarre;
-
-    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
-    private String inputFormat;
 
     @TargetProduct
     private Product targetProduct;
@@ -108,6 +102,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         if (productReader == null) {
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
+
         Product mosaicProduct;
         try {
             mosaicProduct = productReader.readProductNodes(refTile, null);
@@ -124,9 +119,16 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
             reprojectedProduct = mosaicProduct;
         }
 
-        final int width = 43200 / scaling;
-        final int height = 21600 / scaling;
+        /////////////////////////////////////////////////////////////////////////////////////////////////
+        // not needed any more
+//        SubsetOp subsetOp = new SubsetOp();
+//        subsetOp.setSourceProduct(reprojectedProduct);
+//        subsetOp.setRegion(new Rectangle(17 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE, 3 * TILE_SIZE));
+//        reprojectedProduct = subsetOp.getTargetProduct();
+        /////////////////////////////////////////////////////////////////////////////////////////////////
 
+        int width = reprojectedProduct.getSceneRasterWidth() / scaling;
+        int height = reprojectedProduct.getSceneRasterHeight() / scaling;
         Product upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
@@ -135,7 +137,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 2, TILE_SIZE / scaling / 2);
+        upscaledProduct.setPreferredTileSize(TILE_SIZE / scaling / 4, TILE_SIZE / scaling / 4);
 
         if (reprojectToPlateCarre) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
@@ -151,19 +153,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
             Product targetGeoCodingProduct = reprojectionUpscaleGeoCoding.getTargetProduct();
             ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
         } else {
-            final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
-            try {
-                final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
-                final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
-                CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
-                                                          UPPER_LEFT_TILE_UPPER_LEFT_X,
-                                                          UPPER_LEFT_TILE_UPPER_LEFT_Y,
-                                                          pixelSizeX,
-                                                          pixelSizeY);
-                upscaledProduct.setGeoCoding(geoCoding);
-            } catch (Exception e) {
-                throw new OperatorException("Cannot attach geocoding for SIN mosaic: ", e);
-            }
+            ProductUtils.copyGeoCoding(mosaicProduct, upscaledProduct);
         }
 
         brdfModelBandNames = IOUtils.getInversionParameterBandNames();
@@ -178,26 +168,20 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                String expectedFilename;
-                if (inputFormat.equals("DIMAP")) {
-                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
-                } else {
-                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
-                }
-                return name.equals(expectedFilename);
+                final String expectedDimapFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+                final String expectedNcFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+//                return name.equals(expectedDimapFilename) || name.equals(expectedNcFilename);
+                return name.equals(expectedNcFilename);   // test!!
             }
         };
 
         String mergeDirString = gaRootDir + File.separator + "Merge";
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
-        if (mergeFiles != null) {
-            System.out.println("mergeFiles = " + mergeFiles[0]);
-            for (File mergeFile : mergeFiles) {
-                File[] tileFiles = mergeFile.listFiles(mergeFilter);
-                for (File tileFile : tileFiles) {
-                    if (tileFile.exists()) {
-                        return tileFile;
-                    }
+        for (File mergeFile : mergeFiles) {
+            File[] tileFiles = mergeFile.listFiles(mergeFilter);
+            for (File tileFile : tileFiles) {
+                if (tileFile.exists()) {
+                    return tileFile;
                 }
             }
         }
@@ -206,12 +190,11 @@ public class GlobalbedoLevel3UpscaleBrdf extends Operator {
 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
+//        System.out.println("targetRectangle = " + targetRect);
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
                                           targetRect.y * scaling,
                                           targetRect.width * scaling,
                                           targetRect.height * scaling);
-//        System.out.println("calling computeTileStack: targetRect = " + targetRect);
-//        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
         if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
