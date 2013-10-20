@@ -12,18 +12,19 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 /**
- * Pixel operator for getting monthly albedos from 8-day periods.
+ * Pixel operator for getting monthly from 8-day albedo mosaics.
+ * Includes now BHR and DHR alpha terms. (2013 re-processing)
  * The breadboard file is 'MonthlyAlbedoFrom8day.py' provided by Gerardo Lopez Saldana.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.albedo.monthly",
-        description = "Provides monthly albedos from 8-day periods",
+@OperatorMetadata(alias = "ga.albedo.monthlymosaics",
+        description = "Provides monthly from 8-day albedo mosaics. Includes now BHR and DHR alpha terms.",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")
-public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
+public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
 
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] dhrAlphaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -52,7 +53,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
     private static final int SRC_DATA_MASK = 4 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + 4;
     private static final int SRC_SZA = 4 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + 5;
 
-    public static final int SOURCE_SAMPLE_OFFSET = 20;  // this value must be >= number of bands in a source product
+    public static final int SOURCE_SAMPLE_OFFSET = 25;  // this value must be >= number of bands in a source product
 
     private static final int[] TRG_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_DHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -74,9 +75,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
     @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
 
-    private float[][] monthlyWeighting;
     private int[] doy;
-
+    private float[][] monthlyWeighting;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -96,10 +96,14 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
         double sumWeights = 0.0;
 
+        if (x == 1200 && y == 750) {
+            System.out.println("x,y = " + x + "," + y);
+        }
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
-            if (dataMask > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
-
+            final double relEntropy = AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble());
+//            if (dataMask > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
+            if (relEntropy > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
                 final float thisWeight = monthlyWeighting[monthIndex - 1][doy[j] - 1];
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                     monthlyDHR[i] += thisWeight *
@@ -137,6 +141,8 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
                 monthlyBHR[i] /= sumWeights;
                 monthlyDHRSigma[i] /= sumWeights;
                 monthlyBHRSigma[i] /= sumWeights;
+                monthlyDHRAlpha[i] /= sumWeights;
+                monthlyBHRAlpha[i] /= sumWeights;
             }
             monthlyNsamples /= sumWeights;
             monthlyRelativeEntropy /= sumWeights;
@@ -146,11 +152,52 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         }
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyDHRAlpha, monthlyDHRSigma,
-                monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
-                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                monthlyDataMask, monthlySza);
+                                               monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
+                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
+                                               monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
+    }
+
+
+    private void fillTargetSamples(WritableSample[] targetSamples, AlbedoResult result) {
+        // DHR (black sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_DHR[i]].set(result.getBsa()[i]);
+        }
+
+        // DHR_ALPHA (black sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_DHR_ALPHA[i]].set(result.getBsaAlpha()[i]);
+        }
+
+        // DHR_sigma (black sky albedo uncertainty)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_DHR_SIGMA[i]].set(result.getBsaSigmaArray()[i]);
+        }
+
+        // BHR (white sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_BHR[i]].set(result.getWsa()[i]);
+        }
+
+        // BHR_ALPHA (white sky albedo)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_BHR_ALPHA[i]].set(result.getWsaAlpha()[i]);
+        }
+
+        // BHR_sigma (white sky albedo uncertainty)
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_BHR_SIGMA[i]].set(result.getWsaSigmaArray()[i]);
+        }
+
+        int index = 6 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
+        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
+        targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
+        targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
+        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
+        targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
+        targetSamples[index + TRG_SZA].set(result.getSza());
     }
 
     @Override
@@ -215,7 +262,7 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                ProductData.TYPE_FLOAT32);
+                                                                 ProductData.TYPE_FLOAT32);
         weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
@@ -260,7 +307,15 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
             }
 
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DHR_ALPHA[i], dhrAlphaBandNames[i], albedo8DayProduct[j]);
+            }
+
+            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                 configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i], bhrBandNames[i], albedo8DayProduct[j]);
+            }
+
+            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_BHR_ALPHA[i], bhrAlphaBandNames[i], albedo8DayProduct[j]);
             }
 
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -329,46 +384,6 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index++, szaBandName);      // is not in breadboard monthly product
-    }
-
-    private void fillTargetSamples(WritableSample[] targetSamples, AlbedoResult result) {
-        // DHR (black sky albedo)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_DHR[i]].set(result.getBsa()[i]);
-        }
-
-        // DHR_ALPHA (black sky albedo)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_DHR_ALPHA[i]].set(result.getBsaAlpha()[i]);
-        }
-
-        // DHR_sigma (black sky albedo uncertainty)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_DHR_SIGMA[i]].set(result.getBsaSigmaArray()[i]);
-        }
-
-        // BHR (white sky albedo)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_BHR[i]].set(result.getWsa()[i]);
-        }
-
-        // BHR_ALPHA (white sky albedo)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_BHR_ALPHA[i]].set(result.getWsaAlpha()[i]);
-        }
-
-        // BHR_sigma (white sky albedo uncertainty)
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            targetSamples[TRG_BHR_SIGMA[i]].set(result.getWsaSigmaArray()[i]);
-        }
-
-        int index = 6 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
-        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
-        targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
-        targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
-        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
-        targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
-        targetSamples[index + TRG_SZA].set(result.getSza());
     }
 
 }

@@ -300,4 +300,11 @@ public class AlbedoInversionUtils {
         return monthlyWeighting;
     }
 
+    public static double checkSummandForNan(double srcValue) {
+        return Double.isNaN(srcValue) ? 0.0 : srcValue;
+    }
+
+    public static float checkSummandForNan(float srcValue) {
+        return Float.isNaN(srcValue) ? 0.0f : srcValue;
+    }
 }

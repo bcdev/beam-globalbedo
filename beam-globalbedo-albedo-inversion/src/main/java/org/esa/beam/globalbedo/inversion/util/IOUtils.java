@@ -253,9 +253,9 @@ public class IOUtils {
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                                                                                   tile,
-                                                                                   wings,
-                                                                                   computeSnow, computeSeaice);
+                tile,
+                wings,
+                computeSnow, computeSeaice);
 
         if (albedoInputProductList.size() > 0) {
             inputProduct = new AlbedoInput();
@@ -264,10 +264,10 @@ public class IOUtils {
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                                                                                                     true, doy, year, tile,
-                                                                                                     wings,
-                                                                                                     computeSnow,
-                                                                                                     computeSeaice);
+                        true, doy, year, tile,
+                        wings,
+                        computeSnow,
+                        computeSeaice);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -462,14 +462,14 @@ public class IOUtils {
     }
 
     public static String[] getAlbedoDhrAlphaBandNames() {
-        return  new String[]{
-                "DHR_alpha_VIS_NIR","DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW"
+        return new String[]{
+                "DHR_alpha_VIS_NIR", "DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW"
         };
     }
 
     public static String[] getAlbedoBhrAlphaBandNames() {
-        return  new String[]{
-                "BHR_alpha_VIS_NIR","BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"
+        return new String[]{
+                "BHR_alpha_VIS_NIR", "BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"
         };
     }
 
@@ -674,11 +674,11 @@ public class IOUtils {
             if (seaiceLandmaskProduct != null) {
                 final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
                 ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                                      "landmask", targetProduct, true);
+                        "landmask", targetProduct, true);
             }
         } catch (IOException e) {
             System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                                       e.getMessage());
+                    e.getMessage());
         }
     }
 
@@ -695,22 +695,24 @@ public class IOUtils {
         return Math.abs(difference);
     }
 
-    public static Product[] getAlbedo8DayProducts(String albedoDir, final String tile) {
+    public static Product[] getAlbedo8DayTileProducts(String gaRootDir, final String tile) {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                return isAlbedo8DayDimapProduct(name, tile) || isAlbedo8DayNetcdfProduct(name, tile);
+                return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
+                        (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
             }
         };
 
+        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
         final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
 
         if (albedoFiles != null && albedoFiles.length > 0) {
             Product[] albedoProducts = new Product[albedoFiles.length];
 
             int productIndex = 0;
-            for (String albedoFile : albedoFiles) {
-                String albedoProductFileName = albedoDir + File.separator + albedoFile;
+            for (int i = 0; i < albedoFiles.length; i++) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
 
                 if ((new File(albedoProductFileName)).exists()) {
                     Product product;
@@ -720,7 +722,63 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
+                    }
+                }
+            }
+
+            return albedoProducts;
+        } else {
+            return null;
+        }
+
+    }
+
+    public static Product[] getAlbedo8DayMosaicProducts(String gaRootDir, final int monthIndex,
+                                                        final String mosaicScaling, final String reprojection) {
+
+        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // todo maybe we need this for optional SIN mosaics?!
+                // e.g. GlobAlbedo.albedo.2005129.05.PC.dim
+                // final boolean isCorrectSuffix = name.endsWith(reprojection + ".dim") || name.endsWith(reprojection + ".nc");
+
+                // e.g. GlobAlbedo.albedo.2005129.05.dim
+                final boolean isCorrectSuffix = name.endsWith(".dim") || name.endsWith(".nc");
+                final boolean isCorrectPattern = name.length() > 30 &&
+                        name.substring(0, 29).matches("GlobAlbedo.albedo.[0-9]{7}.[0-9]{2}.");
+                if (isCorrectSuffix && isCorrectPattern) {
+                    final String doy = name.substring(22, 25);
+                    for (String doyOfMonth : AlbedoInversionConstants.doysOfMonth[monthIndex - 1]) {
+                        if (doy.equals(doyOfMonth)) {
+                            return true;
+                        }
+                    }
+                }
+                return false;
+            }
+        };
+
+        final String albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" + File.separator +
+                mosaicScaling + File.separator;
+        final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
+
+        if (albedoFiles != null && albedoFiles.length > 0) {
+            Product[] albedoProducts = new Product[albedoFiles.length];
+
+            int productIndex = 0;
+            for (int i = 0; i < albedoFiles.length; i++) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFiles[i];
+
+                if ((new File(albedoProductFileName)).exists()) {
+                    Product product;
+                    try {
+                        product = ProductIO.readProduct(albedoProductFileName);
+                        albedoProducts[productIndex] = product;
+                        productIndex++;
+                    } catch (IOException e) {
+                        throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
+                                + e.getMessage());
                     }
                 }
             }

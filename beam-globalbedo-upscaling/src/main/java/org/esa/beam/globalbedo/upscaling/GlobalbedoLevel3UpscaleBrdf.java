@@ -56,7 +56,8 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
 public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp {
 
-    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"5", "6", "30", "60"},
+            description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
@@ -115,9 +116,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                                          targetRect.y * scaling,
-                                          targetRect.width * scaling,
-                                          targetRect.height * scaling);
+                targetRect.y * scaling,
+                targetRect.width * scaling,
+                targetRect.height * scaling);
 //        System.out.println("calling computeTileStack: targetRect = " + targetRect);
 //        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
@@ -130,7 +131,13 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            computeMajority(srcTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), targetTiles.get(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+
+            String closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
+            if (srcTiles.get(closestSampleBandName) == null || targetTiles.get(closestSampleBandName) == null) {
+                // the originally processed files before 'netcdf polishing' have this band name
+                closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD;
+            }
+            computeMajority(srcTiles.get(closestSampleBandName), targetTiles.get(closestSampleBandName), srcTiles.get(INV_ENTROPY_BAND_NAME));
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();

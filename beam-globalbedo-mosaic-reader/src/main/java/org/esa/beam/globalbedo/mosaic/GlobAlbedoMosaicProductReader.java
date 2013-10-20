@@ -18,12 +18,13 @@ package org.esa.beam.globalbedo.mosaic;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.AbstractProductReader;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.geotools.referencing.CRS;
-import org.geotools.referencing.crs.DefaultGeographicCRS;
-import org.geotools.referencing.datum.DefaultEllipsoid;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.awt.*;
@@ -75,7 +76,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         } else if (mosaicNewModisPriors) {
             mosaicDefinition.setTileSize(1200);
             mosaicTiles = createPriorMosaicTiles(inputFile);
-        }else {
+        } else {
             mosaicTiles = createMosaicTiles(inputFile);
         }
         mosaicGrid = new MosaicGrid(mosaicDefinition, mosaicTiles);
@@ -91,17 +92,13 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
 
-        if (firstMosaicProduct.getGeoCoding() != null && !mosaicModisPriors && !mosaicAdam) {
-            addGeoCoding(firstMosaicProduct, product);
+        CrsGeoCoding crsGeoCoding;
+        if (mosaicAdam || mosaicAdamPriors) {
+            crsGeoCoding = getMosaicGeocoding(10);
         } else {
-            CrsGeoCoding crsGeoCoding = null;
-            if (mosaicAdam || mosaicAdamPriors) {
-                crsGeoCoding = getMosaicGeocoding(10);
-            } else if (mosaicModisPriors || mosaicNewModisPriors) {
-                crsGeoCoding = getMosaicGeocoding(1);
-            }
-            product.setGeoCoding(crsGeoCoding);
+            crsGeoCoding = getMosaicGeocoding(1);
         }
+        product.setGeoCoding(crsGeoCoding);
 
         Band[] bands = firstMosaicProduct.getBands();
         for (Band srcBand : bands) {
@@ -271,13 +268,6 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return fileName.substring(0, matcher.start() - 1);
     }
 
-    String getTileName(File file) {
-        String fileName = file.getName();
-        Matcher matcher = pattern.matcher(fileName);
-        matcher.find();
-        return fileName.substring(matcher.start(), matcher.start() + 6);
-    }
-
     MosaicTile createMosaicTile(File file) {
         Matcher matcher = pattern.matcher(file.getName());
         matcher.find();
@@ -290,36 +280,6 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
     String getMosaicFileRegex(String filename) {
         return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
-    }
-
-    private void addGeoCoding(Product tileProduct, Product product) throws IOException {
-        GeoCoding tileProductGeoCoding = tileProduct.getGeoCoding();
-        CoordinateReferenceSystem mapCRS = tileProductGeoCoding.getMapCRS();
-
-        DefaultEllipsoid ellipsoid = (DefaultEllipsoid) DefaultGeographicCRS.WGS84.getDatum().getEllipsoid();
-
-        double lonExtendMeters = ellipsoid.orthodromicDistance(0.0, 0.0, 180.0, 0.0) * 2;
-        int rasterWidth = product.getSceneRasterWidth();
-        double easting = -lonExtendMeters / 2;
-        double pixelSizeX = lonExtendMeters / rasterWidth;
-
-        double latExtendMeters = ellipsoid.orthodromicDistance(0.0, 90.0, 0.0, -90);
-        int rasterHeight = product.getSceneRasterHeight();
-        double pixelSizeY = latExtendMeters / rasterHeight;
-        double northing = latExtendMeters / 2;
-
-        try {
-            GeoCoding geocoding = new CrsGeoCoding(mapCRS,
-                                                   rasterWidth,
-                                                   rasterHeight,
-                                                   easting,
-                                                   northing,
-                                                   pixelSizeX,
-                                                   pixelSizeY);
-            product.setGeoCoding(geocoding);
-        } catch (Exception e) {
-            throw new IOException("Cannot create GeoCoding: ", e);
-        }
     }
 
     private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
@@ -375,7 +335,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
                     }
                 } else {
                     System.out.println("WARNING: band '" + destBand.getName() + "' not found in product '" +
-                                               mosaicTile.getProduct().getName() + "'.");
+                            mosaicTile.getProduct().getName() + "'.");
                     double nodataValue = destBand.getNoDataValue();
                     for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
                         for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
