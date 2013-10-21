@@ -1,0 +1,5 @@
+#!/bin/tcsh
+
+./ga_l3_brdfmosaic_albedomosaic.csh 2005 121 005 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.11
+
+

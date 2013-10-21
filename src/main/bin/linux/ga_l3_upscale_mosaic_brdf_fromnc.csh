@@ -25,8 +25,8 @@ endif
 set SUCCESS = 1
 
 set TARGET = $gaRootDir/Mosaic/brdf/$deg/GlobAlbedo.brdf.$year$Day.$deg.dim
-echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET"
-time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
+echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET"
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
 
 set SUCCESS = $status
 echo "Status: $SUCCESS"
@@ -35,8 +35,7 @@ echo "Status: $SUCCESS"
 while ( $TRY < 2 && (! -e $TARGET || $SUCCESS != 0))
     # repeat up to 3 times in case product was not written
     echo "Product status unclear: $SUCCESS - reprocess..."
-    echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET"
-    time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
+    time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -Pyear=$year -Pdoy=$Day -PgaRootDir=$gaRootDir -e -t $TARGET
     set SUCCESS = $status
     echo "Status: $SUCCESS"
     @ TRY += 1

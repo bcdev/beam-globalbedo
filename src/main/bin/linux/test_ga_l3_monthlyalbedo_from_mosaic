@@ -1,0 +1,4 @@
+#!/bin/tcsh
+
+./ga_l3_monthlyalbedo_from_mosaic.csh 2005 5 005 /home/globalbedo/Processing/GlobAlbedo /opt/beam-4.11 
+
