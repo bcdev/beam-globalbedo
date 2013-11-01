@@ -57,11 +57,16 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp {
 
     @Parameter(valueSet = {"5", "6", "30", "60"},
-            description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
+               description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
-    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
+    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"},
+               description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
+
+    @Parameter(defaultValue = "MERGE", valueSet = {"MERGE", "SNOW", "NOSNOW"},
+               description = "Input BRDF type, either MERGE, SNOW or NOSNOW.")
+    private String inputType;
 
     @TargetProduct
     private Product targetProduct;
@@ -116,9 +121,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                targetRect.y * scaling,
-                targetRect.width * scaling,
-                targetRect.height * scaling);
+                                          targetRect.y * scaling,
+                                          targetRect.width * scaling,
+                                          targetRect.height * scaling);
 //        System.out.println("calling computeTileStack: targetRect = " + targetRect);
 //        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
@@ -130,7 +135,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            if (inputType.equals("MERGE")) {
+                computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            }
 
             String closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
             if (srcTiles.get(closestSampleBandName) == null || targetTiles.get(closestSampleBandName) == null) {
@@ -158,17 +165,27 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
 
         final FilenameFilter mergeFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
+                String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
                 String expectedFilename;
-                if (inputFormat.equals("DIMAP")) {
-                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".dim";
+
+                if (inputType.equals("MERGE")) {
+                    expectedFilename = "GlobAlbedo.brdf.merge." + year +
+                            IOUtils.getDoyString(doy) + "." + dir.getName() + expectedFilenameExt;
+                } else if (inputType.equals("SNOW")) {
+                    expectedFilename = "GlobAlbedo.brdf." + year +
+                            IOUtils.getDoyString(doy) + "." + dir.getName() + ".Snow" + expectedFilenameExt;
                 } else {
-                    expectedFilename = "GlobAlbedo.brdf.merge." + year + IOUtils.getDoyString(doy) + "." + dir.getName() + ".nc";
+                    expectedFilename = "GlobAlbedo.brdf." + year +
+                            IOUtils.getDoyString(doy) + "." + dir.getName() + ".NoSnow" + expectedFilenameExt;
                 }
+
                 return name.equals(expectedFilename);
             }
         };
 
-        String mergeDirString = gaRootDir + File.separator + "Merge";
+        String mergeDirExt = inputType.equals("MERGE") ? "Merge" : "Inversion";
+        String mergeDirString = gaRootDir + File.separator + mergeDirExt;
+
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
         if (mergeFiles != null) {
             System.out.println("mergeFiles = " + mergeFiles[0]);
