@@ -230,7 +230,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                 for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
                     for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
                         Matrix m = getM(mSrcTiles, sx, sy);
-                        if (m.det() != 0.0 && containsData(m)) {
+                        if (m.lu().isNonsingular() && m.det() != 0.0 && containsData(m)) {
                             Matrix mInv = m.inverse();
                             Matrix f = getF(fSrcTiles, sx, sy);
                             Matrix fmInv = f.times(mInv);
@@ -239,7 +239,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                         }
                     }
                 }
-                if (mInvSum.det() != 0.0 && containsData(mInvSum)) {
+                if (mInvSum.lu().isNonsingular() &&  mInvSum.det() != 0.0 && containsData(mInvSum)) {
                     Matrix mt = mInvSum.inverse();
                     setM(mt, mTargetTiles, x, y);
                     Matrix ft = fmInvsum.times(mt);
