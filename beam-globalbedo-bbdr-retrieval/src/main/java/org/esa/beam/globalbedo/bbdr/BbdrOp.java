@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -424,7 +424,7 @@ public class BbdrOp extends PixelOperator {
             if (sensor == Sensor.MERIS) {
                 l1InvalidExpression = "l1_flags.INVALID OR l1_flags.COSMETIC";
             } else if (sensor == Sensor.VGT) {
-                l1InvalidExpression = "!SM.B0_GOOD AND !SM.B2_GOOD AND !SM.B3_GOOD AND !SM.MIR_GOOD";
+                l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR MIR > 0.65";
             }
 
             String expression = l1InvalidExpression + " ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
