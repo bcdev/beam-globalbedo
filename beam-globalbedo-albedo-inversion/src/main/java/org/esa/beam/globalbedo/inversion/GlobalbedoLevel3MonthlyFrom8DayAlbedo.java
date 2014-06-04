@@ -62,6 +62,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
             if (isMosaicAlbedo) {
                 // the standard now
                 MonthlyFrom8DayAlbedoMosaicsOp monthlyAlbedoMosaicsOp = new MonthlyFrom8DayAlbedoMosaicsOp();
+                monthlyAlbedoMosaicsOp.setParameterDefaultValues();
                 monthlyAlbedoMosaicsOp.setSourceProducts(albedo8DayProducts);
                 monthlyAlbedoMosaicsOp.setParameter("monthIndex", monthIndex);
                 setTargetProduct(monthlyAlbedoMosaicsOp.getTargetProduct());
@@ -69,6 +70,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
                 // get monthly weighting...
                 float[][] monthlyWeighting = AlbedoInversionUtils.getMonthlyWeighting();
                 MonthlyFrom8DayAlbedoOp monthlyAlbedoOp = new MonthlyFrom8DayAlbedoOp();
+                monthlyAlbedoOp.setParameterDefaultValues();
                 monthlyAlbedoOp.setSourceProducts(albedo8DayProducts);
                 monthlyAlbedoOp.setParameter("monthlyWeighting", monthlyWeighting);
                 monthlyAlbedoOp.setParameter("monthIndex", monthIndex);

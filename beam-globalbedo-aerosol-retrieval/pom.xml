@@ -7,7 +7,7 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.1-SNAPSHOT</version>
+        <version>1.2-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -30,39 +30,39 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-spot-vgt-reader</artifactId>
-            <version>1.1</version>
+            <version>${beam.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-auxdata</artifactId>
-            <version>1.1-SNAPSHOT</version>
+            <version>1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
-            <version>1.1</version>
+            <version>${beam.version}</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>
-            <version>2.3.2</version>
+            <version>2.4.1</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-sdr</artifactId>
-            <version>2.3.2</version>
+            <version>2.4.1</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-l2auxdata</artifactId>
-            <version>1.2.2</version>
+            <version>1.2.5</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.aatsr-recalibration</groupId>
             <artifactId>beam-aatsr-recalibration</artifactId>
-            <version>1.2.2</version>
+            <version>1.2.4</version>
         </dependency>
         <!--<dependency>-->
         <!--<groupId>org.esa.beam</groupId>-->
@@ -72,22 +72,22 @@
         <dependency>
             <groupId>org.esa.beam.idepix</groupId>
             <artifactId>beam-idepix-algorithms</artifactId>
-            <version>2.0-SNAPSHOT</version>
+            <version>2.1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.idepix</groupId>
             <artifactId>beam-idepix-core</artifactId>
-            <version>2.0-SNAPSHOT</version>
+            <version>2.1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.idepix</groupId>
             <artifactId>beam-idepix-operators</artifactId>
-            <version>2.0-SNAPSHOT</version>
+            <version>2.1.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-getasse30-reader</artifactId>
-            <version>1.0</version>
+            <version>${beam.version}</version>
         </dependency>
     </dependencies>
 

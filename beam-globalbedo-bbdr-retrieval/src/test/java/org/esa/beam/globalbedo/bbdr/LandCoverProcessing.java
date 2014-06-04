@@ -90,6 +90,7 @@ public class LandCoverProcessing {
 //        aProduct = gaMasterOp.getTargetProduct();
 //
         Operator bbdrOp = new BbdrOp();
+        bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(aProduct);
         aProduct = bbdrOp.getTargetProduct();
 

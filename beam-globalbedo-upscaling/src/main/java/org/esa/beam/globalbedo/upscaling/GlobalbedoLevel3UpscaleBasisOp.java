@@ -62,6 +62,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     protected void setReprojectedProduct(Product mosaicProduct, int tileSize) {
         if (reprojectToPlateCarre) {
             ReprojectionOp reprojection = new ReprojectionOp();
+            reprojection.setParameterDefaultValues();
             reprojection.setParameter("crs", MosaicConstants.WGS84_CODE);
             reprojection.setSourceProduct(mosaicProduct);
             reprojectedProduct = reprojection.getTargetProduct();
@@ -88,6 +89,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
             final double pixelSizeX = modelTransform.getScaleX();
             final double pixelSizeY = modelTransform.getScaleY();
             ReprojectionOp reprojectionUpscaleGeoCoding = new ReprojectionOp();
+            reprojectionUpscaleGeoCoding.setParameterDefaultValues();
             reprojectionUpscaleGeoCoding.setParameter("crs", MosaicConstants.WGS84_CODE);
             reprojectionUpscaleGeoCoding.setParameter("pixelSizeX", pixelSizeX * scaling);
             reprojectionUpscaleGeoCoding.setParameter("pixelSizeY", -pixelSizeY * scaling);

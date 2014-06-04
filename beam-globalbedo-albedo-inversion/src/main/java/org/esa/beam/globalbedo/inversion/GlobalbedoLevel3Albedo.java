@@ -112,6 +112,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             if (brdfSnowProduct != null && brdfNoSnowProduct != null && priorProduct != null) {
                 // merge Snow/NoSnow products...
                 MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
+                mergeBrdfOp.setParameterDefaultValues();
                 mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
                 mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
                 mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
@@ -138,6 +139,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             } else {
                 // STEP 2: compute albedo from merged BRDF product...
                 BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
+                albedoOp.setParameterDefaultValues();
                 albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
                 albedoOp.setParameter("doy", doy);
                 albedoOp.setParameter("computeSeaice", computeSeaice);
@@ -146,6 +148,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
             if (includesSouthPole(tile)) {
                 SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
+                correctionOp.setParameterDefaultValues();
                 correctionOp.setSourceProduct("sourceProduct", getTargetProduct());
                 Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
                 setTargetProduct(southPoleCorrectedProduct);

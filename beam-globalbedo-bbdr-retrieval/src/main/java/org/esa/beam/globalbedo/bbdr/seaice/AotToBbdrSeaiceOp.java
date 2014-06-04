@@ -75,6 +75,7 @@ public class AotToBbdrSeaiceOp extends Operator {
             Product bbdrFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
             // merge fward into nadir product...
             MergeOp mergeOp = new MergeOp();
+            mergeOp.setParameterDefaultValues();
             mergeOp.setSourceProduct("masterProduct", bbdrNadirProduct);
             mergeOp.setSourceProduct("fward", bbdrFwardProduct);
             bbdrProduct = mergeOp.getTargetProduct();

@@ -382,6 +382,7 @@ public class BbdrSeaiceOp extends PixelOperator {
         SRC_TOA_VAR = SRC_TOA_RFL + toaBandNames.length;
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
+        imageVarianceOp.setParameterDefaultValues();
         imageVarianceOp.setSourceProduct(sourceProduct);
         imageVarianceOp.setParameter("sensor", sensor);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
@@ -418,6 +419,7 @@ public class BbdrSeaiceOp extends PixelOperator {
             bandDescriptors[0].type = ProductData.TYPESTRING_INT8;
 
             BandMathsOp bandMathsOp = new BandMathsOp();
+            bandMathsOp.setParameterDefaultValues();
             bandMathsOp.setParameter("targetBandDescriptors", bandDescriptors);
             bandMathsOp.setSourceProduct(sourceProduct);
             Product statusProduct = bandMathsOp.getTargetProduct();

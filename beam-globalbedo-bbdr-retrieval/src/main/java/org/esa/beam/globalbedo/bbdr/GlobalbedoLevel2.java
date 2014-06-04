@@ -70,6 +70,7 @@ public class GlobalbedoLevel2 extends Operator {
                     throw new OperatorException("Could not get geometry for product");
                 }
                 SubsetOp subsetOp = new SubsetOp();
+                subsetOp.setParameterDefaultValues();
                 subsetOp.setGeoRegion(geometry);
                 subsetOp.setSourceProduct(sourceProduct);
                 targetProduct = subsetOp.getTargetProduct();
@@ -78,6 +79,7 @@ public class GlobalbedoLevel2 extends Operator {
             }
 
             GaMasterOp gaMasterOp = new GaMasterOp();
+            gaMasterOp.setParameterDefaultValues();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
@@ -93,6 +95,7 @@ public class GlobalbedoLevel2 extends Operator {
                 setTargetProduct(aotProduct);
             } else {
                 BbdrOp bbdrOp = new BbdrOp();
+                bbdrOp.setParameterDefaultValues();
                 bbdrOp.setSourceProduct(aotProduct);
                 bbdrOp.setParameter("sensor", sensor);
                 Product bbdrProduct = bbdrOp.getTargetProduct();

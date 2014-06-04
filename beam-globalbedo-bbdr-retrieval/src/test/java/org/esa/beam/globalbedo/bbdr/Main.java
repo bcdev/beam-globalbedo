@@ -26,11 +26,13 @@ public class Main {
         final String targetProductFileName = args[2];
         final Product sourceProduct = ProductIO.readProduct(sourceProductFileName);
         final Operator bbdrOp = new BbdrOp();
+        bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(sourceProduct);
         bbdrOp.setParameter("sensor", sensorName);
         Product targetProduct = bbdrOp.getTargetProduct();
 
         final ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
         repro.setParameter("easting", 7783653.6);    // tile h25v06
         repro.setParameter("northing", 3335851.6);
 

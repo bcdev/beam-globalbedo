@@ -88,7 +88,7 @@ public class GMTED2010ElevationModel implements ElevationModel, Resampling.Raste
                                     RASTER_WIDTH,
                                     RASTER_HEIGHT,
                                     resamplingIndex);
-            elevation = resampling.resample(resamplingRaster, resamplingIndex);
+            elevation = (float) resampling.resample(resamplingRaster, resamplingIndex);
         }
         if (Float.isNaN(elevation)) {
             return descriptor.getNoDataValue();
@@ -97,7 +97,21 @@ public class GMTED2010ElevationModel implements ElevationModel, Resampling.Raste
     }
 
     @Override
-    public float getSample(int pixelX, int pixelY) throws IOException {
+    public boolean getSamples(int[] x, int[] y, double[][] samples) throws Exception {
+        boolean isSomeNaNValue = false;
+        for (int i = 0; i < y.length; i++) {
+            for (int j = 0; j < x.length; j++) {
+                double value = (double) getSample(x[j], y[i]);
+                if (Double.isNaN(value)) {
+                    isSomeNaNValue = true;
+                }
+                samples[i][j] = value;
+            }
+        }
+        return isSomeNaNValue;
+    }
+
+    private float getSample(int pixelX, int pixelY) throws IOException {
         final int tileXIndex = pixelX / TILE_WIDTH;
         final int tileYIndex = pixelY / TILE_HEIGHT;
         final ElevationTile tile = getElevationTile(tileXIndex, tileYIndex);

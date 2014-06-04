@@ -86,6 +86,7 @@ public class LandcoverLevel2 extends Operator {
 
     private Product processAot(Product product) {
         GaMasterOp gaMasterOp = new GaMasterOp();
+        gaMasterOp.setParameterDefaultValues();
         gaMasterOp.setParameter("copyToaRadBands", false);
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
@@ -97,6 +98,7 @@ public class LandcoverLevel2 extends Operator {
 
     private Product processBbdr(Product product) {
         BbdrOp bbdrOp = new BbdrOp();
+        bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(product);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);

@@ -45,6 +45,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         Product lcQaResultProduct = lcQaOp.getTargetProduct();
@@ -63,6 +64,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         Product lcQaResultProduct = lcQaOp.getTargetProduct();
@@ -81,6 +83,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         Product lcQaResultProduct = lcQaOp.getTargetProduct();
@@ -100,6 +103,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         Product lcQaResultProduct = lcQaOp.getTargetProduct();
@@ -118,6 +122,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         lcQaOp.setParameter("badDataRowsThreshold", 0);   // no invalid row allowed - QA should fail
@@ -125,6 +130,7 @@ public class LcQaOpTest {
         checkResult_qaFailed(lcQaResultProduct);
 
         lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         lcQaOp.setParameter("badDataRowsThreshold", 3);   // 3 invalid rows allowed - QA should pass
@@ -144,6 +150,7 @@ public class LcQaOpTest {
         }));
 
         LcQaOp lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         lcQaOp.setParameter("percentBadDataValuesThreshold", 79.0f);   // 79% invalid pixels allowed - QA should fail
@@ -151,6 +158,7 @@ public class LcQaOpTest {
         checkResult_qaFailed(lcQaResultProduct);
 
         lcQaOp = new LcQaOp();
+        lcQaOp.setParameterDefaultValues();
         lcQaOp.setSourceProduct(l1Product);
         lcQaOp.setParameter("invalidMaskBitIndex", 0);
         lcQaOp.setParameter("percentBadDataValuesThreshold", 81.0f);   // 81% invalid pixels allowed - QA should pass

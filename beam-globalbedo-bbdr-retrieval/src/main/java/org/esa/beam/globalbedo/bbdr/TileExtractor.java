@@ -171,6 +171,7 @@ public class TileExtractor extends Operator implements Output {
         double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
 
         ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
         repro.setParameter("easting", easting);
         repro.setParameter("northing", northing);
 

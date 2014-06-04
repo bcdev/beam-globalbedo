@@ -56,6 +56,7 @@ public class PolarStereographicOp extends Operator {
                                                  int width, int height) {
 
         ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
 
         repro.setParameter("crs", "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
                 "GEOGCS[\"World Geodetic System 1984\"," +
@@ -100,6 +101,7 @@ public class PolarStereographicOp extends Operator {
     private static Product reprojectToGeographicLatLon(Product origProduct) {
 
         ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
 
         repro.setParameter("easting", 0.0);
         repro.setParameter("northing", 80.0);
@@ -141,6 +143,7 @@ public class PolarStereographicOp extends Operator {
     private static Product reprojectToPolarStereographic(Product latlonProduct) {
 
         ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
 
         repro.setParameter("crs", "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
                 "GEOGCS[\"World Geodetic System 1984\"," +

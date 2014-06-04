@@ -77,6 +77,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator implements Outpu
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+            accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("computeSeaice", computeSeaice);

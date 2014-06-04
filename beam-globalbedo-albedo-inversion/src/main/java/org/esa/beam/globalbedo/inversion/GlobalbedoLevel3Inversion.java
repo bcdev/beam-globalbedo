@@ -122,6 +122,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
 
             InversionOp inversionOp = new InversionOp();
+            inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
             if (reprojectedPriorProduct != null) {
                 inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);
@@ -169,6 +170,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             // todo: this is not a very nice hack. we should try to find a better solution...
             if (includesSouthPole(tile)) {
                 SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
+                correctionOp.setParameterDefaultValues();
                 correctionOp.setSourceProduct("sourceProduct", inversionProduct);
                 Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
                 setTargetProduct(southPoleCorrectedProduct);

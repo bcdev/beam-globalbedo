@@ -7,7 +7,7 @@
     <name>Globalbedo</name>
     <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
 
     <packaging>pom</packaging>
 
@@ -80,11 +80,9 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <!--<ceres.version>0.12</ceres.version>-->
-        <ceres.version>0.13.2</ceres.version>
-        <!--<beam.version>4.9</beam.version>-->
-        <beam.version>4.11</beam.version>
-        <hadoop.version>0.20.205.0</hadoop.version>
+        <ceres.version>0.14</ceres.version>
+        <beam.version>5.0</beam.version>
+        <hadoop.version>2.4.0</hadoop.version>
     </properties>
 
     <dependencyManagement>
@@ -136,17 +134,17 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>1.2.2</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-collocation</artifactId>
-                <version>1.4.1</version>
+                <version>${beam.version}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>1.5.2</version>
+                <version>${beam.version}</version>
             </dependency>
             <!--<dependency>-->
             <!--<groupId>org.esa.beam</groupId>-->
@@ -168,7 +166,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-netcdf</artifactId>
-                <version>1.1.2</version>
+                <version>${beam.version}</version>
             </dependency>
 
         </dependencies>

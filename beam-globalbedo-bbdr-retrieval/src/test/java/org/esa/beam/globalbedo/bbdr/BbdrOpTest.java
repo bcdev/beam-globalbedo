@@ -37,6 +37,7 @@ public class BbdrOpTest {
     @Ignore
     public void testMerisSdrPixel() {
         BbdrOp bbdrOp = new BbdrOp();
+        bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(createSourceProduct());
         bbdrOp.setParameter("landMaskExpression", "true");
         Product targetProduct = bbdrOp.getTargetProduct();

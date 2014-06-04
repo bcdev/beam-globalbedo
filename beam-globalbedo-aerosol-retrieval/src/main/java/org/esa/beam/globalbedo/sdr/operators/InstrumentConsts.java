@@ -126,7 +126,7 @@ class InstrumentConsts {
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "
                 + " && (" + EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME + "<70))";
         validRetrievalExpr.put(supportedInstruments[0], merisValidRetrievalExpr);
-        String vgtValidRetrievaExpr = "(SM.B0_GOOD && SM.B2_GOOD && SM.B3_GOOD && SM.MIR_GOOD "
+        String vgtValidRetrievaExpr = "(SM.B0_GOOD && SM.B2_GOOD && SM.B3_GOOD && (SM.MIR_GOOD or MIR <= 0.65) "
                 + " &&  " + idepixFlagBandName + ".F_LAND "
                 + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW "
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "

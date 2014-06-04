@@ -409,6 +409,7 @@ public class BbdrOp extends PixelOperator {
         SRC_TOA_VAR = SRC_TOA_RFL + toaBandNames.length;
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
+        imageVarianceOp.setParameterDefaultValues();
         imageVarianceOp.setSourceProduct(sourceProduct);
         imageVarianceOp.setParameter("sensor", sensor);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
@@ -424,7 +425,7 @@ public class BbdrOp extends PixelOperator {
             if (sensor == Sensor.MERIS) {
                 l1InvalidExpression = "l1_flags.INVALID OR l1_flags.COSMETIC";
             } else if (sensor == Sensor.VGT) {
-                l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR MIR > 0.65";
+                l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
             }
 
             String expression = l1InvalidExpression + " ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
@@ -438,6 +439,7 @@ public class BbdrOp extends PixelOperator {
             bandDescriptors[0].type = ProductData.TYPESTRING_INT8;
 
             BandMathsOp bandMathsOp = new BandMathsOp();
+            bandMathsOp.setParameterDefaultValues();
             bandMathsOp.setParameter("targetBandDescriptors", bandDescriptors);
             bandMathsOp.setSourceProduct(sourceProduct);
             Product statusProduct = bandMathsOp.getTargetProduct();

@@ -78,6 +78,7 @@ public class CollocToAotSeaiceOp extends Operator {
             aotSourceProduct = getCollocationMasterSubset(extendedCollocationProduct);
 
             GaMasterOp gaMasterOp = new GaMasterOp();
+            gaMasterOp.setParameterDefaultValues();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);

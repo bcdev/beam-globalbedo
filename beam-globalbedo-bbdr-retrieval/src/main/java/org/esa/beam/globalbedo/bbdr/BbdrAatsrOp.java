@@ -282,6 +282,7 @@ public class BbdrAatsrOp extends PixelOperator {
         SRC_TOA_VAR = SRC_TOA_RFL + toaBandNames.length;
 
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
+        imageVarianceOp.setParameterDefaultValues();
         imageVarianceOp.setSourceProduct(sourceProduct);
         imageVarianceOp.setParameter("sensor", Sensor.AATSR);
         Product varianceProduct = imageVarianceOp.getTargetProduct();
