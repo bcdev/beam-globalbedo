@@ -54,6 +54,11 @@
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-modis35-reader</artifactId>
+            <version>1.2-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-tiff-directory-reader</artifactId>
             <version>1.2-SNAPSHOT</version>
         </dependency>

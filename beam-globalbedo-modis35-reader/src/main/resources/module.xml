@@ -1,0 +1,70 @@
+<!--
+  ~ Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
+  ~
+  ~ This program is free software; you can redistribute it and/or modify it
+  ~ under the terms of the GNU General Public License as published by the Free
+  ~ Software Foundation; either version 3 of the License, or (at your option)
+  ~ any later version.
+  ~ This program is distributed in the hope that it will be useful, but WITHOUT
+  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+  ~ more details.
+  ~
+  ~ You should have received a copy of the GNU General Public License along
+  ~ with this program; if not, see http://www.gnu.org/licenses/
+  -->
+
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-modis35-reader</symbolicName>
+    <version>1.2-SNAPSHOT</version>
+    <name>GlobAlbedo Modis35 Cloud Mask Reader</name>
+    <description>
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2014 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+        <b>Changes in 5.0</b><br/>
+        [BEAM-1506] - Scalar variables are wrongly written to NetCDF4<br/>
+        [BEAM-1505] - HDF-EOS reader should scale bands to highest resolution<br/>
+        [BEAM-1504] - Update NetCDF library to latest version<br/>
+        ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+    <!--<dependency>-->
+        <!--<module>beam-modis-reader</module>-->
+    <!--</dependency>-->
+    <dependency>
+        <module>beam-visat-rcp</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader,NetCDF,HDF,CF,EOS</categories>
+
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importModis35Product</id>
+            <helpId>importModis35Product</helpId>
+            <formatName>MOD35-L2</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <text>MODIS35 Cloud Mask</text>
+            <mnemonic/>
+            <shortDescr>Import a MODIS35 Cloud Mask product.
+            </shortDescr>
+            <description>Import a MODIS35 Cloud Mask product.
+            </description>
+        </action>
+    </extension>
+
+</module>
