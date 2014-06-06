@@ -75,16 +75,6 @@ public class Modis35CfFlagCodingPart extends Modis35ProfilePartIO {
         }
     }
 
-    public static FlagCoding readFlagCoding(Modis35ProfileReadContext ctx, String variableName) {
-        final Variable variable = ctx.getNetcdfFile().getRootGroup().findVariable(variableName);
-        final String codingName = variableName + "_flag_coding";
-        if (variable != null) {
-            return readFlagCoding(variable, codingName);
-        } else {
-            return null;
-        }
-    }
-
     private static FlagCoding readFlagCoding(Variable variable, String codingName) {
         final Attribute flagMasks = variable.findAttribute(FLAG_MASKS);
         final int[] maskValues;

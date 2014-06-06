@@ -16,12 +16,15 @@
 
 package org.esa.beam.dataio.netcdf.util;
 
-import java.io.File;
-
 /**
  * Provides most of the constants used in this package.
  */
 public interface Modis35Constants {
+
+    public static final int MOD35_SCALE_FACTOR = 5;
+    public static final int LOW_RES_MODE = 0;
+    public static final int HIGH_RES_MODE = 1;
+    public static final String HIGH_RES_RASTER_DIM_NAMES = "Byte_Segment,Cell_Along_Swath_1km,Cell_Across_Swath_1km";
 
     String FORMAT_NAME = "NetCDF";
     String FORMAT_DESCRIPTION = "NetCDF/CF Data Product";
@@ -33,12 +36,6 @@ public interface Modis35Constants {
             FILE_EXTENSION_NC, FILE_EXTENSION_NC_GZ,
             FILE_EXTENSION_HDF, FILE_EXTENSION_HDF_GZ,
     };
-    Class[] READER_INPUT_TYPES = new Class[]{
-            String.class,
-            File.class,
-    };
-
-    String DATE_TIME_PATTERN = "yyyy-MM-dd HH:mm:ss";
 
     String SCALE_FACTOR_ATT_NAME = "scale_factor";
     String SLOPE_ATT_NAME = "slope";
@@ -46,10 +43,8 @@ public interface Modis35Constants {
     String INTERCEPT_ATT_NAME = "intercept";
     String FILL_VALUE_ATT_NAME = "_FillValue";
     String MISSING_VALUE_ATT_NAME = "missing_value";
-    String ORIG_NAME_ATT_NAME = "orig_name";
     String VALID_MIN_ATT_NAME = "valid_min";
     String VALID_MAX_ATT_NAME = "valid_max";
-    String STEP_ATT_NAME = "step";
     String START_DATE_ATT_NAME = "start_date";
     String START_TIME_ATT_NAME = "start_time";
     String STOP_DATE_ATT_NAME = "stop_date";

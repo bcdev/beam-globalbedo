@@ -26,7 +26,7 @@ import java.util.Map;
  */
 class Modis35CfCompliantUnitMapper {
 
-    private static final Map<String, String> unitMap = new HashMap<String, String>();
+    private static final Map<String, String> unitMap = new HashMap<>();
 
     static {
         unitMap.put("deg", "degree");

@@ -54,68 +54,12 @@ public class Modis35CfGeocodingPart extends Modis35ProfilePartIO {
 
     @Override
     public void decode(Modis35ProfileReadContext ctx, Product p) throws IOException {
-        GeoCoding geoCoding = readConventionBasedMapGeoCoding(ctx, p);
-//        if (geoCoding == null) {
-//            geoCoding = readPixelGeoCoding(p);
-//        }
-        // If there is still no geocoding, check special case of netcdf file which was converted
-        // from hdf file and has 'StructMetadata.n' element.
-        // In this case, the HDF 'elements' were put into a single Netcdf String attribute
-        // todo: in fact this has been checked only for MODIS09 HDF-EOS product. Try to further generalize
-//        if (geoCoding == null && hasHdfMetadataOrigin(ctx.getNetcdfFile().getGlobalAttributes())) {
-//            hdfDecode(ctx, p);
-//        }
-        if (geoCoding != null) {
-            p.setGeoCoding(geoCoding);
-        }
+        // nothing to do here - for MODIS35 we build the geocoding manually in the reader implementation
     }
-
-    private void hdfDecode(Modis35ProfileReadContext ctx, Product p) throws IOException {
-        final Modis35CfHdfEosGeoInfoExtractor cfHdfEosGeoInfoExtractor = new Modis35CfHdfEosGeoInfoExtractor(
-                ctx.getNetcdfFile().getGlobalAttributes());
-        cfHdfEosGeoInfoExtractor.extractInfo();
-
-        String projection = cfHdfEosGeoInfoExtractor.getProjection();
-        double upperLeftLon = cfHdfEosGeoInfoExtractor.getUlLon();
-        double upperLeftLat = cfHdfEosGeoInfoExtractor.getUlLat();
-
-        double lowerRightLon = cfHdfEosGeoInfoExtractor.getLrLon();
-        double lowerRightLat = cfHdfEosGeoInfoExtractor.getLrLat();
-
-        HdfEosGeocodingPart.attachGeoCoding(p, upperLeftLon, upperLeftLat, lowerRightLon, lowerRightLat, projection);
-    }
-
-    private boolean hasHdfMetadataOrigin(List<Attribute> netcdfAttributes) {
-        for (Attribute att : netcdfAttributes) {
-            if (att.getShortName().startsWith("StructMetadata")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
 
     @Override
     public void preEncode(Modis35ProfileWriteContext ctx, Product product) throws IOException {
-        final GeoCoding geoCoding = product.getGeoCoding();
-        if (geoCoding == null) {
-            return;
-        }
-        geographicCRS = isGeographicCRS(geoCoding);
-        final NFileWriteable ncFile = ctx.getNetcdfFileWriteable();
-        final boolean latLonPresent = isLatLonPresent(ncFile);
-        if (!latLonPresent) {
-            if (geographicCRS) {
-                final GeoPos ul = geoCoding.getGeoPos(new PixelPos(0.5f, 0.5f), null);
-                final int w = product.getSceneRasterWidth();
-                final int h = product.getSceneRasterHeight();
-                final GeoPos br = geoCoding.getGeoPos(new PixelPos(w - 0.5f, h - 0.5f), null);
-                addGeographicCoordinateVariables(ncFile, ul, br);
-            } else {
-                addLatLonBands(ncFile, ImageManager.getPreferredTileSize(product));
-            }
-        }
-        ctx.setProperty(Modis35Constants.Y_FLIPPED_PROPERTY_NAME, false);
+        // not needed here
     }
 
     private boolean isLatLonPresent(NFileWriteable ncFile) {
@@ -124,52 +68,7 @@ public class Modis35CfGeocodingPart extends Modis35ProfilePartIO {
 
     @Override
     public void encode(Modis35ProfileWriteContext ctx, Product product) throws IOException {
-        NFileWriteable ncFile = ctx.getNetcdfFileWriteable();
-        if (!isLatLonPresent(ncFile)) {
-            return;
-        }
-        final int h = product.getSceneRasterHeight();
-        final int w = product.getSceneRasterWidth();
-
-        final GeoCoding geoCoding = product.getGeoCoding();
-        final PixelPos pixelPos = new PixelPos();
-        final GeoPos geoPos = new GeoPos();
-
-        NVariable latVariable = ncFile.findVariable("lat");
-        NVariable lonVariable = ncFile.findVariable("lon");
-        if (geographicCRS) {
-            final float[] lat = new float[h];
-            final float[] lon = new float[w];
-            pixelPos.x = 0 + 0.5f;
-            for (int y = 0; y < h; y++) {
-                pixelPos.y = y + 0.5f;
-                geoCoding.getGeoPos(pixelPos, geoPos);
-                lat[y] = geoPos.getLat();
-            }
-            pixelPos.y = 0 + 0.5f;
-            for (int x = 0; x < w; x++) {
-                pixelPos.x = x + 0.5f;
-                geoCoding.getGeoPos(pixelPos, geoPos);
-                lon[x] = geoPos.getLon();
-            }
-            latVariable.writeFully(Array.factory(lat));
-            lonVariable.writeFully(Array.factory(lon));
-        } else {
-            final float[] lat = new float[w];
-            final float[] lon = new float[w];
-            final boolean isYFlipped = (Boolean) ctx.getProperty(Modis35Constants.Y_FLIPPED_PROPERTY_NAME);
-            for (int y = 0; y < h; y++) {
-                pixelPos.y = y + 0.5f;
-                for (int x = 0; x < w; x++) {
-                    pixelPos.x = x + 0.5f;
-                    geoCoding.getGeoPos(pixelPos, geoPos);
-                    lat[x] = geoPos.getLat();
-                    lon[x] = geoPos.getLon();
-                }
-                latVariable.write(0, y, w, 1, isYFlipped, ProductData.createInstance(lat));
-                lonVariable.write(0, y, w, 1, isYFlipped, ProductData.createInstance(lon));
-            }
-        }
+        // not needed here
     }
 
     static boolean isGeographicCRS(final GeoCoding geoCoding) {
@@ -177,133 +76,7 @@ public class Modis35CfGeocodingPart extends Modis35ProfilePartIO {
                CRS.equalsIgnoreMetadata(geoCoding.getMapCRS(), DefaultGeographicCRS.WGS84);
     }
 
-    private void addGeographicCoordinateVariables(NFileWriteable ncFile, GeoPos ul, GeoPos br) throws IOException {
-        final NVariable lat = ncFile.addVariable("lat", DataType.FLOAT, null, "lat");
-        lat.addAttribute("units", "degrees_north");
-        lat.addAttribute("long_name", "latitude");
-        lat.addAttribute("standard_name", "latitude");
-        lat.addAttribute(Modis35Constants.VALID_MIN_ATT_NAME, br.getLat());
-        lat.addAttribute(Modis35Constants.VALID_MAX_ATT_NAME, ul.getLat());
 
-        final NVariable lon = ncFile.addVariable("lon", DataType.FLOAT, null, "lon");
-        lon.addAttribute("units", "degrees_east");
-        lon.addAttribute("long_name", "longitude");
-        lon.addAttribute("standard_name", "longitude");
-        lon.addAttribute(Modis35Constants.VALID_MIN_ATT_NAME, ul.getLon());
-        lon.addAttribute(Modis35Constants.VALID_MAX_ATT_NAME, br.getLon());
-    }
-
-    private void addLatLonBands(final NFileWriteable ncFile, Dimension tileSize) throws IOException {
-        final NVariable lat = ncFile.addVariable("lat", DataType.FLOAT, tileSize, "y x");
-        lat.addAttribute("units", "degrees_north");
-        lat.addAttribute("long_name", "latitude coordinate");
-        lat.addAttribute("standard_name", "latitude");
-
-        final NVariable lon = ncFile.addVariable("lon", DataType.FLOAT, tileSize, "y x");
-        lon.addAttribute("units", "degrees_east");
-        lon.addAttribute("long_name", "longitude coordinate");
-        lon.addAttribute("standard_name", "longitude");
-    }
-
-    private static GeoCoding readConventionBasedMapGeoCoding(Modis35ProfileReadContext ctx, Product product) {
-        final String[] cfConvention_lonLatNames = new String[]{
-                Modis35Constants.LON_VAR_NAME,
-                Modis35Constants.LAT_VAR_NAME
-        };
-        final String[] coardsConvention_lonLatNames = new String[]{
-                Modis35Constants.LONGITUDE_VAR_NAME,
-                Modis35Constants.LATITUDE_VAR_NAME
-        };
-
-        Variable[] lonLat;
-        List<Variable> variableList = ctx.getNetcdfFile().getVariables();
-        lonLat = ReaderUtils.getVariables(variableList, cfConvention_lonLatNames);
-        if (lonLat == null) {
-            lonLat = ReaderUtils.getVariables(variableList, coardsConvention_lonLatNames);
-        }
-
-        if (lonLat != null) {
-            final Variable lonVariable = lonLat[0];
-            final Variable latVariable = lonLat[1];
-            final Modis35DimKey rasterDim = ctx.getRasterDigest().getRasterDim();
-            if (rasterDim.fitsTo(lonVariable, latVariable)) {
-                try {
-                    return createConventionBasedMapGeoCoding(lonVariable, latVariable,
-                                                             product.getSceneRasterWidth(),
-                                                             product.getSceneRasterHeight(), ctx);
-                } catch (Exception e) {
-                    BeamLogManager.getSystemLogger().warning("Failed to create NetCDF geo-coding");
-                }
-            }
-        }
-        return null;
-    }
-
-    private static GeoCoding createConventionBasedMapGeoCoding(Variable lon,
-                                                               Variable lat,
-                                                               int sceneRasterWidth,
-                                                               int sceneRasterHeight,
-                                                               Modis35ProfileReadContext ctx) throws Exception {
-        double pixelX;
-        double pixelY;
-        double easting;
-        double northing;
-        double pixelSizeX;
-        double pixelSizeY;
-
-        boolean yFlipped;
-        Array lonData = lon.read();
-        // SPECIAL CASE: check if we have a global geographic lat/lon with lon from 0..360 instead of -180..180
-        if (isGlobalShifted180(lonData)) {
-            // if this is true, subtract 180 from all longitudes and
-            // add a global attribute which will be analyzed when setting up the image(s)
-            final List<Variable> variables = ctx.getNetcdfFile().getVariables();
-            for (Iterator<Variable> iterator = variables.iterator(); iterator.hasNext(); ) {
-                Variable next = iterator.next();
-                next.getAttributes().add(new Attribute("LONGITUDE_SHIFTED_180", 1));
-            }
-            for (int i = 0; i < lonData.getSize(); i++) {
-                final Index ii = lonData.getIndex().set(i);
-                final double theLon = lonData.getDouble(ii) - 180.0;
-                lonData.setDouble(ii, theLon);
-            }
-        }
-        final Array latData = lat.read();
-
-
-        final int lonSize = lon.getShape(0);
-        final Index i0 = lonData.getIndex().set(0);
-        final Index i1 = lonData.getIndex().set(lonSize - 1);
-        pixelSizeX = (lonData.getDouble(i1) - lonData.getDouble(i0)) / (sceneRasterWidth - 1);
-        easting = lonData.getDouble(i0);
-
-        final int latSize = lat.getShape(0);
-        final Index j0 = latData.getIndex().set(0);
-        final Index j1 = latData.getIndex().set(latSize - 1);
-        pixelSizeY = (latData.getDouble(j1) - latData.getDouble(j0)) / (sceneRasterHeight - 1);
-
-        pixelX = 0.5f;
-        pixelY = 0.5f;
-
-        if (pixelSizeY < 0) {
-            pixelSizeY = -pixelSizeY;
-            yFlipped = false;
-            northing = latData.getDouble(latData.getIndex().set(0));
-        } else {
-            yFlipped = true;
-            northing = latData.getDouble(latData.getIndex().set(latSize - 1));
-        }
-
-        if (pixelSizeX <= 0 || pixelSizeY <= 0) {
-            return null;
-        }
-        ctx.setProperty(Modis35Constants.Y_FLIPPED_PROPERTY_NAME, yFlipped);
-        return new CrsGeoCoding(DefaultGeographicCRS.WGS84,
-                                sceneRasterWidth, sceneRasterHeight,
-                                easting, northing,
-                                pixelSizeX, pixelSizeY,
-                                pixelX, pixelY);
-    }
 
     static boolean isGlobalShifted180(Array lonData) {
         // Idea: lonData values shall closely match [0,360] interval:
@@ -321,21 +94,6 @@ public class Modis35CfGeocodingPart extends Modis35ProfilePartIO {
         final double lastValue = lonData.getDouble(iN);
         return (firstValue >= 0.0 && firstValue <= lonDelta &&
                 lastValue >= 360.0 - lonDelta && lastValue <= 360.0);
-    }
-
-    private static GeoCoding readPixelGeoCoding(Product product) throws IOException {
-        Band lonBand = product.getBand(Modis35Constants.LON_VAR_NAME);
-        if (lonBand == null) {
-            lonBand = product.getBand(Modis35Constants.LONGITUDE_VAR_NAME);
-        }
-        Band latBand = product.getBand(Modis35Constants.LAT_VAR_NAME);
-        if (latBand == null) {
-            latBand = product.getBand(Modis35Constants.LATITUDE_VAR_NAME);
-        }
-        if (latBand != null && lonBand != null) {
-            return GeoCodingFactory.createPixelGeoCoding(latBand, lonBand, latBand.getValidMaskExpression(), 5);
-        }
-        return null;
     }
 
 }

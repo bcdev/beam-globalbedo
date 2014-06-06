@@ -87,10 +87,9 @@ public class ScaleImageOp extends Operator {
         // scale all bands
         for (Band band : sourceProduct.getBands()) {
             if (!targetProduct.containsBand(band.getName())) {
-                ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct, true);
+                targetProduct.addBand(new Band(band.getName(), band.getDataType(), productWidth, productHeight));
                 ProductUtils.copyRasterDataNodeProperties(band, targetProduct.getBand(band.getName()));
-
-                final MultiLevelImage sourceImage = targetProduct.getBand(band.getName()).getSourceImage();
+                final MultiLevelImage sourceImage = band.getSourceImage();
                 RenderedOp scaledImg = ScaleDescriptor.create(sourceImage,
                                                               (float) scaleFactorToUse,
                                                               (float) scaleFactorToUse,
@@ -100,16 +99,6 @@ public class ScaleImageOp extends Operator {
                 targetProduct.getBand(band.getName()).setSourceImage(scaledImg);
             }
         }
-        // tie point grids...
-        for (TiePointGrid tpg : sourceProduct.getTiePointGrids()) {
-            if (!targetProduct.containsTiePointGrid(tpg.getName())) {
-                ProductUtils.copyTiePointGrid(tpg.getName(), sourceProduct, targetProduct);
-            }
-        }
-
-        final PixelGeoCoding pixelGeoCoding =
-                new PixelGeoCoding(targetProduct.getBand("Latitude"), targetProduct.getBand("Longitude"), null, 6);
-        targetProduct.setGeoCoding(pixelGeoCoding);
 
         return targetProduct;
     }

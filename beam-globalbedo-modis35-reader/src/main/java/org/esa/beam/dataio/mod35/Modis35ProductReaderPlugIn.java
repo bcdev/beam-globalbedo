@@ -6,7 +6,6 @@ import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.util.io.BeamFileFilter;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Locale;
 
 /**
@@ -31,26 +30,6 @@ public class Modis35ProductReaderPlugIn implements ProductReaderPlugIn {
         } else {
             return DecodeQualification.UNABLE;
         }
-    }
-
-    /**
-     * Retrieves the input file from the input object passed in
-     *
-     * @param input the input object (File or String)
-     * @return the File representing the product
-     * @throws java.io.IOException on disk access failures
-     */
-    public static File getInput(Object input) throws IOException {
-        return getFileInput(input);
-    }
-
-    static File getFileInput(Object input) {
-        if (input instanceof String) {
-            return new File((String) input);
-        } else if (input instanceof File) {
-            return (File) input;
-        }
-        return null;
     }
 
     private boolean isInputValid(Object input) {

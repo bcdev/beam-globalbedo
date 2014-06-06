@@ -21,11 +21,7 @@ import ucar.nc2.Dimension;
 import ucar.nc2.Group;
 import ucar.nc2.Variable;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Represents an extract of all variables that could be converted to bands.
@@ -36,10 +32,6 @@ public class Modis35RasterDigest {
     private final Variable[] variables;
     private Modis35ScaledVariable[] scaledVariables;
 
-
-    public Modis35RasterDigest(Modis35DimKey rasterDim, Variable[] variables) {
-        this(rasterDim, variables, new Modis35ScaledVariable[0]);
-    }
 
     public Modis35RasterDigest(Modis35DimKey rasterDim, Variable[] variables, Modis35ScaledVariable[] scaledVariables) {
         this.rasterDim = rasterDim;
@@ -59,16 +51,16 @@ public class Modis35RasterDigest {
         return scaledVariables;
     }
 
-    public static Modis35RasterDigest createRasterDigest(final Group... groups) {
-        Map<Modis35DimKey, List<Variable>> variableListMap = new HashMap<Modis35DimKey, List<Variable>>();
+    public static Modis35RasterDigest createRasterDigest(int resolutionMode, final Group... groups) {
+        Map<Modis35DimKey, List<Variable>> variableListMap = new HashMap<>();
         for (Group group : groups) {
             collectVariableLists(group, variableListMap);
         }
         if (variableListMap.isEmpty()) {
             return null;
         }
-        if (System.getProperty("raster.digest") != null && System.getProperty("raster.digest").equals("EXTENDED")) {
-            final Modis35DimKey rasterDim = getBestRasterDimExtended(variableListMap);
+        if (resolutionMode == Modis35Constants.HIGH_RES_MODE) {
+            final Modis35DimKey rasterDim = getBestRasterDimHighRes(variableListMap);
             final Variable[] rasterVariables = getRasterVariablesExtended(variableListMap, rasterDim);
             final Modis35ScaledVariable[] scaledVariables = getScaledVariablesExtended(variableListMap, rasterDim);
             return new Modis35RasterDigest(rasterDim, rasterVariables, scaledVariables);
@@ -81,7 +73,7 @@ public class Modis35RasterDigest {
     }
 
     private static Modis35ScaledVariable[] getScaledVariablesExtended(Map<Modis35DimKey, List<Variable>> variableListMap, Modis35DimKey rasterDim) {
-        List<Modis35ScaledVariable> scaledVariableList = new ArrayList<Modis35ScaledVariable>();
+        List<Modis35ScaledVariable> scaledVariableList = new ArrayList<>();
         for (Modis35DimKey dimKey : variableListMap.keySet()) {
             if (!dimKey.equals(rasterDim)) {
                 double scaleX = getScale(dimKey.getDimensionX(), rasterDim.getDimensionX());
@@ -105,25 +97,22 @@ public class Modis35RasterDigest {
         return getRasterVariables(variableListMap, rasterDim);
     }
 
-    private static Modis35DimKey getBestRasterDimExtended(Map<Modis35DimKey, List<Variable>> variableListMap) {
-        // todo: consider other reasonable cases
+    private static Modis35DimKey getBestRasterDimHighRes(Map<Modis35DimKey, List<Variable>> variableListMap) {
         final Set<Modis35DimKey> ncRasterDims = variableListMap.keySet();
         if (ncRasterDims.size() == 0) {
             return null;
         }
 
-        String[] rasterDimNames = null;
-        final String rasterDimNameString = System.getProperty("raster.dim.names");
-        if (rasterDimNameString != null) {
-            rasterDimNames = rasterDimNameString.split(",");
-        }
+        final String rasterDimNameString = Modis35Constants.HIGH_RES_RASTER_DIM_NAMES;
+        String[] rasterDimNames = rasterDimNameString.split(",");
+
         for (Modis35DimKey rasterDim : ncRasterDims) {
-            if (rasterDimNames != null && rasterDimNames.length == rasterDim.getRank()) {
+            if (rasterDimNames.length == rasterDim.getRank()) {
                 boolean isOptimalRasterDim = false;
                 for (int i = 0; i < rasterDim.getRank(); i++) {
                     isOptimalRasterDim = false;
-                    for (int j = 0; j < rasterDimNames.length; j++) {
-                        if (rasterDimNames[j].equalsIgnoreCase(rasterDim.getDimension(i).getShortName())) {
+                    for (String rasterDimName : rasterDimNames) {
+                        if (rasterDimName.equalsIgnoreCase(rasterDim.getDimension(i).getShortName())) {
                             isOptimalRasterDim = true;
                         }
                     }
@@ -134,25 +123,11 @@ public class Modis35RasterDigest {
             }
         }
 
-        Modis35DimKey bestRasterDim = null;
-        List<Variable> bestVarList = null;
-        for (Modis35DimKey rasterDim : ncRasterDims) {
-            if (rasterDim.isTypicalRasterDim()) {
-                return rasterDim;
-            }
-            // Otherwise, we assume the best is the one which holds the most variables
-            final List<Variable> varList = variableListMap.get(rasterDim);
-            if (bestVarList == null || varList.size() > bestVarList.size()) {
-                bestRasterDim = rasterDim;
-                bestVarList = varList;
-            }
-        }
-
-        return bestRasterDim;
+        return getBestRasterDim(variableListMap);
     }
 
     private static Modis35ScaledVariable[] getScaledVariables(Map<Modis35DimKey, List<Variable>> variableListMap, Modis35DimKey rasterDim) {
-        List<Modis35ScaledVariable> scaledVariableList = new ArrayList<Modis35ScaledVariable>();
+        List<Modis35ScaledVariable> scaledVariableList = new ArrayList<>();
         for (Modis35DimKey dimKey : variableListMap.keySet()) {
             if (!dimKey.equals(rasterDim)) {
                 double scaleX = getScale(dimKey.getDimensionX(), rasterDim.getDimensionX());
@@ -214,7 +189,7 @@ public class Modis35RasterDigest {
                 if (dimX.getLength() > 1 && dimY.getLength() > 1) {
                     List<Variable> list = variableLists.get(rasterDim);
                     if (list == null) {
-                        list = new ArrayList<Variable>();
+                        list = new ArrayList<>();
                         variableLists.put(rasterDim, list);
                     }
                     list.add(variable);

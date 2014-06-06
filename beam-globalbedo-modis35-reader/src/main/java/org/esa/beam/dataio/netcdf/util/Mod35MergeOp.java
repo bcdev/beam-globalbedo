@@ -65,11 +65,11 @@ public class Mod35MergeOp extends Operator {
             }
         }
         // tie point grids...
-        for (TiePointGrid tpg : masterProduct.getTiePointGrids()) {
-            if (!targetProduct.containsTiePointGrid(tpg.getName())) {
-                ProductUtils.copyTiePointGrid(tpg.getName(), masterProduct, targetProduct);
-            }
-        }
+//        for (TiePointGrid tpg : masterProduct.getTiePointGrids()) {
+//            if (!targetProduct.containsTiePointGrid(tpg.getName())) {
+//                ProductUtils.copyTiePointGrid(tpg.getName(), masterProduct, targetProduct);
+//            }
+//        }
 
         return targetProduct;
     }

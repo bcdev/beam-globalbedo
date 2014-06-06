@@ -119,7 +119,7 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
     }
 
     private String getAutoGrouping(Modis35ProfileReadContext ctx) {
-        ArrayList<String> bandNames = new ArrayList<String>();
+        ArrayList<String> bandNames = new ArrayList<>();
         for (final Variable variable : ctx.getRasterDigest().getRasterVariables()) {
             final List<Dimension> dimensions = variable.getDimensions();
             int rank = dimensions.size();
