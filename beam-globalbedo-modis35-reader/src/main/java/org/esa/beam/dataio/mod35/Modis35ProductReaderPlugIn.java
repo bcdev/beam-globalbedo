@@ -38,8 +38,10 @@ public class Modis35ProductReaderPlugIn implements ProductReaderPlugIn {
     }
 
     private boolean isInputHdfFileNameValid(String fileName) {
+        // e.g.
 //        MOD35_L2.A2005180.1455.006.2012278173052.hdf
-        return (fileName.matches("MOD35_L2.A[0-9]{7}.[0-9]{4}.006.[0-9]{13}.(?i)(hdf)"));
+//        MOD35_L2.A2014157.0910.005.2014157192917.hdf
+        return (fileName.matches("MOD35_L2.A[0-9]{7}.[0-9]{4}.[0-9]{3}.[0-9]{13}.(?i)(hdf)"));
     }
 
     @Override

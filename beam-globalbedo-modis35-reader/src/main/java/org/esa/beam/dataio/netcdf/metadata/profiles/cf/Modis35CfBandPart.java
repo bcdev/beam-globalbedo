@@ -51,9 +51,6 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         for (final Variable variable : ctx.getRasterDigest().getRasterVariables()) {
             addBandsToProduct(ctx, p, variable);
         }
-        for (final Modis35ScaledVariable scaledVariable : ctx.getRasterDigest().getScaledVariables()) {
-            addBandsToProduct(ctx, p, scaledVariable.getVariable());
-        }
         p.setAutoGrouping(getAutoGrouping(ctx));
     }
 

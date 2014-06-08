@@ -74,14 +74,14 @@ public class Modis35NetcdfMultiLevelImage extends AbstractNetcdfMultiLevelImage 
 
         if (variable.getDataType() == DataType.LONG) {
             if (rdn.getName().endsWith("_lsb")) {
-                return NetcdfOpImage.createLsbImage(variable, imageOrigin, isYFlipped, lock, dataBufferType,
-                                                    sceneRasterWidth, sceneRasterHeight, imageTileSize, resolutionLevel);
+                return Modis35NetcdfOpImage.createLsbImage(variable, imageOrigin, isYFlipped, lock, dataBufferType,
+                        sceneRasterWidth, sceneRasterHeight, imageTileSize, resolutionLevel);
             } else {
-                return NetcdfOpImage.createMsbImage(variable, imageOrigin, isYFlipped, lock, dataBufferType,
-                                                    sceneRasterWidth, sceneRasterHeight, imageTileSize, resolutionLevel);
+                return Modis35NetcdfOpImage.createMsbImage(variable, imageOrigin, isYFlipped, lock, dataBufferType,
+                        sceneRasterWidth, sceneRasterHeight, imageTileSize, resolutionLevel);
             }
         } else {
-            return new NetcdfOpImage(variable, imageOrigin, isYFlipped, lock,
+            return new Modis35NetcdfOpImage(variable, imageOrigin, isYFlipped, lock,
                                      dataBufferType, sceneRasterWidth, sceneRasterHeight, imageTileSize, resolutionLevel);
         }
     }

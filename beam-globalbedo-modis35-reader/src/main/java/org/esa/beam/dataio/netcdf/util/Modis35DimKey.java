@@ -18,7 +18,6 @@ package org.esa.beam.dataio.netcdf.util;
 
 import com.bc.ceres.core.Assert;
 import ucar.nc2.Dimension;
-import ucar.nc2.Variable;
 
 import java.util.List;
 
@@ -30,8 +29,16 @@ import java.util.List;
  */
 public class Modis35DimKey {
 
-    private static final String[] TYPICAL_X_DIM_NAMES = new String[]{"lon", "long", "longitude", "ni", "NX", "SX", "x", "xc", "XDim", "across_track", "numRows"};
-    private static final String[] TYPICAL_Y_DIM_NAMES = new String[]{"lat", "lat", "latitude", "nj", "NY", "SY", "y", "yc", "YDim", "along_track", "numCells"};
+    private static final String[] TYPICAL_X_DIM_NAMES = new String[]{"lon", "long", "longitude",
+            "ni", "NX", "SX", "x", "xc", "XDim",
+            "Cell_Across_Swath_5km",
+            "Cell_Across_Swath_1km",
+            "across_track", "numRows"};
+    private static final String[] TYPICAL_Y_DIM_NAMES = new String[]{"lat", "lat", "latitude",
+            "nj", "NY", "SY", "y", "yc", "YDim",
+            "Cell_Along_Swath_5km",
+            "Cell_Along_Swath_1km",
+            "along_track", "numCells"};
 
     private final Dimension[] dims;
     private final int xDimIndex;
@@ -109,23 +116,6 @@ public class Modis35DimKey {
         return dims[index];
     }
 
-    public boolean isTypicalRasterDim() {
-        boolean isTypicalRasterDim = false;
-        for (int i = 0; i < TYPICAL_X_DIM_NAMES.length; i++) {
-            isTypicalRasterDim = isTypicalRasterDim || matchesXYDimNames(TYPICAL_X_DIM_NAMES[i], TYPICAL_Y_DIM_NAMES[i]);
-        }
-        return isTypicalRasterDim;
-    }
-
-    // Move to GeocodingUtils
-
-    public boolean fitsTo(final Variable varX, final Variable varY) {
-        return  varX.getRank() == 1 &&
-                varY.getRank() == 1 &&
-                varX.getDimension(0).getLength() == getDimensionX().getLength() &&
-                varY.getDimension(0).getLength() == getDimensionY().getLength();
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -144,12 +134,4 @@ public class Modis35DimKey {
         return 31 * getDimensionY().getLength() + getDimensionX().getLength();
     }
 
-    private boolean matchesXYDimNames(final String xName, final String yName) {
-        if (getDimensionX().getShortName() != null && getDimensionY().getShortName() != null) {
-            return getDimensionX().getShortName().equalsIgnoreCase(xName)
-                    && getDimensionY().getShortName().equalsIgnoreCase(yName);
-        } else {
-            return false;
-        }
-    }
 }

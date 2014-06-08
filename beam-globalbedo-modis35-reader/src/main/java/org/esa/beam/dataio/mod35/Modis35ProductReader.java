@@ -53,7 +53,6 @@ public class Modis35ProductReader extends AbstractProductReader {
         super(readerPlugIn);
     }
 
-    // todo: write tests!!
     // todo: cleanup/remove unmodified classes  from module which are just copies from netcdf reader
 
     @Override
@@ -63,24 +62,34 @@ public class Modis35ProductReader extends AbstractProductReader {
         filename = inFile.getName();
 
         // 1. read product with original RasterDigest: get the variables on 5km grid
-        Product tiePoints5kmProduct = readProduct(Modis35Constants.LOW_RES_MODE);
+        Product tiePoints5kmProduct = readProduct(Modis35Constants.LOW_RES_RASTER_DIM_NAMES);
 
         // 2. read product with modified RasterDigest to get cloud mask on high res 1km grid, skip weird metadata
-        Product cloudMaskFirstProduct = readProduct(Modis35Constants.HIGH_RES_MODE);
+        Product cloudMaskFirstProduct = readProduct(Modis35Constants.HIGH_RES_CLOUDMASK_RASTER_DIM_NAMES);
 
-        // 3. make subset: bands (first 2 bytes of cloudmask) and grid (cut residual columns in x-dir)
-        Map<String, Object> subsetParams = new HashMap<>();
+        // 3. read product with modified RasterDigest to get QA band on high res 1km grid, skip weird metadata
+        Product qualityAssuranceProduct = readProduct(Modis35Constants.HIGH_RES_QA_RASTER_DIM_NAMES);
+
+        // 4. make subsets: cut residual columns in x-dir
         final int subsetWidth = tiePoints5kmProduct.getSceneRasterWidth() * Modis35Constants.MOD35_SCALE_FACTOR;
         final int subsetHeight = tiePoints5kmProduct.getSceneRasterHeight() * Modis35Constants.MOD35_SCALE_FACTOR;
         final Rectangle subsetRegion = new Rectangle(0, 0, subsetWidth, subsetHeight);
-        subsetParams.put("region", subsetRegion);
-        String[] bandNames = new String[]{"Cloud_Mask_Byte_Segment1", "Cloud_Mask_Byte_Segment2"};
-        subsetParams.put("bandNames", bandNames);
-        subsetParams.put("copyMetadata", true);
-        Product cloudMaskSubsetProduct =
-                GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParams, cloudMaskFirstProduct);
 
-        // 4. upscale low res product with factor 5.0 to get same grid as subsetted cloud mask product (use ScaleImageOp)
+        Map<String, Object> cloudMaskSubsetParams = new HashMap<>();
+        cloudMaskSubsetParams.put("region", subsetRegion);
+        cloudMaskSubsetParams.put("copyMetadata", true);
+        cloudMaskSubsetParams.put("bandNames", Modis35Constants.CLOUD_MASK_BAND_NAMES);
+        Product cloudMaskSubsetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class),
+                cloudMaskSubsetParams, cloudMaskFirstProduct);
+
+        Map<String, Object> qualityAssuranceSubsetParams = new HashMap<>();
+        qualityAssuranceSubsetParams.put("region", subsetRegion);
+        qualityAssuranceSubsetParams.put("copyMetadata", true);
+        qualityAssuranceSubsetParams.put("bandNames", Modis35Constants.QUALITY_ASSURANCE_BAND_NAMES);
+        Product qualityAssuranceSubsetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class),
+                qualityAssuranceSubsetParams, qualityAssuranceProduct);
+
+        // 5. upscale low res product with factor 5.0 to get same grid as subsetted cloud mask product (use ScaleImageOp)
         ScaleImageOp scaleImageOp = new ScaleImageOp();
         scaleImageOp.setParameterDefaultValues();
         Map<String, Object> scaleParams = new HashMap<>();
@@ -89,25 +98,35 @@ public class Modis35ProductReader extends AbstractProductReader {
         Product tiePoints1kmProduct =
                 GPF.createProduct(OperatorSpi.getOperatorAlias(ScaleImageOp.class), scaleParams, tiePoints5kmProduct);
 
-        // 5. merge the two products
-        Mod35MergeOp mergeOp = new Mod35MergeOp();
-        mergeOp.setParameterDefaultValues();
-        mergeOp.setSourceProduct("masterProduct", tiePoints1kmProduct);
-        mergeOp.setSourceProduct("slaveProduct", cloudMaskSubsetProduct);
-        Product finalProduct = mergeOp.getTargetProduct();
+        // 6. merge the products
+        // first, merge cloudMaskSubsetProduct to tiePoints1kmProduct
+        Mod35MergeOp mergeOp1 = new Mod35MergeOp();
+        mergeOp1.setParameterDefaultValues();
+        mergeOp1.setSourceProduct("masterProduct", tiePoints1kmProduct);
+        mergeOp1.setSourceProduct("slaveProduct", cloudMaskSubsetProduct);
+        Product mergeProduct1 = mergeOp1.getTargetProduct();
 
-        // 6. add geocoding to final product
+        // then, merge qualityAssuranceSubsetProduct to first merge product
+        Mod35MergeOp mergeOp2 = new Mod35MergeOp();
+        mergeOp2.setParameterDefaultValues();
+        mergeOp2.setSourceProduct("masterProduct", mergeProduct1);
+        mergeOp2.setSourceProduct("slaveProduct", qualityAssuranceSubsetProduct);
+        Product finalProduct = mergeOp2.getTargetProduct();
+
+        // 7. add geocoding to final product
         final PixelGeoCoding pixelGeoCoding =
-                new PixelGeoCoding(finalProduct.getBand("Latitude"), finalProduct.getBand("Longitude"), "", 4);
+                new PixelGeoCoding(tiePoints1kmProduct.getBand("Latitude"), tiePoints1kmProduct.getBand("Longitude"), "", 4);
         finalProduct.setGeoCoding(pixelGeoCoding);
 
         // todo: remove unused variables from product metadata!
+
+        finalProduct.setAutoGrouping("Cloud_Mask:Quality_Assurance");
 
         // return the final product
         return finalProduct;
     }
 
-    private synchronized Product readProduct(int resolutionMode) throws IOException {
+    private synchronized Product readProduct(String rasterDimNames) throws IOException {
         NetcdfFile netcdfFile = Modis35NetcdfFileOpener.open(inputFilePath);
         if (netcdfFile == null) {
             throw new IOException("Failed to open file: " + inputFilePath);
@@ -115,16 +134,16 @@ public class Modis35ProductReader extends AbstractProductReader {
 
         Modis35ProfileReadContext context = new Modis35ProfileReadContextImpl(netcdfFile);
         context.setProperty(Modis35Constants.PRODUCT_FILENAME_PROPERTY, filename);
-        initReadContext(context, resolutionMode);
+        initReadContext(context, rasterDimNames);
         Modis35NetCdfReadProfile profile = new Modis35NetCdfReadProfile();
         configureProfile(profile);
         return profile.readProduct(context);
     }
 
-    private void initReadContext(Modis35ProfileReadContext ctx, int resolutionMode) throws IOException {
+    private void initReadContext(Modis35ProfileReadContext ctx, String rasterDimNames) throws IOException {
         NetcdfFile netcdfFile = ctx.getNetcdfFile();
         final Modis35RasterDigest rasterDigest =
-                Modis35RasterDigest.createRasterDigest(resolutionMode, netcdfFile.getRootGroup());
+                Modis35RasterDigest.createRasterDigest(rasterDimNames, netcdfFile.getRootGroup());
         if (rasterDigest == null) {
             throw new IOException("File does not contain any bands.");
         }

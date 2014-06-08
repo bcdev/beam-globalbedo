@@ -8,7 +8,7 @@ import static org.junit.Assert.*;
 /**
  * @author Norman Fomferra
  */
-public class DimKeyTest {
+public class Modis35DimKeyTest {
     @Test
     public void testEqualsAndHashCode() throws Exception {
         Modis35DimKey dimKey1 = new Modis35DimKey(new Dimension("y", 256), new Dimension("x", 512));
