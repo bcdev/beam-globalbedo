@@ -12,7 +12,6 @@
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo-modis35-reader</artifactId>
     <name>Globalbedo Modis35 Reader</name>
     <description>Reader and conversion tools for MODIS MOD35 cloud mask data products.</description>
@@ -25,10 +24,6 @@
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-modis-reader</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>

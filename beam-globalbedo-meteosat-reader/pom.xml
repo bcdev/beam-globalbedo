@@ -12,7 +12,6 @@
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo-meteosat-reader</artifactId>
     <name>Globalbedo Meteosat Reader</name>
     <description>Reads surface albedo from METEOSAT MFG and MSG data products.</description>
@@ -20,7 +19,15 @@
     <dependencies>
         <dependency>
             <groupId>org.esa.beam</groupId>
+            <artifactId>beam-collocation</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-gpf</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>

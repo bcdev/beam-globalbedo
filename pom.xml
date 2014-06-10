@@ -152,11 +152,6 @@
                 <artifactId>beam-envisat-reader</artifactId>
                 <version>${beam.version}</version>
             </dependency>
-            <!--<dependency>-->
-            <!--<groupId>org.esa.beam</groupId>-->
-            <!--<artifactId>beam-envi-reader</artifactId>-->
-            <!--<version>1.1</version>-->
-            <!--</dependency>-->
 
             <!-- JUnit Libraries ############################################# -->
 
@@ -175,18 +170,6 @@
             </dependency>
 
             <!-- NetCDF Library ############################################# -->
-
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-netcdf</artifactId>
-                <version>${beam.version}</version>
-            </dependency>
-
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-modis-reader</artifactId>
-                <version>${beam.version}</version>
-            </dependency>
 
             <dependency>
                 <groupId>org.esa.beam</groupId>

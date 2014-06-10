@@ -53,7 +53,7 @@ public class Modis35ProductReader extends AbstractProductReader {
         super(readerPlugIn);
     }
 
-    // todo: cleanup/remove unmodified classes  from module which are just copies from netcdf reader
+    // todo: cleanup/remove unmodified classes from module which are just copies from netcdf reader
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
@@ -89,7 +89,7 @@ public class Modis35ProductReader extends AbstractProductReader {
         Product qualityAssuranceSubsetProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class),
                 qualityAssuranceSubsetParams, qualityAssuranceProduct);
 
-        // 5. upscale low res product with factor 5.0 to get same grid as subsetted cloud mask product (use ScaleImageOp)
+        // 5. upscale low res product with factor 5.0 to get same grid as sub-set cloud mask product (use ScaleImageOp)
         ScaleImageOp scaleImageOp = new ScaleImageOp();
         scaleImageOp.setParameterDefaultValues();
         Map<String, Object> scaleParams = new HashMap<>();
@@ -118,9 +118,10 @@ public class Modis35ProductReader extends AbstractProductReader {
                 new PixelGeoCoding(tiePoints1kmProduct.getBand("Latitude"), tiePoints1kmProduct.getBand("Longitude"), "", 4);
         finalProduct.setGeoCoding(pixelGeoCoding);
 
-        // todo: remove unused variables from product metadata!
-
         finalProduct.setAutoGrouping("Cloud_Mask:Quality_Assurance");
+
+        // todo: we need to extract properly the cloud and quality info from the single bits of the
+        // Cloud_Mask and Quality_Assurance bytes. Also, corresponding bit masks in Visat would be nice.
 
         // return the final product
         return finalProduct;
@@ -156,7 +157,6 @@ public class Modis35ProductReader extends AbstractProductReader {
         profile.addProfilePartReader(new Modis35CfBandPart());
         profile.addProfilePartReader(new Modis35CfTiePointGridPart());
         profile.addProfilePartReader(new Modis35CfFlagCodingPart());
-//        profile.addProfilePartReader(new Modis35CfGeocodingPart());
         profile.addProfilePartReader(new Modis35CfTimePart());
         profile.addProfilePartReader(new Modis35CfDescriptionPart());
     }

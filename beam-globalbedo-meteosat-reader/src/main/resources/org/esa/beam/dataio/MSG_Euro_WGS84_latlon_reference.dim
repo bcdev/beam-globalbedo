@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="ISO-8859-1"?>
+<Dimap_Document name="MSG_Euro_WGS84_latlon_reference.dim">
+    <Metadata_Id>
+        <METADATA_FORMAT version="2.11.0">DIMAP</METADATA_FORMAT>
+        <METADATA_PROFILE>BEAM-DATAMODEL-V1</METADATA_PROFILE>
+    </Metadata_Id>
+    <Dataset_Id>
+        <DATASET_SERIES>BEAM-PRODUCT</DATASET_SERIES>
+        <DATASET_NAME>MSG_Euro_WGS84_latlon_reference</DATASET_NAME>
+    </Dataset_Id>
+    <Dataset_Use>
+        <DATASET_COMMENTS>Empty product on WGS84 latlon projection, 1/30 deg resolution, serving as reference (collocation master) for MSG_Euro 5000x5000 products</DATASET_COMMENTS>
+    </Dataset_Use>
+    <Production>
+        <DATASET_PRODUCER_NAME />
+        <PRODUCT_TYPE>MSG_Euro_WGS84_latlon_reference</PRODUCT_TYPE>
+    </Production>
+    <Coordinate_Reference_System>
+        <WKT>
+             GEOGCS["WGS84(DD)", 
+               DATUM["WGS84", 
+                 SPHEROID["WGS84", 6378137.0, 298.257223563]], 
+               PRIMEM["Greenwich", 0.0], 
+               UNIT["degree", 0.017453292519943295], 
+               AXIS["Geodetic longitude", EAST], 
+               AXIS["Geodetic latitude", NORTH]]
+        </WKT>
+    </Coordinate_Reference_System>
+    <Geoposition>
+        <IMAGE_TO_MODEL_TRANSFORM>0.03333333333333333,0.0,0.0,-0.03333333333333333,-30.01666666666665,65.01666666666667</IMAGE_TO_MODEL_TRANSFORM>
+    </Geoposition>
+    <Raster_Dimensions>
+        <NCOLS>2850</NCOLS>
+        <NROWS>3150</NROWS>
+        <NBANDS>0</NBANDS>
+    </Raster_Dimensions>
+    <Dataset_Sources>
+        <MDElem name="metadata">
+            <MDElem name="history">
+                <MDElem name="SubsetInfo">
+                    <MDATTR name="SourceProduct.name" type="ascii">Globalbedo.albedo.200505.05.PC_reprojected_subset</MDATTR>
+                    <MDATTR name="SubSampling.x" type="int32" mode="rw">1</MDATTR>
+                    <MDATTR name="SubSampling.y" type="int32" mode="rw">1</MDATTR>
+                    <MDATTR name="ProductNodeName.1" type="ascii">latitude</MDATTR>
+                    <MDATTR name="ProductNodeName.2" type="ascii">longitude</MDATTR>
+                    <MDATTR name="ProductNodeName.3" type="ascii">history</MDATTR>
+                    <MDElem name="SubsetInfo">
+                        <MDATTR name="SourceProduct.name" type="ascii">Globalbedo.albedo.200505.05.PC_reprojected</MDATTR>
+                        <MDATTR name="SubSampling.x" type="int32" mode="rw">1</MDATTR>
+                        <MDATTR name="SubSampling.y" type="int32" mode="rw">1</MDATTR>
+                        <MDATTR name="SubRegion.x" type="int32" mode="rw">4500</MDATTR>
+                        <MDATTR name="SubRegion.y" type="int32" mode="rw">750</MDATTR>
+                        <MDATTR name="SubRegion.width" type="int32" mode="rw">2850</MDATTR>
+                        <MDATTR name="SubRegion.height" type="int32" mode="rw">3150</MDATTR>
+                        <MDATTR name="ProductNodeName.1" type="ascii">DHR_VIS</MDATTR>
+                    </MDElem>
+                </MDElem>
+            </MDElem>
+            <MDElem name="Processing_Graph">
+                <MDElem name="node.0">
+                    <MDATTR name="id" type="ascii" mode="rw">Subset$146859CE998</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Subset</MDATTR>
+                    <MDATTR name="moduleName" type="ascii" mode="rw">beam-gpf</MDATTR>
+                    <MDATTR name="moduleVersion" type="ascii" mode="rw">5.0</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Create a spatial and/or spectral subset of a data product.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke, Norman Fomferra, Marco Peters</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.1</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2011 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">file:/C:/Users/olafd/QA4ECV/from_eumetsat/Globalbedo.albedo.200505.05.PC_reprojected.dim</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="fullSwath" type="ascii">false</MDATTR>
+                        <MDATTR name="copyMetadata" type="ascii">false</MDATTR>
+                        <MDATTR name="subSamplingX" type="ascii">1</MDATTR>
+                        <MDATTR name="bandNames" type="ascii">DHR_VIS</MDATTR>
+                        <MDATTR name="subSamplingY" type="ascii">1</MDATTR>
+                        <MDElem name="region">
+                            <MDATTR name="height" type="ascii">3150</MDATTR>
+                            <MDATTR name="width" type="ascii">2850</MDATTR>
+                            <MDATTR name="y" type="ascii">750</MDATTR>
+                            <MDATTR name="x" type="ascii">4500</MDATTR>
+                        </MDElem>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.1">
+                    <MDATTR name="id" type="ascii" mode="rw">Meteosat.Netcdf.Read$146859CEA15</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Meteosat.Netcdf.Read</MDATTR>
+                    <MDATTR name="moduleName" type="ascii" mode="rw">beam-globalbedo-meteosat-reader</MDATTR>
+                    <MDATTR name="moduleVersion" type="ascii" mode="rw">1.1-SNAPSHOT</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Reads a Meteosat product with standard Beam Netcdf reader and attaches a Meteosat Geocoding. Suitable lat/lon bands must be passed as parameters,</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Olaf Danne</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.0</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2014 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="latlonReferenceProduct" type="ascii" mode="rw">file:/C:/Users/olafd/QA4ECV/from_eumetsat/Globalbedo.albedo.200505.05.PC_reprojected.dim</MDATTR>
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">file:/C:/Users/olafd/QA4ECV/from_eumetsat/W_XX-EUMETSAT-Darmstadt,SOUNDING+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20010501000000.nc</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="latBandName" type="ascii">lat</MDATTR>
+                        <MDATTR name="lonBandName" type="ascii">lon</MDATTR>
+                        <MDATTR name="regionID" type="ascii">MSG_Euro</MDATTR>
+                    </MDElem>
+                </MDElem>
+                <MDElem name="node.2">
+                    <MDATTR name="id" type="ascii" mode="rw">Write$146859CEA48</MDATTR>
+                    <MDATTR name="operator" type="ascii" mode="rw">Write</MDATTR>
+                    <MDATTR name="moduleName" type="ascii" mode="rw">beam-gpf</MDATTR>
+                    <MDATTR name="moduleVersion" type="ascii" mode="rw">5.0</MDATTR>
+                    <MDATTR name="purpose" type="ascii" mode="rw">Writes a data product to a file.</MDATTR>
+                    <MDATTR name="authors" type="ascii" mode="rw">Marco Zuehlke, Norman Fomferra</MDATTR>
+                    <MDATTR name="version" type="ascii" mode="rw">1.3</MDATTR>
+                    <MDATTR name="copyright" type="ascii" mode="rw">(c) 2010 by Brockmann Consult</MDATTR>
+                    <MDElem name="sources">
+                        <MDATTR name="sourceProduct" type="ascii" mode="rw">product:Globalbedo.albedo.200505.05.PC_reprojected_subset</MDATTR>
+                    </MDElem>
+                    <MDElem name="parameters">
+                        <MDATTR name="formatName" type="ascii">BEAM-DIMAP</MDATTR>
+                        <MDATTR name="clearCacheAfterRowWrite" type="ascii">false</MDATTR>
+                        <MDATTR name="writeEntireTileRows" type="ascii">true</MDATTR>
+                        <MDATTR name="deleteOutputOnFailure" type="ascii">true</MDATTR>
+                        <MDATTR name="file" type="ascii">C:\Users\olafd\QA4ECV\from_eumetsat\Globalbedo.albedo.200505.05.PC_reprojected_subset.dim</MDATTR>
+                    </MDElem>
+                </MDElem>
+            </MDElem>
+        </MDElem>
+    </Dataset_Sources>
+</Dimap_Document>
