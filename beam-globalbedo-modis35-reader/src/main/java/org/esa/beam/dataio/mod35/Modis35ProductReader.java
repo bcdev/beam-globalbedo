@@ -24,13 +24,11 @@ import org.esa.beam.dataio.netcdf.metadata.profiles.cf.*;
 import org.esa.beam.dataio.netcdf.util.*;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelGeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.util.BitSetter;
 import ucar.nc2.NetcdfFile;
 
 import java.awt.*;
@@ -46,8 +44,51 @@ import java.util.Map;
  */
 public class Modis35ProductReader extends AbstractProductReader {
 
+    private static final String MOD35_CLOUD_DETERMINED_FLAG_NAME = "CLOUD_DETERMINED";
+    private static final String MOD35_CLOUD_CERTAIN_FLAG_NAME = "CLOUD_CERTAIN";
+    private static final String MOD35_CLOUD_UNCERTAIN_FLAG_NAME = "CLOUD_PROBABLY";
+    private static final String MOD35_PROBABLY_CLEAR_FLAG_NAME = "CLEAR_PROBABLY";
+    private static final String MOD35_CONFIDENT_CLEAR_FLAG_NAME = "CLEAR_CERTAIN";
+    private static final String MOD35_DAYTIME_FLAG_NAME = "DAYTIME";
+    private static final String MOD35_GLINT_FLAG_NAME = "GLINT";
+    private static final String MOD35_SNOW_ICE_FLAG_NAME = "SNOW_ICE";
+    private static final String MOD35_WATER_FLAG_NAME = "WATER";
+    private static final String MOD35_COASTAL_FLAG_NAME = "COAST";
+    private static final String MOD35_DESERT_FLAG_NAME = "DESERT";
+    private static final String MOD35_LAND_FLAG_NAME = "LAND";
+
+    private static final int CLOUD_DETERMINED_BIT_INDEX = 0;
+    private static final int CLOUD_CERTAIN_BIT_INDEX = 1;
+    private static final int CLOUD_UNCERTAIN_BIT_INDEX = 2;
+    private static final int CLOUD_PROBABLY_CLEAR_BIT_INDEX = 3;
+    private static final int CLOUD_CONFIDENT_CLEAR_BIT_INDEX = 4;
+    private static final int DAYTIME_BIT_INDEX = 5;
+    private static final int GLINT_BIT_INDEX = 6;
+    private static final int SNOW_ICE_BIT_INDEX = 7;
+    private static final int WATER_BIT_INDEX = 8;
+    private static final int COASTAL_BIT_INDEX = 9;
+    private static final int DESERT_BIT_INDEX = 10;
+    private static final int LAND_BIT_INDEX = 11;
+
+    private String MOD35_CLOUD_DETERMINED_FLAG_DESCR = "Cloud mask was determined for this pixel";
+    private String MOD35_CLOUD_CERTAIN_FLAG_DESCR = "Certainly cloudy pixel";
+    private String MOD35_CLOUD_UNCERTAIN_FLAG_DESCR = "Probably cloudy pixel";
+    private String MOD35_PROBABLY_CLEAR_FLAG_DESCR = "Probably clear pixel";
+    private String MOD35_CERTAINLY_CLEAR_FLAG_DESCR = "Certainly clear pixel";
+    private String MOD35_DAYTIME_FLAG_DESCR = "Daytime pixel";
+    private String MOD35_GLINT_FLAG_DESCR = "Glint pixel";
+    private String MOD35_SNOW_ICE_FLAG_DESCR = "Snow/ice pixel";
+    private String MOD35_WATER_FLAG_DESCR = "Water pixel";
+    private String MOD35_COASTAL_FLAG_DESCR = "Coastal pixel";
+    private String MOD35_DESERT_FLAG_DESCR = "Desert pixel";
+    private String MOD35_LAND_FLAG_DESCR = "Land pixel";
+
     private String inputFilePath;
+
     private String filename;
+    public static final String PIXEL_CLASSIF_FLAG_BAND_NAME = "cloudmask_flags";
+
+    public static final String QA_FLAG_BAND_NAME = "qa_flags";
 
     public Modis35ProductReader(ProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -158,6 +199,74 @@ public class Modis35ProductReader extends AbstractProductReader {
         profile.addProfilePartReader(new Modis35CfTimePart());
         profile.addProfilePartReader(new Modis35CfDescriptionPart());
     }
+
+    private void attachPixelClassificationFlagBand(Product mod35Product) {
+        FlagCoding mod35FC = new FlagCoding(PIXEL_CLASSIF_FLAG_BAND_NAME);
+
+        mod35FC.addFlag(MOD35_CLOUD_DETERMINED_FLAG_NAME, BitSetter.setFlag(0, CLOUD_DETERMINED_BIT_INDEX),
+                        MOD35_CLOUD_DETERMINED_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_CLOUD_CERTAIN_FLAG_NAME, BitSetter.setFlag(0, CLOUD_CERTAIN_BIT_INDEX),
+                        MOD35_CLOUD_CERTAIN_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_CLOUD_UNCERTAIN_FLAG_NAME, BitSetter.setFlag(0, CLOUD_UNCERTAIN_BIT_INDEX),
+                        MOD35_CLOUD_UNCERTAIN_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_PROBABLY_CLEAR_FLAG_NAME, BitSetter.setFlag(0, CLOUD_PROBABLY_CLEAR_BIT_INDEX),
+                        MOD35_PROBABLY_CLEAR_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_CONFIDENT_CLEAR_FLAG_NAME, BitSetter.setFlag(0, CLOUD_CONFIDENT_CLEAR_BIT_INDEX),
+                        MOD35_CERTAINLY_CLEAR_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_DAYTIME_FLAG_NAME, BitSetter.setFlag(0, DAYTIME_BIT_INDEX),
+                        MOD35_DAYTIME_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_GLINT_FLAG_NAME, BitSetter.setFlag(0, GLINT_BIT_INDEX),
+                        MOD35_GLINT_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_SNOW_ICE_FLAG_NAME, BitSetter.setFlag(0, SNOW_ICE_BIT_INDEX),
+                        MOD35_SNOW_ICE_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_WATER_FLAG_NAME, BitSetter.setFlag(0, WATER_BIT_INDEX),
+                        MOD35_WATER_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_COASTAL_FLAG_NAME, BitSetter.setFlag(0, COASTAL_BIT_INDEX),
+                        MOD35_COASTAL_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_DESERT_FLAG_NAME, BitSetter.setFlag(0, DESERT_BIT_INDEX),
+                        MOD35_DESERT_FLAG_DESCR);
+        mod35FC.addFlag(MOD35_LAND_FLAG_NAME, BitSetter.setFlag(0, LAND_BIT_INDEX),
+                        MOD35_LAND_FLAG_DESCR);
+
+        ProductNodeGroup<Mask> maskGroup = mod35Product.getMaskGroup();
+        addMask(mod35Product, maskGroup, MOD35_CLOUD_DETERMINED_FLAG_NAME, MOD35_CLOUD_DETERMINED_FLAG_DESCR, new Color(238, 223, 145), 0.0f);
+        addMask(mod35Product, maskGroup, MOD35_CLOUD_CERTAIN_FLAG_NAME, MOD35_CLOUD_CERTAIN_FLAG_DESCR, Color.GREEN, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_CLOUD_UNCERTAIN_FLAG_NAME, MOD35_CLOUD_UNCERTAIN_FLAG_DESCR, Color.white, 0.0f);
+        addMask(mod35Product, maskGroup, MOD35_PROBABLY_CLEAR_FLAG_NAME, MOD35_PROBABLY_CLEAR_FLAG_DESCR, Color.YELLOW, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_CONFIDENT_CLEAR_FLAG_NAME, MOD35_CERTAINLY_CLEAR_FLAG_DESCR, Color.RED, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_DAYTIME_FLAG_NAME, MOD35_DAYTIME_FLAG_DESCR, Color.BLUE, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_GLINT_FLAG_NAME, MOD35_GLINT_FLAG_DESCR, Color.CYAN, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_SNOW_ICE_FLAG_NAME, MOD35_SNOW_ICE_FLAG_DESCR, Color.GREEN.darker().darker(), 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_WATER_FLAG_NAME, MOD35_WATER_FLAG_DESCR, Color.pink, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_COASTAL_FLAG_NAME, MOD35_COASTAL_FLAG_DESCR, Color.pink, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_DESERT_FLAG_NAME, MOD35_DESERT_FLAG_DESCR, Color.pink, 0.5f);
+        addMask(mod35Product, maskGroup, MOD35_LAND_FLAG_NAME, MOD35_LAND_FLAG_DESCR, Color.pink, 0.5f);
+
+        mod35Product.getFlagCodingGroup().add(mod35FC);
+        final Band pixelClassifBand = mod35Product.addBand(PIXEL_CLASSIF_FLAG_BAND_NAME, ProductData.TYPE_INT16);
+        pixelClassifBand.setDescription("MOD35 pixel classification");
+        pixelClassifBand.setSampleCoding(mod35FC);
+
+        fillPixelClassifBand(pixelClassifBand, mod35Product.getBand(Modis35Constants.CLOUD_MASK_BAND_NAMES[0]));
+    }
+
+    private void fillPixelClassifBand(Band pixelClassifBand, Band clmaskByte1Band) {
+        // todo
+
+    }
+
+    private void addMask(Product mod35Product, ProductNodeGroup<Mask> maskGroup, String flagName, String description, Color color,
+                         float transparency) {
+        int width = mod35Product.getSceneRasterWidth();
+        int height = mod35Product.getSceneRasterHeight();
+        String maskPrefix = "mod35_";
+        Mask mask = Mask.BandMathsType.create(maskPrefix + flagName.toLowerCase(),
+                                              description, width, height,
+                                              PIXEL_CLASSIF_FLAG_BAND_NAME + "." + flagName,
+                                              color, transparency);
+        maskGroup.add(mask);
+    }
+
 
 
     @Override
