@@ -13,20 +13,18 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.SystemUtils;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URL;
-import java.net.URLDecoder;
 
 @OperatorMetadata(alias = "Meteosat.Netcdf.Read",
-        description = "Reads a Meteosat product with standard Beam Netcdf reader and " +
-                      "attaches a Meteosat Geocoding. Suitable lat/lon bands must be passed as parameters.",
+        description = "This operator reads a Meteosat MSG 'Euro' product with standard Beam Netcdf reader, " +
+                      "attaches a Meteosat Geocoding, and reprojects to WGS84 lat/lon. " +
+                      "Suitable lat/lon bands must be passed as parameters.",
         authors = "Olaf Danne",
         version = "1.0",
-        copyright = "(c) 2014 by Brockmann Consult",
-        internal = true)
+        copyright = "(c) 2014 by Brockmann Consult")
 public class MeteosatNetcdfReadOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
@@ -106,8 +104,9 @@ public class MeteosatNetcdfReadOp extends Operator {
 
         // Collocate with reference product, which has no bands, but only WGS84 latlon CRS
         // and target region [65N,40S], [30W,65E] which sufficiently covers BRFs for MSG_Euro.
+        // todo: simple reprojection of the Meteosat product would be more reasonable, but does not work. Check why!
         Product latlonReferenceProduct;
-        final File latlonReferenceFile = getLatlonReferenceFile(MSG_EURO_REF_FILE_NAME);
+        final File latlonReferenceFile = getLatlonReferenceFile();
         try {
             latlonReferenceProduct = ProductIO.readProduct(latlonReferenceFile);
             CollocateOp collocateOp = new CollocateOp();
@@ -116,9 +115,9 @@ public class MeteosatNetcdfReadOp extends Operator {
             collocateOp.setSlaveProduct(targetProductOrigProj);
             collocateOp.setRenameSlaveComponents(false);
             final Product finalProduct = collocateOp.getTargetProduct();
-            finalProduct.setGeoCoding(new PixelGeoCoding(finalProduct.getBand("lat"),
-                                                         finalProduct.getBand("lon"),
-                                                         null, 4));
+//            finalProduct.setGeoCoding(new PixelGeoCoding(finalProduct.getBand("lat"),
+//                                                         finalProduct.getBand("lon"),
+//                                                         null, 4));
             ProductUtils.copyMetadata(sourceProduct, finalProduct);
 
             return finalProduct;
@@ -127,24 +126,18 @@ public class MeteosatNetcdfReadOp extends Operator {
         }
     }
 
-    private File getLatlonReferenceFile(String name) {
-        final URL url = getClass().getResource(name);
-        if (url == null) {
-            throw new OperatorException("Cannot find WGS84 latlon reference file: " + name);
-        }
-        String filePath;
-        try {
-            filePath = URLDecoder.decode(url.getPath(), "UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new OperatorException(e.getMessage());
-        }
-        return new File(filePath);
+    private File getLatlonReferenceFile() {
+        String meteosatAuxdataSrcPath = "org/esa/beam/dataio";
+        final String meteosatAuxdataDestPath = ".beam/beam-globalbedo/beam-globalbedo-meteosat-reader/" + meteosatAuxdataSrcPath;
+        File meteosatAuxdataTargetDir = new File(SystemUtils.getUserHomeDir(), meteosatAuxdataDestPath);
+        return new File(meteosatAuxdataTargetDir, MSG_EURO_REF_FILE_NAME);
     }
 
-
+    @SuppressWarnings({"UnusedDeclaration"})
     public static class Spi extends OperatorSpi {
         public Spi() {
             super(MeteosatNetcdfReadOp.class);
+            AuxdataInstaller.installAuxdata(MeteosatNetcdfReadOp.class);
         }
     }
 }

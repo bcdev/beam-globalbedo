@@ -4,21 +4,27 @@
     <version>1.1-SNAPSHOT</version>
     <name>GlobAlbedo Meteosat Surface Albedo Reader</name>
 
-    <description> </description>
+    <description>Reader and Tools for certain Meteosat MFG and MSG products.</description>
 
     <vendor>Brockmann Consult GmbH</vendor>
     <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
-    <copyright>(C) 2011 by Brockmann Consult GmbH</copyright>
+    <copyright>(C) 2011-2014 by Brockmann Consult GmbH</copyright>
     <url>http://envisat.esa.int/beam</url>
     <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
 
     <changelog>
         <![CDATA[
-                ]]>
+        <b>Changes in 1.2-SNAPSHOT</b><br/>
+        Added new 'reader tool' for MSG W_XX Euro netcdf products from Eumetsat (frame of QA4ECV activities).<br/>
+        ]]>
     </changelog>
 
     <dependency>
         <module>beam-core</module>
+    </dependency>
+    <dependency>
+        <groupId>org.esa.beam</groupId>
+        <artifactId>beam-netcdf</artifactId>
     </dependency>
     <dependency>
         <module>beam-visat-rcp</module>

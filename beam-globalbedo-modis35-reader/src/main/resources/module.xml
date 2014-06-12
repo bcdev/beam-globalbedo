@@ -1,25 +1,10 @@
-<!--
-  ~ Copyright (C) 2011 Brockmann Consult GmbH (info@brockmann-consult.de)
-  ~
-  ~ This program is free software; you can redistribute it and/or modify it
-  ~ under the terms of the GNU General Public License as published by the Free
-  ~ Software Foundation; either version 3 of the License, or (at your option)
-  ~ any later version.
-  ~ This program is distributed in the hope that it will be useful, but WITHOUT
-  ~ ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
-  ~ FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
-  ~ more details.
-  ~
-  ~ You should have received a copy of the GNU General Public License along
-  ~ with this program; if not, see http://www.gnu.org/licenses/
-  -->
 
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-modis35-reader</symbolicName>
     <version>1.2-SNAPSHOT</version>
     <name>GlobAlbedo Modis35 Cloud Mask Reader</name>
-    <description>
+    <description>Specific reader for MODIS MOD35 Cloud Mask product.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
@@ -30,19 +15,17 @@
 
     <changelog>
         <![CDATA[
-        <b>Changes in 5.0</b><br/>
-        [BEAM-1506] - Scalar variables are wrongly written to NetCDF4<br/>
-        [BEAM-1505] - HDF-EOS reader should scale bands to highest resolution<br/>
-        [BEAM-1504] - Update NetCDF library to latest version<br/>
+        <b>Changes in 1.2-SNAPSHOT</b><br/>
+        Initial implementation.<br/>
         ]]>
     </changelog>
 
     <dependency>
         <module>beam-core</module>
     </dependency>
-    <!--<dependency>-->
-        <!--<module>beam-modis-reader</module>-->
-    <!--</dependency>-->
+    <dependency>
+        <module>beam-netcdf</module>
+    </dependency>
     <dependency>
         <module>beam-visat-rcp</module>
         <optional>true</optional>
