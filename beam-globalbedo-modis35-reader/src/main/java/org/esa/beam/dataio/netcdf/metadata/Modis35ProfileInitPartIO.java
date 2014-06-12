@@ -17,14 +17,12 @@
 package org.esa.beam.dataio.netcdf.metadata;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
 
-public abstract class Modis35ProfileInitPartIO implements Modis35ProfileInitPartReader, Modis35ProfileInitPartWriter {
+public abstract class Modis35ProfileInitPartIO implements Modis35ProfileInitPartReader {
 
     public abstract Product readProductBody(Modis35ProfileReadContext ctx) throws IOException;
 
-    public abstract void writeProductBody(Modis35ProfileWriteContext ctx, Product p) throws IOException;
 }

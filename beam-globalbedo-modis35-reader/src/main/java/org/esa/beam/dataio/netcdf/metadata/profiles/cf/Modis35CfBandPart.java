@@ -16,20 +16,12 @@
 package org.esa.beam.dataio.netcdf.metadata.profiles.cf;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.Modis35ProfilePartIO;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
-import org.esa.beam.dataio.netcdf.nc.NVariable;
-import org.esa.beam.dataio.netcdf.util.*;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.DataNode;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.IndexCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.datamodel.RasterDataNode;
-import org.esa.beam.framework.datamodel.SampleCoding;
-import org.esa.beam.jai.ImageManager;
+import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
+import org.esa.beam.dataio.netcdf.util.Modis35Constants;
+import org.esa.beam.dataio.netcdf.util.Modis35DimKey;
+import org.esa.beam.dataio.netcdf.util.Modis35NetcdfMultiLevelImage;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.ForLoop;
 import org.esa.beam.util.StringUtils;
 import ucar.ma2.DataType;
@@ -37,7 +29,7 @@ import ucar.nc2.Attribute;
 import ucar.nc2.Dimension;
 import ucar.nc2.Variable;
 
-import java.awt.Color;
+import java.awt.*;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -131,12 +123,8 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         return StringUtils.join(bandNames, ":");
     }
 
-    @Override
-    public void preEncode(Modis35ProfileWriteContext ctx, Product p) throws IOException {
-        // In order to inform the writer that it shall write the geophysical values of log scaled bands
-        // we set this property here.
-        ctx.setProperty(Modis35Constants.CONVERT_LOGSCALED_BANDS_PROPERTY, true);
-        defineRasterDataNodes(ctx, p.getBands());
+    static String replaceNonWordCharacters(String flagName) {
+        return flagName.replaceAll("\\W+", "_");
     }
 
     public static void readCfBandAttributes(Variable variable, RasterDataNode rasterDataNode) {
@@ -150,65 +138,6 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         if (noDataValue != null) {
             rasterDataNode.setNoDataValue(noDataValue.doubleValue());
             rasterDataNode.setNoDataValueUsed(true);
-        }
-    }
-
-    public static void writeCfBandAttributes(RasterDataNode rasterDataNode, NVariable variable) throws IOException {
-        final String description = rasterDataNode.getDescription();
-        if (description != null) {
-            variable.addAttribute("long_name", description);
-        }
-        String unit = rasterDataNode.getUnit();
-        if (unit != null) {
-            unit = Modis35CfCompliantUnitMapper.tryFindUnitString(unit);
-            variable.addAttribute("units", unit);
-        }
-        final boolean unsigned = isUnsigned(rasterDataNode);
-        if (unsigned) {
-            variable.addAttribute("_Unsigned", String.valueOf(true));
-        }
-
-        double noDataValue;
-        if (!rasterDataNode.isLog10Scaled()) {
-            final double scalingFactor = rasterDataNode.getScalingFactor();
-            if (scalingFactor != 1.0) {
-                variable.addAttribute(Modis35Constants.SCALE_FACTOR_ATT_NAME, scalingFactor);
-            }
-            final double scalingOffset = rasterDataNode.getScalingOffset();
-            if (scalingOffset != 0.0) {
-                variable.addAttribute(Modis35Constants.ADD_OFFSET_ATT_NAME, scalingOffset);
-            }
-            noDataValue = rasterDataNode.getNoDataValue();
-        } else {
-            // scaling information is not written anymore for log10 scaled bands
-            // instead we always write geophysical values
-            // we do this because log scaling is not supported by NetCDF-CF conventions
-            noDataValue = rasterDataNode.getGeophysicalNoDataValue();
-        }
-        if (rasterDataNode.isNoDataValueUsed()) {
-            Number fillValue = DataTypeUtils.convertTo(noDataValue, variable.getDataType());
-            variable.addAttribute(Modis35Constants.FILL_VALUE_ATT_NAME, fillValue);
-        }
-        variable.addAttribute("coordinates", "lat lon");
-    }
-
-    public static void defineRasterDataNodes(Modis35ProfileWriteContext ctx, RasterDataNode[] rasterDataNodes) throws
-                                                                                                        IOException {
-        final NFileWriteable ncFile = ctx.getNetcdfFileWriteable();
-        final String dimensions = ncFile.getDimensions();
-        for (RasterDataNode rasterDataNode : rasterDataNodes) {
-            String variableName = ReaderUtils.getVariableName(rasterDataNode);
-
-            int dataType;
-            if (rasterDataNode.isLog10Scaled()) {
-                dataType = rasterDataNode.getGeophysicalDataType();
-            } else {
-                dataType = rasterDataNode.getDataType();
-            }
-            DataType netcdfDataType = DataTypeUtils.getNetcdfDataType(dataType);
-            java.awt.Dimension tileSize = ImageManager.getPreferredTileSize(rasterDataNode.getProduct());
-            final NVariable variable = ncFile.addVariable(variableName, netcdfDataType, tileSize, dimensions);
-            writeCfBandAttributes(rasterDataNode, variable);
         }
     }
 
@@ -275,10 +204,6 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         return rasterDataType;
     }
 
-    private static boolean isUnsigned(DataNode dataNode) {
-        return ProductData.isUIntType(dataNode.getDataType());
-    }
-
     private static void addSampleCodingOrMasksIfApplicable(Product p, Band band, Variable variable,
                                                            String sampleCodingName,
                                                            boolean msb) {
@@ -317,7 +242,7 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         final int sampleCount = Math.min(meanings.length, flagMasks.getLength());
 
         for (int i = 0; i < sampleCount; i++) {
-            final String flagName = Modis35CfFlagCodingPart.replaceNonWordCharacters(meanings[i]);
+            final String flagName = replaceNonWordCharacters(meanings[i]);
             final Number a = flagMasks.getNumericValue(i);
             final Number b = flagValues.getNumericValue(i);
 
@@ -363,7 +288,7 @@ public class Modis35CfBandPart extends Modis35ProfilePartIO {
         final int sampleCount = Math.min(meanings.length, sampleValues.getLength());
 
         for (int i = 0; i < sampleCount; i++) {
-            final String sampleName = Modis35CfFlagCodingPart.replaceNonWordCharacters(meanings[i]);
+            final String sampleName = replaceNonWordCharacters(meanings[i]);
             switch (sampleValues.getDataType()) {
                 case BYTE:
                     sampleCoding.addSample(sampleName,

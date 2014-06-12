@@ -96,11 +96,6 @@ public class Modis35MetadataUtils {
     }
 
     public static MetadataElement readVariableDescriptions(final List<Variable> variableList,
-                                                           String elementName) {
-        return readVariableDescriptions(variableList, elementName, DEFAULT_MAX_NUM_VALUES_READ);
-    }
-
-    public static MetadataElement readVariableDescriptions(final List<Variable> variableList,
                                                            String elementName, int maxNumValuesRead) {
         MetadataElement metadataElement = new MetadataElement(elementName);
         for (Variable variable : variableList) {
@@ -150,9 +145,7 @@ public class Modis35MetadataUtils {
             final ProductData pd = ReaderUtils.createProductData(productDataType, values);
             final MetadataAttribute attribute = new MetadataAttribute("data", pd, true);
             valuesElem.addAttribute(attribute);
-        } catch (IOException e) {
-            Debug.trace(e);
-        } catch (InvalidRangeException e) {
+        } catch (IOException | InvalidRangeException e) {
             Debug.trace(e);
         }
     }

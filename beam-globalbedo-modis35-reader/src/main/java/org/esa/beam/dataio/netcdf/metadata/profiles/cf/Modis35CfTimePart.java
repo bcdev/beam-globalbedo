@@ -16,13 +16,10 @@
 package org.esa.beam.dataio.netcdf.metadata.profiles.cf;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.Modis35ProfilePartIO;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.util.Modis35Constants;
 import org.esa.beam.dataio.netcdf.util.TimeUtils;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import ucar.nc2.NetcdfFile;
 
 import java.io.IOException;
@@ -35,18 +32,5 @@ public class Modis35CfTimePart extends Modis35ProfilePartIO {
         p.setStartTime(
                 TimeUtils.getSceneRasterTime(ncFile, Modis35Constants.START_DATE_ATT_NAME, Modis35Constants.START_TIME_ATT_NAME));
         p.setEndTime(TimeUtils.getSceneRasterTime(ncFile, Modis35Constants.STOP_DATE_ATT_NAME, Modis35Constants.STOP_TIME_ATT_NAME));
-    }
-
-    @Override
-    public void preEncode(Modis35ProfileWriteContext ctx, Product p) throws IOException {
-        ProductData.UTC utc = p.getStartTime();
-        NFileWriteable writeable = ctx.getNetcdfFileWriteable();
-        if (utc != null) {
-            writeable.addGlobalAttribute(Modis35Constants.START_DATE_ATT_NAME, utc.format());
-        }
-        utc = p.getEndTime();
-        if (utc != null) {
-            writeable.addGlobalAttribute(Modis35Constants.STOP_DATE_ATT_NAME, utc.format());
-        }
     }
 }

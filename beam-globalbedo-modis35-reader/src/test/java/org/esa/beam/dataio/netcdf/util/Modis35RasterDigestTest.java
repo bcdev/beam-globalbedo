@@ -23,7 +23,7 @@ public class Modis35RasterDigestTest {
     @Before
     public void setUp() throws Exception {
         final String testFilePath = Modis35RasterDigest.class.getResource(HDF_TESTFILE).getPath();
-        netcdfFile = Modis35NetcdfFileOpener.open(testFilePath);
+        netcdfFile = NetcdfFileOpener.open(testFilePath);
     }
 
     @After

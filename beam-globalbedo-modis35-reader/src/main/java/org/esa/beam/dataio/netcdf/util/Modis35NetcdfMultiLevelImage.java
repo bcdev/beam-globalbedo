@@ -37,17 +37,6 @@ public class Modis35NetcdfMultiLevelImage extends AbstractNetcdfMultiLevelImage 
     /**
      * Constructs a new {@code NetcdfMultiLevelImage}.
      *
-     * @param rdn      the raster data node
-     * @param variable the netcdf variable
-     * @param ctx      the context
-     */
-    public Modis35NetcdfMultiLevelImage(RasterDataNode rdn, Variable variable, Modis35ProfileReadContext ctx) {
-        this(rdn, variable, new int[0], ctx);
-    }
-
-    /**
-     * Constructs a new {@code NetcdfMultiLevelImage}.
-     *
      * @param rdn         the raster data node
      * @param variable    the netcdf variable
      * @param imageOrigin the index within a multidimensional image dataset

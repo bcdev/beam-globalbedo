@@ -128,7 +128,7 @@ public class Modis35ProductReader extends AbstractProductReader {
     }
 
     private synchronized Product readProduct(String rasterDimNames) throws IOException {
-        NetcdfFile netcdfFile = Modis35NetcdfFileOpener.open(inputFilePath);
+        NetcdfFile netcdfFile = NetcdfFileOpener.open(inputFilePath);
         if (netcdfFile == null) {
             throw new IOException("Failed to open file: " + inputFilePath);
         }
@@ -155,8 +155,6 @@ public class Modis35ProductReader extends AbstractProductReader {
         profile.setInitialisationPartReader(new Modis35CfInitialisationPart());
         profile.addProfilePartReader(new Modis35CfMetadataPart());
         profile.addProfilePartReader(new Modis35CfBandPart());
-        profile.addProfilePartReader(new Modis35CfTiePointGridPart());
-        profile.addProfilePartReader(new Modis35CfFlagCodingPart());
         profile.addProfilePartReader(new Modis35CfTimePart());
         profile.addProfilePartReader(new Modis35CfDescriptionPart());
     }

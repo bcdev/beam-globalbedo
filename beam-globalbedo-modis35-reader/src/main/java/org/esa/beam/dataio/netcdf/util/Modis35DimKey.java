@@ -31,7 +31,7 @@ public class Modis35DimKey {
 
     private static final String[] TYPICAL_X_DIM_NAMES = new String[]{"lon", "long", "longitude",
             "ni", "NX", "SX", "x", "xc", "XDim",
-            "Cell_Across_Swath_5km",
+            "Cell_Across_Swath_5km",       // currently, these are the only differences to standard DimKey
             "Cell_Across_Swath_1km",
             "across_track", "numRows"};
     private static final String[] TYPICAL_Y_DIM_NAMES = new String[]{"lat", "lat", "latitude",

@@ -17,7 +17,6 @@
 package org.esa.beam.dataio.netcdf.metadata;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.framework.datamodel.Product;
 
 import java.io.IOException;
@@ -25,15 +24,10 @@ import java.io.IOException;
 /**
  * An I/O part of a metadata profile.
  */
-public abstract class Modis35ProfilePartIO implements Modis35ProfilePartReader, Modis35ProfilePartWriter {
-
+public abstract class Modis35ProfilePartIO implements Modis35ProfilePartReader {
 
     @Override
     public void preDecode(Modis35ProfileReadContext ctx, Product p) throws IOException {
-    }
-
-    @Override
-    public void encode(Modis35ProfileWriteContext ctx, Product p) throws IOException {
     }
 
 }

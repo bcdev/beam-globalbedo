@@ -16,7 +16,6 @@
 package org.esa.beam.dataio.netcdf.metadata.profiles.cf;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.Modis35ProfilePartIO;
 import org.esa.beam.dataio.netcdf.util.Modis35MetadataUtils;
 import org.esa.beam.framework.datamodel.Product;
@@ -28,9 +27,5 @@ public class Modis35CfMetadataPart extends Modis35ProfilePartIO {
     @Override
     public void decode(Modis35ProfileReadContext ctx, Product p) throws IOException {
         Modis35MetadataUtils.readNetcdfMetadata(ctx.getNetcdfFile(), p.getMetadataRoot());
-    }
-
-    @Override
-    public void preEncode(Modis35ProfileWriteContext ctx, Product p) throws IOException {
     }
 }

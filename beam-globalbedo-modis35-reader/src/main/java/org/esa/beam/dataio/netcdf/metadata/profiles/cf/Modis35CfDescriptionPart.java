@@ -17,9 +17,7 @@
 package org.esa.beam.dataio.netcdf.metadata.profiles.cf;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.Modis35ProfilePartIO;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.util.Modis35Constants;
 import org.esa.beam.framework.datamodel.Product;
 import ucar.nc2.Attribute;
@@ -46,14 +44,5 @@ public class Modis35CfDescriptionPart extends Modis35ProfilePartIO {
             }
         }
         p.setDescription(Modis35Constants.FORMAT_DESCRIPTION);
-    }
-
-    @Override
-    public void preEncode(Modis35ProfileWriteContext ctx, Product p) throws IOException {
-        final String description = p.getDescription();
-        if (description != null && description.trim().length() > 0) {
-            final NFileWriteable netcdfFileWriteable = ctx.getNetcdfFileWriteable();
-            netcdfFileWriteable.addGlobalAttribute(TITLE, description);
-        }
     }
 }

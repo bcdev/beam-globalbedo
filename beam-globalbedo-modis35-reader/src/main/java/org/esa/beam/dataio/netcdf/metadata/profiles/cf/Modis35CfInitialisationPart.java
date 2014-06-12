@@ -17,17 +17,11 @@
 package org.esa.beam.dataio.netcdf.metadata.profiles.cf;
 
 import org.esa.beam.dataio.netcdf.Modis35ProfileReadContext;
-import org.esa.beam.dataio.netcdf.Modis35ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.Modis35ProfileInitPartIO;
-import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.util.Modis35Constants;
 import org.esa.beam.framework.dataio.ProductIOException;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.jai.ImageManager;
 import ucar.nc2.Attribute;
-
-import java.awt.Dimension;
-import java.io.IOException;
 
 public class Modis35CfInitialisationPart extends Modis35ProfileInitPartIO {
 
@@ -55,24 +49,6 @@ public class Modis35CfInitialisationPart extends Modis35ProfileInitPartIO {
             }
         }
         return product;
-    }
-
-    @Override
-    public void writeProductBody(Modis35ProfileWriteContext ctx, Product product) throws IOException {
-        NFileWriteable writeable = ctx.getNetcdfFileWriteable();
-        writeable.addGlobalAttribute("Conventions", "CF-1.4");
-        if (Modis35CfGeocodingPart.isGeographicCRS(product.getGeoCoding())) {
-            writeDimensions(writeable, product, "lat", "lon");
-        } else {
-            writeDimensions(writeable, product, "y", "x");
-        }
-        Dimension tileSize = ImageManager.getPreferredTileSize(product);
-        writeable.addGlobalAttribute("TileSize", tileSize.height + ":" + tileSize.width);
-    }
-
-    private void writeDimensions(NFileWriteable writeable, Product p, String dimY, String dimX) throws IOException {
-        writeable.addDimension(dimY, p.getSceneRasterHeight());
-        writeable.addDimension(dimX, p.getSceneRasterWidth());
     }
 
     public String readProductType(final Modis35ProfileReadContext ctx) {
