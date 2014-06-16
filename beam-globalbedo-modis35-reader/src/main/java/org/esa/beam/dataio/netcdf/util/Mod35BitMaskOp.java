@@ -3,19 +3,25 @@ package org.esa.beam.dataio.netcdf.util;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.util.BitSetter;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 13.06.2014
- * Time: 12:04
+ * This Operator extracts and interprets the relevant bit information stored in cloud mask and quality
+ * assurance byte bands.
  *
  * @author olafd
  */
+@OperatorMetadata(alias = "Mod35.Bitmask",
+                  description = "extracts and interprets the relevant bit information stored in cloud mask " +
+                          "and quality assurance byte bands",
+                  authors = "BEAM team",
+                  version = "1.0",
+                  copyright = "(c) 2012 by Brockmann Consult",
+                  internal = true)
 public class Mod35BitMaskOp extends PixelOperator {
 
     private static final int SRC_FLAG = 0;
@@ -25,7 +31,7 @@ public class Mod35BitMaskOp extends PixelOperator {
     private Product sourceProduct;
 
     @Parameter(defaultValue = "Cloud_Mask_Byte_Segment1",
-               valueSet = {"Cloud_Mask_Byte_Segment1", "Quality_Assurance_QA_Dimension1"}, // should be all we need
+               valueSet = {"Cloud_Mask_Byte_Segment1", "Quality_Assurance_QA_Dimension1"}, // these should be all we need
                description = "source band name")
     private String srcBandName;
 
@@ -43,6 +49,15 @@ public class Mod35BitMaskOp extends PixelOperator {
         targetProduct.addBand(trgBandName, ProductData.TYPE_INT16);
     }
 
+    @Override
+    protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+        sampleConfigurer.defineSample(SRC_FLAG, srcBandName);
+    }
+
+    @Override
+    protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+        sampleConfigurer.defineSample(TRG_FLAG, trgBandName);
+    }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -59,10 +74,6 @@ public class Mod35BitMaskOp extends PixelOperator {
                                                            " - must be 'Cloud_Mask_Byte_Segment1' " +
                                                            "or 'Quality_Assurance_QA_Dimension1'.");
         }
-    }
-
-    private void computePixelQualityAssurance(int srcValue, WritableSample[] targetSamples) {
-        // todo
     }
 
     private void computePixelCloudMask(int srcValue, WritableSample[] targetSamples) {
@@ -122,21 +133,54 @@ public class Mod35BitMaskOp extends PixelOperator {
     }
 
     private boolean isDesert(int srcValue) {
-        return (BitSetter.isFlagSet(srcValue, 6) && BitSetter.isFlagSet(srcValue, 7));
+        return (!BitSetter.isFlagSet(srcValue, 6) && BitSetter.isFlagSet(srcValue, 7));
     }
 
     private boolean isLand(int srcValue) {
         return (BitSetter.isFlagSet(srcValue, 6) && BitSetter.isFlagSet(srcValue, 7));
     }
 
-
-    @Override
-    protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(SRC_FLAG, srcBandName);
+    private void computePixelQualityAssurance(int srcValue, WritableSample[] targetSamples) {
+        targetSamples[TRG_FLAG].set(Mod35BitMaskUtils.CLOUD_MASK_USEFUL_BIT_INDEX, isCloudMaskUseful(srcValue));
+        for (int i = 0; i < Mod35BitMaskUtils.NUM_CLOUD_MASK_CONFIDENCE_LEVELS; i++) {
+            targetSamples[TRG_FLAG].set(Mod35BitMaskUtils.CLOUD_MASK_CONFIDENCE_LEVEL_BIT_INDICES[i],
+                                        isQAConfidenceLevel(srcValue, i+1));
+        }
     }
 
-    @Override
-    protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        sampleConfigurer.defineSample(TRG_FLAG, trgBandName);
+    private boolean isCloudMaskUseful(int srcValue) {
+        return BitSetter.isFlagSet(srcValue, 0);
     }
+
+    private boolean isQAConfidenceLevel(int srcValue, int confLevelIndex) {
+        switch (confLevelIndex) {
+            case 1:
+                return (!BitSetter.isFlagSet(srcValue, 1) && !BitSetter.isFlagSet(srcValue, 2) &&
+                        !BitSetter.isFlagSet(srcValue, 3));
+            case 2:
+                return (BitSetter.isFlagSet(srcValue, 1) && !BitSetter.isFlagSet(srcValue, 2) &&
+                        !BitSetter.isFlagSet(srcValue, 3));
+            case 3:
+                return (!BitSetter.isFlagSet(srcValue, 1) && BitSetter.isFlagSet(srcValue, 2) &&
+                        !BitSetter.isFlagSet(srcValue, 3));
+            case 4:
+                return (BitSetter.isFlagSet(srcValue, 1) && BitSetter.isFlagSet(srcValue, 2) &&
+                        !BitSetter.isFlagSet(srcValue, 3));
+            case 5:
+                return (!BitSetter.isFlagSet(srcValue, 1) && !BitSetter.isFlagSet(srcValue, 2) &&
+                        BitSetter.isFlagSet(srcValue, 3));
+            case 6:
+                return (BitSetter.isFlagSet(srcValue, 1) && !BitSetter.isFlagSet(srcValue, 2) &&
+                        BitSetter.isFlagSet(srcValue, 3));
+            case 7:
+                return (!BitSetter.isFlagSet(srcValue, 1) && BitSetter.isFlagSet(srcValue, 2) &&
+                        BitSetter.isFlagSet(srcValue, 3));
+            case 8:
+                return (BitSetter.isFlagSet(srcValue, 1) && BitSetter.isFlagSet(srcValue, 2) &&
+                        BitSetter.isFlagSet(srcValue, 3));
+            default:
+                return false;
+        }
+    }
+
 }

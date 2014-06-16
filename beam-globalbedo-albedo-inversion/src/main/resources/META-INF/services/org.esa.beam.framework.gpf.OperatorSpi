@@ -6,12 +6,10 @@ org.esa.beam.globalbedo.inversion.GlobalbedoLevel3FullAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Inversion$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo$Spi
-org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedoMosaics$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.SouthPoleCorrectionOp$Spi
 org.esa.beam.globalbedo.inversion.util.AccToDimapOp$Spi
 org.esa.beam.globalbedo.inversion.util.ModisTileAttachGeocodingOp$Spi
 org.esa.beam.globalbedo.inversion.util.GaAdaptTileGeocodingOp$Spi
-org.esa.beam.globalbedo.inversion.util.ScaleImageOp$Spi
 org.esa.beam.globalbedo.inversion.util.MergeTestOp$Spi

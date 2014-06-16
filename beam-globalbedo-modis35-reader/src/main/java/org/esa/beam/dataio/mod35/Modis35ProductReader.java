@@ -118,9 +118,10 @@ public class Modis35ProductReader extends AbstractProductReader {
 
         finalProduct.setAutoGrouping("Cloud_Mask:Quality_Assurance");
 
-        // todo: we need to extract properly the cloud and quality info from the single bits of the
-        // Cloud_Mask and Quality_Assurance bytes. Also, corresponding bit masks in Visat would be nice.
+        // 8. extract properly the cloud and quality info from the single bits of the
+        // Cloud_Mask and Quality_Assurance bytes. Also, create corresponding bit masks for Visat
         Mod35BitMaskUtils.attachPixelClassificationFlagBand(finalProduct);
+        Mod35BitMaskUtils.attachQualityAssuranceFlagBand(finalProduct);
 
         // return the final product
         return finalProduct;
