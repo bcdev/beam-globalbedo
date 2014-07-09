@@ -3,9 +3,7 @@ package org.esa.beam.dataio;
 import org.esa.beam.collocation.CollocateOp;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.PixelGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -29,6 +27,8 @@ public class MeteosatNetcdfReadOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @SourceProduct
+    private Product latlonProduct;
 
     @Parameter(defaultValue = "lat",
             description = "Latitude band for setup of Meteosat geocoding")
@@ -63,23 +63,24 @@ public class MeteosatNetcdfReadOp extends Operator {
         targetProductOrigProj.setStartTime(sourceProduct.getStartTime());
         targetProductOrigProj.setEndTime(sourceProduct.getEndTime());
 
-        // copy all bands
+        // copy all source bands
         for (Band band : sourceProduct.getBands()) {
             if (!targetProductOrigProj.containsBand(band.getName())) {
                 ProductUtils.copyBand(band.getName(), sourceProduct, targetProductOrigProj, true);
                 ProductUtils.copyRasterDataNodeProperties(band, targetProductOrigProj.getBand(band.getName()));
             }
         }
-        // tie point grids (there should be none)...
-        for (TiePointGrid tpg : sourceProduct.getTiePointGrids()) {
-            if (!targetProductOrigProj.containsTiePointGrid(tpg.getName())) {
-                ProductUtils.copyTiePointGrid(tpg.getName(), sourceProduct, targetProductOrigProj);
+        // copy lat/lon bands
+        for (Band band : latlonProduct.getBands()) {
+            if (!targetProductOrigProj.containsBand(band.getName())) {
+                ProductUtils.copyBand(band.getName(), latlonProduct, targetProductOrigProj, true);
+                ProductUtils.copyRasterDataNodeProperties(band, targetProductOrigProj.getBand(band.getName()));
             }
         }
 
-        final Band latBand = targetProductOrigProj.getBand(latBandName);
+        final Band latBand = latlonProduct.getBand(latBandName);
         latBand.setValidPixelExpression("lat != 90 && lon != 90");
-        final Band lonBand = targetProductOrigProj.getBand(lonBandName);
+        final Band lonBand = latlonProduct.getBand(lonBandName);
         lonBand.setValidPixelExpression("lat != 90 && lon != 90");
         try {
             targetProductOrigProj.setGeoCoding(new MeteosatGeoCoding(latBand, lonBand, regionID));
@@ -88,6 +89,7 @@ public class MeteosatNetcdfReadOp extends Operator {
                     ("Cannot attach Meteosat geocoding to target product: " + e.getMessage());
         }
 
+        // *** begin: this block needed to be done only once todo: document somewhere else
         // first step was to take an arbitrary global WGS84 latlon product
         // (e.g. a Globalbedo mosaic 'Globalbedo.albedo.200505.05.PC_reprojected.dim')
         // and reproject to 1/30 deg resolution (was done once with Visat)
@@ -101,12 +103,13 @@ public class MeteosatNetcdfReadOp extends Operator {
 //        subsetOp.setBandNames(new String[]{latlonReferenceProduct.getBandAt(0).getName()});
 //        return subsetOp.getTargetProduct();
         // This reference is provided as resource product (MSG_Euro_WGS84_latlon_reference.dim).
+        // *** end: this block needed to be done only once
 
         // Collocate with reference product, which has no bands, but only WGS84 latlon CRS
         // and target region [65N,40S], [30W,65E] which sufficiently covers BRFs for MSG_Euro.
         // todo: simple reprojection of the Meteosat product would be more reasonable, but does not work. Check why!
         Product latlonReferenceProduct;
-        final File latlonReferenceFile = getLatlonReferenceFile();
+        final File latlonReferenceFile = getAuxFile(MSG_EURO_REF_FILE_NAME);
         try {
             latlonReferenceProduct = ProductIO.readProduct(latlonReferenceFile);
             CollocateOp collocateOp = new CollocateOp();
@@ -126,12 +129,13 @@ public class MeteosatNetcdfReadOp extends Operator {
         }
     }
 
-    private File getLatlonReferenceFile() {
+    private File getAuxFile(String filename) {
         String meteosatAuxdataSrcPath = "org/esa/beam/dataio";
         final String meteosatAuxdataDestPath = ".beam/beam-globalbedo/beam-globalbedo-meteosat-reader/" + meteosatAuxdataSrcPath;
         File meteosatAuxdataTargetDir = new File(SystemUtils.getUserHomeDir(), meteosatAuxdataDestPath);
-        return new File(meteosatAuxdataTargetDir, MSG_EURO_REF_FILE_NAME);
+        return new File(meteosatAuxdataTargetDir, filename);
     }
+
 
     @SuppressWarnings({"UnusedDeclaration"})
     public static class Spi extends OperatorSpi {
