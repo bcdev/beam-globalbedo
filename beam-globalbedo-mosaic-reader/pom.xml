@@ -7,12 +7,11 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo-mosaic-reader</artifactId>
     <name>Globalbedo Mosaic Reader</name>
     <description>Reads tiled Albedo product as a mosaic.</description>

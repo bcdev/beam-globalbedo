@@ -115,7 +115,8 @@ public class GaMasterOp extends Operator {
             instrument = "MERIS";
             Map<String, Object> params = new HashMap<String, Object>(4);
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
-            params.put("doEqualization", doEqualization);
+//            params.put("doEqualization", doEqualization);
+            params.put("doEqualization", false);   // test, 20140710
             params.put("gaOutputRayleigh", gaOutputRayleigh);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);

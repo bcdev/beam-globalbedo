@@ -7,12 +7,11 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo-upscaling</artifactId>
     <name>Globalbedo Albedo Upscaling</name>
     <description>Reprojection and upscaling of the final product.</description>
@@ -34,13 +33,13 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-albedo-inversion</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.3-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-mosaic-reader</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 </project>

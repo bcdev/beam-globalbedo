@@ -7,12 +7,11 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.2-SNAPSHOT</version>
+        <version>1.3-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
 
-    <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo-albedo-inversion</artifactId>
     <name>Globalbedo Albedo Inversion</name>
     <description>Calculates Albedo for MERIs, AATSR and SPOT-VGT</description>
@@ -25,7 +24,7 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-auxdata</artifactId>
-            <version>1.2-SNAPSHOT</version>
+            <version>1.3-SNAPSHOT</version>
         </dependency>
     </dependencies>
 

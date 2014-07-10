@@ -1,0 +1,43 @@
+<assembly
+        xmlns="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://maven.apache.org/plugins/maven-assembly-plugin/assembly/1.1.0 http://maven.apache.org/xsd/assembly-1.1.0.xsd">
+    <id>modules</id>
+    <formats>
+        <format>zip</format>
+    </formats>
+    <includeBaseDirectory>false</includeBaseDirectory>
+    <!--<files>-->
+        <!--<file>-->
+            <!--<filtered>true</filtered>-->
+            <!--<source>src/main/assembly/bundle-descriptor.xml</source>-->
+        <!--</file>-->
+    <!--</files>-->
+
+    <moduleSets>
+        <moduleSet>
+            <excludes>
+                <exclude>org.esa.beam.globalbedo:beam-globalbedo-bootstrap</exclude>
+            </excludes>
+            <binaries>
+                <unpack>false</unpack>
+            </binaries>
+        </moduleSet>
+    </moduleSets>
+
+    <dependencySets>
+        <dependencySet>
+            <unpack>false</unpack>
+            <scope>runtime</scope>
+            <includes>
+                <include>*:*aatsr-recalibration*</include>
+                <include>*:*beam-idepix-*</include>
+                <include>*:*watermask-*</include>
+                <include>*:commons-compress*</include>
+                <include>*:jtar*</include>
+                <include>edu.ucar:netcdf</include>
+                <include>edu.ucar:nujan</include>
+            </includes>
+        </dependencySet>
+    </dependencySets>
+</assembly>
