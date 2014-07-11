@@ -154,6 +154,12 @@
                 <version>${beam.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-meris-radiometry</artifactId>
+                <version>5.0.1</version>
+            </dependency>
+
             <!-- JUnit Libraries ############################################# -->
 
             <dependency>

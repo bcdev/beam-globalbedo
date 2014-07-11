@@ -31,6 +31,7 @@
             <scope>runtime</scope>
             <includes>
                 <include>*:*aatsr-recalibration*</include>
+                <include>*:*beam-meris-radiometry*</include>
                 <include>*:*beam-idepix-*</include>
                 <include>*:*watermask-*</include>
                 <include>*:commons-compress*</include>

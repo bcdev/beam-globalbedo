@@ -97,6 +97,7 @@ public class MerisPrepOp extends Operator {
             Dimension targetTS = ImageManager.getPreferredTileSize(sourceProduct);
             RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
             szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParam, sourceProduct, rhTarget);
+            ProductUtils.copyMetadata(sourceProduct, szaSubProduct);
         }
 
         // convert radiance bands to reflectance
