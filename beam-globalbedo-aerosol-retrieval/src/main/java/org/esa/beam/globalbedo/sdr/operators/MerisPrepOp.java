@@ -66,11 +66,17 @@ public class MerisPrepOp extends Operator {
                label = "Perform equalization",
                description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
     private boolean doEqualization;
+
     @Parameter(defaultValue = "true",
                label = " Use land-water flag from L1b product instead")
     private boolean gaUseL1bLandWaterFlag;
+
+    @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
+    private boolean gaRefineClassificationNearCoastlines;
+
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
+
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
 
@@ -130,10 +136,11 @@ public class MerisPrepOp extends Operator {
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("gaCopyRadiances", false);
-            pixelClassParam.put("gaComputeFlagsOnly", true);
+            pixelClassParam.put("gaCopyToaReflectances", false);
             pixelClassParam.put("gaCloudBufferWidth", 3);
             pixelClassParam.put("gaCopyRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            pixelClassParam.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
             pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);

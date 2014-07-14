@@ -78,15 +78,23 @@ public class GaMasterOp extends Operator {
             label = "Perform equalization",
             description = "Perform removal of detector-to-detector systematic radiometric differences in MERIS L1b data products.")
     private boolean doEqualization;
-    @Parameter(defaultValue = "true",
-            label = " Use land-water flag from L1b product instead")
-    private boolean gaUseL1bLandWaterFlag;
+
     @Parameter(label = "Include the named Rayleigh Corrected Reflectances in target product")
     private String[] gaOutputRayleigh;
+
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer = false;
+
     @Parameter(defaultValue = "false", label = " If set, we are in BBDR Seaice mode (no AOT retrieval)")
     private boolean isBbdrSeaice = false;
+
+    @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
+    private boolean gaRefineClassificationNearCoastlines;
+
+    @Parameter(defaultValue = "false")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to true??
+    private boolean gaUseL1bLandWaterFlag;
+
+
 //    @Parameter(defaultValue = "GlobAlbedo")
 //    private CloudScreeningSelector idepixAlgorithm;
 
@@ -115,8 +123,8 @@ public class GaMasterOp extends Operator {
             instrument = "MERIS";
             Map<String, Object> params = new HashMap<String, Object>(4);
             params.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            params.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
             params.put("doEqualization", doEqualization);
-//            params.put("doEqualization", false);   // test, 20140710
             params.put("gaOutputRayleigh", gaOutputRayleigh);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);

@@ -47,6 +47,12 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false")
     private boolean computeAotToBbdrProductOnly;
 
+    @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
+    private boolean gaRefineClassificationNearCoastlines;
+
+    @Parameter(defaultValue = "false")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to true??
+    private boolean gaUseL1bLandWaterFlag;
+
     @Parameter(defaultValue = "")
     private String tile;
 
@@ -82,7 +88,8 @@ public class GlobalbedoLevel2 extends Operator {
             gaMasterOp.setParameterDefaultValues();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
-            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
+            gaMasterOp.setParameter("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);    // todo: default tbd
+            gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
             gaMasterOp.setSourceProduct(targetProduct);
             aotProduct = gaMasterOp.getTargetProduct();
         }
