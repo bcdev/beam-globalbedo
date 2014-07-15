@@ -50,7 +50,7 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
     private boolean gaRefineClassificationNearCoastlines;
 
-    @Parameter(defaultValue = "false")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to true??
+    @Parameter(defaultValue = "true")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to false??
     private boolean gaUseL1bLandWaterFlag;
 
     @Parameter(defaultValue = "")
