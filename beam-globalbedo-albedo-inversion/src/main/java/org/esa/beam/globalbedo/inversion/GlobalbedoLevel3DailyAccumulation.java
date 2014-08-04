@@ -23,7 +23,8 @@ import java.util.logging.Logger;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.l3.dailyacc")
-public class GlobalbedoLevel3DailyAccumulation extends Operator implements Output {
+//public class GlobalbedoLevel3DailyAccumulation extends Operator implements Output {
+public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
