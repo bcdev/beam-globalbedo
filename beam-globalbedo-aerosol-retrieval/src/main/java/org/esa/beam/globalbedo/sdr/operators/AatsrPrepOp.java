@@ -77,6 +77,7 @@ public class AatsrPrepOp extends Operator {
             Map<String,Object> subsetParam = new HashMap<String, Object>(3);
             subsetParam.put("region", szaRegion);
             szaSubProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(SubsetOp.class), subsetParam, sourceProduct);
+            ProductUtils.copyMetadata(sourceProduct, szaSubProduct);
         }
 
         // subset might have set ptype to null, thus:

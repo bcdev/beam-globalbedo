@@ -128,7 +128,7 @@ public class BbdrAatsrOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
 
-        if (sensor == Sensor.AATSR_NADIR) {
+        if (sensor == Sensor.AATSR) {
             viewDirection = "nadir";
         } else if (sensor == Sensor.AATSR_FWARD) {
             viewDirection = "fward";

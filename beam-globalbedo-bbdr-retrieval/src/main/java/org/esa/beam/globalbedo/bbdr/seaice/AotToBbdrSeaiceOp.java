@@ -64,11 +64,11 @@ public class AotToBbdrSeaiceOp extends Operator {
         bbdrParams.put("seaiceWriteSdr", sdrOnly);
 
         Product bbdrProduct;
-        if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+        if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
             bbdrParams.put("sensor", sensor);
             bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
         } else if (sensor == Sensor.AATSR) {
-            bbdrParams.put("sensor", Sensor.AATSR_NADIR);
+            bbdrParams.put("sensor", Sensor.AATSR);
             Product bbdrNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
             bbdrParams.clear();
             bbdrParams.put("sensor", Sensor.AATSR_FWARD);

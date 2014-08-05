@@ -348,7 +348,7 @@ public class BbdrOp extends PixelOperator {
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];
             System.arraycopy(BbdrConstants.MERIS_TOA_BAND_NAMES, 0, toaBandNames, 0,
                              BbdrConstants.MERIS_TOA_BAND_NAMES.length);
-        } else if (sensor == Sensor.AATSR_NADIR) {
+        } else if (sensor == Sensor.AATSR) {
             landExpr = commonLandExpr;
 
             configurator.defineSample(SRC_VZA, "view_elev_nadir");
@@ -551,7 +551,7 @@ public class BbdrOp extends PixelOperator {
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        if (sensor == Sensor.AATSR_FWARD || sensor == Sensor.AATSR_NADIR) {
+        if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
             sza = 90.0 - sza;
             vza = 90.0 - vza;
         }
@@ -598,7 +598,7 @@ public class BbdrOp extends PixelOperator {
             ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
             cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
             gas = ozo;
-        } else if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+        } else if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
             ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
             cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
             gas = ozo;
@@ -625,7 +625,7 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[sensor.getNumBands() * 2 + 2].set(0);
             }
             toaRefl /= sensor.getCal2Meris()[i];
-            if (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+            if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
                 toaRefl *= 0.01 / mus;
             }
             toa_rfl[i] = toaRefl;
