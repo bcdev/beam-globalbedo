@@ -17,6 +17,7 @@
     <description>Reads surface albedo from METEOSAT MFG and MSG data products.</description>
 
     <dependencies>
+        <!-- BEAM core modules -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-collocation</artifactId>
@@ -33,6 +34,8 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-netcdf</artifactId>
         </dependency>
+
+        <!-- External modules -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>

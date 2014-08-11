@@ -32,6 +32,7 @@
     <description>Reads a directory of tiff products into a single product.</description>
 
     <dependencies>
+        <!-- BEAM core modules -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
@@ -40,6 +41,8 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-geotiff</artifactId>
         </dependency>
+
+        <!-- External modules -->
         <dependency>
             <groupId>org.xeustechnologies</groupId>
             <artifactId>jtar</artifactId>

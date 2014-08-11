@@ -17,10 +17,13 @@
     <description>Calculates Albedo for MERIs, AATSR and SPOT-VGT</description>
 
     <dependencies>
+        <!-- BEAM core modules -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
         </dependency>
+
+        <!-- GlobAlbedo core modules -->
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-auxdata</artifactId>

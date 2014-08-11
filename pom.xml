@@ -47,7 +47,7 @@
                 <checksumPolicy>warn</checksumPolicy>
             </releases>
             <snapshots>
-                <enabled>true</enabled>
+                <enabled>false</enabled>
                 <checksumPolicy>warn</checksumPolicy>
             </snapshots>
         </pluginRepository>
@@ -86,9 +86,8 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ceres.version>0.14</ceres.version>
-        <!--<beam.version>[5.0,5.0.2-SNAPSHOT)</beam.version>-->
-        <beam.version>5.0</beam.version>
+        <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
+        <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
         <hadoop.version>2.4.0</hadoop.version>
     </properties>
 
@@ -100,19 +99,19 @@
             <dependency>
                 <groupId>com.bc.ceres</groupId>
                 <artifactId>ceres-launcher</artifactId>
-                <version>${ceres.version}</version>
+                <version>${ceresVersion}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.bc.ceres</groupId>
                 <artifactId>ceres-core</artifactId>
-                <version>${ceres.version}</version>
+                <version>${ceresVersion}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.bc.ceres</groupId>
                 <artifactId>ceres-ui</artifactId>
-                <version>${ceres.version}</version>
+                <version>${ceresVersion}</version>
             </dependency>
 
             <!-- BEAM System Level Modules ############################################# -->
@@ -120,44 +119,63 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-visat</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-bootstrap</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-gpf</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-ui</artifactId>
+                <!-- seems to be necessary to set a fix version here. todo: clarify in Beam/Ceres, fix-->
+                <version>5.0.1</version>
+            </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-geotiff</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-collocation</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-envisat-reader</artifactId>
-                <version>${beam.version}</version>
+                <version>${beamVersion}</version>
             </dependency>
-
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-getasse30-reader</artifactId>
+                <version>${beamVersion}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-spot-vgt-reader</artifactId>
+                <version>${beamVersion}</version>
+            </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-radiometry</artifactId>
                 <version>5.0.1</version>
+            </dependency>
+            <dependency>
+                <groupId>org.esa.beam</groupId>
+                <artifactId>beam-netcdf</artifactId>
+                <version>${beamVersion}</version>
             </dependency>
 
             <!-- JUnit Libraries ############################################# -->
@@ -177,13 +195,6 @@
             </dependency>
 
             <!-- NetCDF Library ############################################# -->
-
-            <dependency>
-                <groupId>org.esa.beam</groupId>
-                <artifactId>beam-netcdf</artifactId>
-                <version>${beam.version}</version>
-                <!--<version>5.0.1-SNAPSHOT</version>-->
-            </dependency>
 
             <dependency>
                 <groupId>edu.ucar</groupId>

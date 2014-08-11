@@ -17,10 +17,13 @@
     <description>Provides the bootstrap classpath for all Globalbedo modules</description>
 
     <dependencies>
+        <!-- BEAM core modules -->
         <dependency>
-            <groupId>com.bc.ceres</groupId>
-            <artifactId>ceres-launcher</artifactId>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-bootstrap</artifactId>
         </dependency>
+
+        <!-- GlobAlbedo core modules -->
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>

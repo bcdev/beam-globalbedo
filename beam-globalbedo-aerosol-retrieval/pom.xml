@@ -17,37 +17,34 @@
     <description>Calculates Aerosol from MERIs, AATSR and SPOT-VGT L1 data</description>
 
     <dependencies>
+
+        <!-- BEAM core modules -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-gpf</artifactId>
         </dependency>
-
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-envisat-reader</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
-            <artifactId>beam-spot-vgt-reader</artifactId>
-            <version>${beam.version}</version>
+            <artifactId>beam-getasse30-reader</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>org.esa.beam.globalbedo</groupId>
-            <artifactId>beam-globalbedo-auxdata</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-spot-vgt-reader</artifactId>
         </dependency>
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-radiometry</artifactId>
-            <version>${beam.version}</version>
         </dependency>
+
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-brr</artifactId>
             <version>2.4.1</version>
         </dependency>
-
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-meris-sdr</artifactId>
@@ -58,6 +55,15 @@
             <artifactId>beam-meris-l2auxdata</artifactId>
             <version>1.2.5</version>
         </dependency>
+
+        <!-- GlobAlbedo core modules -->
+        <dependency>
+            <groupId>org.esa.beam.globalbedo</groupId>
+            <artifactId>beam-globalbedo-auxdata</artifactId>
+            <version>1.3-SNAPSHOT</version>
+        </dependency>
+
+        <!-- GlobAlbedo external modules -->
         <dependency>
             <groupId>org.esa.beam.aatsr-recalibration</groupId>
             <artifactId>beam-aatsr-recalibration</artifactId>
@@ -75,16 +81,6 @@
             <artifactId>beam-idepix-operators</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-meris-radiometry</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.esa.beam</groupId>
-            <artifactId>beam-getasse30-reader</artifactId>
-            <version>${beam.version}</version>
-        </dependency>
     </dependencies>
 
     <build>

@@ -17,6 +17,7 @@
     <description>Reads sea ice from MODIS MOD29.5 sea ice data products.</description>
 
     <dependencies>
+        <!-- BEAM core modules -->
         <dependency>
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-core</artifactId>
@@ -25,6 +26,8 @@
             <groupId>org.esa.beam</groupId>
             <artifactId>beam-netcdf</artifactId>
         </dependency>
+
+        <!-- External modules -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-compress</artifactId>
