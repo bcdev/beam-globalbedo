@@ -161,7 +161,9 @@ public class LcQaOp extends Operator {
             qaResultProduct.setProductType(sourceProduct.getProductType() + "_QA_FAILED");
             ProductUtils.copyGeoCoding(sourceProduct, qaResultProduct);
             ProductUtils.copyBand(radianceOutputBandName, sourceProduct, qaResultProduct, true);
-            ProductUtils.copyBand(l1FlagBandName, sourceProduct, qaResultProduct, true);
+            if (!qaResultProduct.containsBand(l1FlagBandName)) {
+                ProductUtils.copyBand(l1FlagBandName, sourceProduct, qaResultProduct, true);
+            }
             ProductUtils.copyFlagCoding(sourceProduct.getBand(l1FlagBandName).getFlagCoding(), qaResultProduct);
         } else {
             System.out.println("QA PASSED - writing empty target product...");
