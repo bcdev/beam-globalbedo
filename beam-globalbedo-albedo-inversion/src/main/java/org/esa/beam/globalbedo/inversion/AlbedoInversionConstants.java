@@ -52,6 +52,7 @@ public class AlbedoInversionConstants {
     public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
 
     public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
+    public static final String aatsrLandMaskExpression = "cloud_flags_nadir.LAND";
     public static final String seaiceMaskExpression = "cloud_classif_flags.F_SEAICE";
 
     public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";

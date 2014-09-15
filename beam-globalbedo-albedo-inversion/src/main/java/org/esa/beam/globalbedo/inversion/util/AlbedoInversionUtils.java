@@ -56,7 +56,10 @@ public class AlbedoInversionUtils {
         } else if (sourceProduct.getProductType().startsWith("VGT")) {
             configurator.defineSample(index, AlbedoInversionConstants.BBDR_VGT_SM_NAME, sourceProduct);
         } else {
-            // AATSR excluded - no actions
+            BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                    (AlbedoInversionConstants.aatsrLandMaskExpression, sourceProduct);
+            Product landMaskProduct = landOp.getTargetProduct();
+            configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
         }
     }
 

@@ -92,6 +92,21 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
+    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    private String priorMeanBandNamePrefix;
+
+    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    private String priorSdBandNamePrefix;
+
+    @Parameter(defaultValue = "7", description = "Prior broad bands start index (default fits to the latest prior version)")
+    private int priorBandStartIndex;
+
+    @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorNSamplesBandName;
+
+    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorLandMaskBandName;
+
     private FullAccumulator fullAccumulator;
 
     @Override
@@ -156,15 +171,20 @@ public class InversionOp extends PixelOperator {
         if (usePrior) {
             for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
                 for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
-                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    final String indexString = Integer.toString(priorBandStartIndex + i);
+//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
                     configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
 
-                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
                     configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
                 }
             }
-            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
-            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+            configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+            configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
         }
     }
 

@@ -6,11 +6,13 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import static java.lang.Math.pow;
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
 
 /**
  * Operator for merging BRDF Snow/NoSnow products.
@@ -98,6 +100,21 @@ public class MergeBrdfOp extends PixelOperator {
 
     @SourceProduct(description = "Prior product")
     private Product priorProduct;
+
+    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    private String priorMeanBandNamePrefix;
+
+    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    private String priorSdBandNamePrefix;
+
+    @Parameter(defaultValue = "7", description = "Prior broad bands start index (default fits to the latest prior version)")
+    private int priorBandStartIndex;
+
+    @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorNSamplesBandName;
+
+    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorLandMaskBandName;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -380,23 +397,40 @@ public class MergeBrdfOp extends PixelOperator {
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_MEAN[i][j] = 2 * sourceSampleOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
-                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
-            }
-        }
+//        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
+//            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+//                final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+//                SRC_PRIOR_MEAN[i][j] = 2 * sourceSampleOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
+//                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+//            }
+//        }
+//
+//        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
+//            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+//                final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+//                SRC_PRIOR_SD[i][j] = 2 * sourceSampleOffset + priorOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
+//                configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
+//            }
+//        }
+//        configurator.defineSample(SRC_PRIOR_NSAMPLES, AlbedoInversionConstants.PRIOR_NSAMPLES_NAME, priorProduct);
+//        configurator.defineSample(SRC_PRIOR_MASK, AlbedoInversionConstants.PRIOR_MASK_NAME, priorProduct);
 
-        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                SRC_PRIOR_SD[i][j] = 2 * sourceSampleOffset + priorOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                final String indexString = Integer.toString(priorBandStartIndex + i);
+//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+
+//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
                 configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
             }
         }
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, AlbedoInversionConstants.PRIOR_NSAMPLES_NAME, priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, AlbedoInversionConstants.PRIOR_MASK_NAME, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+        configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
     }
 
     @Override

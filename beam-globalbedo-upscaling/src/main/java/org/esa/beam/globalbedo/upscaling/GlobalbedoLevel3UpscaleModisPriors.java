@@ -67,6 +67,9 @@ public class GlobalbedoLevel3UpscaleModisPriors extends GlobalbedoLevel3UpscaleB
     @TargetProduct
     private Product targetProduct;
 
+    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorLandMaskBandName;
+
     private String[] priorMeanBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String maskBandName;
     private Band maskBand;
@@ -103,7 +106,8 @@ public class GlobalbedoLevel3UpscaleModisPriors extends GlobalbedoLevel3UpscaleB
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
 
         priorMeanBandNames = IOUtils.getPriorMeanBandNames();
-        maskBandName = PRIOR_MASK_NAME;
+//        maskBandName = PRIOR_MASK_NAME;
+        maskBandName = priorLandMaskBandName;
         maskBand = reprojectedProduct.getBand(maskBandName);
 
         // for performance, just write one band ...
