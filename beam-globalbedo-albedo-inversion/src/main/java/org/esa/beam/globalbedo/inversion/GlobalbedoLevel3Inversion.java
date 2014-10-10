@@ -36,6 +36,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
+    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix") // e.g., background/processed.p1.0.618034.p2.1.00000
+    private String priorRootDirSuffix;
+
+    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix") // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
+    private String priorFileNamePrefix;
+
     @Parameter(defaultValue = "h18v04", description = "MODIS tile")
     private String tile;
 
@@ -77,13 +83,15 @@ public class GlobalbedoLevel3Inversion extends Operator {
         Product priorProduct = null;
         if (usePrior) {
             // STEP 1: get Prior input file...
-            final String priorDir = priorRootDir + File.separator + tile +
-                    File.separator + "background" + File.separator + "processed.p1.0.618034.p2.1.00000";
+            final String priorDir = priorRootDir + File.separator + tile;
+            if (priorRootDirSuffix != null) {
+                priorDir.concat(File.separator + priorRootDirSuffix);
+            }
 
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
             try {
-                priorProduct = IOUtils.getPriorProduct(priorDir, doy, computeSnow);
+                priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
                         " - cannot proceed...: " + e.getMessage());
@@ -165,6 +173,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
 
             setTargetProduct(inversionProduct);
+//            setTargetProduct(reprojectedPriorProduct);                  // test!!
 
             // correct for lost pixels due to extreme SIN angles near South Pole
             // todo: this is not a very nice hack. we should try to find a better solution...
