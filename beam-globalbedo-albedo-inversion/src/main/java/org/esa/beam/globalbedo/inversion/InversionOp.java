@@ -3,7 +3,8 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
-import Jama.SingularValueDecomposition;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -17,6 +18,8 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
+
+//import Jama.SingularValueDecomposition;
 
 /**
  * Pixel operator implementing the inversion part of python breadboard.
@@ -264,7 +267,8 @@ public class InversionOp extends PixelOperator {
             } else {
                 parameters = new Matrix(NUM_BBDR_WAVE_BANDS *
                                                 NUM_ALBEDO_PARAMETERS, 1,
-                                        INVALID);
+                                        INVALID
+                );
                 uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
                                            3 * NUM_ALBEDO_PARAMETERS,
                                            INVALID);
@@ -277,12 +281,13 @@ public class InversionOp extends PixelOperator {
                 // todo: reactivate
 //                entropy = getEntropy(mAcc);
                 entropy = INVALID;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
-                if (usePrior && prior != null && prior.getM() != null) {
-                    final double entropyPrior = getEntropy(prior.getM());
-                    relEntropy = entropyPrior - entropy;
-                } else {
-                    relEntropy = INVALID;
-                }
+                relEntropy = INVALID;
+//                if (usePrior && prior != null && prior.getM() != null) {
+//                    final double entropyPrior = getEntropy(prior.getM());
+//                    relEntropy = entropyPrior - entropy;
+//                } else {
+//                    relEntropy = INVALID;
+//                }
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
@@ -317,7 +322,7 @@ public class InversionOp extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, daysToTheClosestSample, x, y);
+                          maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -334,8 +339,7 @@ public class InversionOp extends PixelOperator {
 
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample,
-                                   int x, int y) {
+                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample) {
 
         // parameters
         int index = 0;
@@ -363,7 +367,10 @@ public class InversionOp extends PixelOperator {
     }
 
     private double getEntropy(Matrix m) {
-        final SingularValueDecomposition svdM = m.svd();
+        // final SingularValueDecomposition svdM = m.svd();     // this sometimes gets stuck at CEMS!!
+        //  --> single value decomposition from apache.commons.math3 seems to do better
+        final RealMatrix rm = AlbedoInversionUtils.getRealMatrixFromJamaMatrix(m);
+        final SingularValueDecomposition svdM = new SingularValueDecomposition(rm);
         final double[] svdMSingularValues = svdM.getSingularValues();
         // see python BB equivalent at http://nullege.com/codes/search/numpy.prod
         double productSvdMSRecip = 1.0;
