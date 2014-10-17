@@ -187,13 +187,14 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         String mergeDirString = gaRootDir + File.separator + mergeDirExt;
 
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
-        if (mergeFiles != null) {
-            System.out.println("mergeFiles = " + mergeFiles[0]);
+        if (mergeFiles != null && mergeFiles.length > 0) {
             for (File mergeFile : mergeFiles) {
                 File[] tileFiles = mergeFile.listFiles(mergeFilter);
-                for (File tileFile : tileFiles) {
-                    if (tileFile.exists()) {
-                        return tileFile;
+                if (tileFiles != null && tileFiles.length > 0) {
+                    for (File tileFile : tileFiles) {
+                        if (tileFile.exists()) {
+                            return tileFile;
+                        }
                     }
                 }
             }

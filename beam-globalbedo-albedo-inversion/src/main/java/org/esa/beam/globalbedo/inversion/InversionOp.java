@@ -278,16 +278,16 @@ public class InversionOp extends PixelOperator {
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
 
+//                entropy = INVALID;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
+//                relEntropy = INVALID;
                 // todo: reactivate
-//                entropy = getEntropy(mAcc);
-                entropy = INVALID;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
-                relEntropy = INVALID;
-//                if (usePrior && prior != null && prior.getM() != null) {
-//                    final double entropyPrior = getEntropy(prior.getM());
-//                    relEntropy = entropyPrior - entropy;
-//                } else {
-//                    relEntropy = INVALID;
-//                }
+                entropy = getEntropy(mAcc);
+                if (usePrior && prior != null && prior.getM() != null) {
+                    final double entropyPrior = getEntropy(prior.getM());
+                    relEntropy = entropyPrior - entropy;
+                } else {
+                    relEntropy = INVALID;
+                }
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
