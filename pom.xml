@@ -247,6 +247,12 @@
                 <version>1.0.4</version>
             </dependency>
 
+            <dependency>
+                <groupId>commons-math3</groupId>
+                <artifactId>commons-math3</artifactId>
+                <version>3.2</version>
+            </dependency>
+
         </dependencies>
     </dependencyManagement>
 

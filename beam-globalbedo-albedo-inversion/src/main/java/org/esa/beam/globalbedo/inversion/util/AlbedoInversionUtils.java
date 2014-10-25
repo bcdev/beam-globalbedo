@@ -1,6 +1,8 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import Jama.Matrix;
+import org.apache.commons.math3.linear.Array2DRowRealMatrix;
+import org.apache.commons.math3.linear.RealMatrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.Product;
@@ -302,6 +304,20 @@ public class AlbedoInversionUtils {
         }
         return monthlyWeighting;
     }
+
+    public static RealMatrix getRealMatrixFromJamaMatrix(Matrix m) {
+        final int rDim = m.getRowDimension();
+        final int cDim = m.getColumnDimension();
+        RealMatrix rm = new Array2DRowRealMatrix(rDim, cDim);
+        for (int i=0; i<rDim; i++) {
+            for (int j = 0; j < cDim; j++) {
+                rm.setEntry(i, j, m.get(i, j));
+            }
+        }
+
+        return rm;
+    }
+
 
     public static double checkSummandForNan(double srcValue) {
         return Double.isNaN(srcValue) ? 0.0 : srcValue;

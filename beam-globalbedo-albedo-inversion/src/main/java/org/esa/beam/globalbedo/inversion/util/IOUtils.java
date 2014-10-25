@@ -100,7 +100,7 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    public static Product getPriorProduct(String priorDir, int doy, boolean computeSnow) throws IOException {
+    public static Product getPriorProduct(String priorDir, String priorFileNamePrefix, int doy, boolean computeSnow) throws IOException {
 
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
@@ -108,7 +108,7 @@ public class IOUtils {
         String doyString = getDoyString(doy);
 
         for (String priorFileName : snowFilteredPriorList) {
-            if (priorFileName.startsWith("Kernels." + doyString)) {
+            if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
                 String sourceProductFileName = priorDir + File.separator + priorFileName;
                 return ProductIO.readProduct(sourceProductFileName);
             }
@@ -234,7 +234,9 @@ public class IOUtils {
         List<String> snowFilteredPriorList = new ArrayList<String>();
         if (priorFiles != null && priorFiles.length > 0) {
             for (String s : priorFiles) {
-                if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr"))) {
+                // CEMS: kernel.001.006.h18v04.Snow.1km.nc
+                if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr")) ||
+                        (computeSnow && s.endsWith(".Snow.1km.nc")) || (!computeSnow && s.endsWith(".NoSnow.1km.nc"))) {
                     snowFilteredPriorList.add(s);
                 }
             }
