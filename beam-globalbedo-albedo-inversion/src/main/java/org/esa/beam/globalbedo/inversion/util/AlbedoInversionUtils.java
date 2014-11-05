@@ -50,12 +50,14 @@ public class AlbedoInversionUtils {
      */
     public static void setLandMaskSourceSample(SampleConfigurer configurator, int index,
                                                Product sourceProduct, boolean computeSeaice) {
-        if (sourceProduct.getProductType().startsWith("MER") || computeSeaice) {
+        if ((sourceProduct.getProductType().startsWith("MER") ||
+                sourceProduct.getName().startsWith("MER")) || computeSeaice) {
             BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
                     (AlbedoInversionConstants.merisLandMaskExpression, sourceProduct);
             Product landMaskProduct = landOp.getTargetProduct();
             configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
-        } else if (sourceProduct.getProductType().startsWith("VGT")) {
+        } else if ((sourceProduct.getProductType().startsWith("VGT") ||
+                sourceProduct.getName().startsWith("VGT"))) {
             configurator.defineSample(index, AlbedoInversionConstants.BBDR_VGT_SM_NAME, sourceProduct);
         } else {
             BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
@@ -309,7 +311,7 @@ public class AlbedoInversionUtils {
         final int rDim = m.getRowDimension();
         final int cDim = m.getColumnDimension();
         RealMatrix rm = new Array2DRowRealMatrix(rDim, cDim);
-        for (int i=0; i<rDim; i++) {
+        for (int i = 0; i < rDim; i++) {
             for (int j = 0; j < cDim; j++) {
                 rm.setEntry(i, j, m.get(i, j));
             }

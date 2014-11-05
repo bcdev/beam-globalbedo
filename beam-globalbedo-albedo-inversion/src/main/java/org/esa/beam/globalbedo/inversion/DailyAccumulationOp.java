@@ -375,11 +375,14 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private boolean isLandFilter(Sample[] sourceSamples, int sourceProductIndex) {
         if (sourceProducts[sourceProductIndex].getProductType().startsWith("MER") ||
-                sourceProducts[sourceProductIndex].getProductType().startsWith("ATS")) {
+                sourceProducts[sourceProductIndex].getName().startsWith("MER") ||
+                sourceProducts[sourceProductIndex].getProductType().startsWith("ATS") ||
+                sourceProducts[sourceProductIndex].getName().startsWith("ATS")) {
             if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
                 return true;
             }
-        } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("VGT")) {
+        } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("VGT") ||
+                sourceProducts[sourceProductIndex].getName().startsWith("VGT")) {
             if ((sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getInt() & 8) == 0) {
                 return true;
             }
