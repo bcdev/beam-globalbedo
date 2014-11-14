@@ -1,0 +1,19 @@
+/group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/tasks already exists.
+/group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log already exists.
+jobname: ga-l3-h18v04-2005-001-snow_false
+command: ./bin/ga-l3-beam.sh h18v04 2005 001 008 false /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/NoSnow /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/Snow /group_workspaces/cems/globalalbedo/soft/beam-5.0.1
+20141114-181554 submitting job 'ga-l3-h18v04-2005-001-snow_false' for task ga-l3
+calling read_task_jobs()...
+entered read_task_jobs()...
+jobname: ga-l3-h18v04-2005-001-snow_false
+GA_TASKS/jobname.tasks: /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/tasks/ga-l3-h18v04-2005-001-snow_false.tasks
+GA_INST: /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst
+GA_LOG : /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log
+jobname: ga-l3-h18v04-2005-001-snow_false
+command: ./bin/ga-l3-beam.sh
+bsubmit: bsub -R rusage[mem=12000] -P ga_qa4ecv -cwd /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst -oo /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log/ga-l3-h18v04-2005-001-snow_false.out -eo /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log/ga-l3-h18v04-2005-001-snow_false.err -J ga-l3-h18v04-2005-001-snow_false /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/./bin/ga-l3-beam.sh h18v04 2005 001 008 false /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/NoSnow /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/Snow /group_workspaces/cems/globalalbedo/soft/beam-5.0.1
+bsub -R rusage[mem=12000] -P ga_qa4ecv -cwd /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst -oo /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log/ga-l3-h18v04-2005-001-snow_false.out -eo /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log/ga-l3-h18v04-2005-001-snow_false.err -J ga-l3-h18v04-2005-001-snow_false /group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/./bin/ga-l3-beam.sh h18v04 2005 001 008 false /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/NoSnow /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/Snow /group_workspaces/cems/globalalbedo/soft/beam-5.0.1
+Job <931066> is submitted to default queue <lotus>.
+jobs: 931066
+No unfinished job found
+20141114-182115: tasks for ga-l3-h18v04-2005-001-snow_false done

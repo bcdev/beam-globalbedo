@@ -1,0 +1,31 @@
+#!/bin/bash
+
+if [ -z "$GA_INST" ]; then
+    GA_INST=`pwd`
+    . $GA_INST/myga
+fi
+
+if [ -z "$1" ]; then
+    echo "call   : pmstartup <workflow>"
+    echo "example: pmstartup modis.py"
+    exit 1
+fi
+
+workflow=$(basename ${1%.py})
+
+if [ -e ${workflow}.pid ]
+then
+#    if kill -0 $(cat ${workflow}.pid) 1&>2 > /dev/null
+    if kill -0 $(cat ${workflow}.pid) > /dev/null
+    then
+        ps -elf | grep $(cat ${workflow}.pid) | grep -v grep
+        echo "process already running"
+        echo "delete ${workflow}.pid file if running process is not the workflow"
+        exit 1
+    fi
+fi
+
+nohup python2.7 $GA_INST/${workflow}.py > $GA_INST/${workflow}.out 2>&1 &
+echo $! > $GA_INST/${workflow}.pid
+sleep 2
+cat $GA_INST/${workflow}.status

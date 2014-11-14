@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ -z "$GA_INST" ]; then
+    GA_INST=`pwd`
+    . $GA_INST/myga
+fi
+
+if [ -z "$1" ]; then
+    echo "call   : pmshutdown <workflow>"
+    echo "example: pmshutdown modis.py"
+    exit 1
+fi
+
+workflow=$(basename ${1%.py})
+
+if [ ! -e $GA_INST/${workflow}.pid ]; then
+    echo "missing ${workflow}.pid file in $GA_INST"
+    ps -elf|grep python
+    exit 1
+fi
+
+kill $(cat $GA_INST/${workflow}.pid)

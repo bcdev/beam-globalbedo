@@ -1,0 +1,15 @@
+#!/bin/bash
+# GlobAlbedo environment setup at CEMS
+# usage:  . myga
+
+export GA_INST=/group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst
+export GA_LOG=$GA_INST/log
+
+export GA_BEAM_VERSION=beam-5.0.1
+
+export PYTHONPATH=$GA_INST:$GA_INST/src:$PYTHONPATH
+export PATH=$GA_INST:$GA_INST/bin:$PATH
+
+PS1="\[\e]0;\u@\h: \w\a\]\[\e[1;32m\]\u \[\e[1;34m\]\w\[\e[0m\] \[\e[0;31m\](GA)\[\e[0m\]$ "
+
+echo "using GlobAlbedo instance $GA_INST"

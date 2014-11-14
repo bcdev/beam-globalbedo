@@ -1,0 +1,73 @@
+Sender: LSF System <lsfadmin@host045.jc.rl.ac.uk>
+Subject: Job 931066: <ga-l3-h18v04-2005-001-snow_false> in cluster <lotus> Done
+
+Job <ga-l3-h18v04-2005-001-snow_false> was submitted from host <cems-sci1-panfs.cems.rl.ac.uk> by user <odanne> in cluster <lotus>.
+Job was executed on host(s) <host045.jc.rl.ac.uk>, in queue <lotus>, as user <odanne> in cluster <lotus>.
+</home/users/odanne> was used as the home directory.
+</group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst> was used as the working directory.
+Started at Fri Nov 14 18:15:58 2014
+Results reported on Fri Nov 14 18:21:09 2014
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+/group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/./bin/ga-l3-beam.sh h18v04 2005 001 008 false /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/NoSnow /group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/Snow /group_workspaces/cems/globalalbedo/soft/beam-5.0.1
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   384.85 sec.
+    Max Memory :                                 2619.40 MB
+    Average Memory :                             1768.55 MB
+    Total Requested Memory :                     12000.00 MB
+    Delta Memory :                               9380.60 MB
+    Max Swap :                                   12140 MB
+    Max Processes :                              5
+    Max Threads :                                54
+
+The output (if any) follows:
+
+DoY 001...
+Create daily accumulators for tile h18v04, year 2005, DoY 001, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=001 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 002...
+Create daily accumulators for tile h18v04, year 2005, DoY 002, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=002 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 003...
+Create daily accumulators for tile h18v04, year 2005, DoY 003, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=003 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 004...
+Create daily accumulators for tile h18v04, year 2005, DoY 004, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=004 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 005...
+Create daily accumulators for tile h18v04, year 2005, DoY 005, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=005 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 006...
+Create daily accumulators for tile h18v04, year 2005, DoY 006, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=006 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 007...
+Create daily accumulators for tile h18v04, year 2005, DoY 007, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=007 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+DoY 008...
+Create daily accumulators for tile h18v04, year 2005, DoY 008, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.dailyacc -Ptile=h18v04 -Pyear=2005 -Pdoy=008 -PcomputeSnow=false -PbbdrRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR -e
+Create full accumulator for tile h18v04, year 2005, DoY 008, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh  ga.l3.fullacc -Ptile=h18v04 -Pyear=2005 -PstartDoy=001 -PendDoy=008 -Pwings=90 -PcomputeSnow=false -PgaRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest -e
+Compute BRDF for tile h18v04, year 2005, DoY 001, NoSnow ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh ga.l3.inversion -Ptile=h18v04 -Pyear=2005 -Pdoy=001 -Pwings=90 -PcomputeSnow=false -PgaRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest -PpriorRootDir=/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/NoSnow -e -t /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/Inversion/h18v04/GlobAlbedo.brdf.2005001.h18v04.NoSnow.dim
+Reading full accumulator file...
+Done reading full accumulator file.
+Compute MERGED BRDF for tile h18v04, year 2005, DoY 001 ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh ga.l3.albedo -Ptile=h18v04 -Pyear=2005 -Pdoy=001 -PmergedProductOnly=true -PgaRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest -PpriorRootDir=/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km/Snow -e -t /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/Merge/h18v04/GlobAlbedo.brdf.merge.2005001.h18v04.dim
+Compute ALBEDO for tile h18v04, year 2005, DoY 001 ...
+time /group_workspaces/cems/globalalbedo/soft/beam-5.0.1/bin/gpt-d-l2.sh ga.l3.albedo -Ptile=h18v04 -Pyear=2005 -Pdoy=001 -PgaRootDir=/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest -PpriorRootDir=snowPriorRootDir -e -t /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/Albedo/h18v04/GlobAlbedo.albedo.2005001.h18v04.dim
+Fri Nov 14 18:21:09 GMT 2014
+
+
+PS:
+
+Read file </group_workspaces/cems2/qa4ecv/vol4/olafd/ga-inst/log/ga-l3-h18v04-2005-001-snow_false.err> for stderr output of this job.
+
