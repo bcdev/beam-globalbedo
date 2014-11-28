@@ -88,7 +88,10 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
         <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
-        <hadoop.version>2.4.0</hadoop.version>
+        <!-- for AATSR -->
+        <idepixVersion>3.0-EVOLUTION-SNAPSHOT</idepixVersion>
+        <!-- for MERIS -->
+        <!--<idepixVersion>2.1.4-SNAPSHOT</idepixVersion>-->
     </properties>
 
     <dependencyManagement>
@@ -217,17 +220,17 @@
             <dependency>
                 <groupId>org.esa.beam.idepix</groupId>
                 <artifactId>beam-idepix-algorithms</artifactId>
-                <version>3.0-EVOLUTION-SNAPSHOT</version>
+                <version>${idepixVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam.idepix</groupId>
                 <artifactId>beam-idepix-core</artifactId>
-                <version>3.0-EVOLUTION-SNAPSHOT</version>
+                <version>${idepixVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam.idepix</groupId>
                 <artifactId>beam-idepix-operators</artifactId>
-                <version>3.0-EVOLUTION-SNAPSHOT</version>
+                <version>${idepixVersion}</version>
             </dependency>
 
             <dependency>
