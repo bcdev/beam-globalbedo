@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -137,11 +137,13 @@ public class MerisPrepOp extends Operator {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaCopyToaReflectances", false);
-            pixelClassParam.put("gaCloudBufferWidth", 3);
+            // currently not a parameter
+//            pixelClassParam.put("gaCloudBufferWidth", 3);
             pixelClassParam.put("gaCopyRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
             pixelClassParam.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
-            pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
+            // currently not a parameter
+//            pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
@@ -162,6 +164,13 @@ public class MerisPrepOp extends Operator {
                 }
             }
         }
+
+        // TODO
+        // if we should to haze correction / removal
+        // do it now use sza product and idepix as input. merge them.
+        // feed teh output into MerisRadiometryCorrectionOp a 2nd time
+        // use the resulting reflectances for further processing
+        // TODO
 
         // create elevation product if band is missing in sourceProduct
         Product elevProduct = null;

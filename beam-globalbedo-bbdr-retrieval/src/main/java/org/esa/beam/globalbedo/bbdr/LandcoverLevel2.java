@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -91,6 +91,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("copyToaReflBands", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
+        gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", true);
         gaMasterOp.setParameter("gaLcCloudBuffer", true);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();

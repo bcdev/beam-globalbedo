@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -57,6 +57,7 @@ public class GaMasterOp extends Operator {
     private Product sourceProduct;
     @TargetProduct
     private Product targetProduct;
+
     @Parameter(defaultValue = "false")
     private boolean copyToaRadBands;
     @Parameter(defaultValue = "true")
