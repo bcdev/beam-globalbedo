@@ -88,10 +88,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
         <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
-        <!-- for AATSR -->
-        <idepixVersion>3.0-EVOLUTION-SNAPSHOT</idepixVersion>
-        <!-- for MERIS -->
-        <!--<idepixVersion>2.1.4-SNAPSHOT</idepixVersion>-->
+        <idepixVersion>2.1.5-SNAPSHOT</idepixVersion>
     </properties>
 
     <dependencyManagement>
