@@ -29,7 +29,9 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
+import org.esa.beam.idepix.IdepixProducts;
 import org.esa.beam.landcover.LcUclCloudBuffer;
+import org.esa.beam.landcover.StatusPostProcessOp;
 
 import javax.media.jai.OpImage;
 import javax.media.jai.TileCache;
@@ -45,43 +47,23 @@ public class LandcoverLevel2 extends Operator {
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
-    @Parameter(defaultValue = "true")
-    private boolean step1;
-
-    @Parameter(defaultValue = "true")
-    private boolean step2;
-
-    @Parameter(defaultValue = "true")
-    private boolean useFileTileCache;
-
     // for testing purpose
     @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
+
     @Parameter(defaultValue = "true")
-    private boolean doSchillerCloudDetection;
+    private boolean useUclCloudForShadow;
 
     @Override
     public void initialize() throws OperatorException {
-        Product aotProduct;
-        if (step1) {
-            aotProduct = processAot(sourceProduct);
-            if (aotProduct == GaMasterOp.EMPTY_PRODUCT) {
-                setTargetProduct(GaMasterOp.EMPTY_PRODUCT);
-                return;
-            }
-        } else {
-            aotProduct = sourceProduct;
+        Product aotProduct = processAot(sourceProduct);
+        if (aotProduct == GaMasterOp.EMPTY_PRODUCT) {
+            System.err.println("aotProduct is empty");
+            setTargetProduct(GaMasterOp.EMPTY_PRODUCT);
+            return;
         }
-        if (useFileTileCache) {
-            attachFileTileCache(aotProduct);
-        }
-        Product bbdrProduct;
-        if (step2) {
-            bbdrProduct = processBbdr(aotProduct);
-        } else {
-            bbdrProduct = aotProduct;
-        }
-        setTargetProduct(bbdrProduct);
+        attachFileTileCache(aotProduct);
+        setTargetProduct(processBbdr(aotProduct));
     }
 
     private Product processAot(Product product) {
@@ -89,31 +71,35 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameterDefaultValues();
         gaMasterOp.setParameter("copyToaRadBands", false);
         gaMasterOp.setParameter("copyToaReflBands", true);
+        gaMasterOp.setParameter("gaCopyCTP", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
-        gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", true);
-        gaMasterOp.setParameter("gaLcCloudBuffer", true);
+        gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", false);
+        gaMasterOp.setParameter("gaLcCloudBuffer", false);
+        gaMasterOp.setParameter("gaComputeCloudShadow", false);
+        gaMasterOp.setParameter("gaComputeCloudBuffer", false);
         gaMasterOp.setSourceProduct(product);
         return gaMasterOp.getTargetProduct();
     }
 
-    private Product processBbdr(Product product) {
+    private Product processBbdr(Product aotProduct) {
         BbdrOp bbdrOp = new BbdrOp();
         bbdrOp.setParameterDefaultValues();
-        bbdrOp.setSourceProduct(product);
+        bbdrOp.setSourceProduct(aotProduct);
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("sdrOnly", true);
         bbdrOp.setParameter("doUclCloudDetection", doUclCloudDetection);
-        bbdrOp.setParameter("doSchillerCloudDetection", doSchillerCloudDetection);
-        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND and not cloud_classif_flags.F_WATER and not cloud_classif_flags.F_CLOUD_SHADOW and not cloud_classif_flags.F_CLOUD_BUFFER");
-        Product bbdr = bbdrOp.getTargetProduct();
-        if (doUclCloudDetection) {
-            LcUclCloudBuffer lcUclCloudBuffer = new LcUclCloudBuffer();
-            lcUclCloudBuffer.setSourceProduct(bbdr);
-            return lcUclCloudBuffer.getTargetProduct();
-        } else {
-            return bbdr;
-        }
+        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND or cloud_classif_flags.F_CLEAR_SNOW");
+        Product sdrProduct = bbdrOp.getTargetProduct();
+
+        StatusPostProcessOp statusPostProcessOp = new StatusPostProcessOp();
+        statusPostProcessOp.setParameterDefaultValues();
+        statusPostProcessOp.setParameter("useUclCloudForShadow", useUclCloudForShadow);
+        statusPostProcessOp.setSourceProduct("l1b", sourceProduct);
+        statusPostProcessOp.setSourceProduct("status", sdrProduct);
+        statusPostProcessOp.setSourceProduct("ctp", aotProduct);
+
+        return statusPostProcessOp.getTargetProduct();
     }
 
     private void attachFileTileCache(Product product) {

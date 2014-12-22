@@ -84,10 +84,10 @@ public class GaMasterOp extends Operator {
     private String[] gaOutputRayleigh;
 
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
-    private boolean gaLcCloudBuffer = false;
+    private boolean gaLcCloudBuffer;
 
     @Parameter(defaultValue = "false", label = " If set, we are in BBDR Seaice mode (no AOT retrieval)")
-    private boolean isBbdrSeaice = false;
+    private boolean isBbdrSeaice;
 
     @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
     private boolean gaRefineClassificationNearCoastlines;
@@ -95,9 +95,14 @@ public class GaMasterOp extends Operator {
     @Parameter(defaultValue = "false")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to true??
     private boolean gaUseL1bLandWaterFlag;
 
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    private boolean gaComputeCloudShadow;
 
-//    @Parameter(defaultValue = "GlobAlbedo")
-//    private CloudScreeningSelector idepixAlgorithm;
+    @Parameter(defaultValue = "true", label = "Compute cloud buffer")
+    private boolean gaComputeCloudBuffer;
+
+    @Parameter(defaultValue = "false", label = "Copy cloud top pressure")
+    private boolean gaCopyCTP;
 
     private String instrument;
 
@@ -128,6 +133,9 @@ public class GaMasterOp extends Operator {
             params.put("doEqualization", doEqualization);
             params.put("gaOutputRayleigh", gaOutputRayleigh);
             params.put("gaLcCloudBuffer", gaLcCloudBuffer);
+            params.put("gaComputeCloudShadow", gaComputeCloudShadow);
+            params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
+            params.put("gaCopyCTP", gaCopyCTP);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
         } else if (isAatsrProduct) {
             instrument = "AATSR";
@@ -214,6 +222,7 @@ public class GaMasterOp extends Operator {
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
+            copyBand = copyBand || (gaCopyCTP && sourceBandName.equals("cloud_top_press"));
 
             if (copyBand) {
                 ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);

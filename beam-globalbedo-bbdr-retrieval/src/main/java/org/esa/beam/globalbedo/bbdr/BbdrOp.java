@@ -34,7 +34,7 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
-import org.esa.beam.idepix.algorithms.SchillerAlgorithm;
+import org.esa.beam.landcover.StatusPostProcessOp;
 import org.esa.beam.landcover.UclCloudDetection;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.math.FracIndex;
@@ -104,8 +104,6 @@ public class BbdrOp extends PixelOperator {
     private boolean sdrOnly;
     @Parameter(defaultValue = "true")
     private boolean doUclCloudDetection;
-    @Parameter(defaultValue = "true")
-    private boolean doSchillerCloudDetection;
     @Parameter
     private String landExpression;
 
@@ -134,7 +132,6 @@ public class BbdrOp extends PixelOperator {
     private double hsfMin;
     private double hsfMax;
 
-    private SchillerAlgorithm landNN;
     private UclCloudDetection uclCloudDetection;
     private static final double[] PATH_RADIANCE = new double[]{
             0.134, 0.103, 0.070, 0.059, 0.040,
@@ -195,33 +192,30 @@ public class BbdrOp extends PixelOperator {
             ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
 
             Band statusBand = targetProduct.addBand("status", ProductData.TYPE_INT8);
-            statusBand.setNoDataValue(0);
+            statusBand.setNoDataValue(StatusPostProcessOp.STATUS_INVALID);
             statusBand.setNoDataValueUsed(true);
             final IndexCoding indexCoding = new IndexCoding("status");
-            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[8];
-            indexCoding.addIndex("land", 1, "");
-            points[0] = new ColorPaletteDef.Point(1, Color.GREEN, "land");
+            ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[7];
+            indexCoding.addIndex("land", StatusPostProcessOp.STATUS_LAND, "");
+            points[0] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_LAND, Color.GREEN, "land");
 
-            indexCoding.addIndex("water", 2, "");
-            points[1] = new ColorPaletteDef.Point(2, Color.BLUE, "water");
+            indexCoding.addIndex("water", StatusPostProcessOp.STATUS_WATER, "");
+            points[1] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_WATER, Color.BLUE, "water");
 
-            indexCoding.addIndex("snow", 3, "");
-            points[2] = new ColorPaletteDef.Point(3, Color.YELLOW, "snow");
+            indexCoding.addIndex("snow", StatusPostProcessOp.STATUS_SNOW, "");
+            points[2] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_SNOW, Color.YELLOW, "snow");
 
-            indexCoding.addIndex("cloud", 4, "");
-            points[3] = new ColorPaletteDef.Point(4, Color.WHITE, "cloud");
+            indexCoding.addIndex("cloud", StatusPostProcessOp.STATUS_CLOUD, "");
+            points[3] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_CLOUD, Color.WHITE, "cloud");
 
-            indexCoding.addIndex("cloud_shadow", 5, "");
-            points[4] = new ColorPaletteDef.Point(5, Color.GRAY, "cloud_shadow");
+            indexCoding.addIndex("cloud_shadow", StatusPostProcessOp.STATUS_CLOUD_SHADOW, "");
+            points[4] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_CLOUD_SHADOW, Color.GRAY, "cloud_shadow");
 
-            indexCoding.addIndex("ucl_cloud", 10, "");
-            points[5] = new ColorPaletteDef.Point(10, Color.ORANGE, "ucl_cloud");
+            indexCoding.addIndex("cloud_buffer", StatusPostProcessOp.STATUS_CLOUD_BUFFER, "");
+            points[5] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_CLOUD_BUFFER, Color.RED, "cloud_buffer");
 
-            indexCoding.addIndex("ucl_cloud_buffer", 11, "");
-            points[6] = new ColorPaletteDef.Point(11, Color.RED, "ucl_cloud_buffer");
-
-            indexCoding.addIndex("schiller_cloud", 20, "");
-            points[7] = new ColorPaletteDef.Point(20, Color.PINK, "schiller_cloud");
+            indexCoding.addIndex("ucl_cloud", StatusPostProcessOp.STATUS_UCL_CLOUD, "");
+            points[6] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_UCL_CLOUD, Color.ORANGE, "ucl_cloud");
 
             targetProduct.getIndexCodingGroup().add(indexCoding);
             statusBand.setSampleCoding(indexCoding);
@@ -300,9 +294,6 @@ public class BbdrOp extends PixelOperator {
         aotMin = aotArray[0];
         aotMax = aotArray[aotArray.length - 1];
 
-        if (doSchillerCloudDetection) {
-            landNN = new SchillerAlgorithm(SchillerAlgorithm.Net.LAND);
-        }
         if (doUclCloudDetection) {
             try {
                 uclCloudDetection = UclCloudDetection.create();
@@ -329,8 +320,17 @@ public class BbdrOp extends PixelOperator {
         }
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
 
-        BandMathsOp snowOp = BandMathsOp.createBooleanExpressionBand(snowMaskExpression, sourceProduct);
+        BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
+        bdSnow.name = "snow_mask";
+        bdSnow.expression = snowMaskExpression;
+        bdSnow.type = ProductData.TYPESTRING_INT8;
+
+        BandMathsOp snowOp = new BandMathsOp();
+        snowOp.setParameterDefaultValues();
+        snowOp.setSourceProduct(sourceProduct);
+        snowOp.setTargetBandDescriptors(bdSnow);
         Product snowMaskProduct = snowOp.getTargetProduct();
+
         configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 
         if (sensor == Sensor.MERIS) {
@@ -399,8 +399,17 @@ public class BbdrOp extends PixelOperator {
             throw new OperatorException("BbdrOp: invalid sensor '" + sensor.toString() + "' - cannot continue.");
         }
 
-        BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand(landExpr, sourceProduct);
+        BandMathsOp.BandDescriptor bdLand = new BandMathsOp.BandDescriptor();
+        bdLand.name = "land_mask";
+        bdLand.expression = landExpr;
+        bdLand.type = ProductData.TYPESTRING_INT8;
+
+        BandMathsOp landOp = new BandMathsOp();
+        landOp.setParameterDefaultValues();
+        landOp.setSourceProduct(sourceProduct);
+        landOp.setTargetBandDescriptors(bdLand);
         Product landMaskProduct = landOp.getTargetProduct();
+
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
         for (int i = 0; i < toaBandNames.length; i++) {
@@ -428,19 +437,17 @@ public class BbdrOp extends PixelOperator {
                 l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
             }
 
-            String expression = l1InvalidExpression + " ? 0 : (not cloud_classif_flags.F_CLOUD and not cloud_classif_flags.F_CLOUD_BUFFER and cloud_classif_flags.F_CLOUD_SHADOW) ? 5 :" +
-                    "((cloud_classif_flags.F_CLOUD or cloud_classif_flags.F_CLOUD_BUFFER) ? 4:" +
+            String statusExpression = l1InvalidExpression + " ? 0 : (cloud_classif_flags.F_CLOUD ? 4 :" +
                     "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
                     "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
-            BandMathsOp.BandDescriptor[] bandDescriptors = new BandMathsOp.BandDescriptor[1];
-            bandDescriptors[0] = new BandMathsOp.BandDescriptor();
-            bandDescriptors[0].name = "status";
-            bandDescriptors[0].expression = expression;
-            bandDescriptors[0].type = ProductData.TYPESTRING_INT8;
+            BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
+            statusBd.name = "status";
+            statusBd.expression = statusExpression;
+            statusBd.type = ProductData.TYPESTRING_INT8;
 
             BandMathsOp bandMathsOp = new BandMathsOp();
             bandMathsOp.setParameterDefaultValues();
-            bandMathsOp.setParameter("targetBandDescriptors", bandDescriptors);
+            bandMathsOp.setTargetBandDescriptors(statusBd);
             bandMathsOp.setSourceProduct(sourceProduct);
             Product statusProduct = bandMathsOp.getTargetProduct();
 
@@ -508,10 +515,10 @@ public class BbdrOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        int status = 0;
+        int status = StatusPostProcessOp.STATUS_INVALID;
         if (sdrOnly) {
             status = sourceSamples[SRC_STATUS].getInt();
-            if (status == 2) {
+            if (status == StatusPostProcessOp.STATUS_WATER) {
                 fillTargetSampleWithNoDataValue(targetSamples);
                 // water, do simple atmospheric correction
                 double sdr13;
@@ -532,7 +539,7 @@ public class BbdrOp extends PixelOperator {
 
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
                 return;
-            } else if (status != 1 && status != 3) {
+            } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
                 // not land and not snow
                 fillTargetSampleWithNoDataValue(targetSamples);
                 targetSamples[sensor.getNumBands() * 2 + 2].set(status);
@@ -571,7 +578,7 @@ public class BbdrOp extends PixelOperator {
             fillTargetSampleWithNoDataValue(targetSamples);
             if (sdrOnly) {
                 // write status
-                targetSamples[sensor.getNumBands() * 2 + 2].set(0);
+                targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
             }
             return;
         }
@@ -622,7 +629,7 @@ public class BbdrOp extends PixelOperator {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
             if (sdrOnly && (toaRefl == 0.0 || Double.isNaN(toaRefl))) {
                 // if toa_refl look bad, set to invalid
-                targetSamples[sensor.getNumBands() * 2 + 2].set(0);
+                targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
             }
             toaRefl /= sensor.getCal2Meris()[i];
             if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
@@ -667,28 +674,15 @@ public class BbdrOp extends PixelOperator {
                 targetSamples[i].set(rfl_pix[i]);
             }
         }
-        if (sdrOnly && status == 1) {
-            boolean isSchillerCloud = false;
-            if (landNN != null) {
-                float schillerCloudValue = landNN.compute(new SchillerAlgorithm.SourceSampleAccessor(sourceSamples, SRC_TOA_RFL));
-                isSchillerCloud = schillerCloudValue > 1.4;
-            }
-            boolean isUclCloud = false;
+        if (sdrOnly && status == StatusPostProcessOp.STATUS_LAND) {
             if (uclCloudDetection != null) {
                 //do an additional cloud check on the SDRs (only over land)
                 float sdrRed = (float) rfl_pix[6]; //sdr_7
                 float sdrGreen = (float) rfl_pix[13]; //sdr_14
                 float sdrBlue = (float) rfl_pix[2]; //sdr_3
-                isUclCloud = uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue);
-            }
-            if (isUclCloud && isSchillerCloud) {
-                //fillTargetSampleWithNoDataValue(targetSamples);
-                targetSamples[sensor.getNumBands() * 2 + 2].set(30);
-                //return;
-            } else if (isUclCloud) {
-                targetSamples[sensor.getNumBands() * 2 + 2].set(10);
-            } else if (isSchillerCloud) {
-                targetSamples[sensor.getNumBands() * 2 + 2].set(20);
+                if (uclCloudDetection.isCloud(sdrRed, sdrGreen, sdrBlue)) {
+                    targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_UCL_CLOUD);
+                }
             }
         }
 

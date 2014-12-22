@@ -78,7 +78,16 @@ public class MerisPrepOp extends Operator {
     private String[] gaOutputRayleigh;
 
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
-    private boolean gaLcCloudBuffer = false;
+    private boolean gaLcCloudBuffer;
+
+    @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
+    private boolean gaComputeCloudShadow;
+
+    @Parameter(defaultValue = "true", label = "Compute cloud buffer")
+    private boolean gaComputeCloudBuffer;
+
+    @Parameter(defaultValue = "false", label = "Copy cloud top pressure")
+    private boolean gaCopyCTP;
 
     @Override
     public void initialize() throws OperatorException {
@@ -137,13 +146,13 @@ public class MerisPrepOp extends Operator {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaCopyToaReflectances", false);
-            // currently not a parameter
-//            pixelClassParam.put("gaCloudBufferWidth", 3);
             pixelClassParam.put("gaCopyRayleigh", gaOutputRayleigh != null && gaOutputRayleigh.length > 0);
             pixelClassParam.put("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);
+            pixelClassParam.put("gaComputeCloudShadow", gaComputeCloudShadow);
+            pixelClassParam.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
+            pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
             pixelClassParam.put("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
-            // currently not a parameter
-//            pixelClassParam.put("gaLcCloudBuffer", gaLcCloudBuffer);
+            pixelClassParam.put("gaCopyCTP", gaCopyCTP);
             idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
             if (gaOutputRayleigh != null) {
@@ -162,6 +171,9 @@ public class MerisPrepOp extends Operator {
                 if (band != null) {
                     idepixProduct.removeBand(band);
                 }
+            }
+            if (gaCopyCTP) {
+                ProductUtils.copyBand("cloud_top_press", idepixProduct, targetProduct, true);
             }
         }
 
