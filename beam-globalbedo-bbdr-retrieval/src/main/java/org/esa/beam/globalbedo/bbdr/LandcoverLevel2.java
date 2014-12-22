@@ -99,7 +99,8 @@ public class LandcoverLevel2 extends Operator {
         statusPostProcessOp.setSourceProduct("status", sdrProduct);
         statusPostProcessOp.setSourceProduct("ctp", aotProduct);
 
-        return statusPostProcessOp.getTargetProduct();
+        Product statusProduct = statusPostProcessOp.getTargetProduct();
+        return statusProduct;
     }
 
     private void attachFileTileCache(Product product) {

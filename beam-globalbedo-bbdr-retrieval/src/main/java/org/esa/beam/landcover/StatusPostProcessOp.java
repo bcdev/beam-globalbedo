@@ -149,10 +149,8 @@ public class StatusPostProcessOp extends MerisBasisOp {
 
     @Override
     public void computeTile(Band targetBand, final Tile targetStatusTile, ProgressMonitor pm) throws OperatorException {
-        System.out.println("useUclCloudForShadow = " + useUclCloudForShadow);
 
         final Rectangle targetRectangle = targetStatusTile.getRectangle();
-        System.out.println("targetRectangle = " + targetRectangle);
         final Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
 
         final Tile sourceStatusTile = getSourceTile(origStatusBand, sourceRectangle);
