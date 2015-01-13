@@ -29,7 +29,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
     private String tile;
 
     @Parameter(defaultValue = "2005", description = "Year")
-    private int year;
+    private String year;
 
     @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
@@ -52,9 +52,9 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
 
         Product[] albedo8DayProducts;
         if (isMosaicAlbedo) {
-            albedo8DayProducts = IOUtils.getAlbedo8DayMosaicProducts(gaRootDir, monthIndex, mosaicScaling, reprojection);
+            albedo8DayProducts = IOUtils.getAlbedo8DayMosaicProducts(gaRootDir, monthIndex, year, mosaicScaling);
         } else {
-            albedo8DayProducts = IOUtils.getAlbedo8DayTileProducts(gaRootDir, tile);
+            albedo8DayProducts = IOUtils.getAlbedo8DayTileProducts(gaRootDir, year, tile);
         }
         if (albedo8DayProducts != null && albedo8DayProducts.length > 0) {
 

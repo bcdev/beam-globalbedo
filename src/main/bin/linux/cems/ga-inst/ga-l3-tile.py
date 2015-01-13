@@ -39,8 +39,8 @@ for tile in tiles:
         ## daily accumulation, full accumulation, inversion, merge, albedo
 
         albedoDir = gaRootDir + '/Albedo/' + tile
-        m.execute('ga-l3-step.sh', [bbdrRootDir], [albedoDir], parameters=[tile,year,doy,'false',gaRootDir,noSnowPriorDir,snowPriorDir,beamDir])
-        m.execute('ga-l3-step.sh', [bbdrRootDir], [albedoDir], parameters=[tile,year,doy,'true',gaRootDir,snowPriorDir,snowPriorDir,beamDir])
+        m.execute('ga-l3-tile-step.sh', [bbdrRootDir], [albedoDir], parameters=[tile,year,doy,'false',gaRootDir,noSnowPriorDir,snowPriorDir,beamDir])
+        m.execute('ga-l3-tile-step.sh', [bbdrRootDir], [albedoDir], parameters=[tile,year,doy,'true',gaRootDir,snowPriorDir,snowPriorDir,beamDir])
 
 # wait for processing to complete
 m.wait_for_completion()

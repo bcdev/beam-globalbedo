@@ -78,7 +78,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // get BRDF Snow/NoSnow input files...
-        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + tile + File.separator;
+        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
+                File.separator + tile + File.separator;
+        final String brdfSnowDir = brdfDir + "snow";
+        final String brdfNoSnowDir = brdfDir + "nosnow";
+
+        logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
+        logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
 
         Product priorProduct;
         Product brdfMergedProduct = null;
@@ -111,8 +117,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
             Product brdfSnowProduct;
             Product brdfNoSnowProduct;
             try {
-                brdfSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, true);
-                brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfDir, year, doy, false);
+                brdfSnowProduct = IOUtils.getBrdfProduct(brdfSnowDir, year, doy, true);
+                brdfNoSnowProduct = IOUtils.getBrdfProduct(brdfNoSnowDir, year, doy, false);
             } catch (IOException e) {
                 throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
             }

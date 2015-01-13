@@ -697,7 +697,7 @@ public class IOUtils {
         return Math.abs(difference);
     }
 
-    public static Product[] getAlbedo8DayTileProducts(String gaRootDir, final String tile) {
+    public static Product[] getAlbedo8DayTileProducts(String gaRootDir, final String year, final String tile) {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -706,7 +706,7 @@ public class IOUtils {
             }
         };
 
-        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + tile + File.separator;
+        final String albedoDir = gaRootDir + File.separator + "Albedo" + File.separator + year + File.separator + tile + File.separator;
         final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
 
         if (albedoFiles != null && albedoFiles.length > 0) {
@@ -737,7 +737,7 @@ public class IOUtils {
     }
 
     public static Product[] getAlbedo8DayMosaicProducts(String gaRootDir, final int monthIndex,
-                                                        final String mosaicScaling, final String reprojection) {
+                                                        final String year, final String mosaicScaling) {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -761,8 +761,8 @@ public class IOUtils {
             }
         };
 
-        final String albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" + File.separator +
-                mosaicScaling + File.separator;
+        final String albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "albedo" +
+                File.separator + year + File.separator + mosaicScaling + File.separator;
         final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
 
         if (albedoFiles != null && albedoFiles.length > 0) {
