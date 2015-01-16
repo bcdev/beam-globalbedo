@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -344,7 +344,8 @@ public class StatusPostProcessOp extends MerisBasisOp {
     }
 
     private static void setStatusCloudBuffer(int x, int y, Tile statusTile) {
-        if (!isStatusCloud(x, y, statusTile)) {
+        int srcStatus = statusTile.getSampleInt(x, y);
+        if (!(srcStatus == STATUS_CLOUD || srcStatus == STATUS_UCL_CLOUD || srcStatus == STATUS_INVALID)) {
             statusTile.setSample(x, y, STATUS_CLOUD_BUFFER);
         }
     }

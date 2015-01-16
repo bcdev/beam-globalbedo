@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -99,8 +99,7 @@ public class LandcoverLevel2 extends Operator {
         statusPostProcessOp.setSourceProduct("status", sdrProduct);
         statusPostProcessOp.setSourceProduct("ctp", aotProduct);
 
-        Product statusProduct = statusPostProcessOp.getTargetProduct();
-        return statusProduct;
+        return statusPostProcessOp.getTargetProduct();
     }
 
     private void attachFileTileCache(Product product) {
