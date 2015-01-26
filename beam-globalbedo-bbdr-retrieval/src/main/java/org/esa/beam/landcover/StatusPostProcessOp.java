@@ -24,7 +24,6 @@ import org.esa.beam.framework.datamodel.GeoCoding;
 import org.esa.beam.framework.datamodel.GeoPos;
 import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.datamodel.TiePointGeoCoding;
 import org.esa.beam.framework.datamodel.TiePointGrid;
 import org.esa.beam.framework.gpf.GPF;
@@ -35,7 +34,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
 import org.esa.beam.util.RectangleExtender;
@@ -86,7 +84,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
     private boolean useUclCloudForShadow;
 
     @SourceProduct(alias = "l1b")
-    private Product l1bProduct;
+    private Product l1bProduct;  // l1bProduct may have other dimensions than the other products !!!!
     @SourceProduct(alias = "status")
     private Product statusProduct;
     @SourceProduct(alias = "ctp")
@@ -101,7 +99,6 @@ public class StatusPostProcessOp extends MerisBasisOp {
     private GeoCoding geoCoding;
 
     private RectangleExtender rectCalculator;
-    private Band badRadianceBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -121,15 +118,15 @@ public class StatusPostProcessOp extends MerisBasisOp {
         waterParameters.put("resolution", 50);
         waterParameters.put("subSamplingFactorX", 3);
         waterParameters.put("subSamplingFactorY", 3);
-        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
+        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, statusProduct);
         waterFractionBand = waterMaskProduct.getBand("land_water_fraction");
 
-        geoCoding = l1bProduct.getGeoCoding();
+        geoCoding = statusProduct.getGeoCoding();
 
         origStatusBand = statusProduct.getBand(STATUS_BAND);
-        szaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        saaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        altTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
+        szaTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+        saaTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+        altTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int extendedWidth;
         int extendedHeight;
@@ -141,35 +138,10 @@ public class StatusPostProcessOp extends MerisBasisOp {
             extendedHeight = 16;
         }
 
-        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                             l1bProduct.getSceneRasterHeight()),
+        rectCalculator = new RectangleExtender(new Rectangle(statusProduct.getSceneRasterWidth(),
+                                                             statusProduct.getSceneRasterHeight()),
                                                extendedWidth, extendedHeight
         );
-
-        BandMathsOp.BandDescriptor badRadiance = new BandMathsOp.BandDescriptor();
-        badRadiance.name = "bad_radiance";
-        badRadiance.expression = "radiance_1 == 0 or\n" +
-                "radiance_2== 0 or\n" +
-                "radiance_3== 0 or\n" +
-                "radiance_4== 0 or\n" +
-                "radiance_5== 0 or\n" +
-                "radiance_6== 0 or\n" +
-                "radiance_7== 0 or\n" +
-                "radiance_8== 0 or\n" +
-                "radiance_9== 0 or\n" +
-                "radiance_10== 0 or\n" +
-                "radiance_11== 0 or\n" +
-                "radiance_12== 0 or\n" +
-                "radiance_13 == 0 or\n" +
-                "radiance_14 == 0 or\n" +
-                "radiance_15 == 0";
-        badRadiance.type = ProductData.TYPESTRING_INT8;
-
-        BandMathsOp badRadianceOp = new BandMathsOp();
-        badRadianceOp.setParameterDefaultValues();
-        badRadianceOp.setSourceProduct(l1bProduct);
-        badRadianceOp.setTargetBandDescriptors(badRadiance);
-        badRadianceBand = badRadianceOp.getTargetProduct().getBand("bad_radiance");
 
         postProcessedProduct.getBand(STATUS_BAND).setSourceImage(null);
         setTargetProduct(postProcessedProduct);
@@ -182,7 +154,6 @@ public class StatusPostProcessOp extends MerisBasisOp {
         final Rectangle sourceRectangle = rectCalculator.extend(targetRectangle);
 
         final Tile sourceStatusTile = getSourceTile(origStatusBand, sourceRectangle);
-        final Tile badRadianceTile = getSourceTile(badRadianceBand, sourceRectangle);
         Tile szaTile = getSourceTile(szaTPG, sourceRectangle);
         Tile saaTile = getSourceTile(saaTPG, sourceRectangle);
         Tile ctpTile = getSourceTile(ctpBand, sourceRectangle);
@@ -194,12 +165,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
             for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-                    int srcStatus;
-                    if (badRadianceTile.getSampleBoolean(x, y)) {
-                        srcStatus = STATUS_INVALID;
-                    } else {
-                        srcStatus = sourceStatusTile.getSampleInt(x, y);
-                    }
+                    int srcStatus = sourceStatusTile.getSampleInt(x, y);
                     targetStatusTile.setSample(x, y, srcStatus);
 
                     if (gaRefineClassificationNearCoastlines) {
