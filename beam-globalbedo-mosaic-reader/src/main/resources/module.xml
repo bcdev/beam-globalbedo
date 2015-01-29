@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-mosaic-reader</symbolicName>
-    <version>0.1</version>
+    <version>1.3</version>
     <name>GlobAlbedo Mosaic Reader</name>
 
     <description> </description>

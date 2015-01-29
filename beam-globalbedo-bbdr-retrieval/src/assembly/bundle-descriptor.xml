@@ -1,0 +1,21 @@
+<bundleDescriptor>
+    <bundleName>lc-cci-level2</bundleName>
+    <bundleVersion>2.0</bundleVersion>
+
+    <processorDescriptors>
+        <processorDescriptor>
+            <executableName>lc.l2</executableName>
+            <processorName>SDR for MERIS</processorName>
+            <processorVersion>2.0</processorVersion>
+            <defaultParameters></defaultParameters>
+            <outputFormats>BEAM-DIMAP</outputFormats>
+            <descriptionHtml>
+                <![CDATA[<p>SDR as used by the Lc-CCI project.</p>]]>
+            </descriptionHtml>
+            <inputProductTypes>MERIS_L1B</inputProductTypes>
+            <outputProductType>LC_L2</outputProductType>
+            <validMaskExpression>true</validMaskExpression>
+        </processorDescriptor>
+
+    </processorDescriptors>
+</bundleDescriptor>

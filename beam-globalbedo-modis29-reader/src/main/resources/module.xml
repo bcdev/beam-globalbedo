@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-modis29-reader</symbolicName>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.3</version>
     <name>GlobAlbedo Modis29.5 Sea Ice Reader</name>
 
     <description> </description>

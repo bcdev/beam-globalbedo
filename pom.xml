@@ -7,7 +7,7 @@
     <name>Globalbedo</name>
     <groupId>org.esa.beam.globalbedo</groupId>
     <artifactId>beam-globalbedo</artifactId>
-    <version>1.3-SNAPSHOT</version>
+    <version>1.3</version>
 
     <packaging>pom</packaging>
 
@@ -88,7 +88,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
         <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
-        <idepixVersion>2.1.5-SNAPSHOT</idepixVersion>
+        <idepixVersion>2.2</idepixVersion>
     </properties>
 
     <dependencyManagement>
@@ -129,7 +129,7 @@
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-core</artifactId>
-                <version>5.0.3</version>
+                <version>${beamVersion}</version>
             </dependency>
             <dependency>
                 <groupId>org.esa.beam</groupId>

@@ -38,7 +38,11 @@ import javax.media.jai.TileCache;
 import java.awt.image.RenderedImage;
 import java.io.File;
 
-@OperatorMetadata(alias = "lc.l2")
+@OperatorMetadata(alias = "lc.l2",
+        description= "LC-CCI SDR Processor",
+        authors = "Marco Zuehlke, Olaf Danne, Grit Kirches",
+        version = "2.0",
+        copyright = "(C) 2015 by Brockmann Consult")
 public class LandcoverLevel2 extends Operator {
 
     @SourceProduct

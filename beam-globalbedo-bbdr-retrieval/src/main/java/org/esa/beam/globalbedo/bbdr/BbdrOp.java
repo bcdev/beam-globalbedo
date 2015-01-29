@@ -62,8 +62,8 @@ import static java.lang.StrictMath.toRadians;
 @OperatorMetadata(alias = "ga.bbdr",
                   description = "Computes BBDRs and kernel parameters",
                   authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+                  version = "1.1",
+                  copyright = "(C) 2015 by Brockmann Consult")
 public class BbdrOp extends PixelOperator {
 
     private static final int SRC_LAND_MASK = 0;

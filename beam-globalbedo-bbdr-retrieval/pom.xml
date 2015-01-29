@@ -7,7 +7,7 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>1.3-SNAPSHOT</version>
+        <version>1.3</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -39,22 +39,22 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <version>1.3</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-auxdata</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <version>1.3</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-gmted2010</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <version>1.3</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-modis29-reader</artifactId>
-            <version>1.3-SNAPSHOT</version>
+            <version>1.3</version>
         </dependency>
 
         <!-- GlobAlbedo external modules -->
@@ -85,7 +85,7 @@
                 <version>2.2</version>
                 <configuration>
                     <descriptors>
-                        <descriptor>src/main/assembly/calvalus-bundle.xml</descriptor>
+                        <descriptor>src/assembly/calvalus-bundle.xml</descriptor>
                     </descriptors>
                 </configuration>
             </plugin>
