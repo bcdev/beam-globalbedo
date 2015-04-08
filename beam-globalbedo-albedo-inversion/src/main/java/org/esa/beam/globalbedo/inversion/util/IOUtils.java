@@ -792,12 +792,18 @@ public class IOUtils {
 
     }
 
-    public static File[] getTileDirectories(String rootDirString) {
-        final Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+    public static File[] getTileDirectories(String rootDirString, String tileLatIndexString) {
+        Pattern pattern;
+        if (tileLatIndexString != null) {
+            pattern = Pattern.compile("h(\\d\\d)v" + tileLatIndexString);
+        } else {
+            pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
+        }
+        final Pattern finalPattern = pattern;
         FileFilter tileFilter = new FileFilter() {
             @Override
             public boolean accept(File file) {
-                return file.isDirectory() && pattern.matcher(file.getName()).matches();
+                return file.isDirectory() && finalPattern.matcher(file.getName()).matches();
             }
         };
 

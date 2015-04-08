@@ -499,11 +499,19 @@ public class IOTest extends TestCase {
         File h25v06 = new File(rootDir + File.separator + "h25v06");
         if (!h25v06.exists()) h25v06.mkdir();
 
-        File[] tileDirs = IOUtils.getTileDirectories(rootDir);
+        File[] tileDirs = IOUtils.getTileDirectories(rootDir, null);
         assertNotNull(tileDirs);
         assertEquals(2, tileDirs.length);
         assertEquals("h18v04", tileDirs[0].getName());
         assertEquals("h25v06", tileDirs[1].getName());
 
+        tileDirs = IOUtils.getTileDirectories(rootDir, "04");
+        assertNotNull(tileDirs);
+        assertEquals(1, tileDirs.length);
+        assertEquals("h18v04", tileDirs[0].getName());
+
+        tileDirs = IOUtils.getTileDirectories(rootDir, "17");
+        assertNotNull(tileDirs);
+        assertEquals(0, tileDirs.length);
     }
 }

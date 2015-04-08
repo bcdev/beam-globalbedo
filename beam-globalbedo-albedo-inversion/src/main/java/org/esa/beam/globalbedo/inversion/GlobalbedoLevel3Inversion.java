@@ -102,14 +102,14 @@ public class GlobalbedoLevel3Inversion extends Operator {
             // STEP 2: set paths...
             final String bbdrString = computeSeaice ? "BBDR_PST" : "BBDR";
             final String bbdrRootDir = gaRootDir + File.separator + bbdrString;
-            String fullAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+            String fullAccDir = bbdrRootDir + File.separator + "FullAcc"
                     + File.separator + year + File.separator + tile;
 
             // STEP 3: we need to reproject the priors for further use...
             Product reprojectedPriorProduct = null;
             if (usePrior) {
                 try {
-                    Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
+                    Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccDir, tileInfoFilename);
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
                             tileInfoProduct);
                 } catch (IOException e) {
@@ -120,14 +120,14 @@ public class GlobalbedoLevel3Inversion extends Operator {
             // STEP 5: do inversion...
             String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
             if (computeSnow) {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+                fullAccDir = fullAccDir.concat(File.separator + "Snow" + File.separator);
             } else if (computeSeaice) {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
+                fullAccDir = fullAccDir.concat(File.separator);
             } else {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+                fullAccDir = fullAccDir.concat(File.separator + "NoSnow" + File.separator);
             }
 
-            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
+            String fullAccumulatorFilePath = fullAccDir + fullAccumulatorBinaryFilename;
 
             InversionOp inversionOp = new InversionOp();
             inversionOp.setParameterDefaultValues();

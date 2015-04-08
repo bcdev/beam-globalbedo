@@ -89,11 +89,11 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
 
         // STEP 1: get Daily Accumulator input files...
         final String bbdrDir = computeSeaice ? "BBDR_PST" : "BBDR";
-        final String accumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles";
+        final String dailyAccDir = gaRootDir + File.separator + bbdrDir + File.separator + "DailyAcc";
 
         AlbedoInput[] inputProducts = new AlbedoInput[doys.length];
         for (int i = 0; i < doys.length; i++) {
-            inputProducts[i] = IOUtils.getAlbedoInputProduct(accumulatorDir, true, doys[i], year, tile,
+            inputProducts[i] = IOUtils.getAlbedoInputProduct(dailyAccDir, true, doys[i], year, tile,
                                                              wings,
                                                              computeSnow, computeSeaice);
         }
@@ -109,26 +109,27 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                                                                                bandNames.length); // accumulates matrices and extracts mask array
 
         // write accs to files...
-        String fullAccumulatorDir = gaRootDir + File.separator + bbdrDir + File.separator + "AccumulatorFiles"
+        String fullAccDir = gaRootDir + File.separator + bbdrDir + File.separator + "FullAcc"
                 + File.separator + year + File.separator + tile;
         if (computeSnow) {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            fullAccDir = fullAccDir.concat(File.separator + "Snow" + File.separator);
         } else if (computeSeaice) {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
+            fullAccDir = fullAccDir.concat(File.separator);
         } else {
-            fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            fullAccDir = fullAccDir.concat(File.separator + "NoSnow" + File.separator);
         }
         for (FullAccumulator acc : accsToWrite) {
             if (acc != null) {
                 String fullAccumulatorBinaryFilename = "matrices_full_" + acc.getYear() + IOUtils.getDoyString(acc.getDoy()) + ".bin";
-                final File fullAccumulatorBinaryFile = new File(fullAccumulatorDir + fullAccumulatorBinaryFilename);
+                final File fullAccumulatorBinaryFile = new File(fullAccDir + fullAccumulatorBinaryFilename);
                 IOUtils.writeFullAccumulatorToFile(fullAccumulatorBinaryFile, acc.getSumMatrices(), acc.getDaysToTheClosestSample());
             }
         }
 
-        // no target product needed here, define a dummy product
-        Product dummyProduct = new Product("dummy", "dummy", 1, 1);
-        setTargetProduct(dummyProduct);
+        // no target product needed here, define a 'success' dummy product
+        final String productName = "SUCCESS_fullacc_" + year + "_" + startDoy;
+        Product successProduct = new Product(productName, "SUCCESS", 1, 1);
+        setTargetProduct(successProduct);
 
         logger.log(Level.ALL, "Finished full accumulation process for tile: " + tile + ", year: " + year + ", DoYs: " +
                 IOUtils.getDoyString(startDoy) + "-" + IOUtils.getDoyString(endDoy) + " , Snow = " + computeSnow);
