@@ -220,7 +220,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
         } else {
             albedoDirString = gaRootDir + File.separator + "Albedo";
         }
-        final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString);
+        final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString, null);
         for (File albedoFile : albedoFiles) {
             File[] tileFiles;
             if (inputFormat.equals("DIMAP")) {
