@@ -792,13 +792,8 @@ public class IOUtils {
 
     }
 
-    public static File[] getTileDirectories(String rootDirString, String tileLatIndexString) {
-        Pattern pattern;
-        if (tileLatIndexString != null) {
-            pattern = Pattern.compile("h(\\d\\d)v" + tileLatIndexString);
-        } else {
-            pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        }
+    public static File[] getTileDirectories(String rootDirString) {
+        Pattern pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         final Pattern finalPattern = pattern;
         FileFilter tileFilter = new FileFilter() {
             @Override

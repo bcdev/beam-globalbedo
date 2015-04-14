@@ -83,8 +83,8 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
     private static final int TRG_SZA = 5;
 
 
-    @SourceProduct(description = "BRDF merged product")
-    private Product brdfMergedProduct;
+    @SourceProduct(description = "BRDF mosaic product")
+    private Product brdfMosaicProduct;
 
     @Parameter(description = "doy")
     private int doy;
@@ -106,7 +106,7 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         */
 
         final PixelPos pixelPos = new PixelPos(x, y);
-        final GeoPos geoPos = brdfMergedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+        final GeoPos geoPos = brdfMosaicProduct.getGeoCoding().getGeoPos(pixelPos, null);
         final double SZAdeg = AlbedoInversionUtils.computeSza(geoPos, doy);
         final double SZA = SZAdeg * MathUtils.DTOR;
 
@@ -324,7 +324,7 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         parameterBandNames = IOUtils.getInversionParameterBandNames();
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             SRC_PARAMETERS[i] = i;
-            configurator.defineSample(SRC_PARAMETERS[i], parameterBandNames[i], brdfMergedProduct);
+            configurator.defineSample(SRC_PARAMETERS[i], parameterBandNames[i], brdfMosaicProduct);
         }
 
         int index = 0;
@@ -333,37 +333,37 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_UNCERTAINTIES[index] = index;
                 configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES[index],
-                        uncertaintyBandNames[i][j], brdfMergedProduct);
+                        uncertaintyBandNames[i][j], brdfMosaicProduct);
                 index++;
             }
         }
 
         String entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY,
-                entropyBandName, brdfMergedProduct);
+                entropyBandName, brdfMosaicProduct);
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY,
-                relEntropyBandName, brdfMergedProduct);
+                relEntropyBandName, brdfMosaicProduct);
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES,
-                weightedNumberOfSamplesBandName, brdfMergedProduct);
+                weightedNumberOfSamplesBandName, brdfMosaicProduct);
 
         String closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
-        if (brdfMergedProduct.getBand(closestSampleBandName) == null) {
+        if (brdfMosaicProduct.getBand(closestSampleBandName) == null) {
             // the originally processed files before 'netcdf polishing' have this band name
             closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD;
         }
 
         configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_DAYS_CLOSEST_SAMPLE,
-                closestSampleBandName, brdfMergedProduct);
+                closestSampleBandName, brdfMosaicProduct);
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT,
-                goodnessOfFitBandName, brdfMergedProduct);
+                goodnessOfFitBandName, brdfMosaicProduct);
         String proportionNsamplesBandName = AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE,
-                proportionNsamplesBandName, brdfMergedProduct);
+                proportionNsamplesBandName, brdfMosaicProduct);
 
     }
 

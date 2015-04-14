@@ -31,8 +31,7 @@ class MosaicDefinition {
     }
 
     public int calculateIndex(int x, int y) {
-//        return y * numTileX + x;
-        return x;
+        return y * numTileX + x;
     }
 
     public int getNumTiles() {

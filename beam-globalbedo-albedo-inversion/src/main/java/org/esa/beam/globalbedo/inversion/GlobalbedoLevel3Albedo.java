@@ -78,10 +78,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // get BRDF Snow/NoSnow input files...
-        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
-                File.separator + tile + File.separator;
-        final String brdfSnowDir = brdfDir + "snow";
-        final String brdfNoSnowDir = brdfDir + "nosnow";
+//        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
+//                File.separator + tile + File.separator;
+//        final String brdfSnowDir = brdfDir + "snow";
+//        final String brdfNoSnowDir = brdfDir + "nosnow";
+        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator;
+        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile;
+        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile;
 
         logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
         logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");

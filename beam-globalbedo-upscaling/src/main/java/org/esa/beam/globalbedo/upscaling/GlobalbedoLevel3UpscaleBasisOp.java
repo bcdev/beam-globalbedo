@@ -54,10 +54,9 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     @Parameter(defaultValue = "true", description = "If True product will be reprojected")
     boolean reprojectToPlateCarre;
 
-    @Parameter(interval = "[0,17]", defaultValue = "0",
-            description = "SIN tile latitude (v) index")
-    int tileLatIndex;
-
+//    @Parameter(interval = "[0,17]", defaultValue = "0",
+//            description = "SIN tile latitude (v) index")
+//    int tileLatIndex;
 
     Product reprojectedProduct;
     Product upscaledProduct;
@@ -81,13 +80,13 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
         upscaledProduct.setEndTime(reprojectedProduct.getEndTime());
         ProductUtils.copyMetadata(reprojectedProduct, upscaledProduct);
-        upscaledProduct.setPreferredTileSize(tileWidth, tileHeight);
+        upscaledProduct.setPreferredTileSize(tileWidth,tileHeight);
     }
 
     protected void attachUpscaleGeoCoding(Product mosaicProduct,
-                                          double scaling,
-                                          int width, int height,
-                                          boolean plateCarree) {
+                                        double scaling,
+                                        int width, int height,
+                                        boolean plateCarree) {
         if (plateCarree) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
             final double pixelSizeX = modelTransform.getScaleX();
@@ -107,12 +106,9 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
             try {
                 final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
                 final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
-                final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y -
-                        pixelSizeY * height * tileLatIndex;
                 CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
                                                           MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X,
-//                                                          MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y,
-                                                          northing,
+                                                          MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y,
                                                           pixelSizeX,
                                                           pixelSizeY);
                 upscaledProduct.setGeoCoding(geoCoding);
@@ -143,7 +139,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         Rectangle targetRectangle = target.getRectangle();
 
         final PixelPos pixelPos = new PixelPos((int) (targetRectangle.x * scaling),
-                                               (int) ((targetRectangle.y + targetRectangle.height) * scaling));
+                                               (int)((targetRectangle.y + targetRectangle.height) * scaling));
         final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
 
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
@@ -175,8 +171,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         Band[] srcBands = reprojectedProduct.getBands();
         Map<String, Tile> srcTiles = new HashMap<String, Tile>(srcBands.length);
         for (Band band : srcBands) {
-            final Tile sourceTile = getSourceTile(band, srcRect);
-            srcTiles.put(band.getName(), sourceTile);
+            srcTiles.put(band.getName(), getSourceTile(band, srcRect));
         }
         return srcTiles;
     }

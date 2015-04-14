@@ -34,14 +34,6 @@ public class GlobAlbedoMosaicProductReaderTest {
     public void testGetMosaicFileRegex() {
         String dimRegex = mosaicGrid.getMosaicFileRegex("GlobAlbedo.2005129.h18v04.dim");
         assertEquals("GlobAlbedo.2005129.h\\d\\dv\\d\\d.dim", dimRegex);
-
-        mosaicGrid.setTileLatIndexString("04");
-        dimRegex = mosaicGrid.getMosaicFileRegex("GlobAlbedo.2005129.h18v04.dim");
-        assertEquals("GlobAlbedo.2005129.h\\d\\dv04.dim", dimRegex);
-
-        mosaicGrid.setTileLatIndexString(null);
-        String enviRegex = mosaicGrid.getMosaicFileRegex("GlobAlbedo.2005129.h18v04_ENVI.bin");
-        assertEquals("GlobAlbedo.2005129.h\\d\\dv\\d\\d_ENVI.bin", enviRegex);
     }
 
     @Test
@@ -52,7 +44,7 @@ public class GlobAlbedoMosaicProductReaderTest {
         assertSame(mosaicFile, tile.getFile());
         assertEquals(18, tile.getTileX());
         assertEquals(4, tile.getTileY());
-        assertEquals(18, tile.getIndex());
+        assertEquals(162, tile.getIndex());
     }
 
     @Test

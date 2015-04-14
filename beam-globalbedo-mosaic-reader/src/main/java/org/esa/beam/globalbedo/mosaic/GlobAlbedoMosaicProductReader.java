@@ -54,13 +54,11 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private boolean mosaicAdam;
     private boolean mosaicAdamPriors;
     private int adamPriorStage;
-    private String tileLatIndexString;
 
     protected GlobAlbedoMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         this.pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-//        this.mosaicDefinition = new MosaicDefinition(36, 18, 1200);
-        this.mosaicDefinition = new MosaicDefinition(36, 1, 1200);
+        this.mosaicDefinition = new MosaicDefinition(36, 18, 1200);
     }
 
     @Override
@@ -96,9 +94,9 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
 
         CrsGeoCoding crsGeoCoding;
         if (mosaicAdam || mosaicAdamPriors) {
-            crsGeoCoding = getMosaicGeocoding(10, tileLatIndexString);
+            crsGeoCoding = getMosaicGeocoding(10);
         } else {
-            crsGeoCoding = getMosaicGeocoding(1, tileLatIndexString);
+            crsGeoCoding = getMosaicGeocoding(1);
         }
         product.setGeoCoding(crsGeoCoding);
 
@@ -263,11 +261,6 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         this.adamPriorStage = adamPriorStage;
     }
 
-    public void setTileLatIndexString(String tileLatIndexString) {
-        this.tileLatIndexString = tileLatIndexString;
-    }
-
-
     String getProductName(File file) {
         String fileName = file.getName();
         Matcher matcher = pattern.matcher(fileName);
@@ -286,25 +279,17 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     }
 
     String getMosaicFileRegex(String filename) {
-//        return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
-        if (tileLatIndexString != null) {
-            return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv" + tileLatIndexString);
-        } else {
-            return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
-        }
+        return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
     }
 
-    private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor, String tileLatIndexString) {
+    private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
         final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
-//        final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
+        final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
         final String crsString = MosaicConstants.MODIS_SIN_PROJECTION_CRS_STRING;
         final int imageWidth = MosaicConstants.MODIS_TILE_WIDTH * 36 / downscalingFactor;
-//        final int imageHeight = MosaicConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
-        final int imageHeight = MosaicConstants.MODIS_TILE_HEIGHT  / downscalingFactor;
+        final int imageHeight = MosaicConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
         final double pixelSizeX = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
         final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
-        final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y -
-                pixelSizeY * imageHeight * Integer.parseInt(tileLatIndexString);
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
             return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
