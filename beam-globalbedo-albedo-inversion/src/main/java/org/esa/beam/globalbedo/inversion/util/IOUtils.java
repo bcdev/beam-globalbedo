@@ -833,7 +833,8 @@ public class IOUtils {
     private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
         List<String> brdfFileList = new ArrayList<String>();
         for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && s.endsWith(".dim")) || (snow && s.contains(".Snow") && s.endsWith(".dim"))) {
+            if ((!snow && s.contains(".NoSnow") && (s.endsWith(".dim") || s.endsWith(".nc"))) ||
+                    (snow && s.contains(".Snow") && (s.endsWith(".dim") || s.endsWith(".nc")))) {
                 brdfFileList.add(s);
             }
         }
@@ -844,7 +845,7 @@ public class IOUtils {
     private static List<String> getBrdfSeaiceProductNames(String[] brdfFiles) {
         List<String> brdfFileList = new ArrayList<String>();
         for (String s : brdfFiles) {
-            if (s.contains(".Seaice") && s.endsWith(".dim")) {
+            if (s.contains(".Seaice") && (s.endsWith(".dim") || s.endsWith(".nc"))) {
                 brdfFileList.add(s);
             }
         }
