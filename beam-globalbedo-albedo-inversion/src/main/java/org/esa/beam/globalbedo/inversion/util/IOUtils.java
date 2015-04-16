@@ -236,6 +236,7 @@ public class IOUtils {
             for (String s : priorFiles) {
                 // CEMS: kernel.001.006.h18v04.Snow.1km.nc
                 if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr")) ||
+                        (computeSnow && s.endsWith(".Snow.nc")) || (!computeSnow && s.endsWith(".NoSnow.nc")) ||
                         (computeSnow && s.endsWith(".Snow.1km.nc")) || (!computeSnow && s.endsWith(".NoSnow.1km.nc"))) {
                     snowFilteredPriorList.add(s);
                 }

@@ -134,7 +134,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        double maskRelEntropy = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble());
         maskRelEntropy = Math.exp(maskRelEntropy / 9.0);
         if (maskRelEntropy > 0.0) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
@@ -176,7 +177,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         final int numParams = AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
         double[] fParams = new double[numParams];
         for (int i = 0; i < numParams; i++) {
-            fParams[i] = sourceSamples[i].getDouble();
+            fParams[i] = AlbedoInversionUtils.checkSummandForNan(sourceSamples[i].getDouble());
         }
 
         double[] DHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -224,16 +225,21 @@ public class BrdfToAlbedoOp extends PixelOperator {
             }
         }
 
-        double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        double relEntropy = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble());
         if (!Double.isNaN(relEntropy)) {
             relEntropy = Math.exp(relEntropy / 9.0);
         }
 
         // write results to target product...
-        final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
-        final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
-        final double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
-        final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+        final double weightedNumberOfSamples = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble());
+        final double goodnessOfFit = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble());
+        final double snowFraction = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble());
+        final double entropy = AlbedoInversionUtils.checkSummandForNan(
+                sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble());
         final double maskEntropy = (entropy != 0.0) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
                 BHR, alphaBHR, sigmaBHR,
@@ -524,7 +530,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
         int index = 0;
         final int n = AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
         for (int i = 0; i < SRC_UNCERTAINTIES.length; i++) {
-            final double sampleUncertainty = sourceSamples[SRC_PARAMETERS.length + index].getDouble();
+            final double sampleUncertainty = AlbedoInversionUtils.checkSummandForNan(
+                    sourceSamples[SRC_PARAMETERS.length + index].getDouble());
             cTmp[i] = sampleUncertainty;
             index++;
         }
