@@ -256,9 +256,9 @@ public class IOUtils {
         AlbedoInput inputProduct = null;
 
         final List<String> albedoInputProductList = getAlbedoInputProductFileNames(accumulatorRootDir, useBinaryFiles, doy, year,
-                tile,
-                wings,
-                computeSnow, computeSeaice);
+                                                                                   tile,
+                                                                                   wings,
+                                                                                   computeSnow, computeSeaice);
 
         if (albedoInputProductList.size() > 0) {
             inputProduct = new AlbedoInput();
@@ -267,10 +267,10 @@ public class IOUtils {
 
             if (useBinaryFiles) {
                 final List<String> albedoInputProductBinaryFileList = getAlbedoInputProductFileNames(accumulatorRootDir,
-                        true, doy, year, tile,
-                        wings,
-                        computeSnow,
-                        computeSeaice);
+                                                                                                     true, doy, year, tile,
+                                                                                                     wings,
+                                                                                                     computeSnow,
+                                                                                                     computeSeaice);
                 String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
                 int binaryProductIndex = 0;
                 for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -299,10 +299,10 @@ public class IOUtils {
         return inputProduct;
     }
 
-    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
-                                                       int year, String tile,
-                                                       int wings,
-                                                       boolean computeSnow, boolean computeSeaice) {
+    static List<String> getAlbedoInputProductFileNamesOld(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
+                                                          int year, String tile,
+                                                          int wings,
+                                                          boolean computeSnow, boolean computeSeaice) {
         List<String> albedoInputProductList = new ArrayList<String>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
@@ -390,6 +390,106 @@ public class IOUtils {
         Collections.sort(albedoInputProductList);
         return albedoInputProductList;
     }
+
+    static List<String> getAlbedoInputProductFileNames(String accumulatorRootDir, final boolean isBinaryFiles, int doy,
+                                                       final int year, String tile,
+                                                       int wings,
+                                                       boolean computeSnow, boolean computeSeaice) {
+        List<String> albedoInputProductList = new ArrayList<String>();
+
+        final FilenameFilter yearFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // accept only years between 1995 and 2010 (GA period), but allow 2011 wings!
+                // we assume that wings is max. 540, so they may lap just into previous or next year
+                int startYear = 1995;
+                for (int i = 0; i <= 16; i++) {
+                    String thisYear = (new Integer(startYear + i)).toString();
+//                    if (name.equals(thisYear)) {
+                    if (name.equals(thisYear) && Math.abs((startYear + i) - year) <= 1) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
+
+        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // accept only filenames like 'matrices_2005123.dim', 'matrices_2005123.bin'...
+                if (isBinaryFiles) {
+                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
+                } else {
+                    return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("dim"));
+                }
+            }
+        };
+
+        final String[] allYears = (new File(accumulatorRootDir)).list(yearFilter);
+
+        doy = doy + 8; // 'MODIS day'
+
+        // fill the name list year by year...
+        for (String thisYear : allYears) {
+            String thisYearsRootDir;
+            if (computeSnow) {
+                thisYearsRootDir = accumulatorRootDir.concat(
+                        File.separator + thisYear + File.separator + tile + File.separator + "Snow");
+            } else if (computeSeaice) {
+                thisYearsRootDir = accumulatorRootDir.concat(
+                        File.separator + thisYear + File.separator + tile);
+            } else {
+                thisYearsRootDir = accumulatorRootDir.concat(
+                        File.separator + thisYear + File.separator + tile + File.separator + "NoSnow");
+            }
+            final String[] thisYearAlbedoInputFiles = (new File(thisYearsRootDir)).list(inputProductNameFilter);
+
+            if (thisYearAlbedoInputFiles != null && thisYearAlbedoInputFiles.length > 0) {
+                for (String s : thisYearAlbedoInputFiles) {
+                    if (s.startsWith("matrices_" + thisYear)) {
+                        if (!albedoInputProductList.contains(s)) {
+                            // check the 'wings' condition...
+                            try {
+                                final int dayOfYear = Integer.parseInt(s.substring(13, 16));
+                                //    # Left wing
+                                if (365 + (doy - wings) <= 366) {
+                                    if (!albedoInputProductList.contains(s)) {
+                                        int firstLeftDoy = Math.min(365, Math.max(1, 366 - (wings - 366)));
+                                        if (dayOfYear >= firstLeftDoy &&
+                                                dayOfYear >= 366 + (doy - wings) &&
+                                                Integer.parseInt(thisYear) < year) {
+                                            albedoInputProductList.add(s);
+                                        }
+                                    }
+                                }
+                                //    # Center
+                                if ((dayOfYear < doy + wings) && (dayOfYear >= doy - wings) &&
+                                        (Integer.parseInt(thisYear) == year)) {
+                                    albedoInputProductList.add(s);
+                                }
+                                //    # Right wing
+                                if ((doy + wings) - 365 > 0) {
+                                    if (!albedoInputProductList.contains(s)) {
+                                        int lastRightDoy = Math.max(1, Math.min(365, wings - 366));
+                                        if (dayOfYear <= lastRightDoy &&
+                                                dayOfYear <= (doy + wings - 365) &&
+                                                Integer.parseInt(thisYear) > year) {
+                                            albedoInputProductList.add(s);
+                                        }
+                                    }
+                                }
+                            } catch (NumberFormatException e) {
+                                BeamLogManager.getSystemLogger().log(Level.ALL, "Cannot determine wings for accumulator " + s + " - skipping.");
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        Collections.sort(albedoInputProductList);
+        return albedoInputProductList;
+    }
+
 
     static final Map<Integer, String> waveBandsOffsetMap = new HashMap<Integer, String>();
 
@@ -677,11 +777,11 @@ public class IOUtils {
             if (seaiceLandmaskProduct != null) {
                 final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
                 ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                        "landmask", targetProduct, true);
+                                      "landmask", targetProduct, true);
             }
         } catch (IOException e) {
             System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                    e.getMessage());
+                                       e.getMessage());
         }
     }
 
@@ -725,7 +825,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
@@ -781,7 +881,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
