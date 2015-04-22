@@ -453,7 +453,7 @@ public class IOUtils {
                                 //    # Left wing
                                 if (365 + (doy - wings) <= 366) {
                                     if (!albedoInputProductList.contains(s)) {
-                                        int firstLeftDoy = Math.min(365, Math.max(1, 366 - (wings - 366)));
+                                        int firstLeftDoy = Math.min(365, Math.max(1, 366 - (wings - 366)/2));
                                         if (dayOfYear >= firstLeftDoy &&
                                                 dayOfYear >= 366 + (doy - wings) &&
                                                 Integer.parseInt(thisYear) < year) {
@@ -469,7 +469,7 @@ public class IOUtils {
                                 //    # Right wing
                                 if ((doy + wings) - 365 > 0) {
                                     if (!albedoInputProductList.contains(s)) {
-                                        int lastRightDoy = Math.max(1, Math.min(365, wings - 366));
+                                        int lastRightDoy = Math.max(1, Math.min(365, (wings - 366)/2));
                                         if (dayOfYear <= lastRightDoy &&
                                                 dayOfYear <= (doy + wings - 365) &&
                                                 Integer.parseInt(thisYear) > year) {
