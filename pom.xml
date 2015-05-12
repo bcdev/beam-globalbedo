@@ -74,6 +74,7 @@
         <module>beam-globalbedo-bootstrap</module>
         <module>beam-globalbedo-bbdr-retrieval</module>
         <module>beam-globalbedo-albedo-inversion</module>
+        <module>beam-globalbedo-avhrr-ltdr-reader</module>
         <module>beam-globalbedo-mosaic-reader</module>
         <module>beam-globalbedo-meteosat-reader</module>
 		<module>beam-globalbedo-modis29-reader</module>
