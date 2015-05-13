@@ -1,19 +1,3 @@
-/*
- * Copyright (C) 2012 Brockmann Consult GmbH (info@brockmann-consult.de)
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU General Public License as published by the Free
- * Software Foundation; either version 3 of the License, or (at your option)
- * any later version.
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program; if not, see http://www.gnu.org/licenses/
- */
-
 package org.esa.beam.dataio.avhrr;
 
 import com.bc.ceres.core.ProgressMonitor;
@@ -22,26 +6,29 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.dataio.ProductReaderPlugIn;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.ImageUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 import javax.swing.tree.TreeNode;
 import java.awt.image.RenderedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.List;
 
 /**
- * Product reader responsible for reading MODIS MOD35 cloud mask HDF product.
+ * Product reader responsible for reading AVHRR LTDR HDF product.
  *
  * @author Olaf Danne
  */
 public class AvhrrLtdrProductReader extends AbstractProductReader {
 
     private String inputFilePath;
-    private String filename;
 
     private static final int productWidth = 7200;
     private static final int productHeight = 3600;
+    private GeoCoding geoCoding;
 
     public AvhrrLtdrProductReader(ProductReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
@@ -51,7 +38,6 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
     protected Product readProductNodesImpl() throws IOException {
         final File inFile = getInputFile();
         inputFilePath = inFile.getPath();
-        filename = inFile.getName();
 
         Product ltdrProduct = null;
 
@@ -73,15 +59,6 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
             e.printStackTrace();
         }
 
-        // 7. add geocoding to final product (always global, 7200x3600)     todo
-//        GeoCoding gc = new CrsGeoCoding()
-
-        // 8. extract properly the cloud and quality info from the single bits of the     todo if needed
-        // Cloud_Mask and Quality_Assurance bytes. Also, create corresponding bit masks for Visat
-//        Mod35BitMaskUtils.attachPixelClassificationFlagBand(finalProduct);
-//        Mod35BitMaskUtils.attachQualityAssuranceFlagBand(finalProduct);
-
-        // return the final product
         return ltdrProduct;
     }
 
@@ -90,44 +67,78 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
         Product product = null;
         if (inputFileRootNode != null) {
             product = new Product(inputFile.getName(), "AVHRR LTDR", productWidth, productHeight);
+            product.setDescription("AVHRR LTDR land surface product");
+            product.setFileLocation(inputFile);
+
+            // add geocoding to product (always global lat/lon, 7200x3600 pixel)
+            final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+            final double easting = -180.0;
+            final double northing = 90.0;
+            final double pixelSizeX = 0.05;
+            final double pixelSizeY = 0.05;
+            geoCoding = new CrsGeoCoding(crs, productWidth, productHeight, easting, northing, pixelSizeX, pixelSizeY);
+            product.setGeoCoding(geoCoding);
+
+            product.setAutoGrouping("TOA_REFL");
 
             final TreeNode gridNode = inputFileRootNode.getChildAt(0);        // 'Grid'
 
             final Group rootGroup = (Group) ((DefaultMutableTreeNode) inputFileRootNode).getUserObject();
             final java.util.List rootMetadata = rootGroup.getMetadata();
             addLtdrMetadataElement(rootMetadata, product, "MPH");
-            product.setDescription("AVHRR LTDR land surface product");
-            product.setFileLocation(inputFile);
+
+            // add start/end time to product:
+            addStartStopTimes(product, rootMetadata);
 
             final TreeNode dataFieldsNode = gridNode.getChildAt(0);        // 'Data Fields'
 
             for (int i = 0; i < dataFieldsNode.getChildCount(); i++) {
                 // we have: 'TOA_REFL_CH1', 'TOA_REFL_CH2', 'SZEN', 'VZEN', 'RELAZ', 'TIME', 'QA'
+                // but so far we only need  'TOA_REFL_CH1', 'TOA_REFL_CH2', 'QA'
+                // --> only read those for performance reasons
                 final TreeNode dataFieldsChildNode = dataFieldsNode.getChildAt(i);
                 final String dataFieldsChildNodeName = dataFieldsChildNode.toString();
 
                 final Group dataFieldsChildGroup = (Group) ((DefaultMutableTreeNode) dataFieldsNode).getUserObject();
-                if (dataFieldsChildNodeName.startsWith("TOA_REFL")) {
-                    //  'TOA_REFL_CH1', 'TOA_REFL_CH2'
-                    final HObject dataFieldsChildGroupMember = dataFieldsChildGroup.getMemberList().get(i);
-                    final List childMetadata = dataFieldsChildGroupMember.getMetadata();
-                    final Band toaBand = createTargetBand(product,
+                final HObject dataFieldsChildGroupMember = dataFieldsChildGroup.getMemberList().get(i);
+                final List childMetadata = dataFieldsChildGroupMember.getMetadata();
+                Dataset dataset = (Dataset) dataFieldsChildGroupMember;
+                if (dataFieldsChildNodeName.contains("REFL_CH") || dataFieldsChildNodeName.equals("QA")) {
+                    final Band ltdrBand = createTargetBand(product,
                                                           childMetadata,
                                                           dataFieldsChildNodeName,
                                                           ProductData.TYPE_INT16);
 
-
-                    Dataset dataset = (Dataset) dataFieldsChildGroupMember;
                     final ProductData productData = ProductData.createInstance(new short[productWidth * productHeight]);
                     productData.setElems(dataset.read());
 
-                    final RenderedImage radiometryImage = ImageUtils.createRenderedImage(productWidth,
+                    final RenderedImage ltdrImage = ImageUtils.createRenderedImage(productWidth,
                                                                                          productHeight,
                                                                                          productData);
-                    toaBand.setSourceImage(radiometryImage);
-                } else if (dataFieldsChildNodeName.equals("QA")) {
-                    // quality flag
-                    // todo: check if needed
+                    ltdrBand.setSourceImage(ltdrImage);
+
+                    if (dataFieldsChildNodeName.contains("REFL_CH")) {
+                        if (dataFieldsChildNodeName.startsWith("TOA_REFL_CH")) {
+                            ltdrBand.setDescription("AVHRR TOA reflectance at " +
+                                                            AvhrrLtdrConstants.WAVELENGTHS[i] + " nm");
+                        } else {
+                            ltdrBand.setDescription("AVHRR SURFACE reflectance at " +
+                                                            AvhrrLtdrConstants.WAVELENGTHS[i] + " nm");
+                        }
+                        ltdrBand.setUnit("dl");
+                        ltdrBand.setSpectralBandIndex(i);
+                        ltdrBand.setSpectralWavelength(AvhrrLtdrConstants.WAVELENGTHS[i]);
+                        ltdrBand.setSpectralBandwidth(AvhrrLtdrConstants.BANDWIDTHS[i]);
+                    } else {
+                        ltdrBand.setName(AvhrrLtdrConstants.QA_FLAG_BAND_NAME);
+                        ltdrBand.setDescription("AVHRR LTDR quality flag band");
+                        ltdrBand.setUnit("dl");
+                        FlagCoding ltdrQaFlagCoding = new FlagCoding(AvhrrLtdrConstants.QA_FLAG_BAND_NAME);
+                        AvhrrLtdrUtils.addQualityFlags(ltdrQaFlagCoding);
+                        AvhrrLtdrUtils.addQualityMasks(product);
+                        product.getFlagCodingGroup().add(ltdrQaFlagCoding);
+                        ltdrBand.setSampleCoding(ltdrQaFlagCoding);
+                    }
                 }
             }
         }
@@ -142,10 +153,15 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
         final Band band = product.addBand(bandName, dataType);
         band.setScalingFactor(scaleFactor);
         band.setScalingOffset(-1.0 * scaleOffset / scaleFactor);
-        band.setNoDataValue(-1.0*scaleFactor);         // todo!
-        band.setNoDataValueUsed(true);
 
         return band;
+    }
+
+    private void addStartStopTimes(Product product, List timeMetadata) throws ParseException {
+        product.setStartTime(ProductData.UTC.parse(AvhrrLtdrUtils.getStartEndTimeFromAttributes(timeMetadata)[0],
+                                                   AvhrrLtdrConstants.AVHRR_LTDR_DATE_FORMAT_PATTERN));
+        product.setEndTime(ProductData.UTC.parse(AvhrrLtdrUtils.getStartEndTimeFromAttributes(timeMetadata)[1],
+                                                 AvhrrLtdrConstants.AVHRR_LTDR_DATE_FORMAT_PATTERN));
     }
 
 
@@ -167,8 +183,8 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
     }
 
     private void addLtdrMetadataElement(List<Attribute> rootMetadata,
-                                             final Product product,
-                                             String metadataElementName) {
+                                        final Product product,
+                                        String metadataElementName) {
         final MetadataElement metadataElement = new MetadataElement(metadataElementName);
 
         for (Attribute attribute : rootMetadata) {

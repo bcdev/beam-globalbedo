@@ -1,11 +1,11 @@
 
 <module>
     <manifestVersion>1.0.0</manifestVersion>
-    <symbolicName>beam-globalbedo-modis35-reader</symbolicName>
+    <symbolicName>beam-globalbedo-avhrr-ltdr-reader</symbolicName>
     <version>1.3-SNAPSHOT</version>
-    <name>GlobAlbedo Modis35 Cloud Mask Reader</name>
+    <name>GlobAlbedo AVHRR LTDR Reader</name>
     <packaging>dir</packaging>
-    <description>Specific reader for MODIS MOD35 Cloud Mask product.
+    <description>Specific reader for AVHRR LTDR product.
     </description>
 
     <vendor>Brockmann Consult GmbH</vendor>
