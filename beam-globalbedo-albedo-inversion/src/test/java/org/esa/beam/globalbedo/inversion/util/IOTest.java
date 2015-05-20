@@ -213,25 +213,25 @@ public class IOTest extends TestCase {
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
         accName = "matrices_2005169.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
-//        accName = "matrices_2004352.bin"; // the accumulator product name
-//        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));       // todo: check!!!
-//        accName = "matrices_2006090.bin"; // the accumulator product name
-//        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2004364.bin"; // the accumulator product name
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));       // todo: check!!!
+        accName = "matrices_2006002.bin"; // the accumulator product name
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
 
         processDoy = 1; // the reference doy to process
         accName = "matrices_2005088.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
-        accName = "matrices_2004276.bin"; // the accumulator product name
+        accName = "matrices_2004277.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
-        accName = "matrices_2004275.bin"; // the accumulator product name
+        accName = "matrices_2004276.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
 
         processDoy = 361; // the reference doy to process
         accName = "matrices_2005288.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
-        accName = "matrices_2006090.bin"; // the accumulator product name
+        accName = "matrices_2006086.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
-        accName = "matrices_2006091.bin"; // the accumulator product name
+        accName = "matrices_2006087.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
     }
 

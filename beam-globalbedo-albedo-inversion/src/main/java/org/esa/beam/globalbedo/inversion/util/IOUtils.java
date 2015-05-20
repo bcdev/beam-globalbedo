@@ -354,7 +354,7 @@ public class IOUtils {
             //    # Left wing
             if (365 + (processDoy - wings) <= 366) {
                 int firstLeftDoy = Math.min(365, Math.max(1, 366 - wings/2));
-                if (accDoy >= firstLeftDoy && accDoy >= 366 + (processDoy - wings) && accYear < processYear) {
+                if (accDoy >= firstLeftDoy && accDoy >= 366 + (processDoy - wings/2) && accYear < processYear) {
                     isInWingsInterval = true;
                 }
             }
@@ -368,8 +368,7 @@ public class IOUtils {
             if (!isInWingsInterval) {
                 if ((processDoy + wings) - 365 > 0) {
                     int lastRightDoy = Math.max(1, Math.min(365, wings/2));
-                    if (accDoy <= lastRightDoy &&
-                            accDoy <= (processDoy + wings - 365) && accYear > processYear) {
+                    if (accDoy <= lastRightDoy && accDoy <= (processDoy + wings/2 - 365) && accYear > processYear) {
                         isInWingsInterval = true;
                     }
                 }
