@@ -204,6 +204,37 @@ public class IOTest extends TestCase {
         assertEquals(-1, IOUtils.getDoyFromAlbedoProductName(productName));
     }
 
+    public void testWingsCoverage() {
+        int wings = 180;
+        int processYear = 2005; // the reference year to process
+
+        int processDoy = 121; // the reference doy to process
+        String accName = "matrices_2005100.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2005169.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+//        accName = "matrices_2004352.bin"; // the accumulator product name
+//        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));       // todo: check!!!
+//        accName = "matrices_2006090.bin"; // the accumulator product name
+//        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+
+        processDoy = 1; // the reference doy to process
+        accName = "matrices_2005088.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2004276.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2004275.bin"; // the accumulator product name
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+
+        processDoy = 361; // the reference doy to process
+        accName = "matrices_2005288.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2006090.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        accName = "matrices_2006091.bin"; // the accumulator product name
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+    }
+
     public void testGetDoyString() throws Exception {
         int doy = 123;
         assertEquals("123", IOUtils.getDoyString(doy));

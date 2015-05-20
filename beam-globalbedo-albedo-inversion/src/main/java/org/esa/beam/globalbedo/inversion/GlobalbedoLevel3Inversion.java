@@ -54,9 +54,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "001", description = "DoY")
     private int doy;
 
-    @Parameter(defaultValue = "540", description = "Wings")   // 540 # One year plus 3 months wings
-    private int wings;
-
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
@@ -83,9 +80,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
         Product priorProduct = null;
         if (usePrior) {
             // STEP 1: get Prior input file...
-            final String priorDir = priorRootDir + File.separator + tile;
+            String priorDir = priorRootDir + File.separator + tile;
             if (priorRootDirSuffix != null) {
-                priorDir.concat(File.separator + priorRootDirSuffix);
+                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
 
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");

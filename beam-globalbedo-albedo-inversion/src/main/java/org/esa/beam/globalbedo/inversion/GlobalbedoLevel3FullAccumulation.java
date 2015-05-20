@@ -54,7 +54,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "129", description = "End Day of Year", interval = "[1,366]")
     private int endDoy;
 
-    @Parameter(defaultValue = "540", description = "Wings")
+    @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
