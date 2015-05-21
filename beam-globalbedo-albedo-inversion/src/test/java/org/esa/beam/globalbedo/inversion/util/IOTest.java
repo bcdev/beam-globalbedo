@@ -214,7 +214,7 @@ public class IOTest extends TestCase {
         accName = "matrices_2005169.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
         accName = "matrices_2004364.bin"; // the accumulator product name
-        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));       // todo: check!!!
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
         accName = "matrices_2006002.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
 
