@@ -245,8 +245,8 @@ public class AlbedoInversionUtils {
                 bData[i * width + j] = 1.0f;
             }
         }
-        b.setDataElems(bData);
-
+//        b.setDataElems(bData); // deprecated
+        b.setRasterData(ProductData.createInstance(bData));
         product.setPreferredTileSize(product.getSceneRasterWidth(), 45);
 
         return product;

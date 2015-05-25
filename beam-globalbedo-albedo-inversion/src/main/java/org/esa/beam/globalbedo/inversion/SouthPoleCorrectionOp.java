@@ -40,7 +40,9 @@ public class SouthPoleCorrectionOp extends Operator {
 
         Band[] bands = sourceProduct.getBands();
         for (Band band : bands) {
-            targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+            if (!targetProduct.containsBand(band.getName())) {
+                targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+            }
         }
 
         setTargetProduct(targetProduct);
