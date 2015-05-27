@@ -155,7 +155,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 //                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
 //                                                                            year, doy, doyOffset);
                         bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
-                                                                            year, doy, doyOffset);
+                                                                            year, doy, doy + doyOffset + singleDay);
                         for (Product bbdrProduct : bbdrProducts) {
                             logger.log(Level.ALL, "bbdrProduct:  " + bbdrProduct.getName());
                         }

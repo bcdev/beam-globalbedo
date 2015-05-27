@@ -82,7 +82,7 @@ public class Inversion2Op extends PixelOperator {
     private int doy;
 
     @Parameter(description = "Full accumulator object")
-    private Accumulator fullAccumulator;
+    private Accumulator[][] fullAccumulator;
 
     @Parameter(defaultValue = "", description = "The day distance from DoY to the closest sample")
     private float[][] daysToTheClosestSampleArray;
@@ -208,7 +208,7 @@ public class Inversion2Op extends PixelOperator {
 
         double maskAcc = 0.0;
         if (fullAccumulator != null) {
-            maskAcc = fullAccumulator.getMask();
+            maskAcc = fullAccumulator[x][y].getMask();
         }
 
         double maskPrior = 1.0;
@@ -221,9 +221,9 @@ public class Inversion2Op extends PixelOperator {
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
         if (fullAccumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
-            final Matrix mAcc = fullAccumulator.getM();
-            Matrix vAcc = fullAccumulator.getV();
-            final Matrix eAcc = fullAccumulator.getE();
+            final Matrix mAcc = fullAccumulator[x][y].getM();
+            Matrix vAcc = fullAccumulator[x][y].getV();
+            final Matrix eAcc = fullAccumulator[x][y].getE();
 
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {

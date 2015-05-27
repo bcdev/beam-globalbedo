@@ -83,13 +83,13 @@ public class IOUtils {
     public static Product[] getAccumulationInputProducts(String bbdrRootDir,
                                                          String[] sensors,
                                                          String tile,
-                                                         int year, int doy, int doyOffset) throws IOException {
+                                                         int year, int doy, int dayOffset) throws IOException {
         int referenceYear = year;
-        int referenceDoy = doy + doyOffset;
-        if (doyOffset < 0 && Math.abs(doyOffset) > doy) {
+        int referenceDoy = doy + dayOffset;
+        if (dayOffset < 0 && Math.abs(dayOffset) > doy) {
             referenceYear -= 1;
             referenceDoy += 365;
-        } else if (doyOffset > 0 && doyOffset + doy > 365) {
+        } else if (dayOffset > 0 && dayOffset + doy > 365) {
             referenceYear += 1;
             referenceDoy -= 365;
         }
