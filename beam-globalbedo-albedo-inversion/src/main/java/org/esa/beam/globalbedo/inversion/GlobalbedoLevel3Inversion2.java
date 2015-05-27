@@ -43,7 +43,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
     @Parameter(defaultValue = "", description = "Reference DoY", interval = "[1,366]")
     private int doy;
 
-    @Parameter(defaultValue = "180", description = "Wings value")
+    @Parameter(defaultValue = "240", description = "Wings value")
     private int wings;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
@@ -74,7 +74,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 
 
     Accumulator[][] fullAccumulator;
-    float[][] daysToTheClosestSample;
+    float[][] daysToTheClosestSampleArray;
     private Logger logger;
 
     @Override
@@ -98,7 +98,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                                                    " - cannot proceed...: " + e.getMessage());
+                        " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -112,28 +112,25 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             if (usePrior) {
                 try {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                                                                                 null);
+                            null);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                 }
             }
 
-
-            // set constants
-            final int nIntervals = 2 * wings / AlbedoInversionConstants.EIGHT_DAYS;
-            final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
-            final int numBands = bandNames.length;
-
             fullAccumulator = new Accumulator[AlbedoInversionConstants.MODIS_TILE_WIDTH]
                     [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
-            daysToTheClosestSample = new float[AlbedoInversionConstants.MODIS_TILE_WIDTH]
+            daysToTheClosestSampleArray = new float[AlbedoInversionConstants.MODIS_TILE_WIDTH]
                     [AlbedoInversionConstants.MODIS_TILE_WIDTH];
             for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
                 for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
                     fullAccumulator[x][y] = DailyAccumulation.createZeroAccumulator();
-                    daysToTheClosestSample[x][y] = Float.NaN;
+                    daysToTheClosestSampleArray[x][y] = Float.NaN;
                 }
             }
+
+//            final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
+//            final int numBands = bandNames.length;
 
             // loop over all 8-day intervals: In each interval:
             // - read BBDRs for the 8 consecutive days
@@ -144,9 +141,10 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             //        ** accumulate full accumulator arrays: F(x,y,i,j) += weight(|day - doy|)*D(i,j)
             // - close BBDRs for the 8 consecutive days
 
+            final int nIntervals = 2 * wings / AlbedoInversionConstants.EIGHT_DAYS;   // default: 2*30
             for (int i = 0; i < nIntervals; i++) {
                 logger.log(Level.ALL, "INTERVAL:  " + i + " of " + nIntervals);
-                final int doyOffset = AlbedoInversionConstants.EIGHT_DAYS * (i - nIntervals / 2);
+                final int doyOffset = AlbedoInversionConstants.EIGHT_DAYS * (i - nIntervals / 2);  // default: -240..240
                 Product[] bbdrProducts;
                 try {
                     // the BBDR products for a single day:
@@ -154,8 +152,12 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                         logger.log(Level.ALL, "DAY:  " + singleDay + " of " + 8);
 //                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
 //                                                                            year, doy, doyOffset);
+                        // default for doy = 2005121:
+                        // doy + doyOffset + singleDay = 20040904 .. 20051228
+                        logger.log(Level.ALL, "doy,doyOffset,singleDay:  " +
+                                doy + ", " + doyOffset + ", " + singleDay);
                         bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
-                                                                            year, doy, doy + doyOffset + singleDay);
+                                year, doy, doyOffset, singleDay);
                         for (Product bbdrProduct : bbdrProducts) {
                             logger.log(Level.ALL, "bbdrProduct:  " + bbdrProduct.getName());
                         }
@@ -168,15 +170,15 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                                     // one daily acc for each pixel:
                                     Accumulator singleDailyAcc =
                                             DailyAccumulation.compute(x, y, bbdrProducts, bbdrTiles,
-                                                                      computeSnow, computeSeaice);
+                                                    computeSnow, computeSeaice);
                                     // now accumulate full accumulator: F(x,y,i,j) += weight(|doyOffset|)*D(i,j):
                                     fullAccumulator[x][y].setM(fullAccumulator[x][y].getM().plus(singleDailyAcc.getM().times(weight)));
                                     fullAccumulator[x][y].setV(fullAccumulator[x][y].getV().plus(singleDailyAcc.getV().times(weight)));
                                     fullAccumulator[x][y].setE(fullAccumulator[x][y].getE().plus(singleDailyAcc.getE().times(weight)));
                                     fullAccumulator[x][y].setMask(fullAccumulator[x][y].getMask() + singleDailyAcc.getMask());
-                                    float dayOfClosestSampleOld = daysToTheClosestSample[x][y];
-                                    daysToTheClosestSample[x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
-                                                                                                             singleDailyAcc.getMask(), doyOffset, singleDay);
+                                    float dayOfClosestSampleOld = daysToTheClosestSampleArray[x][y];
+                                    daysToTheClosestSampleArray[x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
+                                            singleDailyAcc.getMask(), doyOffset, singleDay);
                                 }
                             }
                         }
@@ -193,9 +195,8 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 
             // after loop over all 8-day intervals we have:
             // - Accumulator fullAccumulator[x][y] for each pixel with M, V, E
-            // - daysToTheClosestSample
+            // - daysToTheClosestSampleArray
             // --> we are ready for pixel-wise inversion:
-            // todo: if fullAccumulator is put as parameter into an Op, check if is written as metadata into netcdf file
 
             Inversion2Op inversion2Op = new Inversion2Op();
             inversion2Op.setParameterDefaultValues();
@@ -206,15 +207,15 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 // the inversion Op needs a source product of proper size
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                                                                                       AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversion2Op.setSourceProduct("priorProduct", dummySourceProduct);
             }
             inversion2Op.setParameter("fullAccumulator", fullAccumulator);
-            inversion2Op.setParameter("daysToTheClosestSample", daysToTheClosestSample);
+            inversion2Op.setParameter("daysToTheClosestSampleArray", daysToTheClosestSampleArray);
             inversion2Op.setParameter("year", year);
             inversion2Op.setParameter("tile", tile);
             inversion2Op.setParameter("doy", doy);
@@ -239,6 +240,13 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 // same in the standard mode without using priors...
                 inversionProduct.setGeoCoding(IOUtils.getModisTileGeocoding(tile));
             }
+
+             // todo: if fullAccumulator is put as parameter into an Op, check if is written as metadata into netcdf file
+            // YES:
+            // attr path: /metadata/Processing_Graph:node_0:parameters:fullAccumulator
+            // attr path: /metadata/Processing_Graph:node_0:parameters:daysToTheClosestSampleArray
+            // --> remove thesemetadata:
+            // inversionProduct.getMetadataRoot()...
 
             setTargetProduct(inversionProduct);
 
@@ -268,13 +276,9 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
         Tile[][] bbdrTiles = new Tile[bbdrProducts.length]
                 [AlbedoInversionConstants.BBDR_BAND_NAMES.length];
         final Rectangle rect = new Rectangle(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                             AlbedoInversionConstants.MODIS_TILE_HEIGHT);
-//        logger.log(Level.ALL, "bbdrProducts.length:  " + bbdrProducts.length);
+                AlbedoInversionConstants.MODIS_TILE_HEIGHT);
         for (int i = 0; i < bbdrProducts.length; i++) {
-//            logger.log(Level.ALL, "bbdrProducts[i]:  " + bbdrProducts[i].getName());
             for (int j = 0; j < AlbedoInversionConstants.BBDR_BAND_NAMES.length; j++) {
-//                logger.log(Level.ALL, "bbdrProducts[i] band j:  " + AlbedoInversionConstants.BBDR_BAND_NAMES[j]);
-//                final Band b = bbdrProducts[i].getBand(AlbedoInversionConstants.BBDR_BAND_NAMES[j]);
                 final Band b = bbdrProducts[i].getBandAt(j);
                 if (b != null) {
                     bbdrTiles[i][j] = getSourceTile(b, rect);

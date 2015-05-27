@@ -83,18 +83,26 @@ public class IOUtils {
     public static Product[] getAccumulationInputProducts(String bbdrRootDir,
                                                          String[] sensors,
                                                          String tile,
-                                                         int year, int doy, int dayOffset) throws IOException {
-        int referenceYear = year;
-        int referenceDoy = doy + dayOffset;
-        if (dayOffset < 0 && Math.abs(dayOffset) > doy) {
-            referenceYear -= 1;
-            referenceDoy += 365;
-        } else if (dayOffset > 0 && dayOffset + doy > 365) {
-            referenceYear += 1;
-            referenceDoy -= 365;
-        }
+                                                         int year, int doy,
+                                                         int doyOffset,
+                                                         int singleDay) throws IOException {
 
-        final String daystring = AlbedoInversionUtils.getDateFromDoy(referenceYear, referenceDoy);
+        int inputProductsDay = doy + doyOffset + singleDay;
+        BeamLogManager.getSystemLogger().log(Level.ALL, "inputProductsDay:  " + inputProductsDay);
+        int referenceYear = year;
+        if (inputProductsDay < 0) {
+            referenceYear -= 1;
+            inputProductsDay += 365;
+        } else if (inputProductsDay > 365) {
+            referenceYear += 1;
+            inputProductsDay -= 365;
+        }
+        BeamLogManager.getSystemLogger().log(Level.ALL, ",referenceYearinputProductsDay:  " +
+                referenceYear + ", " + inputProductsDay);
+
+        final String daystring = AlbedoInversionUtils.getDateFromDoy(referenceYear, inputProductsDay);
+        BeamLogManager.getSystemLogger().log(Level.ALL,"daystring = " + daystring);
+
         List<Product> bbdrProductsList = new ArrayList<>();
         for (String sensor : sensors) {
             final String sensorBbdrDir = bbdrRootDir + File.separator + sensor + File.separator + referenceYear + File.separator + tile;
