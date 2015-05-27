@@ -75,11 +75,14 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 
     Accumulator[][] fullAccumulator;
     float[][] daysToTheClosestSample;
+    private Logger logger;
 
     @Override
     public void initialize() throws OperatorException {
 
-        Logger logger = BeamLogManager.getSystemLogger();
+        logger = BeamLogManager.getSystemLogger();
+
+        logger.log(Level.ALL, "START!!!");
 
         Product priorProduct = null;
         if (usePrior) {
@@ -95,7 +98,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                        " - cannot proceed...: " + e.getMessage());
+                                                    " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -109,7 +112,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             if (usePrior) {
                 try {
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            null);
+                                                                                 null);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                 }
@@ -123,6 +126,8 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 
             fullAccumulator = new Accumulator[AlbedoInversionConstants.MODIS_TILE_WIDTH]
                     [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
+            daysToTheClosestSample = new float[AlbedoInversionConstants.MODIS_TILE_WIDTH]
+                    [AlbedoInversionConstants.MODIS_TILE_WIDTH];
             for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
                 for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
                     fullAccumulator[x][y] = DailyAccumulation.createZeroAccumulator();
@@ -140,30 +145,38 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             // - close BBDRs for the 8 consecutive days
 
             for (int i = 0; i < nIntervals; i++) {
+                logger.log(Level.ALL, "INTERVAL:  " + i + " of " + nIntervals);
                 final int doyOffset = AlbedoInversionConstants.EIGHT_DAYS * (i - nIntervals / 2);
                 Product[] bbdrProducts;
                 try {
+                    // the BBDR products for a single day:
                     for (int singleDay = 0; singleDay < 8; singleDay++) {
-                        // the BBDR products for a single day:
+                        logger.log(Level.ALL, "DAY:  " + singleDay + " of " + 8);
+//                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
+//                                                                            year, doy, doyOffset);
                         bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
-                                year, doy, doyOffset);
+                                                                            year, doy, doyOffset);
+                        for (Product bbdrProduct : bbdrProducts) {
+                            logger.log(Level.ALL, "bbdrProduct:  " + bbdrProduct.getName());
+                        }
+                        Tile[][] bbdrTiles = extractTilesFromBBDRProducts(bbdrProducts);
                         if (bbdrProducts != null && bbdrProducts.length > 0) {
                             // get an array of 1200x1200-tiles for all input bands of all products:
-                            Tile[][] bbdrTiles = extractTilesFromBBDRProducts(bbdrProducts);
+                            final double weight = FullAccumulation.getWeight(doyOffset);
                             for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
                                 for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+                                    // one daily acc for each pixel:
                                     Accumulator singleDailyAcc =
                                             DailyAccumulation.compute(x, y, bbdrProducts, bbdrTiles,
-                                                    computeSnow, computeSeaice);
+                                                                      computeSnow, computeSeaice);
                                     // now accumulate full accumulator: F(x,y,i,j) += weight(|doyOffset|)*D(i,j):
-                                    final double weight = FullAccumulation.getWeight(doyOffset);
                                     fullAccumulator[x][y].setM(fullAccumulator[x][y].getM().plus(singleDailyAcc.getM().times(weight)));
                                     fullAccumulator[x][y].setV(fullAccumulator[x][y].getV().plus(singleDailyAcc.getV().times(weight)));
                                     fullAccumulator[x][y].setE(fullAccumulator[x][y].getE().plus(singleDailyAcc.getE().times(weight)));
                                     fullAccumulator[x][y].setMask(fullAccumulator[x][y].getMask() + singleDailyAcc.getMask());
                                     float dayOfClosestSampleOld = daysToTheClosestSample[x][y];
                                     daysToTheClosestSample[x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
-                                            singleDailyAcc.getMask(), doyOffset, singleDay);
+                                                                                                             singleDailyAcc.getMask(), doyOffset, singleDay);
                                 }
                             }
                         }
@@ -193,10 +206,10 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 // the inversion Op needs a source product of proper size
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversion2Op.setSourceProduct("priorProduct", dummySourceProduct);
             }
@@ -255,11 +268,17 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
         Tile[][] bbdrTiles = new Tile[bbdrProducts.length]
                 [AlbedoInversionConstants.BBDR_BAND_NAMES.length];
         final Rectangle rect = new Rectangle(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                                             AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+//        logger.log(Level.ALL, "bbdrProducts.length:  " + bbdrProducts.length);
         for (int i = 0; i < bbdrProducts.length; i++) {
+//            logger.log(Level.ALL, "bbdrProducts[i]:  " + bbdrProducts[i].getName());
             for (int j = 0; j < AlbedoInversionConstants.BBDR_BAND_NAMES.length; j++) {
-                final Band b = bbdrProducts[i].getBand(AlbedoInversionConstants.BBDR_BAND_NAMES[j]);
-                bbdrTiles[i][j] = getSourceTile(b, rect);
+//                logger.log(Level.ALL, "bbdrProducts[i] band j:  " + AlbedoInversionConstants.BBDR_BAND_NAMES[j]);
+//                final Band b = bbdrProducts[i].getBand(AlbedoInversionConstants.BBDR_BAND_NAMES[j]);
+                final Band b = bbdrProducts[i].getBandAt(j);
+                if (b != null) {
+                    bbdrTiles[i][j] = getSourceTile(b, rect);
+                }
             }
         }
         return bbdrTiles;

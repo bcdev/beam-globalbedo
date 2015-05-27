@@ -23,6 +23,11 @@
             <artifactId>beam-gpf</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-netcdf</artifactId>
+        </dependency>
+
         <!-- GlobAlbedo core modules -->
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
