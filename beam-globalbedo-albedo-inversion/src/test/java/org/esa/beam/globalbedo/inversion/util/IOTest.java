@@ -248,6 +248,38 @@ public class IOTest extends TestCase {
         assertNull(IOUtils.getDoyString(doy));
     }
 
+    public void testGetReferenceDate() throws Exception {
+        int doy = 123;
+        int year = 2005;
+        int dayOffset = 3;
+        int[] referenceDate = IOUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2005, referenceDate[0]);
+        assertEquals(126, referenceDate[1]);
+
+        dayOffset = -240;
+        referenceDate = IOUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2004, referenceDate[0]);
+        assertEquals(248, referenceDate[1]);
+
+        dayOffset = 240;
+        referenceDate = IOUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2005, referenceDate[0]);
+        assertEquals(363, referenceDate[1]);
+
+        doy = 001;
+        dayOffset = -240;
+        referenceDate = IOUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2004, referenceDate[0]);
+        assertEquals(126, referenceDate[1]);
+
+        doy = 361;
+        dayOffset = 240;
+        referenceDate = IOUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2006, referenceDate[0]);
+        assertEquals(236, referenceDate[1]);
+    }
+
+
     public void testWriteFloatArray1() throws Exception {
         float[][] fArray = new float[dim1][dim2];
 

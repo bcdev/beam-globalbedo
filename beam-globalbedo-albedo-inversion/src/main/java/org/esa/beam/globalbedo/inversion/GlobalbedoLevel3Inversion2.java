@@ -150,27 +150,23 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                     // the BBDR products for a single day:
                     for (int singleDay = 0; singleDay < 8; singleDay++) {
                         logger.log(Level.ALL, "DAY:  " + singleDay + " of " + 8);
-//                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
-//                                                                            year, doy, doyOffset);
-                        // default for doy = 2005121:
-                        // doy + doyOffset + singleDay = 20040904 .. 20051228
-                        logger.log(Level.ALL, "doy,doyOffset,singleDay:  " +
-                                doy + ", " + doyOffset + ", " + singleDay);
-                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,
-                                year, doy, doyOffset, singleDay);
+                        final int singleDayOffset = doyOffset + singleDay;
+                        final int[] referenceDate = IOUtils.getReferenceDate(year, doy, singleDayOffset);
+                        logger.log(Level.ALL, "bbdrProduct date:  " + referenceDate[0] + "," + referenceDate[1]);
+                        bbdrProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile,referenceDate);
                         for (Product bbdrProduct : bbdrProducts) {
                             logger.log(Level.ALL, "bbdrProduct:  " + bbdrProduct.getName());
                         }
                         Tile[][] bbdrTiles = extractTilesFromBBDRProducts(bbdrProducts);
                         if (bbdrProducts != null && bbdrProducts.length > 0) {
                             // get an array of 1200x1200-tiles for all input bands of all products:
-                            final double weight = FullAccumulation.getWeight(doyOffset);
+                            final double weight = FullAccumulation.getWeight(singleDayOffset);
                             for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
                                 for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
                                     // one daily acc for each pixel:
                                     Accumulator singleDailyAcc =
                                             DailyAccumulation.compute(x, y, bbdrProducts, bbdrTiles,
-                                                    computeSnow, computeSeaice);
+                                                                      computeSnow, computeSeaice);
                                     // now accumulate full accumulator: F(x,y,i,j) += weight(|doyOffset|)*D(i,j):
                                     fullAccumulator[x][y].setM(fullAccumulator[x][y].getM().plus(singleDailyAcc.getM().times(weight)));
                                     fullAccumulator[x][y].setV(fullAccumulator[x][y].getV().plus(singleDailyAcc.getV().times(weight)));
@@ -178,7 +174,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                                     fullAccumulator[x][y].setMask(fullAccumulator[x][y].getMask() + singleDailyAcc.getMask());
                                     float dayOfClosestSampleOld = daysToTheClosestSampleArray[x][y];
                                     daysToTheClosestSampleArray[x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
-                                            singleDailyAcc.getMask(), doyOffset, singleDay);
+                                                                                                             singleDailyAcc.getMask(), doyOffset, singleDay);
                                 }
                             }
                         }
@@ -200,6 +196,9 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
 
             Inversion2Op inversion2Op = new Inversion2Op();
             inversion2Op.setParameterDefaultValues();
+            inversion2Op.setFullAccumulator(fullAccumulator);
+            inversion2Op.setDaysToTheClosestSampleArray(daysToTheClosestSampleArray);
+            inversion2Op.setParameterDefaultValues();
             Product dummySourceProduct;
             if (reprojectedPriorProduct != null) {
                 inversion2Op.setSourceProduct("priorProduct", reprojectedPriorProduct);
@@ -214,8 +213,8 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 }
                 inversion2Op.setSourceProduct("priorProduct", dummySourceProduct);
             }
-            inversion2Op.setParameter("fullAccumulator", fullAccumulator);
-            inversion2Op.setParameter("daysToTheClosestSampleArray", daysToTheClosestSampleArray);
+//            inversion2Op.setParameter("fullAccumulator", fullAccumulator);
+//            inversion2Op.setParameter("daysToTheClosestSampleArray", daysToTheClosestSampleArray);
             inversion2Op.setParameter("year", year);
             inversion2Op.setParameter("tile", tile);
             inversion2Op.setParameter("doy", doy);

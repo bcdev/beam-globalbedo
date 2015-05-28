@@ -81,11 +81,11 @@ public class Inversion2Op extends PixelOperator {
     @Parameter(description = "Day of year")
     private int doy;
 
-    @Parameter(description = "Full accumulator object")
-    private Accumulator[][] fullAccumulator;
-
-    @Parameter(defaultValue = "", description = "The day distance from DoY to the closest sample")
-    private float[][] daysToTheClosestSampleArray;
+//    @Parameter(description = "Full accumulator object")
+//    private Accumulator[][] fullAccumulator;
+//
+//    @Parameter(defaultValue = "", description = "The day distance from DoY to the closest sample")
+//    private float[][] daysToTheClosestSampleArray;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -114,6 +114,16 @@ public class Inversion2Op extends PixelOperator {
     @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorLandMaskBandName;
 
+    Accumulator[][] fullAccumulator;
+    float[][] daysToTheClosestSampleArray;
+
+    public void setFullAccumulator(Accumulator[][] fullAccumulator) {
+        this.fullAccumulator = fullAccumulator;
+    }
+
+    public void setDaysToTheClosestSampleArray(float[][] daysToTheClosestSampleArray) {
+        this.daysToTheClosestSampleArray = daysToTheClosestSampleArray;
+    }
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
