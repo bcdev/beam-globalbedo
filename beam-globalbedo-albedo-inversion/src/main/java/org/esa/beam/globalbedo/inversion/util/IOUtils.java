@@ -103,20 +103,6 @@ public class IOUtils {
         return bbdrProductsList.toArray(new Product[bbdrProductsList.size()]);
     }
 
-    public static int[] getReferenceDate(int year, int doy, int dayOffset) {
-        int referenceYear = year;
-        int referenceDoy = doy + dayOffset;
-        if (dayOffset < 0 && Math.abs(dayOffset) > doy) {
-            referenceYear -= 1;
-            referenceDoy += 365;
-        } else if (dayOffset > 0 && dayOffset + doy > 365) {
-            referenceYear += 1;
-            referenceDoy -= 365;
-        }
-
-        return new int[]{referenceYear, referenceDoy};
-    }
-
     /**
      * Filters from a list of BBDR file names the ones which contain a given daystring
      *
@@ -225,24 +211,18 @@ public class IOUtils {
         String doyString = Integer.toString(doy);
         if (doy < 0 || doy > 366) {
             return null;
+        } else {
+            return String.format("%03d", doy);
         }
-        if (doy < 10) {
-            doyString = "00" + doyString;
-        } else if (doy < 100) {
-            doyString = "0" + doyString;
-        }
-        return doyString;
     }
 
     public static String getMonthString(int month) {
         String monthString = Integer.toString(month);
         if (month < 0 || month > 12) {
             return null;
+        } else {
+            return String.format("%02d", month);
         }
-        if (month < 10) {
-            monthString = "0" + monthString;
-        }
-        return monthString;
     }
 
     static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
@@ -687,6 +667,7 @@ public class IOUtils {
         return ProductIO.readProduct(tileInfoFilePath);
     }
 
+
     public static void copyLandmask(String gaRootDir, String tile, Product targetProduct) {
         try {
             final Product seaiceLandmaskProduct = IOUtils.getSeaiceLandmaskProduct(gaRootDir, tile);
@@ -700,7 +681,6 @@ public class IOUtils {
                     e.getMessage());
         }
     }
-
 
     public static Product getSeaiceLandmaskProduct(String gaRootDir, String tile) throws IOException {
         String defaultLandmaskFilename = "GlobAlbedo.landmask." + tile + ".dim";
@@ -844,5 +824,4 @@ public class IOUtils {
         Collections.sort(brdfFileList);
         return brdfFileList;
     }
-
 }

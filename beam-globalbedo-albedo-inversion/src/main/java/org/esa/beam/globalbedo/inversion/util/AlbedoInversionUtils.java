@@ -328,4 +328,44 @@ public class AlbedoInversionUtils {
     public static float checkSummandForNan(float srcValue) {
         return Float.isNaN(srcValue) ? 0.0f : srcValue;
     }
+
+    public static int[] getReferenceDate(int year, int day) {
+        int referenceYear = year;
+        int referenceDay = day;
+        if (day < 0) {
+            referenceYear -= 1;
+            referenceDay += 365;
+        } else if (day > 365) {
+            referenceYear += 1;
+            referenceDay -= 365;
+        }
+        return new int[]{referenceYear, referenceDay};
+    }
+
+    public static int[] getReferenceDate(int year, int doy, int dayOffset) {
+        int referenceYear = year;
+        int referenceDoy = doy + dayOffset;
+        if (dayOffset < 0 && Math.abs(dayOffset) > doy) {
+            referenceYear -= 1;
+            referenceDoy += 365;
+        } else if (dayOffset > 0 && dayOffset + doy > 365) {
+            referenceYear += 1;
+            referenceDoy -= 365;
+        }
+
+        return new int[]{referenceYear, referenceDoy};
+    }
+
+    public static int computeDayOffset(int[] referenceDate, int year, int day) {
+        final int referenceYear = referenceDate[0];
+        final int referenceDay = referenceDate[1];
+
+        if (year == referenceYear) {
+            return Math.abs(referenceDay - day);
+        } else if (year > referenceYear) {
+            return (365 - referenceDay) + day;
+        } else {
+            return (365 - day) + referenceDay;
+        }
+    }
 }

@@ -197,4 +197,74 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(Float.NaN, valueF + summandF);
         assertEquals(10.0f, valueF + AlbedoInversionUtils.checkSummandForNan(summandF));
     }
+
+    public void testComputeDayOffset() {
+        int year = 2005;
+        int doy = 13;
+        int referenceYear = 2005;
+        int referenceDoy = 121;
+        int[] referenceDate = new int[]{referenceYear, referenceDoy};
+        int doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
+        assertEquals(108, doyOffset);
+
+        year = 2006;
+        doy = 27;
+        doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
+        assertEquals(271, doyOffset);
+
+        year = 2004;
+        doy = 279;
+        doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
+        assertEquals(207, doyOffset);
+    }
+
+    public void testGetReferenceDate() throws Exception {
+        int doy = 123;
+        int year = 2005;
+        int[] referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
+        assertEquals(2005, referenceDate[0]);
+        assertEquals(123, referenceDate[1]);
+
+        doy = -73;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
+        assertEquals(2004, referenceDate[0]);
+        assertEquals(292, referenceDate[1]);
+
+        doy = 403;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
+        assertEquals(2006, referenceDate[0]);
+        assertEquals(38, referenceDate[1]);
+    }
+
+    public void testGetReferenceDate2() throws Exception {
+        int doy = 123;
+        int year = 2005;
+        int dayOffset = 3;
+        int[] referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2005, referenceDate[0]);
+        assertEquals(126, referenceDate[1]);
+
+        dayOffset = -240;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2004, referenceDate[0]);
+        assertEquals(248, referenceDate[1]);
+
+        dayOffset = 240;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2005, referenceDate[0]);
+        assertEquals(363, referenceDate[1]);
+
+        doy = 1;
+        dayOffset = -240;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2004, referenceDate[0]);
+        assertEquals(126, referenceDate[1]);
+
+        doy = 361;
+        dayOffset = 240;
+        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
+        assertEquals(2006, referenceDate[0]);
+        assertEquals(236, referenceDate[1]);
+    }
+
 }

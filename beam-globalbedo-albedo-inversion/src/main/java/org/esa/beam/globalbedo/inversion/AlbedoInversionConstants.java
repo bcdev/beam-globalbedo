@@ -110,6 +110,7 @@ public class AlbedoInversionConstants {
 
     public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
 
+    public static final int DOYS_IN_YEAR = 46;
     public static final int EIGHT_DAYS = 8;
 
     public static final int NUM_BBDR_WAVE_BANDS = 3;
