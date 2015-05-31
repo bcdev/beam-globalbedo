@@ -42,7 +42,7 @@ public class Inversion2Op extends PixelOperator {
     public static final int[][] SRC_PRIOR_SD = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
     public static final int SOURCE_SAMPLE_OFFSET = 0;  // this value must be >= number of bands in a source product
-    public static final int PRIOR_OFFSET = (int) pow(NUM_ALBEDO_PARAMETERS, 2.0);
+    public static final int PRIOR_OFFSET = NUM_ALBEDO_PARAMETERS * NUM_ALBEDO_PARAMETERS;
     public static final int SRC_PRIOR_NSAMPLES = 2 * PRIOR_OFFSET;
 
     public static final int SRC_PRIOR_MASK = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET + 1;
@@ -116,6 +116,12 @@ public class Inversion2Op extends PixelOperator {
 
     Accumulator[][] fullAccumulator;
     float[][] daysToTheClosestSampleArray;
+
+    private Prior[][] prior;
+
+    public void setPrior(Prior[][] prior) {
+        this.prior = prior;
+    }
 
     public void setFullAccumulator(Accumulator[][] fullAccumulator) {
         this.fullAccumulator = fullAccumulator;
@@ -222,10 +228,10 @@ public class Inversion2Op extends PixelOperator {
         }
 
         double maskPrior = 1.0;
-        Prior prior = null;
+//        prior = null;
         if (usePrior) {
-            prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
-            maskPrior = prior.getMask();
+//            prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
+            maskPrior = prior[x][y].getMask();
         }
 
         double goodnessOfFit = 0.0;
@@ -238,12 +244,12 @@ public class Inversion2Op extends PixelOperator {
             if (usePrior) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     double m_ii_accum = mAcc.get(i, i);
-                    if (prior.getM() != null) {
-                        m_ii_accum += prior.getM().get(i, i);
+                    if (prior[x][y].getM() != null) {
+                        m_ii_accum += prior[x][y].getM().get(i, i);
                     }
                     mAcc.set(i, i, m_ii_accum);
                 }
-                vAcc = vAcc.plus(prior.getV());
+                vAcc = vAcc.plus(prior[x][y].getV());
             }
 
             final LUDecomposition lud = new LUDecomposition(mAcc);
@@ -270,8 +276,8 @@ public class Inversion2Op extends PixelOperator {
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
                 entropy = getEntropy(mAcc);
-                if (usePrior && prior != null && prior.getM() != null) {
-                    final double entropyPrior = getEntropy(prior.getM());
+                if (usePrior && prior != null && prior[x][y].getM() != null) {
+                    final double entropyPrior = getEntropy(prior[x][y].getM());
                     relEntropy = entropyPrior - entropy;
                 } else {
                     relEntropy = INVALID;
@@ -285,11 +291,11 @@ public class Inversion2Op extends PixelOperator {
         } else {
             if (maskPrior > 0.0) {
                 if (usePrior) {
-                    parameters = prior.getParameters();
-                    final LUDecomposition lud = new LUDecomposition(prior.getM());
+                    parameters = prior[x][y].getParameters();
+                    final LUDecomposition lud = new LUDecomposition(prior[x][y].getM());
                     if (lud.isNonsingular()) {
-                        uncertainties = prior.getM().inverse();
-                        entropy = getEntropy(prior.getM());
+                        uncertainties = prior[x][y].getM().inverse();
+                        entropy = getEntropy(prior[x][y].getM());
                     } else {
                         uncertainties = new Matrix(
                                 3 * NUM_BBDR_WAVE_BANDS,
