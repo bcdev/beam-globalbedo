@@ -181,23 +181,23 @@ public class BbdrAvhrrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
-        String[] toaBandNames;
-
-        String landExpr;
-        final String landMaskExpression = "NOT QA_FLAGS.WATER";
-        final String snowMaskExpression = "QA_FLAGS.F_CLEAR_SNOW";
-
-        BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
-        bdSnow.name = "snow_mask";
-        bdSnow.expression = snowMaskExpression;
-        bdSnow.type = ProductData.TYPESTRING_INT8;
-
-        BandMathsOp snowOp = new BandMathsOp();
-        snowOp.setParameterDefaultValues();
-        snowOp.setSourceProduct(sourceProduct);
-        snowOp.setTargetBandDescriptors(bdSnow);
-        Product snowMaskProduct = snowOp.getTargetProduct();
-
+//        String[] toaBandNames;
+//
+//        String landExpr;
+//        final String landMaskExpression = "NOT QA_FLAGS.WATER";
+//        final String snowMaskExpression = "QA_FLAGS.F_CLEAR_SNOW";
+//
+//        BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
+//        bdSnow.name = "snow_mask";
+//        bdSnow.expression = snowMaskExpression;
+//        bdSnow.type = ProductData.TYPESTRING_INT8;
+//
+//        BandMathsOp snowOp = new BandMathsOp();
+//        snowOp.setParameterDefaultValues();
+//        snowOp.setSourceProduct(sourceProduct);
+//        snowOp.setTargetBandDescriptors(bdSnow);
+//        Product snowMaskProduct = snowOp.getTargetProduct();
+//
 //        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 //
 //        if (sensor == Sensor.AVHRR) {

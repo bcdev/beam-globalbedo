@@ -134,32 +134,10 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
         // when doing inversion, read the one for particular day and extract info (a 'Prior' object)
         // and put this into inversion!!! After that, dispose the prior product!
         logger.log(Level.ALL, "...start reading priors...");
-        Product[] priorProducts = null;
-//        Product[] reprojectedPriorProduct = null;
         String priorDir = priorRootDir + File.separator + tile;
         if (priorRootDirSuffix != null) {
             priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
         }
-//        if (usePrior) {
-//            priorProducts = new Product[AlbedoInversionConstants.DOYS_IN_YEAR];
-//            reprojectedPriorProduct = new Product[AlbedoInversionConstants.DOYS_IN_YEAR];
-//            // STEP 1: get Prior input file...
-//
-//            logger.log(Level.ALL, "Searching for prior file in directorys: '" + priorDir + "'...");
-//
-//            for (int i = 0; i < AlbedoInversionConstants.DOYS_IN_YEAR; i++) {
-//                logger.log(Level.ALL, "   reading prior for doy " + doys[i] + " ...");
-//                try {
-//                    priorProducts[i] = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doys[i], computeSnow);
-//                    reprojectedPriorProduct[i] = IOUtils.getReprojectedPriorProduct(priorProducts[i], tile,
-//                            null);
-//                    logger.log(Level.ALL, "   read prior for doy " + doys[i]);
-//                } catch (IOException e) {
-//                    logger.log(Level.SEVERE, "No reprojected prior file available for DoY " + IOUtils.getDoyString(doys[i]) + ": " +
-//                            e.getMessage());
-//                }
-//            }
-//        }
 
         // - loop in over all days in year +- wings.
         //     # read BBDRs for each day

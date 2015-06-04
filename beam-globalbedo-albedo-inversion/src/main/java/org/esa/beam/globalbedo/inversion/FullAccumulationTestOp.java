@@ -31,7 +31,7 @@ import java.util.logging.Level;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")
-public class DailyAccumulationOp extends PixelOperator {
+public class FullAccumulationTestOp extends PixelOperator {
 
     private static final int SRC_BB_NIR = 1;
     private static final int SRC_BB_SW = 2;
@@ -81,9 +81,6 @@ public class DailyAccumulationOp extends PixelOperator {
 
     @Parameter(defaultValue = "false", description = "Debug - run additional parts of code if needed.")
     private boolean debug;
-
-    @Parameter(defaultValue = "true", description = "Write binary accumulator file.")
-    private boolean writeBinaryFile;
 
 
     @Parameter(description = "Daily accumulator binary file")
@@ -229,21 +226,12 @@ public class DailyAccumulationOp extends PixelOperator {
         numPixelsProcessed++;
         if (numPixelsProcessed == sourceProducts[0].getSceneRasterWidth() *
                 sourceProducts[0].getSceneRasterHeight()) {
-            BeamLogManager.getSystemLogger().log(Level.INFO, "all pixels processed [" + numPixelsProcessed + "]");
-            if (writeBinaryFile) {
-                BeamLogManager.getSystemLogger().log(Level.INFO, "...writing accumulator result array...");
-                IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
-                BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator result array written.");
-            }
+            BeamLogManager.getSystemLogger().log(Level.INFO,
+                    "all pixels processed (" + numPixelsProcessed +
+                            ") - writing accumulator result array...");
+            IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator result array written.");
         }
-    }
-
-    public float[][][] getResultArray() {
-        return resultArray;
-    }
-
-    public int getNumPixelsProcessed() {
-        return numPixelsProcessed;
     }
 
     private Accumulator getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
@@ -432,7 +420,7 @@ public class DailyAccumulationOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(DailyAccumulationOp.class);
+            super(FullAccumulationTestOp.class);
         }
     }
 }

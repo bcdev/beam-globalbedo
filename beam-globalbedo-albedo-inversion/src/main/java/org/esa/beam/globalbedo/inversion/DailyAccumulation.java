@@ -12,6 +12,28 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
  */
 public class DailyAccumulation {
 
+    private static final int[][] TRG_M =
+            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+                    [3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+
+    private static final int[] TRG_V =
+            new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+
+    private static final int TRG_E = 90;
+    private static final int TRG_MASK = 91;
+    private static final int TRG_DCS = 92;
+
+    static {
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                TRG_M[i][j] = 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * i + j;
+            }
+        }
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            TRG_V[i] = 3 * 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS + i;
+        }
+    }
+
     /**
      * provides a daily accumulator. To be called per pixel.
      *
@@ -44,6 +66,29 @@ public class DailyAccumulation {
         return new Accumulator(M, V, E, mask);
     }
 
+    public static float[] computeResultArray(int x, int y, Product[] bbdrProducts, Tile[][] bbdrTiles,
+                                      boolean computeSnow, boolean computeSeaice) {
+        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        Matrix E = new Matrix(1, 1);
+        double mask = 0.0;
+
+        // accumulate the matrices from the single products...
+        // bbdrTiles = bbdrTiles[productIndex][bandIndex]
+        for (int i = 0; i < bbdrTiles.length; i++) {
+            final Accumulator accumulator = getMatricesPerBBDRDataset(x, y, bbdrProducts, bbdrTiles, i,
+                                                                      computeSnow, computeSeaice);
+            M.plusEquals(accumulator.getM());
+            V.plusEquals(accumulator.getV());
+            E.plusEquals(accumulator.getE());
+            mask += accumulator.getMask();
+        }
+
+        return fillBinaryResultArray(new Accumulator(M, V, E, mask), x, y);
+    }
+
+
     public static Accumulator createZeroAccumulator() {
         final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
@@ -52,6 +97,24 @@ public class DailyAccumulation {
 
         return new Accumulator(zeroM, zeroV, zeroE, 0);
     }
+
+    private static float[] fillBinaryResultArray(Accumulator accumulator, int x, int y) {
+        float[] resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS+1];
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                resultArray[TRG_M[i][j]] = (float) accumulator.getM().get(i, j);
+            }
+        }
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            resultArray[TRG_V[i]] = (float) accumulator.getV().get(i, 0);
+        }
+        resultArray[TRG_E] = (float) accumulator.getE().get(0, 0);
+        resultArray[TRG_MASK] = (float) accumulator.getMask();
+        resultArray[TRG_DCS] = Float.NaN; // todo
+
+        return resultArray;
+    }
+
 
     private static Accumulator getMatricesPerBBDRDataset(int x, int y,
                                                          Product[] bbdrProducts,
