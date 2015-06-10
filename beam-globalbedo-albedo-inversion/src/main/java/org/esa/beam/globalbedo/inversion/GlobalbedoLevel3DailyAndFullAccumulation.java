@@ -12,6 +12,7 @@ import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import javax.media.jai.JAI;
 import java.awt.*;
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +23,7 @@ import java.util.logging.Logger;
  * New operator for daily AND full accumulation part.
  * This version avoids daily accumulator file I/O, but still writes full accumulator binary files
  * due to memory constraints.
- * todo: to be tested...
+ * todo: is still in preparation and testing...
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
@@ -71,6 +72,8 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
     private Rectangle tileRectangle;
 
     private float[][][] resultArray;
+
+    private Product dummyProduct;
 
     @Override
     public void initialize() throws OperatorException {
@@ -128,6 +131,8 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
 
         // - wings=90 (Oct-Dec, Jan-Mar)
         // -90, ..., -1, 0, 1, 2, ... , 365, 366(+1), 367(+2), ..., 455(+90)
+        Product targetProduct = null;
+        dummyProduct = new Product("dummy", "dummy", 1200, 1200);
         for (int i = -wings; i < 365 + wings; i++) {
             logger.log(Level.ALL, "BBDR DAY INDEX:  " + i);
             Product[] bbdrProducts = null;
@@ -139,7 +144,6 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
                 for (Product bbdrProduct : bbdrProducts) {
                     logger.log(Level.ALL, "bbdrProduct:  " + bbdrProduct.getName());
                 }
-                final Tile[][] bbdrTiles = extractTilesFromBBDRProducts(bbdrProducts);
 
                 final int productYear = ((i < 0) ? (year - 1) : ((i > 365) ? (year + 1) : year));
                 final int doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, productYear, doy);
@@ -147,22 +151,23 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
 
                 // per pixel:
                 if (bbdrProducts.length > 0) {
+                    targetProduct = accumulate_op(i, bbdrProducts, doyOffset, weight);
+//                    final Tile[][] bbdrTiles = extractTilesFromBBDRProducts(bbdrProducts);
 //                    accumulate(i, bbdrProducts, bbdrTiles, doyOffset, weight);
-//                    accumulate_op(i, bbdrProducts, bbdrTiles, doyOffset, weight);
-                    accumulate_2(i, bbdrProducts, bbdrTiles, doyOffset, weight);
+//                    accumulate_2(i, bbdrProducts, doyOffset, weight);
                 }
             } catch (IOException e) {
                 logger.log(Level.WARNING, "No BBDR products could be read for date " +
                         +referenceDate[0] + "," + referenceDate[1] + " : " + e.getMessage());
             } finally {
                 // dispose the BBDR products of the single day:
-                if (bbdrProducts != null) {
-                    for (Product bbdrProduct : bbdrProducts) {
-                        if (bbdrProduct != null) {
-                            bbdrProduct.dispose();
-                        }
-                    }
-                }
+//                if (bbdrProducts != null) {
+//                    for (Product bbdrProduct : bbdrProducts) {
+//                        if (bbdrProduct != null) {
+//                            bbdrProduct.dispose();
+//                        }
+//                    }
+//                }
             }
         }
 
@@ -184,91 +189,94 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
 
         // no target product needed here, define a 'success' dummy product
         // no target product needed here, define a 'success' dummy product
-        final String productName = "SUCCESS_fullacc_" + year + "_" + doy;
-        Product successProduct = new Product(productName, "SUCCESS", 1, 1);
-        setTargetProduct(successProduct);
+//        final String productName = "SUCCESS_fullacc_" + year + "_" + doy;
+//        Product successProduct = new Product(productName, "SUCCESS", 1, 1);
+//        setTargetProduct(successProduct);
+        setTargetProduct(targetProduct);
 
         logger.log(Level.ALL, "Finished full accumulation process for tile: " + tile + ", year: " + year + ", DoYs: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 
-    private void accumulate_op(int i, Product[] bbdrProducts, Tile[][] bbdrTiles, int doyOffset, float weight) {
+    private Product accumulate_op(int i, Product[] bbdrProducts, int doyOffset, float weight) {
         // first get result array from old DailyAccumulationOp for the single day
         //...
         final long t0 = System.nanoTime();
         DailyAccumulationOp dailyAccOp = new DailyAccumulationOp();
         dailyAccOp.setParameterDefaultValues();
         dailyAccOp.setSourceProducts(bbdrProducts);
+        dailyAccOp.setSourceProduct("dummyProduct", dummyProduct);
         dailyAccOp.setParameter("computeSnow", computeSnow);
         dailyAccOp.setParameter("computeSeaice", computeSeaice);
         dailyAccOp.setParameter("writeBinaryFile", false);
-        setTargetProduct(dailyAccOp.getTargetProduct());
+        dummyProduct = dailyAccOp.getTargetProduct();
 
         //... wait until resultArray is filled completely...
         long endWaitTime = System.currentTimeMillis() + 60 * 1000;
         boolean isConditionMet = false;
         float[][][] dailyAccOpResultArray = null;
-        while (System.currentTimeMillis() < endWaitTime && !isConditionMet) {
-            isConditionMet = dailyAccOp.getNumPixelsProcessed() == 1200 * 1200;
-            if (isConditionMet) {
-                dailyAccOpResultArray = dailyAccOp.getResultArray();
-                break;
-            } else {
-                try {
-                    System.out.println("dailyAccOp.getNumPixelsProcessed() = " + dailyAccOp.getNumPixelsProcessed());
-                    Thread.sleep(100);
-                    System.out.println("slept 100ms");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
+//        while (System.currentTimeMillis() < endWaitTime && !isConditionMet) {
+//            isConditionMet = dailyAccOp.getNumPixelsProcessed() == 1200 * 1200;
+//            if (isConditionMet) {
+//                dailyAccOpResultArray = dailyAccOp.getResultArray();
+//                break;
+//            } else {
+//                try {
+//                    System.out.println("dailyAccOp.getNumPixelsProcessed() = " + dailyAccOp.getNumPixelsProcessed());
+//                    Thread.sleep(100);
+//                    System.out.println("slept 100ms");
+//                } catch (InterruptedException e) {
+//                    e.printStackTrace();
+//                }
+//            }
+//        }
         final long t1 = System.nanoTime();
         System.out.println("t1-t0 (us) [dailyacc] = " + (t1 - t0) / 1000.);
 
         // then full accumulate:
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
-                // compute daily acc for single day:
-                // now accumulate full accumulator: F(x,y,i,j) += weight(|doyOffset|)*D(i,j):
-                float dayOfClosestSampleOld = resultArray[TRG_DCS][x][y];
-                final int singleDay = i - doy;
-                final long t2 = System.nanoTime();
-                resultArray[TRG_DCS][x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
-                                                                                       dailyAccOpResultArray[TRG_MASK][x][y],
-                                                                                       doyOffset,
-                                                                                       singleDay);
-                final long t3 = System.nanoTime();
-                if (x == 600 && y == 600) {
-                    System.out.println("t3-t2 (us) = " + (t3 - t2) / 1000.);
-                }
-
-                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                    for (int k = 0; k < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
-                        resultArray[TRG_M[j][k]][x][y] += weight * dailyAccOpResultArray[TRG_M[j][k]][x][y];
-                    }
-                }
-                final long t4 = System.nanoTime();
-                if (x == 600 && y == 600) {
-                    System.out.println("t4-t3 (us) = " + (t4 - t3) / 1000.);
-                }
-                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                    resultArray[TRG_V[j]][x][y] += weight * dailyAccOpResultArray[TRG_V[j]][x][y];
-                }
-                resultArray[TRG_E][x][y] += weight * resultArray[TRG_E][x][y];
-                resultArray[TRG_MASK][x][y] += dailyAccOpResultArray[TRG_MASK][x][y];
-                final long t5 = System.nanoTime();
-                if (x == 600 && y == 600) {
-                    System.out.println("t5-t4 (us) = " + (t5 - t4) / 1000.);
-                }
-            }
-        }
+//        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
+//            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+//                // compute daily acc for single day:
+//                // now accumulate full accumulator: F(x,y,i,j) += weight(|doyOffset|)*D(i,j):
+//                float dayOfClosestSampleOld = resultArray[TRG_DCS][x][y];
+//                final int singleDay = i - doy;
+//                final long t2 = System.nanoTime();
+//                resultArray[TRG_DCS][x][y] = FullAccumulation.updateDayOfClosestSample(dayOfClosestSampleOld,
+//                                                                                       dailyAccOpResultArray[TRG_MASK][x][y],
+//                                                                                       doyOffset,
+//                                                                                       singleDay);
+//                final long t3 = System.nanoTime();
+//                if (x == 600 && y == 600) {
+//                    System.out.println("t3-t2 (us) = " + (t3 - t2) / 1000.);
+//                }
+//
+//                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+//                    for (int k = 0; k < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
+//                        resultArray[TRG_M[j][k]][x][y] += weight * dailyAccOpResultArray[TRG_M[j][k]][x][y];
+//                    }
+//                }
+//                final long t4 = System.nanoTime();
+//                if (x == 600 && y == 600) {
+//                    System.out.println("t4-t3 (us) = " + (t4 - t3) / 1000.);
+//                }
+//                for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+//                    resultArray[TRG_V[j]][x][y] += weight * dailyAccOpResultArray[TRG_V[j]][x][y];
+//                }
+//                resultArray[TRG_E][x][y] += weight * resultArray[TRG_E][x][y];
+//                resultArray[TRG_MASK][x][y] += dailyAccOpResultArray[TRG_MASK][x][y];
+//                final long t5 = System.nanoTime();
+//                if (x == 600 && y == 600) {
+//                    System.out.println("t5-t4 (us) = " + (t5 - t4) / 1000.);
+//                }
+//            }
+//        }
 
 //        FullAccumulationTestOp fullAccTestOp = new FullAccumulationTestOp();
 //        fullAccTestOp.setParameterDefaultValues();
 //        fullAccTestOp.setSourceProducts(bbdrProducts);
 //        fullAccTestOp.setParameter("weight", weight);
 //        fullAccTestOp.setParameter("doyOffset", doyOffset);
+        return dailyAccOp.getTargetProduct();
     }
 
     private void accumulate(int i, Product[] bbdrProducts, Tile[][] bbdrTiles, int doyOffset, float weight) {
@@ -317,8 +325,10 @@ public class GlobalbedoLevel3DailyAndFullAccumulation extends Operator {
     }
 
     private void accumulate_2(int i, Product[] bbdrProducts, Tile[][] bbdrTiles, int doyOffset, float weight) {
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+//        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
+        for (int x = 0; x < 75; x++) {
+//            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+            for (int y = 0; y < 75; y++) {
                 // compute daily acc for single day:
                 final long t1 = System.nanoTime();
                 final float[] dailyAccOpResultArray =

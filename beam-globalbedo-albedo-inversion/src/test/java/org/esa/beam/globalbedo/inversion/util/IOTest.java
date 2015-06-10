@@ -209,30 +209,41 @@ public class IOTest extends TestCase {
         int processYear = 2005; // the reference year to process
 
         int processDoy = 121; // the reference doy to process
+        String tile = "h18v04";
         String accName = "matrices_2005100.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2005169.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2004364.bin"; // the accumulator product name
-        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2006002.bin"; // the accumulator product name
-        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
 
         processDoy = 1; // the reference doy to process
         accName = "matrices_2005088.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2004277.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2004276.bin"; // the accumulator product name
-        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
 
         processDoy = 361; // the reference doy to process
         accName = "matrices_2005288.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2006086.bin"; // the accumulator product name
-        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2006087.bin"; // the accumulator product name
-        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, accName));
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
+
+        tile = "h18v00";
+        processDoy = 185;
+        accName = "matrices_2005100.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
+        accName = "matrices_2005009.bin"; // the accumulator product name
+        assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
+        accName = "matrices_2005001.bin"; // the accumulator product name
+        assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
+
     }
 
     public void testGetDoyString() throws Exception {

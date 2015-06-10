@@ -350,7 +350,7 @@ public class IOUtils {
             if (thisYearAlbedoInputFiles != null && thisYearAlbedoInputFiles.length > 0) {
                 for (String s : thisYearAlbedoInputFiles) {
                     if (s.startsWith("matrices_" + accProductYear) && !albedoInputProductList.contains(s)) {
-                        if (isInWingsInterval(wings, year, doy, s)) {
+                        if (isInWingsInterval(wings, year, doy, tile, s)) {
                             albedoInputProductList.add(s);
                         }
                     }
@@ -362,7 +362,7 @@ public class IOUtils {
         return albedoInputProductList;
     }
 
-    static boolean isInWingsInterval(int wings, int processYear, int processDoy, String accName) {
+    static boolean isInWingsInterval(int wings, int processYear, int processDoy, String tile, String accName) {
         // check the 'wings' condition...
         boolean isInWingsInterval = false;
         try {
@@ -378,7 +378,9 @@ public class IOUtils {
             }
             //    # Center
             if (!isInWingsInterval) {
-                if ((accDoy < processDoy + wings / 2) && (accDoy >= processDoy - wings / 2) && (accYear == processYear)) {
+                // make sure that we always cover a period with daylight at the poles
+                int offset = isPolarTile(tile) ? Math.max(180, wings/2) : wings/2;
+                if ((accDoy < processDoy + offset) && (accDoy >= processDoy - offset) && (accYear == processYear)) {
                     isInWingsInterval = true;
                 }
             }
@@ -396,6 +398,10 @@ public class IOUtils {
                     "Cannot determine wings for accumulator '" + accName + "' - skipping.");
         }
         return isInWingsInterval;
+    }
+
+    private static boolean isPolarTile(String tile) {
+        return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
     }
 
     static final Map<Integer, String> waveBandsOffsetMap = new HashMap<>();
