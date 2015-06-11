@@ -369,17 +369,17 @@ public class IOUtils {
             // e.g. matrices_2005100.bin
             final int accYear = Integer.parseInt(accName.substring(9, 13));
             final int accDoy = Integer.parseInt(accName.substring(13, 16));
+            // make sure that we always cover a period with daylight at the poles
+            int offset = isPolarTile(tile) ? Math.max(180, wings/2) : wings/2;
             //    # Left wing
             if (365 + (processDoy - wings) <= 366) {
-                int firstLeftDoy = Math.min(365, Math.max(1, 366 - wings / 2));
-                if (accDoy >= firstLeftDoy && accDoy >= 366 + (processDoy - wings / 2) && accYear < processYear) {
+                int firstLeftDoy = Math.min(365, Math.max(1, 366 - offset));
+                if (accDoy >= firstLeftDoy && accDoy >= 366 + (processDoy - offset) && accYear < processYear) {
                     isInWingsInterval = true;
                 }
             }
             //    # Center
             if (!isInWingsInterval) {
-                // make sure that we always cover a period with daylight at the poles
-                int offset = isPolarTile(tile) ? Math.max(180, wings/2) : wings/2;
                 if ((accDoy < processDoy + offset) && (accDoy >= processDoy - offset) && (accYear == processYear)) {
                     isInWingsInterval = true;
                 }
@@ -387,8 +387,8 @@ public class IOUtils {
             //    # Right wing
             if (!isInWingsInterval) {
                 if ((processDoy + wings) - 365 > 0) {
-                    int lastRightDoy = Math.max(1, Math.min(365, wings / 2));
-                    if (accDoy <= lastRightDoy && accDoy <= (processDoy + wings / 2 - 365) && accYear > processYear) {
+                    int lastRightDoy = Math.max(1, Math.min(365, offset));
+                    if (accDoy <= lastRightDoy && accDoy <= (processDoy + offset - 365) && accYear > processYear) {
                         isInWingsInterval = true;
                     }
                 }

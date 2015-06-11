@@ -96,6 +96,7 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
                 // we have: 'TOA_REFL_CH1', 'TOA_REFL_CH2', 'SZEN', 'VZEN', 'RELAZ', 'TIME', 'QA'
                 // but so far we only need  'TOA_REFL_CH1', 'TOA_REFL_CH2', 'QA'
                 // --> only read those for performance reasons
+                // 20150611: we will also need 'SZEN', 'VZEN', 'RELAZ' !!
                 final TreeNode dataFieldsChildNode = dataFieldsNode.getChildAt(i);
                 final String dataFieldsChildNodeName = dataFieldsChildNode.toString();
 
@@ -103,7 +104,8 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
                 final HObject dataFieldsChildGroupMember = dataFieldsChildGroup.getMemberList().get(i);
                 final List childMetadata = dataFieldsChildGroupMember.getMetadata();
                 Dataset dataset = (Dataset) dataFieldsChildGroupMember;
-                if (dataFieldsChildNodeName.contains("REFL_CH") || dataFieldsChildNodeName.equals("QA")) {
+                if (dataFieldsChildNodeName.contains("REFL_CH") || dataFieldsChildNodeName.equals("QA") ||
+                        dataFieldIsAngle(dataFieldsChildNodeName)) {
                     final Band ltdrBand = createTargetBand(product,
                                                           childMetadata,
                                                           dataFieldsChildNodeName,
@@ -129,6 +131,9 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
                         ltdrBand.setSpectralBandIndex(i);
                         ltdrBand.setSpectralWavelength(AvhrrLtdrConstants.WAVELENGTHS[i]);
                         ltdrBand.setSpectralBandwidth(AvhrrLtdrConstants.BANDWIDTHS[i]);
+                    } else if (dataFieldIsAngle(dataFieldsChildNodeName)) {
+                        ltdrBand.setDescription(AvhrrLtdrUtils.getStringAttributeValue(childMetadata, "long name"));
+                        ltdrBand.setUnit("deg");
                     } else {
                         ltdrBand.setName(AvhrrLtdrConstants.QA_FLAG_BAND_NAME);
                         ltdrBand.setDescription("AVHRR LTDR quality flag band");
@@ -143,6 +148,11 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
             }
         }
         return product;
+    }
+
+    private boolean dataFieldIsAngle(String dataFieldsChildNodeName) {
+        return dataFieldsChildNodeName.equals("SZEN") || dataFieldsChildNodeName.equals("VZEN") ||
+                dataFieldsChildNodeName.equals("RELAZ");
     }
 
     private Band createTargetBand(Product product, List metadata, String bandName, int dataType) throws Exception {

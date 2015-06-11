@@ -74,6 +74,21 @@ public class AvhrrLtdrUtils {
         return floatAttr;
     }
 
+    public static String getStringAttributeValue(List<Attribute> metadata, String attributeName) {
+        String stringAttr = "";
+
+        for (Attribute attribute : metadata) {
+            if (attribute.getName().equals(attributeName)) {
+                String[] svals = (String[]) attribute.getValue();
+                for (String sval : svals) {
+                    stringAttr = stringAttr.concat(sval + " ");
+                }
+            }
+        }
+        return stringAttr;
+    }
+
+
     public static String[] getStartEndTimeFromAttributes(List<Attribute> metadata) {
         String[] startStopTimes = new String[2];
         String startDate = "";
