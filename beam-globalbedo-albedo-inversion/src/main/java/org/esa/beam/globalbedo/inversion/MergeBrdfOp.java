@@ -54,14 +54,6 @@ public class MergeBrdfOp extends PixelOperator {
 
     private static final int sourceSampleOffset = 100;
 
-    public static final int[][] SRC_PRIOR_MEAN =
-            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
-                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-
-    public static final int[][] SRC_PRIOR_SD =
-            new int[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS]
-                    [AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-
     public static final int priorOffset = (int) pow(AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 2.0);
     public static final int SRC_PRIOR_NSAMPLES = 2 * sourceSampleOffset + 2 * priorOffset;
 
@@ -127,7 +119,7 @@ public class MergeBrdfOp extends PixelOperator {
         final double totalNSamples = nSamplesSnow + nSamplesNoSnow;
         final double priorMask = AlbedoInversionUtils.checkSummandForNan(sourceSamples[SRC_PRIOR_MASK].getDouble());
 
-        if (x == 180 && y == 300) {
+        if (x == 760 && y == 720) {
             System.out.println("x,y = " + x + "," + y);
         }
 
@@ -411,39 +403,19 @@ public class MergeBrdfOp extends PixelOperator {
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-//        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-//            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-//                final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-//                SRC_PRIOR_MEAN[i][j] = 2 * sourceSampleOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
-//                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
-//            }
-//        }
-//
-//        for (int i = 0; i < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
-//            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-//                final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-//                SRC_PRIOR_SD[i][j] = 2 * sourceSampleOffset + priorOffset + AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS * i + j;
-//                configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
-//            }
-//        }
-//        configurator.defineSample(SRC_PRIOR_NSAMPLES, AlbedoInversionConstants.PRIOR_NSAMPLES_NAME, priorProduct);
-//        configurator.defineSample(SRC_PRIOR_MASK, AlbedoInversionConstants.PRIOR_MASK_NAME, priorProduct);
-
         for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
             for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                 final String indexString = Integer.toString(priorBandStartIndex + i);
-//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
                 final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+                final int srcPriorMeanIndex  = 2 * sourceSampleOffset + NUM_ALBEDO_PARAMETERS * i + j;
+                configurator.defineSample(srcPriorMeanIndex, meanBandName, priorProduct);
 
-//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
                 final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
+                final int srcPriorSdIndex = 2 * sourceSampleOffset + priorOffset + NUM_ALBEDO_PARAMETERS * i + j;
+                configurator.defineSample(srcPriorSdIndex, sdMeanBandName, priorProduct);
             }
         }
-//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
         configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
-//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
         configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
     }
 
