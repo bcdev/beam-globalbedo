@@ -906,9 +906,6 @@ public class BbdrOp extends PixelOperator {
     }
 
     static Matrix matrixSquare(double[] doubles) {
-//        Matrix matrix = new Matrix(doubles, doubles.length);
-//        return matrix.times(matrix.transpose());
-
         Matrix matrix = new Matrix(doubles.length, doubles.length);
         for (int i = 0; i < doubles.length; i++) {
             for (int j = 0; j < doubles.length; j++) {

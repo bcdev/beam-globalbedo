@@ -180,6 +180,7 @@ public class BbdrAvhrrOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
+        // todo: implement when algorithm is clarified
 //        String[] toaBandNames;
 //
 //        String landExpr;
@@ -312,235 +313,236 @@ public class BbdrAvhrrOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        int status = StatusPostProcessOp.STATUS_INVALID;
-
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            fillTargetSampleWithNoDataValue(targetSamples);
-            return;
-        }
-
-        double vza = sourceSamples[SRC_VZA].getDouble();
-        double vaa = sourceSamples[SRC_VAA].getDouble();
-        double sza = sourceSamples[SRC_SZA].getDouble();
-        double saa = sourceSamples[SRC_SAA].getDouble();
-        if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
-            sza = 90.0 - sza;
-            vza = 90.0 - vza;
-        }
-        double aot = sourceSamples[SRC_AOT].getDouble();
-        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
-        double hsf = sourceSamples[SRC_DEM].getDouble();
-
-        hsf *= 0.001; // convert m to km
-        if (hsf <= 0.0 && hsf >= -0.45) {
-            hsf = hsfMin;
-        }
-
-        if (vza < vzaMin || vza > vzaMax ||
-                sza < szaMin || sza > szaMax ||
-                aot < aotMin || aot > aotMax ||
-                hsf < hsfMin || hsf > hsfMax) {
-            fillTargetSampleWithNoDataValue(targetSamples);
-            if (sdrOnly) {
-                // write status
-                targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
-            }
-            return;
-        }
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
-        targetSamples[TRG_VZA].set(vza);
-        targetSamples[TRG_SZA].set(sza);
-        targetSamples[TRG_DEM].set(hsf);
-        targetSamples[TRG_AOD].set(aot);
-        targetSamples[TRG_AODERR].set(delta_aot);
-
-        double ozo;
-        double cwv;
-        double gas;
-
-//      CWV & OZO - provided as constant values
-        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
-        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
-        gas = ozo;
-
-        double vza_r = toRadians(vza);
-        double sza_r = toRadians(sza);
-        double muv = cos(vza_r);
-        double mus = cos(sza_r);
-        double amf = 1.0 / muv + 1.0 / mus;
-
-        double phi = abs(saa - vaa);
-        if (phi > 180.0) {
-            phi = 360.0 - phi;
-        }
-        phi = min(phi, 179);
-        phi = max(phi, 1);
-        if (!sdrOnly) {
-            targetSamples[TRG_RAA].set(phi);
-        }
-
-        float[] tg = gasLookupTable.getTg((float) amf, (float) gas);
-        float[][][] kx_tg = gasLookupTable.getKxTg((float) amf, (float) gas);
-
-        double[][] f_int_all = interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
-
-        double[] sab = new double[sensor.getNumBands()];
-        double[] rat_tdw = new double[sensor.getNumBands()];
-        double[] rat_tup = new double[sensor.getNumBands()];
-        double[] rfl_pix = new double[sensor.getNumBands()];
-        for (int i = 0; i < sensor.getNumBands(); i++) {
-            double[] f_int = f_int_all[i];
-
-            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
-            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
-            sab[i] = f_int[2];        // Spherical Albedo
-            rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
-            rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
-
-            toa_rfl[i] = toa_rfl[i] / tg[i];
-
-            double x_term = (toa_rfl[i] - rpw) / ttot;
-            // RFL_PIX IS THE SURFACE REFLECTANCE which we get now from the product!!
-            rfl_pix[i] = x_term / (1. + sab[i] * x_term);
-        }
-
-        ///////////////////////////////////////////////////////////////////////////////////////////
-
-        double rfl_red = rfl_pix[sensor.getIndexRed()];
-        double rfl_nir = rfl_pix[sensor.getIndexNIR()];
-        double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
-        double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
-        if (sdrOnly) {
-            targetSamples[sensor.getNumBands() * 2].set(ndvi_land);
-        } else {
-            targetSamples[TRG_NDVI].set(ndvi_land);
-        }
-
-        double[] err_rad = new double[sensor.getNumBands()];
-        double[] err_aod = new double[sensor.getNumBands()];
-        double[] err_cwv = new double[sensor.getNumBands()];
-        double[] err_ozo = new double[sensor.getNumBands()];
-        double[] err_coreg = new double[sensor.getNumBands()];
-
-        for (int i = 0; i < sensor.getNumBands(); i++) {
-            double[] f_int = f_int_all[i];
-            err_rad[i] = sensor.getRadiometricError() * toa_rfl[i];
-
-            double delta_cwv = sensor.getCwvError() * cwv;
-            double delta_ozo = sensor.getOzoError() * ozo;
-
-            err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
-            err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
-            err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
-
-            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();       // compute a variance product as in BbdrOp
-            err_coreg[i] *= sensor.getErrCoregScale();
-        }
-
-        Matrix err_aod_cov = matrixSquare(err_aod);
-        Matrix err_cwv_cov = matrixSquare(err_cwv);
-        Matrix err_ozo_cov = matrixSquare(err_ozo);
-        Matrix err_coreg_cov = matrixSquare(err_coreg);
-
-        Matrix err_rad_cov = new Matrix(sensor.getNumBands(), sensor.getNumBands());
-        for (int i = 0; i < sensor.getNumBands(); i++) {
-            err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
-        }
-
-        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
-                err_rad_cov).plusEquals(err_coreg_cov);
-
-        // end of implementation needed for landcover cci
-        ////////////////////////////////////////////////////////////////////////////////////////////////
-
-        double ndviSum = sensor.getAndvi() + sensor.getBndvi();
-        double sig_ndvi_land = pow(
-                (pow(ndviSum * rfl_nir * sqrt(
-                        err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
-                        pow(ndviSum * rfl_red * sqrt(
-                                err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
-                ), 0.5);
-        targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
-
-        // BB conversion and error var-cov calculation
-
-        Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
-        Matrix bdr_mat_all = nb_coef_arr_all.times(rfl_pix_m).plus(nb_intcp_arr_all);
-
-        double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
-        for (int i = 0; i < bbdrsData.length; i++) {
-            targetSamples[i].set(bbdrsData[i]);
-        }
-
-        Matrix err2_mat_rfl = nb_coef_arr_all.times(err2_tot_cov).times(nb_coef_arr_all.transpose());
-        Matrix err2_n2b_all = new Matrix(n_spc, n_spc);
-        for (int i = 0; i < n_spc; i++) {
-            err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
-        }
-        Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
-
-        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
-        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
-        for (int i = 0; i < relevantErrIndices.length; i++) {
-            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
-            targetSamples[TRG_ERRORS + i].set(err_final);
-        }
-
-        // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
-
-        double[][] f_int_nsky = interpol_lut_Nsky(sza, vza, hsf, aot);
-
-        double phi_r = toRadians(phi);
-
-        double mu_phi = cos(phi_r);
-        double mu_ph_ang = mus * muv + sin(vza_r) * sin(sza_r) * mu_phi;
-        double ph_ang = acos(mu_ph_ang);
-
-        double kvol = ((PI / 2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang)) / (mus + muv) - PI / 4.0;
-
-        double hb = 2.0;
-
-        double tan_vp = tan(vza_r);
-        double tan_sp = tan(sza_r);
-        double sec_vp = 1. / muv;
-        double sec_sp = 1. / mus;
-
-        double D2 = tan_vp * tan_vp + tan_sp * tan_sp - 2 * tan_vp * tan_sp * mu_phi;
-
-        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)), 2)), 0.5)) / (sec_vp + sec_sp);
-        cost = min(cost, 1.0);
-        double t = acos(cost);
-
-        double ocap = (t - sin(t) * cost) * (sec_vp + sec_sp) / PI;
-
-        double kgeo = 0.5 * (1. + mu_ph_ang) * sec_sp * sec_vp + ocap - sec_vp - sec_sp;
-
-        // Nsky-weighted kernels
-        Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
-        Matrix rat_tup_m = new Matrix(rat_tup, rat_tup.length);
-        for (int i_bb = 0; i_bb < n_spc; i_bb++) {
-            Matrix nb_coef_arr_D_m = nb_coef_arr[i_bb];
-            Matrix m1 = nb_coef_arr_D_m.times(rat_tdw_m);
-            double rat_tdw_bb = m1.get(0, 0) + nb_intcp_arr_D[i_bb];
-
-            Matrix m2 = nb_coef_arr_D_m.times(rat_tup_m);
-            double rat_tup_bb = m2.get(0, 0) + nb_intcp_arr_D[i_bb];
-
-            // 1/(1-Delta_bb)=(1-rho*S)^2
-            Matrix sab_m = new Matrix(sab, sab.length);
-            Matrix m3 = nb_coef_arr_D_m.times(sab_m);
-            double delta_bb_inv = pow((1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb])), 2);
-
-            double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
-            double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
-            double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
-            double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
-            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol;
-            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1] + t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
-            targetSamples[TRG_KERN + (i_bb * 2)].set(kernel_land_0);
-            targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kernel_land_1);
-        }
+        // todo: implement when algorithm is clarified
+//        int status = StatusPostProcessOp.STATUS_INVALID;
+//
+//        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+//            // only compute over land
+//            fillTargetSampleWithNoDataValue(targetSamples);
+//            return;
+//        }
+//
+//        double vza = sourceSamples[SRC_VZA].getDouble();
+//        double vaa = sourceSamples[SRC_VAA].getDouble();
+//        double sza = sourceSamples[SRC_SZA].getDouble();
+//        double saa = sourceSamples[SRC_SAA].getDouble();
+//        if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
+//            sza = 90.0 - sza;
+//            vza = 90.0 - vza;
+//        }
+//        double aot = sourceSamples[SRC_AOT].getDouble();
+//        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+//        double hsf = sourceSamples[SRC_DEM].getDouble();
+//
+//        hsf *= 0.001; // convert m to km
+//        if (hsf <= 0.0 && hsf >= -0.45) {
+//            hsf = hsfMin;
+//        }
+//
+//        if (vza < vzaMin || vza > vzaMax ||
+//                sza < szaMin || sza > szaMax ||
+//                aot < aotMin || aot > aotMax ||
+//                hsf < hsfMin || hsf > hsfMax) {
+//            fillTargetSampleWithNoDataValue(targetSamples);
+//            if (sdrOnly) {
+//                // write status
+//                targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+//            }
+//            return;
+//        }
+//        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+//        targetSamples[TRG_VZA].set(vza);
+//        targetSamples[TRG_SZA].set(sza);
+//        targetSamples[TRG_DEM].set(hsf);
+//        targetSamples[TRG_AOD].set(aot);
+//        targetSamples[TRG_AODERR].set(delta_aot);
+//
+//        double ozo;
+//        double cwv;
+//        double gas;
+//
+////      CWV & OZO - provided as constant values
+//        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
+//        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
+//        gas = ozo;
+//
+//        double vza_r = toRadians(vza);
+//        double sza_r = toRadians(sza);
+//        double muv = cos(vza_r);
+//        double mus = cos(sza_r);
+//        double amf = 1.0 / muv + 1.0 / mus;
+//
+//        double phi = abs(saa - vaa);
+//        if (phi > 180.0) {
+//            phi = 360.0 - phi;
+//        }
+//        phi = min(phi, 179);
+//        phi = max(phi, 1);
+//        if (!sdrOnly) {
+//            targetSamples[TRG_RAA].set(phi);
+//        }
+//
+//        float[] tg = gasLookupTable.getTg((float) amf, (float) gas);
+//        float[][][] kx_tg = gasLookupTable.getKxTg((float) amf, (float) gas);
+//
+//        double[][] f_int_all = interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
+//
+//        double[] sab = new double[sensor.getNumBands()];
+//        double[] rat_tdw = new double[sensor.getNumBands()];
+//        double[] rat_tup = new double[sensor.getNumBands()];
+//        double[] rfl_pix = new double[sensor.getNumBands()];
+//        for (int i = 0; i < sensor.getNumBands(); i++) {
+//            double[] f_int = f_int_all[i];
+//
+//            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
+//            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
+//            sab[i] = f_int[2];        // Spherical Albedo
+//            rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
+//            rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
+//
+//            toa_rfl[i] = toa_rfl[i] / tg[i];
+//
+//            double x_term = (toa_rfl[i] - rpw) / ttot;
+//            // RFL_PIX IS THE SURFACE REFLECTANCE which we get now from the product!!
+//            rfl_pix[i] = x_term / (1. + sab[i] * x_term);
+//        }
+//
+//        ///////////////////////////////////////////////////////////////////////////////////////////
+//
+//        double rfl_red = rfl_pix[sensor.getIndexRed()];
+//        double rfl_nir = rfl_pix[sensor.getIndexNIR()];
+//        double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
+//        double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
+//        if (sdrOnly) {
+//            targetSamples[sensor.getNumBands() * 2].set(ndvi_land);
+//        } else {
+//            targetSamples[TRG_NDVI].set(ndvi_land);
+//        }
+//
+//        double[] err_rad = new double[sensor.getNumBands()];
+//        double[] err_aod = new double[sensor.getNumBands()];
+//        double[] err_cwv = new double[sensor.getNumBands()];
+//        double[] err_ozo = new double[sensor.getNumBands()];
+//        double[] err_coreg = new double[sensor.getNumBands()];
+//
+//        for (int i = 0; i < sensor.getNumBands(); i++) {
+//            double[] f_int = f_int_all[i];
+//            err_rad[i] = sensor.getRadiometricError() * toa_rfl[i];
+//
+//            double delta_cwv = sensor.getCwvError() * cwv;
+//            double delta_ozo = sensor.getOzoError() * ozo;
+//
+//            err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
+//            err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
+//            err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
+//
+//            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();       // compute a variance product as in BbdrOp
+//            err_coreg[i] *= sensor.getErrCoregScale();
+//        }
+//
+//        Matrix err_aod_cov = matrixSquare(err_aod);
+//        Matrix err_cwv_cov = matrixSquare(err_cwv);
+//        Matrix err_ozo_cov = matrixSquare(err_ozo);
+//        Matrix err_coreg_cov = matrixSquare(err_coreg);
+//
+//        Matrix err_rad_cov = new Matrix(sensor.getNumBands(), sensor.getNumBands());
+//        for (int i = 0; i < sensor.getNumBands(); i++) {
+//            err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
+//        }
+//
+//        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
+//                err_rad_cov).plusEquals(err_coreg_cov);
+//
+//        // end of implementation needed for landcover cci
+//        ////////////////////////////////////////////////////////////////////////////////////////////////
+//
+//        double ndviSum = sensor.getAndvi() + sensor.getBndvi();
+//        double sig_ndvi_land = pow(
+//                (pow(ndviSum * rfl_nir * sqrt(
+//                        err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
+//                        pow(ndviSum * rfl_red * sqrt(
+//                                err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+//                ), 0.5);
+//        targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
+//
+//        // BB conversion and error var-cov calculation
+//
+//        Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
+//        Matrix bdr_mat_all = nb_coef_arr_all.times(rfl_pix_m).plus(nb_intcp_arr_all);
+//
+//        double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
+//        for (int i = 0; i < bbdrsData.length; i++) {
+//            targetSamples[i].set(bbdrsData[i]);
+//        }
+//
+//        Matrix err2_mat_rfl = nb_coef_arr_all.times(err2_tot_cov).times(nb_coef_arr_all.transpose());
+//        Matrix err2_n2b_all = new Matrix(n_spc, n_spc);
+//        for (int i = 0; i < n_spc; i++) {
+//            err2_n2b_all.set(i, i, rmse_arr_all[i] * rmse_arr_all[i]);
+//        }
+//        Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
+//
+//        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
+//        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+//        for (int i = 0; i < relevantErrIndices.length; i++) {
+//            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+//            targetSamples[TRG_ERRORS + i].set(err_final);
+//        }
+//
+//        // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
+//
+//        double[][] f_int_nsky = interpol_lut_Nsky(sza, vza, hsf, aot);
+//
+//        double phi_r = toRadians(phi);
+//
+//        double mu_phi = cos(phi_r);
+//        double mu_ph_ang = mus * muv + sin(vza_r) * sin(sza_r) * mu_phi;
+//        double ph_ang = acos(mu_ph_ang);
+//
+//        double kvol = ((PI / 2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang)) / (mus + muv) - PI / 4.0;
+//
+//        double hb = 2.0;
+//
+//        double tan_vp = tan(vza_r);
+//        double tan_sp = tan(sza_r);
+//        double sec_vp = 1. / muv;
+//        double sec_sp = 1. / mus;
+//
+//        double D2 = tan_vp * tan_vp + tan_sp * tan_sp - 2 * tan_vp * tan_sp * mu_phi;
+//
+//        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)), 2)), 0.5)) / (sec_vp + sec_sp);
+//        cost = min(cost, 1.0);
+//        double t = acos(cost);
+//
+//        double ocap = (t - sin(t) * cost) * (sec_vp + sec_sp) / PI;
+//
+//        double kgeo = 0.5 * (1. + mu_ph_ang) * sec_sp * sec_vp + ocap - sec_vp - sec_sp;
+//
+//        // Nsky-weighted kernels
+//        Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
+//        Matrix rat_tup_m = new Matrix(rat_tup, rat_tup.length);
+//        for (int i_bb = 0; i_bb < n_spc; i_bb++) {
+//            Matrix nb_coef_arr_D_m = nb_coef_arr[i_bb];
+//            Matrix m1 = nb_coef_arr_D_m.times(rat_tdw_m);
+//            double rat_tdw_bb = m1.get(0, 0) + nb_intcp_arr_D[i_bb];
+//
+//            Matrix m2 = nb_coef_arr_D_m.times(rat_tup_m);
+//            double rat_tup_bb = m2.get(0, 0) + nb_intcp_arr_D[i_bb];
+//
+//            // 1/(1-Delta_bb)=(1-rho*S)^2
+//            Matrix sab_m = new Matrix(sab, sab.length);
+//            Matrix m3 = nb_coef_arr_D_m.times(sab_m);
+//            double delta_bb_inv = pow((1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + nb_intcp_arr_D[i_bb])), 2);
+//
+//            double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
+//            double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
+//            double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
+//            double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
+//            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * kpp_vol;
+//            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1] + t2 * f_int_nsky[i_bb][3] + t3 * kpp_geo;
+//            targetSamples[TRG_KERN + (i_bb * 2)].set(kernel_land_0);
+//            targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kernel_land_1);
+//        }
     }
 
     private void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {

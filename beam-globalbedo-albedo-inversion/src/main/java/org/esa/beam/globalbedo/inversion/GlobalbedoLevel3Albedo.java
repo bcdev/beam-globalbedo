@@ -25,6 +25,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 

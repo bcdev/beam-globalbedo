@@ -38,6 +38,11 @@ import javax.media.jai.TileCache;
 import java.awt.image.RenderedImage;
 import java.io.File;
 
+/**
+ * GlobAlbedo Level 2 processor (LC-CCI specific) for BBDR and kernel parameter computation, and tile extraction
+ *
+ * @author Marco Zuehlke
+ */
 @OperatorMetadata(alias = "lc.l2")
 public class LandcoverLevel2 extends Operator {
 

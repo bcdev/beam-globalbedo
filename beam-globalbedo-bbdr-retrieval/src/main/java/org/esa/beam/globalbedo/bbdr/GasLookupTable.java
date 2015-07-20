@@ -7,6 +7,8 @@ import javax.imageio.stream.ImageInputStream;
 import java.io.IOException;
 
 /**
+ * Container to hold LUTs for gaseous correction part
+ *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
@@ -203,11 +205,6 @@ public class GasLookupTable {
         }
         return tg;
     }
-
-//    float[] get2(float amf, float gas) {
-//        LookupTable lookupTable = new LookupTable(lutGas, amfArray, gasArray);
-//        lookupTable.getValue(amf, gas);
-//    }
 
     public float[][][] getKxTg(float amf, float gas) {
         int ind_amf = BbdrUtils.getIndexBefore(amf, amfArray);

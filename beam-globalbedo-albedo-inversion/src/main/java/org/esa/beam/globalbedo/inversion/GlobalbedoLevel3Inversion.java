@@ -1,6 +1,5 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -10,7 +9,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.util.ProductUtils;
+import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;

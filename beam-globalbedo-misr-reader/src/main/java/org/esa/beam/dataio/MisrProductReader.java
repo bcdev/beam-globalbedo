@@ -29,7 +29,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Product reader responsible for reading Meteosat First Generation MSA data products in HDF format.
+ * Product reader responsible for reading MISR data products in HDF format.
  *
  * @author Olaf Danne
  */

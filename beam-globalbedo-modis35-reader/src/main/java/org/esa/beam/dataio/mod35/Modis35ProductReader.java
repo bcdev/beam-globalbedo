@@ -59,6 +59,8 @@ public class Modis35ProductReader extends AbstractProductReader {
         inputFilePath = inFile.getPath();
         filename = inFile.getName();
 
+        // todo: get rid of the following weird setup, use hdf object framework instead, as e.g. in AVHRR LTDR reader!!!
+
         // 1. read product with original RasterDigest: get the variables on 5km grid
         Product tiePoints5kmProduct = readProduct(Modis35Constants.LOW_RES_RASTER_DIM_NAMES);
 
