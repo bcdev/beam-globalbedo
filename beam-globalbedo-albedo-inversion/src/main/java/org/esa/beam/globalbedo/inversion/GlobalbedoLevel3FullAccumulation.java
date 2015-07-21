@@ -24,9 +24,7 @@ import java.util.logging.Logger;
 /**
  * 'Master' operator for the full accumulation for a period of DoYs
  * --> basically makes 'full' (8-day) binary accumulator files from all the dailies, now
- * with reading the dailies only once!! However, this requires a lot of memory.
- * It seems that not more than 1/2 year (23 DoYs) can be properly processed.
- * Also, final setup will depend on final concept to be provided by GL.
+ * with reading the dailies only once! Note that this requires a lot of memory.
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $

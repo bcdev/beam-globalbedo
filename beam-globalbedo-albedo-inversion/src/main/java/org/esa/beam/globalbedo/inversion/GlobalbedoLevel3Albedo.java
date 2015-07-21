@@ -102,9 +102,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
             brdfMergedProduct = copyFromSingleProduct(brdfSeaiceProduct, 0.0f);
         } else {
             // we need the SNOW Prior file for given DoY...
-            final String priorDir = priorRootDir + File.separator + tile;
+            String priorDir = priorRootDir + File.separator + tile;
             if (priorRootDirSuffix != null) {
-                priorDir.concat(File.separator + priorRootDirSuffix);
+                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
             logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 

@@ -238,14 +238,6 @@ public class DailyAccumulationOp extends PixelOperator {
         }
     }
 
-    public float[][][] getResultArray() {
-        return resultArray;
-    }
-
-    public int getNumPixelsProcessed() {
-        return numPixelsProcessed;
-    }
-
     private Accumulator getMatricesPerBBDRDataset(Sample[] sourceSamples, int sourceProductIndex) {
 
         if (computeSeaice) {

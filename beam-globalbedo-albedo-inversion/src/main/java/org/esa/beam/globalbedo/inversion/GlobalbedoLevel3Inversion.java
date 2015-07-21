@@ -151,8 +151,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
             Product inversionProduct = inversionOp.getTargetProduct();
 
             if (computeSeaice) {
-                // in this case we have no geocoding yet...
-//                inversionProduct.setGeoCoding(IOUtils.getSeaicePstGeocoding(tile));
                 for (int i = doy; i < doy + 8; i++) {
                     try {
                         Product[] bbdrpstProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, i);
@@ -169,11 +167,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
 
             setTargetProduct(inversionProduct);
-//            setTargetProduct(reprojectedPriorProduct);                  // test!!
 
             // correct for lost pixels due to extreme SIN angles near South Pole
             // todo: this is not a very nice hack. we should try to find a better solution...
-            if (includesSouthPole(tile)) {
+            if (includesSouthPole()) {
                 SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
                 correctionOp.setParameterDefaultValues();
                 correctionOp.setSourceProduct("sourceProduct", inversionProduct);
@@ -195,7 +192,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 
-    private boolean includesSouthPole(String tile) {
+    private boolean includesSouthPole() {
         return (tile.equals("h17v17") || tile.equals("h18v17"));
     }
 

@@ -19,8 +19,6 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
-//import Jama.SingularValueDecomposition;
-
 /**
  * Pixel operator implementing the inversion part of python breadboard.
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo Lopez Saldana.

@@ -110,11 +110,6 @@ public class AlbedoInversionConstants {
 
     public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
 
-//    public static final int DOYS_IN_YEAR = 46;
-//    public static final int DOYS_IN_YEAR = 23; // test!!
-    public static final int DOYS_IN_YEAR = 2; // test!!
-    public static final int EIGHT_DAYS = 8;
-
     public static final int NUM_BBDR_WAVE_BANDS = 3;
     public static final int NUM_ALBEDO_PARAMETERS = 3;  // f0, f1, f2
 
@@ -125,17 +120,9 @@ public class AlbedoInversionConstants {
 
     public static final int SEAICE_TILE_WIDTH = 2250;
     public static final int SEAICE_TILE_HEIGHT = 2250;
-//    public static final int SEAICE_TILE_WIDTH = 50;   // test!!
-//    public static final int SEAICE_TILE_HEIGHT = 50;
 
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_X = 926.6254330558;
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_Y = 926.6254330558;
-
-    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
-    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
-
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
 
     public static final String MODIS_SIN_PROJECTION_CRS_STRING =
             "PROJCS[\"MODIS Sinusoidal\"," +
