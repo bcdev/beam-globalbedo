@@ -116,8 +116,8 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         Matrix[] bsaSigma = new Matrix[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            wsaSigma[i] = new Matrix(1, 1, Double.NaN);
-            bsaSigma[i] = new Matrix(1, 1, Double.NaN);
+            wsaSigma[i] = new Matrix(1, 1, AlbedoInversionConstants.NO_DATA_VALUE);
+            bsaSigma[i] = new Matrix(1, 1, AlbedoInversionConstants.NO_DATA_VALUE);
         }
 
         Matrix uWsaVis = new Matrix(1, 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
@@ -167,8 +167,8 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
                 bsaSigma[2] = uBsaSw.times(C.transpose()).times(uBsaSw.transpose());
             } else {
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                    wsaSigma[i].set(0, 0, Double.NaN);
-                    bsaSigma[i].set(0, 0, Double.NaN);
+                    wsaSigma[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
+                    bsaSigma[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
                 }
             }
         }
@@ -211,17 +211,17 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         // # Cap uncertainties and calculate sqrt
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             final double wsa = wsaSigma[i].get(0, 0);
-            if (!Double.isNaN(wsa)) {
+            if (AlbedoInversionUtils.isValid(wsa)) {
                 wsaSigma[i].set(0, 0, Math.min(1.0, Math.sqrt(wsa)));
             }
             final double bsa = bsaSigma[i].get(0, 0);
-            if (!Double.isNaN(bsa)) {
+            if (AlbedoInversionUtils.isValid(bsa)) {
                 bsaSigma[i].set(0, 0, Math.min(1.0, Math.sqrt(bsa)));
             }
         }
 
         double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        if (!Double.isNaN(relEntropy)) {
+        if (AlbedoInversionUtils.isValid(relEntropy)) {
             relEntropy = Math.exp(relEntropy / 9.0);
         }
 
@@ -229,8 +229,8 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
         final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
         final double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
-        final double entropy = AlbedoInversionUtils.checkSummandForNan(sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble());
-        final double maskEntropy = (entropy != 0.0) ? 1.0 : 0.0;
+        final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+        final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(blackSkyAlbedo, alphaDHR, bsaSigma,
                 whiteSkyAlbedo, alphaBHR, wsaSigma,
                 weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
@@ -247,34 +247,34 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
         dhrAlphaBandNames = IOUtils.getAlbedoDhrAlphaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(dhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
         dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
         bhrBandNames = IOUtils.getAlbedoBhrBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
         bhrAlphaBandNames = IOUtils.getAlbedoBhrAlphaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(bhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -282,39 +282,39 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             Band band = targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
                 ProductData.TYPE_FLOAT32);
-        weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
+        weightedNumberOfSamplesBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
-        relEntropyBand.setNoDataValue(Float.NaN);
+        relEntropyBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         relEntropyBand.setNoDataValueUsed(true);
 
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
-        goodnessOfFitBand.setNoDataValue(Float.NaN);
+        goodnessOfFitBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         goodnessOfFitBand.setNoDataValueUsed(true);
 
         snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
         Band snowFractionBand = targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
-        snowFractionBand.setNoDataValue(Float.NaN);
+        snowFractionBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         snowFractionBand.setNoDataValueUsed(true);
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         Band dataMaskBand = targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
-        dataMaskBand.setNoDataValue(Float.NaN);
+        dataMaskBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         dataMaskBand.setNoDataValueUsed(true);
 
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
-        szaBand.setNoDataValue(Float.NaN);
+        szaBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         szaBand.setNoDataValueUsed(true);
     }
 

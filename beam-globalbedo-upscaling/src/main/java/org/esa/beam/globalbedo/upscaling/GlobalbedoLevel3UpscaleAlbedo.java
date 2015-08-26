@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
@@ -265,7 +266,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
                     float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
                     final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
                     if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                        sample = Float.NaN;
+                        sample = AlbedoInversionConstants.NO_DATA_VALUE;
                     }
                     final int xCorr = x - targetRectangle.x;
                     final int yCorr = y - targetRectangle.y;
@@ -299,16 +300,16 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             int xIndex = sourceRectangle.x;
             float corrValue;
             float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || Float.isNaN(value))
+            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
                     && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
                 xIndex++;
                 value = src.getSampleFloat(xIndex, y);
             }
-            if (value == 0.0 || Float.isNaN(value)) {
+            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
                 // go north direction, we WILL find a non-zero value
                 int yIndex = y;
                 float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || Float.isNaN(value2))
+                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
                         && yIndex > sourceRectangle.y + 1) {
                     yIndex--;
                     value2 = src.getSampleFloat(xIndex, yIndex);
@@ -332,16 +333,16 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             int xIndex = sourceRectangle.x + sourceRectangle.width - 1;
             float corrValue;
             float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || Float.isNaN(value))
+            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
                     && xIndex > sourceRectangle.x) {
                 xIndex--;
                 value = src.getSampleFloat(xIndex, y);
             }
-            if (value == 0.0 || Float.isNaN(value)) {
+            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
                 // go north direction, we WILL find a non-zero value
                 int yIndex = y;
                 float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || Float.isNaN(value2))
+                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
                         && yIndex > sourceRectangle.y + 1) {
                     yIndex--;
                     value2 = src.getSampleFloat(xIndex, yIndex);

@@ -282,7 +282,7 @@ public class MergeBrdfOp extends PixelOperator {
         parameterBandNames = IOUtils.getInversionParameterBandNames();
         for (String parameterBandName : parameterBandNames) {
             Band band = targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -291,41 +291,41 @@ public class MergeBrdfOp extends PixelOperator {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 Band band = targetProduct.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
+                band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
                 band.setNoDataValueUsed(true);
             }
         }
 
         entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
         Band entropyBand = targetProduct.addBand(entropyBandName, ProductData.TYPE_FLOAT32);
-        entropyBand.setNoDataValue(Float.NaN);
+        entropyBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         entropyBand.setNoDataValueUsed(true);
 
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
-        relEntropyBand.setNoDataValue(Float.NaN);
+        relEntropyBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         relEntropyBand.setNoDataValueUsed(true);
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
                                                                  ProductData.TYPE_FLOAT32);
-        weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
+        weightedNumberOfSamplesBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
         daysToTheClosestSampleBandName = AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
         Band daysToTheClosestSampleBand = targetProduct.addBand(
                 daysToTheClosestSampleBandName, ProductData.TYPE_FLOAT32);
-        daysToTheClosestSampleBand.setNoDataValue(Float.NaN);
+        daysToTheClosestSampleBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         daysToTheClosestSampleBand.setNoDataValueUsed(true);
 
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
-        goodnessOfFitBand.setNoDataValue(Float.NaN);
+        goodnessOfFitBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         goodnessOfFitBand.setNoDataValueUsed(true);
 
         proportionNsamplesBandName = AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME;
         Band proportionNsamplesBand = targetProduct.addBand(proportionNsamplesBandName, ProductData.TYPE_FLOAT32);
-        proportionNsamplesBand.setNoDataValue(Float.NaN);
+        proportionNsamplesBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         proportionNsamplesBand.setNoDataValueUsed(true);
 
 //        targetProduct.setPreferredTileSize(100, 100);

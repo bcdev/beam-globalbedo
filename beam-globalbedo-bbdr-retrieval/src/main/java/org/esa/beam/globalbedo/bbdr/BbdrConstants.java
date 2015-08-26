@@ -88,5 +88,7 @@ public class BbdrConstants {
     public static final int SEAICE_PST_QUADRANT_PRODUCT_HEIGHT = 2250;
     public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
     public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
+
+    public static final float NO_DATA_VALUE = -999.0f;
 }
 

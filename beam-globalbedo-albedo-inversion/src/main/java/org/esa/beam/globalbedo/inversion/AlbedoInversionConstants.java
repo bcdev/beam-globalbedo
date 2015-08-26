@@ -101,7 +101,7 @@ public class AlbedoInversionConstants {
     // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
 
-    public static final double INVALID = -9999.0;
+    public static final double INVALID = AlbedoInversionConstants.NO_DATA_VALUE;
 
     public static final double HALFLIFE = 11.54;
 
@@ -140,4 +140,6 @@ public class AlbedoInversionConstants {
                 {"305","313","321","329"},    // Nov
                 {"337","345","353","361"}     // Dec
         };
+
+    public static final float NO_DATA_VALUE = -999.0f;
 }

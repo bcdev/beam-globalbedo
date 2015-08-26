@@ -11,6 +11,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.BorderExtender;
@@ -59,8 +60,8 @@ public class SouthPoleCorrectionOp extends Operator {
                     final float prevRowValue = sourceTile.getSampleFloat(x, y - 1);
                     // if we detect a data discontinuity going down a column, we check if the rest
                     // of the column is zero or NaN. If so, we copy the last valid data pixel at the edge.
-                    if ((value == 0.0 || Float.isNaN(value)) &&
-                            (prevRowValue != 0.0 && !Float.isNaN(prevRowValue)) &&
+                    if ((value == 0.0 || !AlbedoInversionUtils.isValid(value)) &&
+                            (prevRowValue != 0.0 && AlbedoInversionUtils.isValid(prevRowValue)) &&
                             isRestOfColumnZero(sourceTile, x, y)) {
                         targetTile.setSample(x, y, prevRowValue);
                     } else {

@@ -113,11 +113,11 @@ public class GlobalbedoLevel3UpscaleModisPriors extends GlobalbedoLevel3UpscaleB
         // for performance, just write one band ...
         Band band = upscaledProduct.addBand(priorMeanBandNames[0], ProductData.TYPE_FLOAT32);
         ProductUtils.copyRasterDataNodeProperties(reprojectedProduct.getBand(priorMeanBandNames[0]), band);
-        band.setNoDataValue(Float.NaN);
+        band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         band.setNoDataValueUsed(true);
         band = upscaledProduct.addBand(maskBandName, ProductData.TYPE_FLOAT32);
         ProductUtils.copyRasterDataNodeProperties(reprojectedProduct.getBand(maskBandName), band);
-        band.setNoDataValue(Float.NaN);
+        band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         band.setNoDataValueUsed(true);
 
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());

@@ -6,6 +6,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
@@ -125,7 +126,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                     sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
                 }
                 if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                    sample = Float.NaN;
+                    sample = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
                 target.setSample(x, y, sample);
             }
@@ -157,7 +158,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                     if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
                         target.setSample(x, y, 0.0);
                     } else {
-                        target.setSample(x, y, Float.NaN);
+                        target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
                     }
                 }
             }
@@ -186,7 +187,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         for (int y = rect.y; y < rect.y + rect.height; y++) {
             for (int x = rect.x; x < rect.x + rect.width; x++) {
                 double sample = entropy.getSampleDouble(x, y);
-                if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
+                if (sample != 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
                     return true;
                 }
             }

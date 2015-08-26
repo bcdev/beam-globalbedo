@@ -29,10 +29,10 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-                  description = "Performs final inversion from fully accumulated optimal estimation matrices",
-                  authors = "Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Performs final inversion from fully accumulated optimal estimation matrices",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 
 public class InversionOp extends PixelOperator {
 
@@ -117,7 +117,7 @@ public class InversionOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         for (String parameterBandName : PARAMETER_BAND_NAMES) {
-            Band b = productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, Float.NaN);
+            Band b = productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
             if (computeSeaice) {
                 b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             }
@@ -126,18 +126,18 @@ public class InversionOp extends PixelOperator {
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, Float.NaN);
+                Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
                 if (computeSeaice) {
                     b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
                 }
             }
         }
 
-        Band bInvEntr = productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        Band bInvRelEntr = productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
-        Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, Float.NaN);
+        Band bInvEntr = productConfigurer.addBand(INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvRelEntr = productConfigurer.addBand(INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
@@ -257,8 +257,8 @@ public class InversionOp extends PixelOperator {
             final LUDecomposition lud = new LUDecomposition(mAcc);
             if (lud.isNonsingular()) {
                 Matrix tmpM = mAcc.inverse();
-                if (AlbedoInversionUtils.matrixHasNanElements(tmpM) || AlbedoInversionUtils.matrixHasZerosInDiagonale(
-                        tmpM)) {
+                if (AlbedoInversionUtils.matrixHasNanElements(tmpM) ||
+                        AlbedoInversionUtils.matrixHasZerosInDiagonale(tmpM)) {
                     tmpM = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
                                       3 * NUM_ALBEDO_PARAMETERS,
                                       INVALID);

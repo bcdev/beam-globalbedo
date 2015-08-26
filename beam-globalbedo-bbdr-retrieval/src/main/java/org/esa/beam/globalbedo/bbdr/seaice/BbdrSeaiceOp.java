@@ -146,10 +146,10 @@ public class BbdrSeaiceOp extends PixelOperator {
             }
 
             Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
-            ndvi.setNoDataValue(Float.NaN);
+            ndvi.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             ndvi.setNoDataValueUsed(true);
             Band aod = targetProduct.addBand("aod", ProductData.TYPE_FLOAT32);
-            aod.setNoDataValue(Float.NaN);
+            aod.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             aod.setNoDataValueUsed(true);
 
             // copy flag coding and flag images
@@ -208,7 +208,7 @@ public class BbdrSeaiceOp extends PixelOperator {
             };
             for (String bandName : bandNames) {
                 Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(Float.NaN);
+                band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
                 band.setNoDataValueUsed(true);
             }
             targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
@@ -223,14 +223,14 @@ public class BbdrSeaiceOp extends PixelOperator {
         for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
             Band srcBand = sourceProduct.getBand(bandname);
             Band band = targetProduct.addBand("sdr_" + bandname, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
         for (String bandname : BbdrConstants.VGT_TOA_BAND_NAMES) {
             Band srcBand = sourceProduct.getBand(bandname);
             Band band = targetProduct.addBand("sdr_error_" + bandname, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
@@ -240,14 +240,14 @@ public class BbdrSeaiceOp extends PixelOperator {
         for (int i = 0; i < sensor.getNumBands(); i++) {
             Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
             Band band = targetProduct.addBand("sdr_" + (i + 1), ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
         for (int i = 0; i < sensor.getNumBands(); i++) {
             Band srcBand = sourceProduct.getBand("reflectance_" + (i + 1));
             Band band = targetProduct.addBand("sdr_error_" + (i + 1), ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
@@ -832,7 +832,7 @@ public class BbdrSeaiceOp extends PixelOperator {
 
     private void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {
         for (WritableSample targetSample : targetSamples) {
-            targetSample.set(Float.NaN);
+            targetSample.set(BbdrConstants.NO_DATA_VALUE);
         }
     }
 

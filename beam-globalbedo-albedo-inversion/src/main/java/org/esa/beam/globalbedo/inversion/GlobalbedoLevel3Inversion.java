@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -15,6 +14,10 @@ import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,10 +39,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
-    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix") // e.g., background/processed.p1.0.618034.p2.1.00000
+    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
+    // e.g., background/processed.p1.0.618034.p2.1.00000
     private String priorRootDirSuffix;
 
-    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix") // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
+    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
     @Parameter(defaultValue = "h18v04", description = "MODIS tile")
@@ -94,7 +99,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                        " - cannot proceed...: " + e.getMessage());
+                                                    " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -111,7 +116,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 try {
                     Product tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
                     reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                            tileInfoProduct);
+                                                                                 tileInfoProduct);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                 }
@@ -137,10 +142,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
             } else {
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
@@ -172,6 +177,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 inversionProduct.setGeoCoding(IOUtils.getModisTileGeocoding(tile));
             }
 
+            // todo: complete and activate
+//            addMetadata(inversionProduct);
+
             setTargetProduct(inversionProduct);
 //            setTargetProduct(reprojectedPriorProduct);                  // test!!
 
@@ -182,6 +190,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 correctionOp.setParameterDefaultValues();
                 correctionOp.setSourceProduct("sourceProduct", inversionProduct);
                 Product southPoleCorrectedProduct = correctionOp.getTargetProduct();
+                ProductUtils.copyMetadata(inversionProduct, southPoleCorrectedProduct);
                 setTargetProduct(southPoleCorrectedProduct);
             }
 
@@ -197,6 +206,114 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
         logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
+    }
+
+    private void addMetadata(Product inversionProduct) {
+        final MetadataElement globalElement = inversionProduct.getMetadataRoot().getElement("Global_Attributes");
+
+        final ProductData historyAttrData = ProductData.createInstance("QA4ECV Processing, 2014-2017");
+        final MetadataAttribute historyAttr = new MetadataAttribute("history", historyAttrData, true);
+        globalElement.addAttribute(historyAttr);
+
+        final ProductData conventionsAttrData = ProductData.createInstance("CF-1.4");
+        final MetadataAttribute conventionsAttr = new MetadataAttribute("conventions", conventionsAttrData, true);
+        globalElement.addAttribute(conventionsAttr);
+
+        final ProductData titleAttrData = ProductData.createInstance("QA4ECV BRDF Product");
+        final MetadataAttribute titleAttr = new MetadataAttribute("title", titleAttrData, true);
+        globalElement.addAttribute(titleAttr);
+
+        final String institutionString =
+                "Mullard Space Science Laboratory, Department of Space and Climate Physics, University College London";
+        final ProductData institutionAttrData = ProductData.createInstance(institutionString);
+        final MetadataAttribute institutionAttr = new MetadataAttribute("institution", institutionAttrData, true);
+        globalElement.addAttribute(institutionAttr);
+
+        final ProductData sourceAttrData = ProductData.createInstance("Satellite observations, BRDF/Albedo Inversion Model");
+        final MetadataAttribute sourceAttr = new MetadataAttribute("source", sourceAttrData, true);
+        globalElement.addAttribute(sourceAttr);
+
+        final ProductData referencesAttrData = ProductData.createInstance("GlobAlbedo ATBD V3.1");
+        final MetadataAttribute referencesAttr = new MetadataAttribute("references", referencesAttrData, true);
+        globalElement.addAttribute(referencesAttr);
+
+        final ProductData commentAttrData = ProductData.createInstance("none");
+        final MetadataAttribute commentAttr = new MetadataAttribute("comment", commentAttrData, true);
+        globalElement.addAttribute(commentAttr);
+
+        addVariableAttributes(inversionProduct);
+    }
+
+    static final Map<String, String> waveBandsTextsMap = new HashMap<String, String>();
+
+    static {
+        waveBandsTextsMap.put("VIS", "visible");
+        waveBandsTextsMap.put("NIR", "near infrared");
+        waveBandsTextsMap.put("SW", "shortwave");
+    }
+
+    private void addVariableAttributes(Product inversionProduct) {
+        final MetadataElement variablesRootElement = inversionProduct.getMetadataRoot().getElement("Variable_Attributes");
+
+        for (MetadataElement metadataElement : variablesRootElement.getElements()) {
+            if (metadataElement.getName().equals("metadata")) {
+                variablesRootElement.removeElement(metadataElement);
+            }
+        }
+
+        String delims = "[_]";
+        for (Band b : inversionProduct.getBands()) {
+            final MetadataElement variableElement = variablesRootElement.getElement(b.getName());
+            if (b.getName().startsWith("mean_")) {
+                String[] tokens = b.getName().split(delims);
+                if (tokens.length == 3) {
+                    final String longNameString =
+                            "BRDF model parameter " + tokens[2] + " - " + waveBandsTextsMap.get(tokens[1]) + " band";
+                    addMDElement(variableElement, "long_name", longNameString);
+                }
+            } else if (b.getName().startsWith("VAR_")) {
+                String[] tokens = b.getName().split(delims);
+                if (tokens.length == 5) {
+                    final String longNameString =
+                            "Covariance of BRDF model parameters " +
+                                    tokens[1] + "-" + tokens[2] + "/" + tokens[1] + "-" + tokens[2];
+                    addMDElement(variableElement, "long_name", longNameString);
+                }
+            } else if (b.getName().equals("Entropy")) {
+                final String longNameString = "Entropy";
+                addMDElement(variableElement, "long_name", longNameString);
+            } else if (b.getName().equals("Relative_Entropy")) {
+                final String longNameString = "Relative entropy";
+                addMDElement(variableElement, "long_name", longNameString);
+            } else if (b.getName().equals("Weighted_Number_of_Samples")) {
+                final String longNameString = "Weighted number of BRDF samples";
+                addMDElement(variableElement, "long_name", longNameString);
+            } else if (b.getName().equals("Goodness_of_Fit")) {
+                final String longNameString = "Goodness of fit";
+                addMDElement(variableElement, "long_name", longNameString);
+            } else if (b.getName().equals("Proportion_NSamples")) {
+                final String longNameString = "Proportion of numbers of snow/noSnow samples";
+                addMDElement(variableElement, "long_name", longNameString);
+            } else if (b.getName().equals("Time_to_the_Closest_Sample")) {
+                final String longNameString = "Time to the closest sample";
+                addMDElement(variableElement, "long_name", longNameString);
+                final String unitString = "day";
+                addMDElement(variableElement, "units", unitString);
+            } else if (b.getName().equals("crs")) {
+                final String longNameString = "Coordinate Reference System";
+                addMDElement(variableElement, "long_name", longNameString);
+                final String commentString =
+                        "A coordinate reference system (CRS) defines defines how the georeferenced spatial data " +
+                                "relates to real locations on the Earth's surface";
+                addMDElement(variableElement, "comment", commentString);
+            }
+        }
+    }
+
+    private void addMDElement(MetadataElement variableElement, String key, String value) {
+        final ProductData attrData = ProductData.createInstance(value);
+        final MetadataAttribute attr = new MetadataAttribute(key, attrData, true);
+        variableElement.addAttribute(attr);
     }
 
     private boolean includesSouthPole(String tile) {

@@ -320,12 +320,11 @@ public class AlbedoInversionUtils {
         return rm;
     }
 
-
-    public static double checkSummandForNan(double srcValue) {
-        return Double.isNaN(srcValue) ? 0.0 : srcValue;
+    public static boolean isValid(float srcValue) {
+        return (srcValue != AlbedoInversionConstants.NO_DATA_VALUE) && !Float.isNaN(srcValue);
     }
 
-    public static float checkSummandForNan(float srcValue) {
-        return Float.isNaN(srcValue) ? 0.0f : srcValue;
+    public static boolean isValid(double srcValue) {
+        return (srcValue != (double) AlbedoInversionConstants.NO_DATA_VALUE) && !Double.isNaN(srcValue);
     }
 }

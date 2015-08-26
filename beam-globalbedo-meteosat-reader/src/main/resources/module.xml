@@ -23,8 +23,10 @@
         <module>beam-core</module>
     </dependency>
     <dependency>
-        <groupId>org.esa.beam</groupId>
-        <artifactId>beam-netcdf</artifactId>
+        <module>beam-collocation</module>
+    </dependency>
+    <dependency>
+        <module>beam-netcdf</module>
     </dependency>
     <dependency>
         <module>beam-visat-rcp</module>

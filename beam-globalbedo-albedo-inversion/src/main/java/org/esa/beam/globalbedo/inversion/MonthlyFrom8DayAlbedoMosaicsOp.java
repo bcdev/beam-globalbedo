@@ -101,35 +101,52 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         }
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
-            final double relEntropy = AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble());
+            final double relEntropy = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();
 //            if (dataMask > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
-            if (relEntropy > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
+            if (AlbedoInversionUtils.isValid(relEntropy) && relEntropy > 0.0) { // the mask is 0.0/1.0, derived from entropy!!!
                 final float thisWeight = monthlyWeighting[monthIndex - 1][doy[j] - 1];
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                    monthlyDHR[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i]].getDouble());
-                    monthlyBHR[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i]].getDouble());
-                    monthlyDHRAlpha[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR_ALPHA[i]].getDouble());
-                    monthlyBHRAlpha[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR_ALPHA[i]].getDouble());
-                    monthlyDHRSigma[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR_SIGMA[i]].getDouble());
-                    monthlyBHRSigma[i] += thisWeight *
-                            AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR_SIGMA[i]].getDouble());
+                    final double dhrSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(dhrSample)) {
+                        monthlyDHR[i] += thisWeight * dhrSample;
+                    }
+                    final double bhrSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(bhrSample)) {
+                        monthlyBHR[i] += thisWeight * bhrSample;
+                    }
+                    final double dhrAlphaSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR_ALPHA[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(dhrAlphaSample)) {
+                        monthlyDHRAlpha[i] += thisWeight * dhrAlphaSample;
+                    }
+                    final double bhrAlphaSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR_ALPHA[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(bhrAlphaSample)) {
+                        monthlyBHRAlpha[i] += thisWeight * bhrAlphaSample;
+                    }
+                    final double dhrSigmaSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DHR_SIGMA[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(dhrSigmaSample)) {
+                        monthlyDHRSigma[i] += thisWeight * dhrSigmaSample;
+                    }
+                    final double bhrSigmaSample = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_BHR_SIGMA[i]].getDouble();
+                    if (AlbedoInversionUtils.isValid(bhrSigmaSample)) {
+                        monthlyBHRSigma[i] += thisWeight * bhrSigmaSample;
+                    }
                 }
-                monthlyNsamples += thisWeight *
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES].getDouble());
-                monthlyRelativeEntropy += thisWeight *
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble());
-                monthlyGoodnessOfFit += thisWeight *
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble());
-                monthlySnowFraction += thisWeight *
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble());
+                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES].getDouble())) {
+                    monthlyNsamples += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
+                }
+                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble())) {
+                    monthlyRelativeEntropy += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();
+                }
+                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble())) {
+                    monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
+                }
+                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble())) {
+                    monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
+                }
                 monthlyDataMask = 1.0;
-                monthlySza += thisWeight *
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble());
+                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble())) {
+                    monthlySza += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
+                }
 
                 sumWeights += thisWeight;
             }
@@ -211,7 +228,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_DHR[i] = index;
             index++;
             Band band = targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -220,7 +237,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_DHR_ALPHA[i] = index;
             index++;
             Band band = targetProduct.addBand(dhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -229,7 +246,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_DHR_SIGMA[i] = index;
             index++;
             Band band = targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -238,7 +255,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_BHR[i] = index;
             index++;
             Band band = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -247,7 +264,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_BHR_ALPHA[i] = index;
             index++;
             Band band = targetProduct.addBand(bhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
@@ -256,40 +273,40 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             SRC_BHR_SIGMA[i] = index;
             index++;
             Band band = targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
                                                                  ProductData.TYPE_FLOAT32);
-        weightedNumberOfSamplesBand.setNoDataValue(Float.NaN);
+        weightedNumberOfSamplesBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         weightedNumberOfSamplesBand.setNoDataValueUsed(true);
 
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
-        relEntropyBand.setNoDataValue(Float.NaN);
+        relEntropyBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         relEntropyBand.setNoDataValueUsed(true);
 
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
-        goodnessOfFitBand.setNoDataValue(Float.NaN);
+        goodnessOfFitBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         goodnessOfFitBand.setNoDataValueUsed(true);
 
         snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
         Band snowFractionBand = targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
-        snowFractionBand.setNoDataValue(Float.NaN);
+        snowFractionBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         snowFractionBand.setNoDataValueUsed(true);
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         Band dataMaskBand = targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
-        dataMaskBand.setNoDataValue(Float.NaN);
+        dataMaskBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         dataMaskBand.setNoDataValueUsed(true);
 
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         // is not in breadboard monthly product
         Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
-        szaBand.setNoDataValue(Float.NaN);
+        szaBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
         szaBand.setNoDataValueUsed(true);
     }
 

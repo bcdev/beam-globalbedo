@@ -27,6 +27,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
@@ -122,7 +123,7 @@ public class GlobalbedoLevel3UpscaleNewModisPriors extends GlobalbedoLevel3Upsca
             String targetBandName = getTargetBandName(srcBand);
             Band band = upscaledProduct.addBand(targetBandName, srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 

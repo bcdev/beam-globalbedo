@@ -186,15 +186,19 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(95.2706, sunZenith, 0.3);
     }
 
-    public void testCheckSummandForNan() throws Exception {
-        double summand = Double.NaN;
-        double value = 10.0;
-        assertEquals(Double.NaN, value + summand);
-        assertEquals(10.0, value + AlbedoInversionUtils.checkSummandForNan(summand));
+    public void testCheckValidValues() {
+        double a = -999.0;
+        assertFalse(AlbedoInversionUtils.isValid(a));
+        a = Double.NaN;
+        assertFalse(AlbedoInversionUtils.isValid(a));
+        a = 123.4;
+        assertTrue(AlbedoInversionUtils.isValid(a));
 
-        float summandF = Float.NaN;
-        float valueF = 10.0f;
-        assertEquals(Float.NaN, valueF + summandF);
-        assertEquals(10.0f, valueF + AlbedoInversionUtils.checkSummandForNan(summandF));
+        float b = -999.0f;
+        assertFalse(AlbedoInversionUtils.isValid(b));
+        b = Float.NaN;
+        assertFalse(AlbedoInversionUtils.isValid(b));
+        b = 123.4f;
+        assertTrue(AlbedoInversionUtils.isValid(b));
     }
 }

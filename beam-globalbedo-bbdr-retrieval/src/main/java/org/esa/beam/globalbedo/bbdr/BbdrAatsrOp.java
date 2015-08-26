@@ -153,7 +153,7 @@ public class BbdrAatsrOp extends PixelOperator {
                 bandName = bandName.concat("_" + viewDirection);
             }
             Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
         targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
@@ -168,14 +168,14 @@ public class BbdrAatsrOp extends PixelOperator {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
             Band srcBand = sourceProduct.getBand("reflec_" + viewDirection + "_" + wvl);
             Band band = targetProduct.addBand("sdr_" + viewDirection + "_" + wvl, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
             ProductUtils.copySpectralBandProperties(srcBand, band);
         }
         for (int i = 0; i < Sensor.AATSR.getNumBands(); i++) {
             final String wvl = String.format("%04d", (int) Sensor.AATSR.getWavelength()[i]);
             Band band = targetProduct.addBand("sdr_error_" + viewDirection + "_" + wvl, ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(BbdrConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
     }
@@ -581,7 +581,7 @@ public class BbdrAatsrOp extends PixelOperator {
 
     private void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {
         for (WritableSample targetSample : targetSamples) {
-            targetSample.set(Float.NaN);
+            targetSample.set(BbdrConstants.NO_DATA_VALUE);
         }
     }
 

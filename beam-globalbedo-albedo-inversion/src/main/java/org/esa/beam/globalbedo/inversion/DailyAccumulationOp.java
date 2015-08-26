@@ -401,13 +401,13 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private boolean isBBDRFilter(Sample[] sourceSamples, int sourceProductIndex) {
         return (sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble() == 0.0 ||
-                Double.isNaN(sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble()) ||
+                AlbedoInversionUtils.isValid(sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble()) ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset].getDouble() == 9999.0 ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 0.0 ||
-                Double.isNaN(sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble()) ||
+                AlbedoInversionUtils.isValid(sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble()) ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_NIR].getDouble() == 9999.0 ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble() == 0.0 ||
-                Double.isNaN(sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble()) ||
+                AlbedoInversionUtils.isValid(sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble()) ||
                 sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_BB_SW].getDouble() == 9999.0);
     }
 

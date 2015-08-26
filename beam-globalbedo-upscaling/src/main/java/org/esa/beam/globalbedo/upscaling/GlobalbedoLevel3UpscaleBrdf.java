@@ -28,6 +28,8 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
@@ -208,7 +210,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         for (int y = rect.y; y < rect.y + rect.height; y++) {
             for (int x = rect.x; x < rect.x + rect.width; x++) {
                 double sample = entropy.getSampleDouble(x, y);
-                if (sample != 0.0 && sample != noDataValue && !Double.isNaN(sample)) {
+                if (sample != 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
                     return true;
                 }
             }
@@ -343,8 +345,8 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
                 final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                    sample = Float.NaN;
+                if (sample == 0.0 || sampleMask == 0.0 || AlbedoInversionUtils.isValid(sample)) {
+                    sample = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
                 target.setSample(x, y, sample);
             }
@@ -367,7 +369,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                 if (sampleMask > 0.0) {
                     target.setSample(x, y, max);
                 } else {
-                    target.setSample(x, y, Float.NaN);
+                    target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
                 }
             }
         }
