@@ -25,6 +25,25 @@ then
     fi
 fi
 
+if [ -z "${GA_INST}" ]; then
+    GA_INST=`pwd`
+fi
+
+GA_TASKS=${GA_INST}/tasks
+GA_LOG=${GA_INST}/log
+if [ -e ${GA_TASKS} ]
+then
+    echo "${GA_TASKS} already exists."
+else
+    mkdir ${GA_TASKS}
+fi
+if [ -e ${GA_LOG} ]
+then
+    echo "${GA_LOG} already exists."
+else
+    mkdir ${GA_LOG}
+fi
+
 nohup python2.7 $GA_INST/${workflow}.py > $GA_INST/${workflow}.out 2>&1 &
 echo $! > $GA_INST/${workflow}.pid
 sleep 2

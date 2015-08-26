@@ -21,9 +21,6 @@ import java.awt.*;
                   copyright = "(C) 2013 by Brockmann Consult")
 public class AccToDimapOp extends Operator {
 
-    @SourceProduct
-    private Product sourceProduct;   // we don't need it, set a dummy source product
-
     @Parameter(description = "Year")
     private int year;
 

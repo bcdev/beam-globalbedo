@@ -31,7 +31,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Product reader responsible for reading Meteosat First Generation MSA data products in HDF format.
+ * Product reader responsible for reading MODIS29 data products in HDF format.
  *
  * @author Olaf Danne
  */
@@ -69,16 +69,6 @@ public class Modis29ProductReader extends AbstractProductReader {
                     geoInputProduct = createGeoInputProduct(virtualDir.getFile(fileName));
                 }
             }
-//            if (seaiceInputProduct != null) {
-//                if (geoInputProduct == null) {
-//                    // product was not included in the tar archive
-//                    // alternatively, it is by convention expected in same directory as input product
-//                    geoInputProduct = getGeoInputProductFromAuxdataFile(seaiceInputProduct.getName());
-//                }
-//            } else {
-//                throw new IllegalStateException("Content of MOD29 Seaice product '" + getInputFile().getName() +
-//                                                        "' incomplete or corrupt.");
-//            }
         } catch (IOException e) {
             throw new IllegalStateException("MOD29 Seaice product '" + getInputFile().getName() +
                                                     "' cannot be read.");
@@ -182,16 +172,7 @@ public class Modis29ProductReader extends AbstractProductReader {
         targetBand = ProductUtils.copyBand(lonBand.getName(), staticInputProduct, targetBandName, product, false);
         targetBand.setSourceImage(lonBand.getSourceImage());
 
-        // implement specific GeoCoding which takes into account missing lat/lon data 'outside the Earth' ,
-        // by using a LUT with: latlon <--> pixel for all pixels 'INside the Earth'
-        // --> special solution for Meteosat, but general solution is still under discussion
-
         product.setGeoCoding(new PixelGeoCoding(latBand, lonBand, null, 5));    // todo: does this work??
-//        final Band latBandT = product.getBand("Navigation_Latitude");
-//        latBandT.setValidPixelExpression("'Navigation_Latitude' != -9999.0");
-//        final Band lonBandT = product.getBand("Navigation_Longitude");
-//        lonBandT.setValidPixelExpression("'Navigation_Latitude' != -9999.0");
-//        product.setGeoCoding(new MeteosatGeoCoding(latBandT, lonBandT, "MFG_0deg"));
     }
 
     private boolean hasSameRasterDimension(Product productOne, Product productTwo) {

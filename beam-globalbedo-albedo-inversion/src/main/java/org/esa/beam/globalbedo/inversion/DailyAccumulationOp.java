@@ -82,6 +82,9 @@ public class DailyAccumulationOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Debug - run additional parts of code if needed.")
     private boolean debug;
 
+    @Parameter(defaultValue = "true", description = "Write binary accumulator file.")
+    private boolean writeBinaryFile;
+
 
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
@@ -226,11 +229,12 @@ public class DailyAccumulationOp extends PixelOperator {
         numPixelsProcessed++;
         if (numPixelsProcessed == sourceProducts[0].getSceneRasterWidth() *
                 sourceProducts[0].getSceneRasterHeight()) {
-            BeamLogManager.getSystemLogger().log(Level.INFO,
-                    "all pixels processed (" + numPixelsProcessed +
-                            ") - writing accumulator result array...");
-            IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator result array written.");
+            BeamLogManager.getSystemLogger().log(Level.INFO, "all pixels processed [" + numPixelsProcessed + "]");
+            if (writeBinaryFile) {
+                BeamLogManager.getSystemLogger().log(Level.INFO, "...writing accumulator result array...");
+                IOUtils.writeFloatArrayToFile(dailyAccumulatorBinaryFile, resultArray);
+                BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator result array written.");
+            }
         }
     }
 

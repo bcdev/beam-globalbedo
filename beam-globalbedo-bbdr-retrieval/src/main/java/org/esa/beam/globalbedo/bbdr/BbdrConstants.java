@@ -34,6 +34,14 @@ public class BbdrConstants {
         1.012f, 0.953f, 0.971f, 1.0f
     };
 
+    public final static float[] AVHRR_WAVELENGHTS = {
+            645.0f, 830.0f
+    };
+
+    public final static float[] AVHRR_CALIBRATION_COEFFS = {
+            1.0f, 1.0f
+    };
+
 
     // MERIS has ozone, but no water vapour image
     // AATSR has neither ozone nor water vapour image

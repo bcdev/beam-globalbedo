@@ -55,6 +55,9 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     @Parameter(defaultValue = "true", description = "If True product will be reprojected")
     boolean reprojectToPlateCarre;
 
+//    @Parameter(interval = "[0,17]", defaultValue = "0",
+//            description = "SIN tile latitude (v) index")
+//    int tileLatIndex;
 
     Product reprojectedProduct;
     Product upscaledProduct;

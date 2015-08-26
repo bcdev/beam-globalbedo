@@ -281,9 +281,7 @@ public class BbdrUtils {
             final int day = Integer.parseInt(yyyymmdd.substring(6, 8));
             cal.set(year, month, day);
             doy = cal.get(Calendar.DAY_OF_YEAR);
-        } catch (StringIndexOutOfBoundsException e) {
-            e.printStackTrace();
-        } catch (NumberFormatException e) {
+        } catch (StringIndexOutOfBoundsException | NumberFormatException e) {
             e.printStackTrace();
         }
         return doy;

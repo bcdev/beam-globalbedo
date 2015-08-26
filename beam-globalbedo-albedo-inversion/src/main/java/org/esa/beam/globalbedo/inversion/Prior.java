@@ -2,7 +2,13 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.Operator;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
  * Object holding the prior data elements M, V, Mask and Parameters
@@ -28,22 +34,21 @@ public class Prior {
      * Returns a prior object built from source samples of a prior product to be used for inversion in {@link InversionOp}}.
      * This method basically represents the BB implementation 'GetPrior'
      *
-     * @param sourceSamples - the source samples as defined in {@link InversionOp}}.
+     * @param sourceSamples    - the source samples as defined in {@link InversionOp}}.
      * @param priorScaleFactor - the prior scale factor
-     *
      * @return Prior
      */
     public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor) {
 
         Matrix C = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);              // 9x9
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);              // 9x9
         Matrix inverseC = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                     3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);       // 9x9
+                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);       // 9x9
         Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);  // 9x1
 
         double mask = 0.0;
         final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;
-        double nSamples = sourceSamples[priorIndexNsamples].getDouble();
+        double nSamples = AlbedoInversionUtils.checkSummandForNan(sourceSamples[priorIndexNsamples].getDouble());
 
         Matrix priorMean = new Matrix(
                 AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
@@ -54,10 +59,10 @@ public class Prior {
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 final int priorIndexMij = InversionOp.SRC_PRIOR_MEAN[i][j];
-                final double m_ij = sourceSamples[priorIndexMij].getDouble();
+                final double m_ij = AlbedoInversionUtils.checkSummandForNan(sourceSamples[priorIndexMij].getDouble());
                 priorMean.set(index, 0, m_ij);
                 final int priorIndexSDij = InversionOp.SRC_PRIOR_SD[i][j];
-                final double sd_ij = sourceSamples[priorIndexSDij].getDouble();
+                final double sd_ij = AlbedoInversionUtils.checkSummandForNan(sourceSamples[priorIndexSDij].getDouble());
                 priorSD.set(index, 0, sd_ij);
                 if (priorMean.get(index, 0) > 0.0 && priorSD.get(index, 0) == 0.0) {
                     mask = 1.0;
@@ -91,7 +96,7 @@ public class Prior {
                 for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                     for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                         if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
-                            priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
+                                priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
                             processPixel = false;
                             break;
                         }
@@ -100,7 +105,7 @@ public class Prior {
                 }
                 if (processPixel) {
                     final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                                             3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);    // 9x9
+                            3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);    // 9x9
                     inverseC = cIdentity.inverse();
                     index = 0;
                     for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
@@ -140,4 +145,5 @@ public class Prior {
     public Matrix getParameters() {
         return parameters;
     }
+
 }

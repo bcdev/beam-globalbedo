@@ -32,6 +32,11 @@ import org.esa.beam.util.logging.BeamLogManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * GlobAlbedo Level 2 processor for BBDR and kernel parameter computation, and tile extraction
+ *
+ * @author Olaf Danne
+ */
 @OperatorMetadata(alias = "ga.l2")
 public class GlobalbedoLevel2 extends Operator {
 
@@ -95,6 +100,7 @@ public class GlobalbedoLevel2 extends Operator {
         }
 
         if (aotProduct.equals(GaMasterOp.EMPTY_PRODUCT)) {
+            // todo: this happens when source product is too small (width or height < 9). Improve handling of this!
             logger.log(Level.ALL, "No AOT product generated for source product: " + sourceProduct.getName() +
                     " --> cannot create BBDR product.");
         } else {

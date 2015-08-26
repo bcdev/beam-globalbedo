@@ -3,15 +3,8 @@ package org.esa.beam.globalbedo.inversion;
 /**
  * Class representing a 'full' 8-day accumulator, holding M, V, E (sumMatrices) and
  * daysToTheClosestSample.
- * This class is not yet used, but should be used later as output from 'GlobAlbedoFullAccumulation'
- * and as input for Inversion (instead of reading the daily accumulators multiple times and
- * doing the accumulation there)
- * <p/>
- * Created by IntelliJ IDEA.
- * User: olafd
- * Date: 19.06.11
- * Time: 16:52
- * To change this template use File | Settings | File Templates.
+ *
+ * @author Olaf Danne
  */
 public class FullAccumulator {
     private int year;

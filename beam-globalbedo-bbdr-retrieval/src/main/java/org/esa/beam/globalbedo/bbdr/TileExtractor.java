@@ -128,8 +128,11 @@ public class TileExtractor extends Operator implements Output {
     private void writeTileProduct(Product product, String tileName) {
         File dir = new File(bbdrDir, tileName);
         dir.mkdirs();
-        File file = new File(dir, "subset_" + sourceProduct.getName() + "_BBDR_Geo.dim");
-        WriteOp writeOp = new WriteOp(product, file, DimapProductConstants.DIMAP_FORMAT_NAME);
+//        File file = new File(dir, "subset_" + sourceProduct.getName() + "_BBDR_Geo.dim");
+//        File file = new File(dir, sourceProduct.getName() + "_" + tileName + ".dim");  // 20150401 for QA4ECV chain on CEMS
+//        WriteOp writeOp = new WriteOp(product, file, DimapProductConstants.DIMAP_FORMAT_NAME);
+        File file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");  // 20150401 for QA4ECV chain on CEMS
+        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-BEAM");
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 

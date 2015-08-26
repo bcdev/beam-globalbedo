@@ -5,7 +5,7 @@ import org.esa.beam.util.math.MathUtils;
 import org.esa.beam.framework.datamodel.PixelGeoCoding;
 
 /**
- * Provides a QuadTree search for Meteosat First and Second Generation Albedo product geocoding.
+ * Provides a QuadTree search for MISR product geocoding.
  * In principle, the algorithm is the same as used in {@link PixelGeoCoding}. A region ID
  * allows for specific implementations for regions containing weird areas (e.g. off-planet in Meteosat MSG Euro product).
  *

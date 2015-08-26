@@ -6,7 +6,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -23,7 +22,6 @@ import java.util.logging.Logger;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.l3.dailyacc")
-//public class GlobalbedoLevel3DailyAccumulation extends Operator implements Output {
 public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
@@ -61,7 +59,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         }
 
         if (inputProducts != null && inputProducts.length > 0) {
-            String dailyAccumulatorDir = bbdrRootDir + File.separator + "AccumulatorFiles"
+            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
@@ -91,9 +89,11 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             logger.log(Level.ALL, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
             //  no BBDR input - just set a dummy target product
-            Product dummyProduct = new Product("tileInfo", "dummy", 1, 1);
+            Product dummyProduct = new Product("dummy", "dummy", 1, 1);
             setTargetProduct(dummyProduct);
         }
+
+        getTargetProduct().setName("SUCCESS_dailyacc_" + year + "_" + doy);
 
         logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);

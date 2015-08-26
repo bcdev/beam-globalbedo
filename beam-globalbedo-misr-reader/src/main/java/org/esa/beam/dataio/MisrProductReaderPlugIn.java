@@ -13,7 +13,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 /**
- * PlugIn class which provides a Meteosat First Generation MSA product reader to the framework.
+ * PlugIn class which provides a MISR product reader to the framework.
  *
  * @author Olaf Danne
  */

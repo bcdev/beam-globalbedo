@@ -25,6 +25,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -78,10 +79,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // get BRDF Snow/NoSnow input files...
-        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
-                File.separator + tile + File.separator;
-        final String brdfSnowDir = brdfDir + "snow";
-        final String brdfNoSnowDir = brdfDir + "nosnow";
+//        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
+//                File.separator + tile + File.separator;
+//        final String brdfSnowDir = brdfDir + "snow";
+//        final String brdfNoSnowDir = brdfDir + "nosnow";
+        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator;
+        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile;
+        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile;
 
         logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
         logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
@@ -98,9 +102,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
             brdfMergedProduct = copyFromSingleProduct(brdfSeaiceProduct, 0.0f);
         } else {
             // we need the SNOW Prior file for given DoY...
-            final String priorDir = priorRootDir + File.separator + tile;
+            String priorDir = priorRootDir + File.separator + tile;
             if (priorRootDirSuffix != null) {
-                priorDir.concat(File.separator + priorRootDirSuffix);
+                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
             logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 

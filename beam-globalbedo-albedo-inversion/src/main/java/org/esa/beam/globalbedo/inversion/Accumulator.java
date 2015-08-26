@@ -72,4 +72,20 @@ public class Accumulator {
     public double getMask() {
         return mask;
     }
+
+    public void setM(Matrix m) {
+        M = m;
+    }
+
+    public void setV(Matrix v) {
+        V = v;
+    }
+
+    public void setE(Matrix e) {
+        E = e;
+    }
+
+    public void setMask(double mask) {
+        this.mask = mask;
+    }
 }

@@ -34,9 +34,6 @@ public class GlobAlbedoMosaicProductReaderTest {
     public void testGetMosaicFileRegex() {
         String dimRegex = mosaicGrid.getMosaicFileRegex("GlobAlbedo.2005129.h18v04.dim");
         assertEquals("GlobAlbedo.2005129.h\\d\\dv\\d\\d.dim", dimRegex);
-
-        String enviRegex = mosaicGrid.getMosaicFileRegex("GlobAlbedo.2005129.h18v04_ENVI.bin");
-        assertEquals("GlobAlbedo.2005129.h\\d\\dv\\d\\d_ENVI.bin", enviRegex);
     }
 
     @Test

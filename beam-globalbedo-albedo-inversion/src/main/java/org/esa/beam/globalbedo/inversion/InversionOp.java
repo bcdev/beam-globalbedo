@@ -19,8 +19,6 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
-//import Jama.SingularValueDecomposition;
-
 /**
  * Pixel operator implementing the inversion part of python breadboard.
  * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo Lopez Saldana.
@@ -218,6 +216,10 @@ public class InversionOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);
+
+        if (x == 180 && y == 300) {
+            System.out.println("x,y = " + x + "," + y);
+        }
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;

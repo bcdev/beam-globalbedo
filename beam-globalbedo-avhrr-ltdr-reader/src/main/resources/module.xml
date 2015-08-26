@@ -1,0 +1,63 @@
+
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-avhrr-ltdr-reader</symbolicName>
+    <version>2.0-SNAPSHOT</version>
+    <name>GlobAlbedo AVHRR LTDR Reader</name>
+    <packaging>dir</packaging>
+    <description>Specific reader for AVHRR LTDR product.
+    </description>
+
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>Max Planck Str.2, 21502 Geesthacht (Germany)</contactAddress>
+    <copyright>(C) 2014 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <changelog>
+        <![CDATA[
+        <b>Changes in 1.2-SNAPSHOT</b><br/>
+        Initial implementation.<br/>
+        ]]>
+    </changelog>
+
+    <dependency>
+        <module>beam-core</module>
+    </dependency>
+
+    <dependency>
+        <module>lib-hdf</module>
+    </dependency>
+
+    <dependency>
+        <lib>lib/jhdfobj-2.7.jar</lib>
+    </dependency>
+
+    <dependency>
+        <lib>lib/jhdf4obj-2.7.jar</lib>
+    </dependency>
+
+    <dependency>
+        <module>beam-visat-rcp</module>
+        <optional>true</optional>
+    </dependency>
+
+    <categories>Reader,HDF</categories>
+
+    <extension point="beam-ui:actions">
+        <action>
+            <class>org.esa.beam.visat.actions.ProductImportAction</class>
+            <id>importAvhrrLtdrProduct</id>
+            <helpId>importAvhrrLtdrProduct</helpId>
+            <formatName>AVHRR-LTDR</formatName>
+            <useAllFileFilter>true</useAllFileFilter>
+            <text>AVHRR LTDR</text>
+            <mnemonic/>
+            <shortDescr>Import an AVHRR LTDR product.
+            </shortDescr>
+            <description>Import an AVHRR LTDR product.
+            </description>
+        </action>
+    </extension>
+
+</module>

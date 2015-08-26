@@ -31,9 +31,11 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.JAI;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -66,9 +68,10 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
-    @Parameter(defaultValue = "MERGE", valueSet = {"MERGE", "SNOW", "NOSNOW"},
-               description = "Input BRDF type, either MERGE, SNOW or NOSNOW.")
+    @Parameter(defaultValue = "Merge", valueSet = {"Merge", "Snow", "NoSnow"},
+               description = "Input BRDF type, either Merge, Snow or NoSnow.")
     private String inputType;
+
 
     @TargetProduct
     private Product targetProduct;
@@ -77,9 +80,18 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     private String[][] uncertaintyBandNames;
     private double matrixNodataValue;
     private Band entropyBand;
+    private Band relEntropyBand;
+    private Band weightedNumSamplesBand;
+    private Band mergeProportionNsamplesBand;
+    private Band godnessOfFitBand;
+    private Band closestSampleBand;
+    private int height;
 
     @Override
     public void initialize() throws OperatorException {
+
+//        JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
+
         final File refTile = findRefTile();
         if (refTile == null || !refTile.exists()) {
             throw new OperatorException("No BRDF files for mosaicing found.");
@@ -105,6 +117,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         final int tileHeight = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
+
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
@@ -116,6 +129,11 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         matrixNodataValue = upscaledProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
         uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
         entropyBand = reprojectedProduct.getBand(INV_ENTROPY_BAND_NAME);
+        relEntropyBand = reprojectedProduct.getBand(INV_REL_ENTROPY_BAND_NAME);
+        weightedNumSamplesBand = reprojectedProduct.getBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
+        mergeProportionNsamplesBand = reprojectedProduct.getBand(MERGE_PROPORTION_NSAMPLES_BAND_NAME);
+        godnessOfFitBand = reprojectedProduct.getBand(INV_GOODNESS_OF_FIT_BAND_NAME);
+        closestSampleBand = reprojectedProduct.getBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
 
         targetProduct = upscaledProduct;
     }
@@ -137,7 +155,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            if (inputType.equals("MERGE")) {
+            if (inputType.equals("Merge")) {
                 computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             }
 
@@ -170,10 +188,10 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                 String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
                 String expectedFilename;
 
-                if (inputType.equals("MERGE")) {
+                if (inputType.equals("Merge")) {
                     expectedFilename = "GlobAlbedo.brdf.merge." + year +
                             IOUtils.getDoyString(doy) + "." + dir.getName() + expectedFilenameExt;
-                } else if (inputType.equals("SNOW")) {
+                } else if (inputType.equals("Snow")) {
                     expectedFilename = "GlobAlbedo.brdf." + year +
                             IOUtils.getDoyString(doy) + "." + dir.getName() + ".Snow" + expectedFilenameExt;
                 } else {
@@ -185,8 +203,8 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             }
         };
 
-        String mergeDirExt = inputType.equals("MERGE") ? "Merge" : "Inversion";
-        String mergeDirString = gaRootDir + File.separator + mergeDirExt;
+        String mergeDirExt = "Inversion";
+        String mergeDirString = gaRootDir + File.separator + mergeDirExt + File.separator + inputType + File.separator + year;
 
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
         if (mergeFiles != null && mergeFiles.length > 0) {

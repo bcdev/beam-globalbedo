@@ -37,6 +37,9 @@ import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
+ * BBDR Operator for AATSR
+ * (preliminary implementation, AATSR was descoped in GA project)
+ *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
