@@ -20,7 +20,7 @@ import java.util.Locale;
  */
 public class MsgMSAProductReaderPlugIn implements ProductReaderPlugIn {
 
-    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-METEOSAT-SURFACE-ALBEDO";
+    public static final String FORMAT_NAME_METEOSAT_MSA = "GLOBALBEDO-METEOSAT-MSG-SURFACE-ALBEDO";
 
     private static final Class[] SUPPORTED_INPUT_TYPES = new Class[]{String.class, File.class};
     private static final String DESCRIPTION = "METEOSAT MSA Format";

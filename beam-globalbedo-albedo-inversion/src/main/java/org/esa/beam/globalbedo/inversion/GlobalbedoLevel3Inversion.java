@@ -9,14 +9,13 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,20 +46,17 @@ public class GlobalbedoLevel3Inversion extends Operator {
     // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
-    @Parameter(defaultValue = "h18v04", description = "MODIS tile")
+    @Parameter(description = "MODIS tile")
     private String tile;
 
-    @Parameter(defaultValue = "tileInfo_0.dim", description = "Name of tile info filename providing the geocoding")
+    @Parameter(description = "Name of tile info filename providing the geocoding")
     private String tileInfoFilename;
 
-    @Parameter(defaultValue = "2005", description = "Year")
+    @Parameter(description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "001", description = "DoY")
+    @Parameter(description = "DoY")
     private int doy;
-
-    @Parameter(defaultValue = "540", description = "Wings")   // 540 # One year plus 3 months wings
-    private int wings;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -160,8 +156,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
             Product inversionProduct = inversionOp.getTargetProduct();
 
             if (computeSeaice) {
-                // in this case we have no geocoding yet...
-//                inversionProduct.setGeoCoding(IOUtils.getSeaicePstGeocoding(tile));
                 for (int i = doy; i < doy + 8; i++) {
                     try {
                         Product[] bbdrpstProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, i);
@@ -181,11 +175,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
 //            addMetadata(inversionProduct);
 
             setTargetProduct(inversionProduct);
-//            setTargetProduct(reprojectedPriorProduct);                  // test!!
 
             // correct for lost pixels due to extreme SIN angles near South Pole
             // todo: this is not a very nice hack. we should try to find a better solution...
-            if (includesSouthPole(tile)) {
+            if (includesSouthPole()) {
                 SouthPoleCorrectionOp correctionOp = new SouthPoleCorrectionOp();
                 correctionOp.setParameterDefaultValues();
                 correctionOp.setSourceProduct("sourceProduct", inversionProduct);
@@ -316,7 +309,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
         variableElement.addAttribute(attr);
     }
 
-    private boolean includesSouthPole(String tile) {
+    private boolean includesSouthPole() {
         return (tile.equals("h17v17") || tile.equals("h18v17"));
     }
 

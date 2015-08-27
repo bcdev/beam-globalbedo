@@ -27,13 +27,13 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
 
-    @Parameter(defaultValue = "h18v04", description = "MODIS tile")
+    @Parameter(description = "MODIS tile")
     private String tile;
 
-    @Parameter(defaultValue = "2005", description = "Year")
+    @Parameter(description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "001", description = "Day of Year", interval = "[1,366]")
+    @Parameter(description = "Day of Year", interval = "[1,366]")
     private int doy;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")

@@ -23,10 +23,10 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALB
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.albedo.mergebrdf",
-                  description = "Provides daily accumulation of single BBDR observations",
-                  authors = "Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Provides daily accumulation of single BBDR observations",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class MergeBrdfOp extends PixelOperator {
 
     // source samples:
@@ -35,7 +35,7 @@ public class MergeBrdfOp extends PixelOperator {
 
     // this offset is the number of UR matrix elements + diagonale. Should be 45 for 9x9 matrix...
     private static final int urMatrixOffset = ((int) pow(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 2.0)
-                                               + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
+            + 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS) / 2;
 
     private static final int[] SRC_SNOW_UNCERTAINTIES = new int[urMatrixOffset];
     private static final int[] SRC_NOSNOW_UNCERTAINTIES = new int[urMatrixOffset];
@@ -111,22 +111,26 @@ public class MergeBrdfOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        final double nSamplesSnow = AlbedoInversionUtils.checkSummandForNan
-                (sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble());
-        final double nSamplesNoSnow = AlbedoInversionUtils.checkSummandForNan
-                (sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length +
-                        SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble());
+
+        final double nSamplesSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length +
+                SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double nSamplesSnow = AlbedoInversionUtils.isValid(nSamplesSnowDataValue) ? nSamplesSnowDataValue : 0.0;
+
+        final double nSamplesNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length +
+                SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double nSamplesNoSnow = AlbedoInversionUtils.isValid(nSamplesNoSnowDataValue) ? nSamplesNoSnowDataValue : 0.0;
+
         final double totalNSamples = nSamplesSnow + nSamplesNoSnow;
-        final double priorMask = AlbedoInversionUtils.checkSummandForNan(sourceSamples[SRC_PRIOR_MASK].getDouble());
 
-        if (x == 760 && y == 720) {
-            System.out.println("x,y = " + x + "," + y);
-        }
+        final double priorMaskDataValue = sourceSamples[SRC_PRIOR_MASK].getDouble();
+        final double priorMask = AlbedoInversionUtils.isValid(priorMaskDataValue) ? priorMaskDataValue : 0.0;
 
-        final double entropySnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_ENTROPY].getDouble());
-        final double entropyNoSnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_ENTROPY].getDouble());
+        final double entropySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length +
+                SRC_SNOW_ENTROPY].getDouble();
+        final double entropySnow = AlbedoInversionUtils.isValid(entropySnowDataValue) ? entropySnowDataValue : 0.0;
+        final double entropyNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length +
+                SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_ENTROPY].getDouble();
+        final double entropyNoSnow = AlbedoInversionUtils.isValid(entropyNoSnowDataValue) ? entropyNoSnowDataValue : 0.0;
 
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
@@ -205,12 +209,15 @@ public class MergeBrdfOp extends PixelOperator {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                final double sampleParameterSnowDataValue = sourceSamples[index].getDouble();
                 final double sampleParameterSnow =
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[index].getDouble());
+                        AlbedoInversionUtils.isValid(sampleParameterSnowDataValue) ? sampleParameterSnowDataValue : 0.0;
+                final double sampleParameterNoSnowDataValue = sourceSamples[sourceSampleOffset + index].getDouble();
                 final double sampleParameterNoSnow =
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[sourceSampleOffset + index].getDouble());
+                        AlbedoInversionUtils.isValid(sampleParameterNoSnowDataValue) ?
+                                sampleParameterNoSnowDataValue : 0.0;
                 final double resultParameters = sampleParameterSnow * proportionNsamplesSnow +
-                                                sampleParameterNoSnow * proportionNsamplesNoSnow;
+                        sampleParameterNoSnow * proportionNsamplesNoSnow;
                 targetSamples[TRG_PARAMETERS[index]].set(resultParameters);
                 index++;
             }
@@ -220,58 +227,69 @@ public class MergeBrdfOp extends PixelOperator {
         index = 0;
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                final double sampleUncertaintySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + index].getDouble();
                 final double sampleUncertaintySnow =
-                        AlbedoInversionUtils.checkSummandForNan(sourceSamples[SRC_SNOW_PARAMETERS.length + index].getDouble());
+                        AlbedoInversionUtils.isValid(sampleUncertaintySnowDataValue) ? sampleUncertaintySnowDataValue : 0.0;
+                final double sampleUncertaintyNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_SNOW_PARAMETERS.length + index].getDouble();
                 final double sampleUncertaintyNoSnow =
-                        AlbedoInversionUtils.checkSummandForNan( sourceSamples[sourceSampleOffset + SRC_SNOW_PARAMETERS.length + index].getDouble());
+                        AlbedoInversionUtils.isValid(sampleUncertaintyNoSnowDataValue) ? sampleUncertaintyNoSnowDataValue : 0.0;
                 final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
-                                                   sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
+                        sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
                 targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(resultUncertainties);
                 index++;
             }
         }
 
-        final double sampleEntropySnow = AlbedoInversionUtils.checkSummandForNan
-                        (sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_ENTROPY].getDouble());
-        final double sampleEntropyNoSnow = AlbedoInversionUtils.checkSummandForNan
-                        (sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_ENTROPY].getDouble());
+        final double sampleEntropySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_ENTROPY].getDouble();
+        final double sampleEntropySnow = AlbedoInversionUtils.isValid
+                (sampleEntropySnowDataValue) ? sampleEntropySnowDataValue : 0.0;
+        final double sampleEntropyNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_ENTROPY].getDouble();
+        final double sampleEntropyNoSnow = AlbedoInversionUtils.isValid
+                (sampleEntropyNoSnowDataValue) ? sampleEntropyNoSnowDataValue : 0.0;
         final double resultEntropy = sampleEntropySnow * proportionNsamplesSnow +
-                                     sampleEntropyNoSnow * proportionNsamplesNoSnow;
+                sampleEntropyNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY].set(resultEntropy);
 
-        final double sampleRelEntropySnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_REL_ENTROPY].getDouble());
-        final double sampleRelEntropyNoSnow = AlbedoInversionUtils.checkSummandForNan(
-                        sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_REL_ENTROPY].getDouble());
+        final double sampleRelEntropySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_REL_ENTROPY].getDouble();
+        final double sampleRelEntropySnow = AlbedoInversionUtils.isValid(
+                sampleRelEntropySnowDataValue) ? sampleRelEntropySnowDataValue : 0.0;
+        final double sampleRelEntropyNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_REL_ENTROPY].getDouble();
+        final double sampleRelEntropyNoSnow = AlbedoInversionUtils.isValid(
+                sampleRelEntropyNoSnowDataValue) ? sampleRelEntropyNoSnowDataValue : 0.0;
         final double resultRelEntropy = sampleRelEntropySnow * proportionNsamplesSnow +
-                                        sampleRelEntropyNoSnow * proportionNsamplesNoSnow;
+                sampleRelEntropyNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY].set(resultRelEntropy);
 
-        final double sampleWeightedNumSamplesSnow = AlbedoInversionUtils.checkSummandForNan(
-                        sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble());
-        final double sampleWeightedNumSamplesNoSnow = AlbedoInversionUtils.checkSummandForNan(
-                        sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble());
+        final double sampleWeightedNumSamplesSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double sampleWeightedNumSamplesSnow = AlbedoInversionUtils.isValid(
+                sampleWeightedNumSamplesSnowDataValue) ? sampleWeightedNumSamplesSnowDataValue : 0.0;
+        final double sampleWeightedNumSamplesNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double sampleWeightedNumSamplesNoSnow = AlbedoInversionUtils.isValid(
+                sampleWeightedNumSamplesNoSnowDataValue) ? sampleWeightedNumSamplesNoSnowDataValue : 0.0;
         final double resultWeightedNumSamples = sampleWeightedNumSamplesSnow * proportionNsamplesSnow +
-                                                sampleWeightedNumSamplesNoSnow * proportionNsamplesNoSnow;
+                sampleWeightedNumSamplesNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(
                 resultWeightedNumSamples);
 
-        final double sampleDoyClosestSampleSnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble());
-        final double sampleDoyClosestSampleNoSnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble());
+        final double sampleDoyClosestSampleSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble();
+        final double sampleDoyClosestSampleSnow = AlbedoInversionUtils.isValid(
+                sampleDoyClosestSampleSnowDataValue) ? sampleDoyClosestSampleSnowDataValue : 0.0;
+        final double sampleDoyClosestSampleNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble();
+        final double sampleDoyClosestSampleNoSnow = AlbedoInversionUtils.isValid(
+                sampleDoyClosestSampleNoSnowDataValue) ? sampleDoyClosestSampleNoSnowDataValue : 0.0;
         final double resultDoyClosestSample = sampleDoyClosestSampleSnow * proportionNsamplesSnow +
-                                              sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
+                sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(
                 resultDoyClosestSample);
 
-
-        final double sampleGoodnessOfFitSnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_GOODNESS_OF_FIT].getDouble());
-        final double sampleGoodnessOfFitNoSnow = AlbedoInversionUtils.checkSummandForNan(
-                sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_GOODNESS_OF_FIT].getDouble());
+        final double sampleGoodnessOfFitSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_GOODNESS_OF_FIT].getDouble();
+        final double sampleGoodnessOfFitSnow = AlbedoInversionUtils.isValid(
+                sampleGoodnessOfFitSnowDataValue) ? sampleGoodnessOfFitSnowDataValue : 0.0;
+        final double sampleGoodnessOfFitNoSnowDataValue = sourceSamples[sourceSampleOffset + SRC_NOSNOW_PARAMETERS.length + SRC_NOSNOW_UNCERTAINTIES.length + SRC_NOSNOW_GOODNESS_OF_FIT].getDouble();
+        final double sampleGoodnessOfFitNoSnow = AlbedoInversionUtils.isValid(
+                sampleGoodnessOfFitNoSnowDataValue) ? sampleGoodnessOfFitNoSnowDataValue : 0.0;
         final double resultGoodnessOfFit = sampleGoodnessOfFitSnow * proportionNsamplesSnow +
-                                           sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
+                sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
         targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(resultGoodnessOfFit);
 
     }
@@ -407,7 +425,7 @@ public class MergeBrdfOp extends PixelOperator {
             for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                 final String indexString = Integer.toString(priorBandStartIndex + i);
                 final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                final int srcPriorMeanIndex  = 2 * sourceSampleOffset + NUM_ALBEDO_PARAMETERS * i + j;
+                final int srcPriorMeanIndex = 2 * sourceSampleOffset + NUM_ALBEDO_PARAMETERS * i + j;
                 configurator.defineSample(srcPriorMeanIndex, meanBandName, priorProduct);
 
                 final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;

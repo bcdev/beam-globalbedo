@@ -57,13 +57,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix") // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
-    @Parameter(defaultValue = "h18v04", description = "MODIS tile")
+    @Parameter(description = "MODIS tile")
     private String tile;
 
-    @Parameter(defaultValue = "2005", description = "Year")
+    @Parameter(description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "001", description = "DoY")
+    @Parameter(description = "DoY")
     private int doy;
 
     @Parameter(defaultValue = "false", description = "Write merged BRDF product only (no albedo compuation)")

@@ -263,32 +263,32 @@ public class InversionOp extends PixelOperator {
                         AlbedoInversionUtils.matrixHasZerosInDiagonale(tmpM)) {
                     tmpM = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
                                       3 * NUM_ALBEDO_PARAMETERS,
-                                      INVALID);
+                                      AlbedoInversionConstants.NO_DATA_VALUE);
                 }
                 uncertainties = tmpM;
             } else {
                 parameters = new Matrix(NUM_BBDR_WAVE_BANDS *
                                                 NUM_ALBEDO_PARAMETERS, 1,
-                                        INVALID
+                                        AlbedoInversionConstants.NO_DATA_VALUE
                 );
                 uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS,
                                            3 * NUM_ALBEDO_PARAMETERS,
-                                           INVALID);
+                                           AlbedoInversionConstants.NO_DATA_VALUE);
                 maskAcc = 0.0;
             }
 
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
 
-//                entropy = INVALID;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
-//                relEntropy = INVALID;
+//                entropy = AlbedoInversionConstants.NO_DATA_VALUE;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
+//                relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 // todo: reactivate
                 entropy = getEntropy(mAcc);
                 if (usePrior && prior != null && prior.getM() != null) {
                     final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
                 } else {
-                    relEntropy = INVALID;
+                    relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
             }
             // 'Goodness of Fit'...
@@ -307,16 +307,16 @@ public class InversionOp extends PixelOperator {
                     } else {
                         uncertainties = new Matrix(
                                 3 * NUM_BBDR_WAVE_BANDS,
-                                3 * NUM_ALBEDO_PARAMETERS, INVALID);
-                        entropy = INVALID;
+                                3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
+                        entropy = AlbedoInversionConstants.NO_DATA_VALUE;
                     }
                     relEntropy = 0.0;
                 } else {
                     uncertainties = new Matrix(
                             3 * NUM_BBDR_WAVE_BANDS,
-                            3 * NUM_ALBEDO_PARAMETERS, INVALID);
-                    entropy = INVALID;
-                    relEntropy = INVALID;
+                            3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
+                    entropy = AlbedoInversionConstants.NO_DATA_VALUE;
+                    relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
             }
         }

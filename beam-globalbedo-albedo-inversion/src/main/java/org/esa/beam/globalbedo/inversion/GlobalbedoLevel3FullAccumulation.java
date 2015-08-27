@@ -40,16 +40,16 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "", description = "GA root directory")
     private String gaRootDir;
 
-    @Parameter(defaultValue = "h18v04", description = "MODIS tile")
+    @Parameter(description = "MODIS tile")
     private String tile;
 
-    @Parameter(defaultValue = "2005", description = "Year")
+    @Parameter(description = "Year")
     private int year;
 
-    @Parameter(defaultValue = "121", description = "Start Day of Year", interval = "[1,366]")
+    @Parameter(description = "Start Day of Year", interval = "[1,366]")
     private int startDoy;
 
-    @Parameter(defaultValue = "129", description = "End Day of Year", interval = "[1,366]")
+    @Parameter(description = "End Day of Year", interval = "[1,366]")
     private int endDoy;
 
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year

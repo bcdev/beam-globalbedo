@@ -29,7 +29,7 @@ public class MsgMSAProductReaderPlugInTest {
 
     @Test
     public void testMsgMSAReaderPlugInsAreLoaded() {
-        testReaderPlugInLoading("GLOBALBEDO-METEOSAT-SURFACE-ALBEDO", MsgMSAProductReaderPlugIn.class);
+        testReaderPlugInLoading("GLOBALBEDO-METEOSAT-MSG-SURFACE-ALBEDO", MsgMSAProductReaderPlugIn.class);
     }
 
     private void testReaderPlugInLoading(String formatName, Class<? extends ProductReaderPlugIn> readerPlugInClass) {

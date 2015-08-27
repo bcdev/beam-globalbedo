@@ -194,12 +194,12 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         // # Calculate White-Sky Albedo...
         double[] BHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        BHR[0] = fParams[(3 * 0)] +
-                (fParams[1 + 3 * 0] * uWsaVis.get(0, 1 + 3 * 0)) +
-                (fParams[2 + 3 * 0] * uWsaVis.get(0, 2 + 3 * 0));
-        BHR[1] = fParams[(3 * 1)] +
-                (fParams[1 + 3 * 1] * uWsaNir.get(0, 1 + 3 * 1)) +
-                (fParams[2 + 3 * 1] * uWsaNir.get(0, 2 + 3 * 1));
+        BHR[0] = fParams[3] +
+                (fParams[1] * uWsaVis.get(0, 1)) +
+                (fParams[2] * uWsaVis.get(0, 2));
+        BHR[1] = fParams[3] +
+                (fParams[1 + 3] * uWsaNir.get(0, 1 + 3)) +
+                (fParams[2 + 3] * uWsaNir.get(0, 2 + 3));
         BHR[2] = fParams[(3 * 2)] +
                 (fParams[1 + 3 * 2] * uWsaSw.get(0, 1 + 3 * 2)) +
                 (fParams[2 + 3 * 2] * uWsaSw.get(0, 2 + 3 * 2));
@@ -423,7 +423,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
-        configurator.defineSample(index++, szaBandName);
+        configurator.defineSample(index, szaBandName);
     }
 
 

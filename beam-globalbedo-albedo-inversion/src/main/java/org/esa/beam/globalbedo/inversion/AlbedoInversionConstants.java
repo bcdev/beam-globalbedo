@@ -67,17 +67,12 @@ public class AlbedoInversionConstants {
 
     public static final int SEAICE_TILE_WIDTH = 2250;
     public static final int SEAICE_TILE_HEIGHT = 2250;
-//    public static final int SEAICE_TILE_WIDTH = 50;   // test!!
-//    public static final int SEAICE_TILE_HEIGHT = 50;
 
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_X = 926.6254330558;
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_Y = 926.6254330558;
 
     public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
     public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
-
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
-//    public static final double UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
 
     public static final String MODIS_SIN_PROJECTION_CRS_STRING =
             "PROJCS[\"MODIS Sinusoidal\"," +
@@ -100,8 +95,6 @@ public class AlbedoInversionConstants {
 
     // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
-
-    public static final double INVALID = AlbedoInversionConstants.NO_DATA_VALUE;
 
     public static final double HALFLIFE = 11.54;
 
