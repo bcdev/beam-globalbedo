@@ -33,6 +33,8 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.ACC_DAY
         copyright = "(C) 2011, 2013 by Brockmann Consult")
 public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
 
+    // todo: this operator should no longer be needed, everything should be covered by BrdfToAlbedoOp!
+
     // source samples:
     private static final int[] SRC_PARAMETERS = new int[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 

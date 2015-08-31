@@ -134,8 +134,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        maskRelEntropy = Math.exp(maskRelEntropy / 9.0);
+        double maskRelEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
+                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
         if (maskRelEntropy > 0.0) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
@@ -181,35 +182,69 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         double[] DHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < DHR.length; i++) {
-            DHR[i] = fParams[(3 * i)] +
-                    fParams[1 + 3 * i] * (-0.007574 + (-0.070887 * Math.pow(SZA,
-                            2.0)) + (0.307588 * Math.pow(
-                            SZA,
-                            3.0))) +
-                    fParams[2 + 3 * i] * (-1.284909 + (-0.166314 * Math.pow(SZA,
-                            2.0)) + (0.041840 * Math.pow(
-                            SZA,
-                            3.0)));
+            if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
+                    AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
+                DHR[i] = fParams[3 * i] +
+                        fParams[1 + 3 * i] * (-0.007574 + (-0.070887 * Math.pow(SZA,
+                                                                                2.0)) + (0.307588 * Math.pow(
+                                SZA,
+                                3.0))) +
+                        fParams[2 + 3 * i] * (-1.284909 + (-0.166314 * Math.pow(SZA,
+                                                                                2.0)) + (0.041840 * Math.pow(
+                                SZA,
+                                3.0)));
+            } else {
+                DHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+            }
         }
 
         // # Calculate White-Sky Albedo...
         double[] BHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        BHR[0] = fParams[3] +
-                (fParams[1] * uWsaVis.get(0, 1)) +
-                (fParams[2] * uWsaVis.get(0, 2));
-        BHR[1] = fParams[3] +
-                (fParams[1 + 3] * uWsaNir.get(0, 1 + 3)) +
-                (fParams[2 + 3] * uWsaNir.get(0, 2 + 3));
-        BHR[2] = fParams[(3 * 2)] +
-                (fParams[1 + 3 * 2] * uWsaSw.get(0, 1 + 3 * 2)) +
-                (fParams[2 + 3 * 2] * uWsaSw.get(0, 2 + 3 * 2));
+        if (AlbedoInversionUtils.isValid(fParams[0]) && AlbedoInversionUtils.isValid(fParams[1]) &&
+                AlbedoInversionUtils.isValid(fParams[2])) {
+            BHR[0] = fParams[0] +
+                    (fParams[1] * uWsaVis.get(0, 1)) +
+                    (fParams[2] * uWsaVis.get(0, 2));
+        } else {
+            BHR[0] = AlbedoInversionConstants.NO_DATA_VALUE;
+        }
 
-        double[] alphaDHR = null;
-        double[] alphaBHR = null;
+        if (AlbedoInversionUtils.isValid(fParams[3]) && AlbedoInversionUtils.isValid(fParams[4]) &&
+                AlbedoInversionUtils.isValid(fParams[5])) {
+            BHR[1] = fParams[3] +
+                    (fParams[4] * uWsaNir.get(0, 4)) +
+                    (fParams[5] * uWsaNir.get(0, 5));
+        } else {
+            BHR[1] = AlbedoInversionConstants.NO_DATA_VALUE;
+        }
+
+        if (AlbedoInversionUtils.isValid(fParams[6]) && AlbedoInversionUtils.isValid(fParams[7]) &&
+                AlbedoInversionUtils.isValid(fParams[8])) {
+            BHR[2] = fParams[6] +
+                    (fParams[7] * uWsaSw.get(0, 7)) +
+                    (fParams[8] * uWsaSw.get(0, 8));
+        } else {
+            BHR[2] = AlbedoInversionConstants.NO_DATA_VALUE;
+        }
+
+        double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+        if (AlbedoInversionUtils.isValid(relEntropy)) {
+            relEntropy = Math.exp(relEntropy / 9.0);
+        }
+
+        double[] alphaDHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];;
+        double[] alphaBHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];;
         if (!computeSeaice) {
             // calculate alpha terms
-            alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR
-            alphaBHR = computeAlphaBHR(C);      // wsa = BHR
+            if (AlbedoInversionUtils.isValid(relEntropy)) {
+                alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR
+                alphaBHR = computeAlphaBHR(C);      // wsa = BHR
+            } else {
+                for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                    alphaDHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+                    alphaBHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+                }
+            }
         }
 
         // # Cap uncertainties and calculate sqrt
@@ -224,17 +259,13 @@ public class BrdfToAlbedoOp extends PixelOperator {
             }
         }
 
-        double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        if (AlbedoInversionUtils.isValid(relEntropy)) {
-            relEntropy = Math.exp(relEntropy / 9.0);
-        }
 
         // write results to target product...
         final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
         final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
         final double snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
         final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
-        final double maskEntropy = (entropy != 0.0) ? 1.0 : 0.0;
+        final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
                 BHR, alphaBHR, sigmaBHR,
                 weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
@@ -445,9 +476,15 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         Matrix cDHR = mDHR.times(c.transpose()).times(mDHR.transpose());
 
-        alphaDHR[0] = (float) (cDHR.get(0, 1) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(1, 1)));
-        alphaDHR[1] = (float) (cDHR.get(0, 2) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(2, 2)));
-        alphaDHR[2] = (float) (cDHR.get(1, 2) / Math.sqrt(cDHR.get(1, 1) * cDHR.get(2, 2)));
+        if (isValidCMatrix(c)) {
+            alphaDHR[0] = (float) (cDHR.get(0, 1) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(1, 1)));
+            alphaDHR[1] = (float) (cDHR.get(0, 2) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(2, 2)));
+            alphaDHR[2] = (float) (cDHR.get(1, 2) / Math.sqrt(cDHR.get(1, 1) * cDHR.get(2, 2)));
+        } else {
+            for (int i = 0; i < 3; i++) {
+                alphaDHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+            }
+        }
 
         return alphaDHR;
     }
@@ -465,11 +502,28 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         Matrix cBHR = mBHR.times(c.transpose()).times(mBHR.transpose());
 
-        alphaBHR[0] = (float) (cBHR.get(0, 1) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(1, 1)));
-        alphaBHR[1] = (float) (cBHR.get(0, 2) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(2, 2)));
-        alphaBHR[2] = (float) (cBHR.get(1, 2) / Math.sqrt(cBHR.get(1, 1) * cBHR.get(2, 2)));
+        if (isValidCMatrix(c)) {
+            alphaBHR[0] = (float) (cBHR.get(0, 1) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(1, 1)));
+            alphaBHR[1] = (float) (cBHR.get(0, 2) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(2, 2)));
+            alphaBHR[2] = (float) (cBHR.get(1, 2) / Math.sqrt(cBHR.get(1, 1) * cBHR.get(2, 2)));
+        } else {
+            for (int i = 0; i < 3; i++) {
+                alphaBHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+            }
+        }
 
         return alphaBHR;
+    }
+
+    private boolean isValidCMatrix(Matrix c) {
+        for (int i = 0; i <3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (c.get(i, j) != AlbedoInversionConstants.NO_DATA_VALUE) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, AlbedoResult result) {

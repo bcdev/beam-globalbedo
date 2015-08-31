@@ -97,6 +97,6 @@ public class BbdrConstants {
     public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
     public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
 
-    public static final float NO_DATA_VALUE = -999.0f;
+    public static final float NO_DATA_VALUE = -9999.0f;
 }
 

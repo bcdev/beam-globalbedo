@@ -363,7 +363,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
                 final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || sampleMask == 0.0 || AlbedoInversionUtils.isValid(sample)) {
+                if (sample == 0.0 || sampleMask == 0.0 || !AlbedoInversionUtils.isValid(sample)) {
                     sample = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
                 target.setSample(x, y, sample);

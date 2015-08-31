@@ -134,5 +134,5 @@ public class AlbedoInversionConstants {
                 {"337","345","353","361"}     // Dec
         };
 
-    public static final float NO_DATA_VALUE = -999.0f;
+    public static final float NO_DATA_VALUE = -9999.0f;
 }

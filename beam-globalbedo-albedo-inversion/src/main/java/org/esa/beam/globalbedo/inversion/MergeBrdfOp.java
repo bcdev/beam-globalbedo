@@ -139,7 +139,8 @@ public class MergeBrdfOp extends PixelOperator {
             if ((nSamplesNoSnow == 0.0 && !areNoSnowSamplesZero()) && priorMask == 3.0) {
                 // Inland water bodies
                 setMergedBandsToZero(sourceSamples, targetSamples);
-                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
+                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length +
+                        TRG_PROPORTION_NSAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
             } else if (priorMask == 0.0 || priorMask == 2.0) {
                 // Shoreline
                 setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
@@ -167,7 +168,7 @@ public class MergeBrdfOp extends PixelOperator {
             targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_PROPORTION_NSAMPLES].set(0.0);
         } else {
             setMergedBandsToZero(sourceSamples, targetSamples);
-            targetSamples[TRG_PROPORTION_NSAMPLES].set(0.0);
+            targetSamples[TRG_PROPORTION_NSAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
         }
     }
 
@@ -218,7 +219,12 @@ public class MergeBrdfOp extends PixelOperator {
                                 sampleParameterNoSnowDataValue : 0.0;
                 final double resultParameters = sampleParameterSnow * proportionNsamplesSnow +
                         sampleParameterNoSnow * proportionNsamplesNoSnow;
-                targetSamples[TRG_PARAMETERS[index]].set(resultParameters);
+
+                if (sampleParameterNoSnow == 0.0 && sampleParameterSnow == 0.0) {
+                    targetSamples[TRG_PARAMETERS[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+                } else {
+                    targetSamples[TRG_PARAMETERS[index]].set(resultParameters);
+                }
                 index++;
             }
         }
@@ -235,7 +241,12 @@ public class MergeBrdfOp extends PixelOperator {
                         AlbedoInversionUtils.isValid(sampleUncertaintyNoSnowDataValue) ? sampleUncertaintyNoSnowDataValue : 0.0;
                 final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
                         sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
-                targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(resultUncertainties);
+
+                if (sampleUncertaintySnow == 0.0 && sampleUncertaintySnow == 0.0) {
+                    targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+                } else {
+                    targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(resultUncertainties);
+                }
                 index++;
             }
         }
@@ -248,7 +259,11 @@ public class MergeBrdfOp extends PixelOperator {
                 (sampleEntropyNoSnowDataValue) ? sampleEntropyNoSnowDataValue : 0.0;
         final double resultEntropy = sampleEntropySnow * proportionNsamplesSnow +
                 sampleEntropyNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY].set(resultEntropy);
+        if (sampleEntropyNoSnow == 0.0 && sampleEntropySnow == 0.0) {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_ENTROPY].set(resultEntropy);
+        }
 
         final double sampleRelEntropySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_REL_ENTROPY].getDouble();
         final double sampleRelEntropySnow = AlbedoInversionUtils.isValid(
@@ -258,7 +273,11 @@ public class MergeBrdfOp extends PixelOperator {
                 sampleRelEntropyNoSnowDataValue) ? sampleRelEntropyNoSnowDataValue : 0.0;
         final double resultRelEntropy = sampleRelEntropySnow * proportionNsamplesSnow +
                 sampleRelEntropyNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY].set(resultRelEntropy);
+        if (sampleRelEntropyNoSnow == 0.0 && sampleRelEntropySnow == 0.0) {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_REL_ENTROPY].set(resultRelEntropy);
+        }
 
         final double sampleWeightedNumSamplesSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double sampleWeightedNumSamplesSnow = AlbedoInversionUtils.isValid(
@@ -268,8 +287,13 @@ public class MergeBrdfOp extends PixelOperator {
                 sampleWeightedNumSamplesNoSnowDataValue) ? sampleWeightedNumSamplesNoSnowDataValue : 0.0;
         final double resultWeightedNumSamples = sampleWeightedNumSamplesSnow * proportionNsamplesSnow +
                 sampleWeightedNumSamplesNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(
-                resultWeightedNumSamples);
+        if (sampleWeightedNumSamplesNoSnow == 0.0 && sampleWeightedNumSamplesSnow == 0.0) {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(
+                    AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_WEIGHTED_NUM_SAMPLES].set(
+                    resultWeightedNumSamples);
+        }
 
         final double sampleDoyClosestSampleSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double sampleDoyClosestSampleSnow = AlbedoInversionUtils.isValid(
@@ -279,8 +303,13 @@ public class MergeBrdfOp extends PixelOperator {
                 sampleDoyClosestSampleNoSnowDataValue) ? sampleDoyClosestSampleNoSnowDataValue : 0.0;
         final double resultDoyClosestSample = sampleDoyClosestSampleSnow * proportionNsamplesSnow +
                 sampleDoyClosestSampleNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(
-                resultDoyClosestSample);
+        if (sampleDoyClosestSampleNoSnow == 0.0 && sampleDoyClosestSampleSnow == 0.0) {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(
+                    AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_DAYS_CLOSEST_SAMPLE].set(
+                    resultDoyClosestSample);
+        }
 
         final double sampleGoodnessOfFitSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length + SRC_SNOW_GOODNESS_OF_FIT].getDouble();
         final double sampleGoodnessOfFitSnow = AlbedoInversionUtils.isValid(
@@ -290,7 +319,11 @@ public class MergeBrdfOp extends PixelOperator {
                 sampleGoodnessOfFitNoSnowDataValue) ? sampleGoodnessOfFitNoSnowDataValue : 0.0;
         final double resultGoodnessOfFit = sampleGoodnessOfFitSnow * proportionNsamplesSnow +
                 sampleGoodnessOfFitNoSnow * proportionNsamplesNoSnow;
-        targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(resultGoodnessOfFit);
+        if (sampleGoodnessOfFitNoSnow == 0.0 && sampleGoodnessOfFitSnow == 0.0) {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES.length + TRG_GOODNESS_OF_FIT].set(resultGoodnessOfFit);
+        }
 
     }
 

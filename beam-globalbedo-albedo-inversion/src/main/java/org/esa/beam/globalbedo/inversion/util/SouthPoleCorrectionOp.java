@@ -42,7 +42,14 @@ public class SouthPoleCorrectionOp extends Operator {
         Band[] bands = sourceProduct.getBands();
         for (Band band : bands) {
             if (!targetProduct.containsBand(band.getName())) {
-                targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                Band targetBand = targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                targetBand.setDescription(band.getDescription());
+                targetBand.setGeophysicalNoDataValue(band.getGeophysicalNoDataValue());
+                targetBand.setNoDataValue(band.getNoDataValue());
+                targetBand.setNoDataValueUsed(band.isNoDataValueUsed());
+                targetBand.setScalingFactor(band.getScalingFactor());
+                targetBand.setScalingOffset(band.getScalingOffset());
+                targetBand.setUnit(band.getUnit());
             }
         }
 

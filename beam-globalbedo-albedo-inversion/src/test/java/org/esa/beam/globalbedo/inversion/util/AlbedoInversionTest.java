@@ -187,14 +187,14 @@ public class AlbedoInversionTest extends TestCase {
     }
 
     public void testCheckValidValues() {
-        double a = -999.0;
+        double a = -9999.0;
         assertFalse(AlbedoInversionUtils.isValid(a));
         a = Double.NaN;
         assertFalse(AlbedoInversionUtils.isValid(a));
         a = 123.4;
         assertTrue(AlbedoInversionUtils.isValid(a));
 
-        float b = -999.0f;
+        float b = -9999.0f;
         assertFalse(AlbedoInversionUtils.isValid(b));
         b = Float.NaN;
         assertFalse(AlbedoInversionUtils.isValid(b));
