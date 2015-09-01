@@ -112,6 +112,10 @@ public class MergeBrdfOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
+        if (x == 500 && y == 860) {
+            System.out.println("x,y = " + x + "," + y);
+        }
+
         final double nSamplesSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length +
                 SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double nSamplesSnow = AlbedoInversionUtils.isValid(nSamplesSnowDataValue) ? nSamplesSnowDataValue : 0.0;
@@ -242,7 +246,7 @@ public class MergeBrdfOp extends PixelOperator {
                 final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
                         sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
 
-                if (sampleUncertaintySnow == 0.0 && sampleUncertaintySnow == 0.0) {
+                if (sampleUncertaintySnow == 0.0 && sampleUncertaintyNoSnow == 0.0) {
                     targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
                 } else {
                     targetSamples[TRG_PARAMETERS.length + TRG_UNCERTAINTIES[index]].set(resultUncertainties);

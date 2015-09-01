@@ -218,7 +218,7 @@ public class InversionOp extends PixelOperator {
 //        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-        if (x == 980 && y == 220) {
+        if (x == 200 && y == 200) {
             System.out.println("x,y = " + x + "," + y);
         }
 
@@ -280,10 +280,6 @@ public class InversionOp extends PixelOperator {
 
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
-
-//                entropy = AlbedoInversionConstants.NO_DATA_VALUE;  // test used because of VM crashes on gamaster in case of only one BRDF source product!!!
-//                relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
-                // todo: reactivate
                 entropy = getEntropy(mAcc);
                 if (usePrior && prior != null && prior.getM() != null) {
                     final double entropyPrior = getEntropy(prior.getM());
@@ -319,6 +315,12 @@ public class InversionOp extends PixelOperator {
                     entropy = AlbedoInversionConstants.NO_DATA_VALUE;
                     relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
+            } else {
+                uncertainties = new Matrix(
+                        3 * NUM_BBDR_WAVE_BANDS,
+                        3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
+                entropy = AlbedoInversionConstants.NO_DATA_VALUE;
+                relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
             }
         }
 
