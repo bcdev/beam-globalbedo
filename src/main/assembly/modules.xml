@@ -34,10 +34,10 @@
                 <include>*:*beam-meris-radiometry*</include>
                 <include>*:*beam-idepix-*</include>
                 <include>*:*watermask-*</include>
-                <include>*:commons-compress*</include>
-                <include>*:jtar*</include>
-                <include>edu.ucar:netcdf</include>
-                <include>edu.ucar:nujan</include>
+                <!--<include>*:commons-compress*</include>-->
+                <!--<include>*:jtar*</include>-->
+                <!--<include>edu.ucar:netcdf</include>-->
+                <!--<include>edu.ucar:nujan</include>-->
             </includes>
         </dependencySet>
     </dependencySets>
