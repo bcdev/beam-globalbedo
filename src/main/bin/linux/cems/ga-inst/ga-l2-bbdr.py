@@ -7,15 +7,22 @@ from pmonitor import PMonitor
 __author__ = 'olafd'
 
 #sensors = ['MERIS','VGT']
-#sensors = ['MERIS']
-sensors = ['VGT']
+sensors = ['MERIS']
+#sensors = ['VGT']
 #year = sys.argv[1]   # in [1997, 2010]
+years = ['2006']    #test  
 #years = ['2005']    #test  
-years = ['2001']    #test  
+#years = ['2004','2005']    #test  
+#allMonths = ['01', '02', '03']
+allMonths = ['04', '05', '06']
+#allMonths = ['10', '11', '12']
 #allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+#allMonthsVGT = ['10', '11', '12']  # data at CEMS from Vito is stored like this
+#allMonthsVGT = ['1', '2', '3']  # data at CEMS from Vito is stored like this
+allMonthsVGT = ['4', '5', '6']  # data at CEMS from Vito is stored like this
 #allMonthsVGT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']  # data at CEMS from Vito is stored like this
-allMonths = ['10']
-allMonthsVGT = ['10']
+#allMonths = ['01']
+#allMonthsVGT = ['1']
 
 #################################################################
 def getMonthVGT(year):
@@ -41,18 +48,19 @@ def getNumMonthDays(year, month_index):
     elif month_index == 4 or month_index == 6 or month_index == 9 or month_index == 11:
         return 30
     else:
-        return 3  # test!!
-        #return 31
+        #return 3  # test!!
+        return 31
 
 #################################################################
 
 ######################## L1b --> BBDR: ###########################
 
-gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
+gaRootDir = '/group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest'
 merisL1bRootDir = gaRootDir + '/MERIS'
 vgtL1bRootDir = gaRootDir + '/VGT'
 
-beamDir = '/group_workspaces/cems/globalalbedo/soft/beam-5.0.1'
+#beamDir = '/group_workspaces/cems/globalalbedo/soft/beam-5.0.1'
+beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 inputs = []
 for year in years:
@@ -61,12 +69,16 @@ for year in years:
             # MERIS L1b files are stored per month...
             for month in getMonth(year):
                 if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month):
-                    l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month)
-                    if len(l1bFiles) > 0:
-                        # we do not want other files than *.N1 for MERIS:
-                        for index in range(0, len(l1bFiles)):
-                            if l1bFiles[index].endswith(".N1"):
-                                inputs.append(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + l1bFiles[index])
+                    for day in range(1, getNumMonthDays(year, int(month))+1):
+                        if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2)):
+                            l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2))
+                            #l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month)
+                            if len(l1bFiles) > 0:
+                                # we do not want other files than *.N1 for MERIS:
+                                for index in range(0, len(l1bFiles)):
+                                    if l1bFiles[index].endswith(".N1") or l1bFiles[index].endswith(".N1.gz"):
+                                        inputs.append(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2) + '/' + l1bFiles[index])
+                                        #inputs.append(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + l1bFiles[index])
 
 for year in years:
     for sensor in sensors:
@@ -75,13 +87,14 @@ for year in years:
             for month in getMonthVGT(year):
                 if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month):
                     for day in range(1, getNumMonthDays(year, int(month))+1):
-                        l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day))
-                        if len(l1bFiles) > 0:
-                            # we do not want other files than *.ZIP for VGT:
-                            for index in range(0,len(l1bFiles)):
-                                if l1bFiles[index].endswith(".ZIP"):
-                                    #print('input: ', gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index])
-                                    inputs.append(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index])
+                        if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day)):
+                            l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day))
+                            if len(l1bFiles) > 0:
+                                # we do not want other files than *.ZIP for VGT:
+                                for index in range(0,len(l1bFiles)):
+                                    if l1bFiles[index].endswith(".ZIP"):
+                                        #print('input: ', gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index])
+                                        inputs.append(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index])
 
 #print 'inputs: ', inputs
 m = PMonitor(inputs, 
@@ -95,14 +108,18 @@ for year in years:
         if sensor == 'MERIS':
             for month in getMonth(year):
                 if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month):
-                    l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month)
-                    if len(l1bFiles) > 0:
-                        for index in range(0, len(l1bFiles)):
-                            l1bPath = gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + l1bFiles[index] 
-		            #print 'index, l1bPath', index, ', ', l1bPath
-                            bbdrL2Dir = gaRootDir + '/BBDR_L2/' + sensor + '/' + year + '/' + month 
-                            bbdrTileDir = gaRootDir + '/BBDR/' + sensor + '/' + year 
-                            m.execute('ga-l2-bbdr-step.sh', [l1bPath], [bbdrL2Dir], parameters=[l1bPath,l1bFiles[index],bbdrL2Dir,bbdrTileDir,year,month,sensor,gaRootDir,beamDir])
+                    for day in range(1, getNumMonthDays(year, int(month))+1):
+                        #l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month)
+                        if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2)):
+                            l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2))
+                            if len(l1bFiles) > 0:
+                                for index in range(0, len(l1bFiles)):
+                                    #l1bPath = gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + l1bFiles[index] 
+		                    l1bPath = gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day).zfill(2) + '/' + l1bFiles[index]
+                                    #print 'index, l1bPath', index, ', ', l1bPath
+                                    bbdrL2Dir = gaRootDir + '/BBDR_L2/' + sensor + '/' + year + '/' + month 
+                                    bbdrTileDir = gaRootDir + '/BBDR/' + sensor + '/' + year 
+                                    m.execute('ga-l2-bbdr-step.sh', [l1bPath], [bbdrL2Dir], parameters=[l1bPath,l1bFiles[index],bbdrL2Dir,bbdrTileDir,year,month,sensor,gaRootDir,beamDir])
         if sensor == 'VGT':
             for month in getMonthVGT(year):
                 bbdrL2Dir = gaRootDir + '/BBDR_L2/' + sensor + '/' + year + '/' + month
@@ -110,14 +127,15 @@ for year in years:
 
                 if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month):
                     for day in range(1, getNumMonthDays(year, int(month))+1):
-                        l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day))
-                        if len(l1bFiles) > 0:
-                            # we do not want other files than *.ZIP for VGT:
-                            for index in range(0,len(l1bFiles)):
-                                if l1bFiles[index].endswith(".ZIP"):
-                                    l1bPath = gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index]
-                                    #print('executing: ', l1bPath)
-                                    m.execute('ga-l2-bbdr-step.sh', [l1bPath], [bbdrL2Dir], parameters=[l1bPath,l1bFiles[index],bbdrL2Dir,bbdrTileDir,year,month,sensor,gaRootDir,beamDir])
+                        if os.path.exists(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day)):
+                            l1bFiles = os.listdir(gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day))
+                            if len(l1bFiles) > 0:
+                                # we do not want other files than *.ZIP for VGT:
+                                for index in range(0,len(l1bFiles)):
+                                    if l1bFiles[index].endswith(".ZIP"):
+                                        l1bPath = gaRootDir + '/L1b/' + sensor + '/' + year + '/' + month + '/' + str(day) + '/' + l1bFiles[index]
+                                        #print('executing: ', l1bPath)
+                                        m.execute('ga-l2-bbdr-step.sh', [l1bPath], [bbdrL2Dir], parameters=[l1bPath,l1bFiles[index],bbdrL2Dir,bbdrTileDir,year,month,sensor,gaRootDir,beamDir])
 
 m.wait_for_completion()
 

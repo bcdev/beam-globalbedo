@@ -13,23 +13,31 @@ __author__ = 'olafd'
 
 
 #years = ['2003']    #test  
+#years = ['2001']    #test  
+#years = ['2003']    #test  
 years = ['2005']    #test  
 #snowModes = ['Snow', 'NoSnow', 'Merge']
 snowModes = ['Merge']
-resolutions = ['05', '025', '005']
 #resolutions = ['05', '005']
-#resolutions = ['05']
+resolutions = ['005']
 
 doys = []
-#for i in range(45): # one year
+for i in range(46): # one year
+#for i in range(45): # test: skip Doy 361
 #for i in range(4):   # one month
-for i in range(1):   # one doy
-    #doy = 8*i + 1
-    doy = 8*i + 121
+#for i in range(1):   # one doy
+    doy = 8*i + 1
+    #doy = 8*i + 121  # May01
     doys.append(str(doy).zfill(3))
 
-gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
-beamDir = '/group_workspaces/cems/globalalbedo/soft/beam-5.0.1'
+#doys = ['001', '121', '361']
+#doys = ['121']
+#doys = ['361']
+#doys = ['001','185','361']
+
+gaRootDir = '/group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest'
+#beamDir = '/group_workspaces/cems/globalalbedo/soft/beam-5.0.1'
+beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 inputs = []
 for year in years:
     for snowMode in snowModes:
@@ -46,8 +54,8 @@ for year in years:
 m = PMonitor(inputs, 
              request='ga-l3-mosaic', 
              logdir='log',
-             hosts=[('localhost',64)],
-	     types=[('ga-l3-mosaic-step.sh',32), ('ga-l3-mosaic-brdf-albedo-step.sh',32)])
+             hosts=[('localhost',192)],
+	     types=[('ga-l3-brdfmosaic-step.sh',168), ('ga-l3-albedomosaic-step.sh',24)])
      
 for year in years:
     for snowMode in snowModes:
@@ -59,16 +67,8 @@ for year in years:
                 # BRDF tiles --> BRDF mosaic:
                 brdfMosaicDir = gaRootDir + '/Mosaic/brdf/' + snowMode + '/' + resolution
                 m.execute('ga-l3-brdfmosaic-step.sh', [brdfTileDir], [brdfMosaicDir], parameters=[year,doy,snowMode,resolution,gaRootDir,beamDir])
-                #m.execute('ga-l3-brdfmosaic-step.sh', [brdfTileDir], [brdfMosaicDir], parameters=[year,doy,snowMode,resolution,'false',gaRootDir,beamDir])
-                #m.execute('ga-l3-brdfmosaic-step.sh', [brdfTileDir], [brdfMosaicDir], parameters=[year,doy,snowMode,resolution,'true',gaRootDir,beamDir]) # reprojection to Plate Carree, TODO: fix!
-                
-for year in years:
-    for snowMode in snowModes:
-        for doy in doys:
-            for resolution in resolutions:
 
                 ## BRDF mosaic --> Albedo mosaic
-                brdfMosaicDir = gaRootDir + '/Mosaic/brdf/' + snowMode + '/' + resolution
                 albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + resolution
                 m.execute('ga-l3-albedomosaic-step.sh', [brdfMosaicDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,gaRootDir,beamDir])
 

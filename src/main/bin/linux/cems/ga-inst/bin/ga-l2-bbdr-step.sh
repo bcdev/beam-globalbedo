@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga-env.sh
+. ${GA_INST}/bin/ga_env/ga-env-l2-bbdr.sh
 
 l1bPath=$1
 l1bFile=$2

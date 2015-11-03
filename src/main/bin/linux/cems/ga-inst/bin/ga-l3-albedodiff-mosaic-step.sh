@@ -1,31 +1,20 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l3-brdfmosaic.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-albedodiff-mosaic.sh
 
 echo "entered ga-l3-mosaic-step..."
 
 year=$1
 doy=$2
-snowMode=$3
-deg=$4
-gaRootDir=$5
-beamDir=$6
+gaRootDir=$3
+albedodiffRootDir=$4
+beamDir=$5
 
 doy=`printf '%03d\n' "$((10#$doy))"`
 
-if [ $deg -eq "005" ]
-then
-    scaling=6
-elif [ $deg -eq "025" ]
-then
-    scaling=30
-else
-    scaling=60
-fi
-
-task="ga-l3-brdfmosaic"
-jobname="${task}-${year}-${doy}-${snowMode}-${deg}"
-command="./bin/${task}-beam.sh ${year} ${doy} ${snowMode} ${deg} ${scaling} ${gaRootDir} ${beamDir}"
+task="ga-l3-albedodiff-mosaic"
+jobname="${task}-${year}-${doy}"
+command="./bin/${task}-beam.sh ${year} ${doy} ${scaling} ${gaRootDir} ${albedodiffRootDir} ${beamDir}"
 memory="65536"
 
 echo "jobname: $jobname"

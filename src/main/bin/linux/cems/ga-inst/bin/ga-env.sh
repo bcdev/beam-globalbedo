@@ -11,6 +11,19 @@ fi
 
 GA_TASKS=${GA_INST}/tasks
 GA_LOG=${GA_INST}/log
+#if [ -e ${GA_TASKS} ] 
+#then
+#    echo "${GA_TASKS} already exists."
+#else
+#    mkdir ${GA_TASKS}
+#fi
+#if [ -e ${GA_LOG} ]
+#then
+#    echo "${GA_LOG} already exists."
+#else
+#    mkdir ${GA_LOG}
+#fi
+
 
 read_task_jobs() {
     echo "entered read_task_jobs()..."
@@ -45,7 +58,8 @@ wait_for_task_jobs_completion() {
     jobname=$1
     while true
     do
-        sleep 10
+        #sleep 10
+        sleep 120
         # Output of bjobs command (example from SST CCI):
         # JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
         # 619450  rquast  RUN   lotus      lotus.jc.rl host042.jc. *r.n10-sub Aug 14 10:15
@@ -89,48 +103,49 @@ wait_for_task_jobs_completion() {
 submit_job() {
     jobname=$1
     command=$2
-    memory=$3
-
     #bsubmit="bsub -R rusage[mem=20480] -q lotus -n 1 -W 8:00 -P esacci_sst -cwd ${MMS_INST} -oo ${MMS_LOG}/${jobname}.out -eo ${MMS_LOG}/${jobname}.err -J ${jobname} ${mms.home}/bin/${command} ${@:3}"
     echo "GA_INST: ${GA_INST}"
     echo "GA_LOG : ${GA_LOG}"
     echo "jobname: ${jobname}"
     echo "command: ${command}"
 
-    mem_to_use=8192
-    if [ -n "$memory" ]
-    then
-        mem_to_use=$memory
-    fi
-    echo "mem_to_use: ${mem_to_use}"
-
-    # for L1b, L2:
+    # L2,L3:
     #bsubmit="bsub -R rusage[mem=16384] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    # for mosaicing: TODO: make configurable
-    bsubmit="bsub -R rusage[mem=65536] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -R rusage[mem=32768] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -R rusage[swp=32768] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+
+    # Mosaics:
+    #bsubmit="bsub -R rusage[mem=65536] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     
-    #bsubmit="bsub -R rusage[mem=${mem_to_use}] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # staging
+    #bsubmit="bsub -R rusage[mem=16384] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 
-    rm -f ${GA_LOG}/${jobname}.out
-    rm -f ${GA_LOG}/${jobname}.err
+#    rm -f ${GA_LOG}/${jobname}.out
+#    rm -f ${GA_LOG}/${jobname}.err
 
 #    echo "${bsubmit}"
 #    line=`${bsubmit}`
+    if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+#    if hostname | grep -qF 'cems-sci1-panfs.cems.rl.ac.uk'
 #    if hostname | grep -qF 'cems-sci1.cems.rl.ac.uk'
 #    if hostname | grep -qF 'jasmin-sci1.ceda.ac.uk'
-    if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+#    if hostname | grep -qF '$HOSTNAME'
     then
         echo "${bsubmit}"
         line=`${bsubmit}`
     else
         echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
+#        echo "ssh -A cems-sci1-panfs.cems.rl.ac.uk ${bsubmit}" # which of those is correct, sci1 or sci1-panfs ??
 #        echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
 #        echo "ssh -A jasmin-sci1.ceda.ac.uk ${bsubmit}"
+#        echo "ssh -A $HOSTNAME ${bsubmit}"
         line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+#        line=`ssh -A cems-sci1-panfs.cems.rl.ac.uk ${bsubmit}`
 #        line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
 #        line=`ssh -A jasmin-sci1.ceda.ac.uk ${bsubmit}`
+#        line=`ssh -A $HOSTNAME ${bsubmit}`
     fi
 
     echo ${line}

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# example: ./ga-l3-tile-inversion-clean.sh /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest 2005 h18v04 121
+# example: ./ga-l3-tile-inversion-clean.sh /group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest 2005 h18v04 121
 
 gaRootDir=$1
 sensor=$2
