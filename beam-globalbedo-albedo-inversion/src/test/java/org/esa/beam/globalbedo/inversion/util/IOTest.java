@@ -1,6 +1,7 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
+import org.junit.Ignore;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -259,6 +260,7 @@ public class IOTest extends TestCase {
         assertNull(IOUtils.getDoyString(doy));
     }
 
+    @Ignore
     public void testWriteFloatArray1() throws Exception {
         float[][] fArray = new float[dim1][dim2];
 
@@ -287,6 +289,7 @@ public class IOTest extends TestCase {
         ch.close();
     }
 
+    @Ignore
     public void testWriteFloatArray2() throws Exception {
         float[][] fArray = new float[dim1][dim2];
 
@@ -321,6 +324,7 @@ public class IOTest extends TestCase {
         System.out.println("write test 2 time: = " + (t2 - t1));
     }
 
+    @Ignore
     public void testReadFloatArray_2() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -363,6 +367,7 @@ public class IOTest extends TestCase {
         assertEquals(expected, fArray[dim1 - 1][dim2 - 1]);
     }
 
+    @Ignore
     public void testReadFloatArray_3() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -392,6 +397,7 @@ public class IOTest extends TestCase {
         assertEquals(expected, fArray[dim1 - 1][dim2 - 1]);
     }
 
+    @Ignore
     public void testReadFloatArray_4() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -418,6 +424,7 @@ public class IOTest extends TestCase {
         assertEquals(expected, fArray[dim1 - 1][dim2 - 1]);
     }
 
+    @Ignore
     public void testReadFloatArray_5() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -440,6 +447,7 @@ public class IOTest extends TestCase {
         System.out.println("read test 5 time: = " + (t2 - t1));
     }
 
+    @Ignore
     public void testReadFloatArray_6() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -462,6 +470,7 @@ public class IOTest extends TestCase {
         System.out.println("read test 6 time: = " + (t2 - t1));
     }
 
+    @Ignore
     public void testReadFloatArray_7() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
@@ -504,7 +513,7 @@ public class IOTest extends TestCase {
         assertEquals(expected, fArray[dim1 - 1][dim2 - 1]);
     }
 
-
+    @Ignore
     public void testReadFloatArray_8() throws Exception {
         long t1 = System.currentTimeMillis();
         FileInputStream finStream = new FileInputStream(testfile);
