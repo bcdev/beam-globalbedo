@@ -24,6 +24,12 @@ public class VirtualDirTgz extends VirtualDir {
     }
 
     @Override
+    public String[] listAllFiles() throws IOException {
+        // todo: implement if needed (see e.g. VirtualDirTgz in beam-landsat-reader)
+        return new String[0];
+    }
+
+    @Override
     public String getBasePath() {
         return archiveFile.getPath();
     }
