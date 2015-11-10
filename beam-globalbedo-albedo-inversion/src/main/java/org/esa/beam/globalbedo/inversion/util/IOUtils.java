@@ -404,7 +404,7 @@ public class IOUtils {
         return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
     }
 
-    static final Map<Integer, String> waveBandsOffsetMap = new HashMap<>();
+    public static final Map<Integer, String> waveBandsOffsetMap = new HashMap<>();
 
     static {
         waveBandsOffsetMap.put(0, "VIS");
@@ -454,6 +454,20 @@ public class IOUtils {
             // only UR triangle matrix
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
+                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+            }
+        }
+        return bandNames;
+
+    }
+
+    public static String[][] getNewPriorCovarianceBandNames() {
+        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            // only UR triangle matrix
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                bandNames[i][j] = "Cov_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
                         waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
             }
         }

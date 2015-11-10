@@ -64,8 +64,11 @@ public class Prior {
                 final double m_ij = AlbedoInversionUtils.isValid(m_ij_value) ? m_ij_value : 0.0;
                 priorMean.set(index, 0, m_ij);
                 final int priorIndexSDij = InversionOp.SRC_PRIOR_SD[i][j];
-                final double sd_ij_value = sourceSamples[priorIndexSDij].getDouble();
-                final double sd_ij = AlbedoInversionUtils.isValid(sd_ij_value) ? sd_ij_value : 0.0;
+//                final double sd_ij_value = sourceSamples[priorIndexSDij].getDouble();
+//                final double sd_ij = AlbedoInversionUtils.isValid(sd_ij_value) ? sd_ij_value : 0.0;
+                final double cov_ij_value = sourceSamples[priorIndexSDij].getDouble();
+                // Oct. 2015 Prior version:
+                final double sd_ij = AlbedoInversionUtils.isValid(cov_ij_value) ? Math.sqrt(cov_ij_value) : 0.0;
                 priorSD.set(index, 0, sd_ij);
                 if (priorMean.get(index, 0) > 0.0 && priorSD.get(index, 0) == 0.0) {
                     mask = 1.0;
