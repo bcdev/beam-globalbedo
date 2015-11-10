@@ -5,6 +5,7 @@ import sys
 import featuretools
 import warptools
 import epr
+from   netCDF4 import Dataset
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -25,6 +26,32 @@ def find_overlap(ats_prod, mer_prod):
 
     return np.min(y), np.max(y)
 
+def write_as_netcdf(image_data):
+
+    root_grp = Dataset('./test.nc', 'w', format='NETCDF4')
+    root_grp.description = 'Example coregistration data'
+
+    # dimensions
+    xdim = np.shape(image_data)[0]
+    ydim = np.shape(image_data)[1]
+    root_grp.createDimension('y', ydim)
+    root_grp.createDimension('x', xdim)
+
+    # variables
+    y = root_grp.createVariable('y', 'f4', ('y',))
+    x = root_grp.createVariable('x', 'f4', ('x',))
+    reflec = root_grp.createVariable('reflec_nadir_0670', 'f4', ('y', 'x'))
+
+    # data
+    ydata =  np.arange(ydim)
+    xdata =  np.arange(xdim)
+    y[:] = ydata
+    x[:] = xdata
+    for j in range(ydim):
+        for i in range(ydim):
+            reflec[j,i] = image_data[j, i]
+
+    root_grp.close()
 
 if __name__ == "__main__":
 
@@ -100,6 +127,9 @@ if __name__ == "__main__":
             # pull out the images
             plt.imshow(transform_applier.resampled_image, cmap='gray', interpolation='none')
             plt.show()
+
+            # test: write as netcdf
+            # write_as_netcdf(transform_applier.resampled_image)
 
         else:
             print "could not derive a warp for images provided"

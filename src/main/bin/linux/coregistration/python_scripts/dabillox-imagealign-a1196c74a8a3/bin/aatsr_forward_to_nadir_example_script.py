@@ -1,9 +1,10 @@
 __author__ = 'daniel'
 
-import image_align.featuretools as featuretools
-import image_align.warptools as warptools
+import featuretools
+import warptools
 import epr
 import numpy as np
+import sys
 
 import matplotlib.pyplot as plt
 
@@ -14,10 +15,17 @@ if __name__ == "__main__":
 
     sift_exe_path = '/home/daniel/coreg_testing/vlfeat-0.9.20/bin/glnxa64/sift '
 
-    test_path = '/home/daniel/coreg_testing/'
-    path_to_ats_data = test_path + "coreg_data/ATS_TOA_1PRUPA20090220_034445_000065272076_00347_36473_5893.N1"
-    temp_dir = test_path + "temp"
-    out_dir = temp_dir + '/' + path_to_ats_data.split("/")[-1][:-3]+"_coreg.nc"
+    # test_path = '/home/daniel/coreg_testing/'
+    # path_to_ats_data = test_path + "coreg_data/ATS_TOA_1PRUPA20090220_034445_000065272076_00347_36473_5893.N1"
+    # temp_dir = test_path + "temp"
+    # out_dir = temp_dir + '/' + path_to_ats_data.split("/")[-1][:-3]+"_coreg.nc"
+
+    path = sys.argv[1]
+    aatsrData = sys.argv[2]
+
+    path_to_ats_data = path + "AATSR/" + aatsrData
+    temp_dir = path + "temp"
+    out_dir = temp_dir + '/' + aatsrData + "_coreg.nc"
 
     ats_product = epr.open(path_to_ats_data)
     ats_nadir = ats_product.get_band("reflec_nadir_0870").read_as_array(512, y_lines, xoffset=0, yoffset=y_offset)
