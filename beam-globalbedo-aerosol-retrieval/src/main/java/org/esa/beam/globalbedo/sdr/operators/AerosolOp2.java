@@ -517,8 +517,9 @@ public class AerosolOp2 extends Operator {
     }
 
     private void readLookupTable() throws IOException {
-        ImageInputStream aotIis = Luts.getAotLutData(instrument);
-        ImageInputStream gasIis = Luts.getCwvLutData(instrument);
+        final String lutInstrument = instrument.equals("PROBAV") ? "VGT" : instrument;
+        ImageInputStream aotIis = Luts.getAotLutData(lutInstrument);
+        ImageInputStream gasIis = Luts.getCwvLutData(lutInstrument);
         int nLutBands = InstrumentConsts.getInstance().getnLutBands(instrument);
         momo = new MomoLut(aotIis, gasIis, nLutBands);
     }

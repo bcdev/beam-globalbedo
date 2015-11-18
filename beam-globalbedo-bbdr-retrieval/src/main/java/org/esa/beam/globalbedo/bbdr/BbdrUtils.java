@@ -38,7 +38,8 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static AotLookupTable getAotLookupTable(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getAotLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getAotLutData(instrument);
         try {
             // read LUT dimensions and values
             float[] vza = Luts.readDimension(iis);
@@ -112,7 +113,8 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static LookupTable getAotKxLookupTable(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getAotKxLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getAotKxLutData(instrument);
         try {
             // read LUT dimensions and values
             float[] vza = Luts.readDimension(iis);
@@ -153,7 +155,8 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static NskyLookupTable getNskyLookupTableDw(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getNskyDwLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getNskyDwLutData(instrument);
         try {
             // read LUT dimensions and values
             float[] sza = Luts.readDimension(iis);
@@ -201,7 +204,8 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static NskyLookupTable getNskyLookupTableUp(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getNskyUpLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getNskyUpLutData(instrument);
         try {
             // read LUT dimensions and values
             float[] vza = Luts.readDimension(iis);

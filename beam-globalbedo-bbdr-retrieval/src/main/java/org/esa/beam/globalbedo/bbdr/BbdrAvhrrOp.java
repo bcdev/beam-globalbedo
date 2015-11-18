@@ -37,11 +37,14 @@ import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
+ * Computes BBDRs and kernel parameters for AVHRR (i.e. AVHRR-LTDR)
+ * todo: implement when specific algorithm is available
+ *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
 @OperatorMetadata(alias = "ga.bbdr",
-                  description = "Computes BBDRs and kernel parameters",
+                  description = "Computes BBDRs and kernel parameters for AVHRR",
                   authors = "Marco Zuehlke, Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")

@@ -69,7 +69,8 @@ public class GasLookupTable {
     }
 
     private void loadCwvOzoLookupTableArray(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getCwvLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getCwvLutData(instrument);
         try {
             int nAng = iis.readInt();
             int nCwv = iis.readInt();
@@ -123,7 +124,8 @@ public class GasLookupTable {
     }
 
     private void loadCwvOzoKxLookupTableArray(Sensor sensor) throws IOException {
-        ImageInputStream iis = Luts.getCwvKxLutData(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        ImageInputStream iis = Luts.getCwvKxLutData(instrument);
         try {
             // read LUT dimensions and values
             int nAng = iis.readInt();

@@ -83,6 +83,10 @@ public class ImageVarianceOp extends Operator {
                 if (band.getName().startsWith("B") || band.getName().equals("MIR")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
+            } else if (sensor == Sensor.PROBAV) {
+                if (band.getName().startsWith("TOA_REFL")) {
+                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
+                }
             }
         }
         setTargetProduct(targetProduct);

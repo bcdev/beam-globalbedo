@@ -51,7 +51,8 @@ public class N2Bconversion {
     }
 
     public void load() throws IOException {
-        BufferedReader reader = Luts.getN2BCoeffReader(sensor.getInstrument());
+        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        BufferedReader reader = Luts.getN2BCoeffReader(instrument);
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {
                 reader.readLine(); // skip this
@@ -72,7 +73,7 @@ public class N2Bconversion {
             reader.close();
         }
 
-        reader = Luts.getN2BCoeffDReader(sensor.getInstrument());
+        reader = Luts.getN2BCoeffDReader(instrument);
         try {
             for (int ind_spc = 0; ind_spc < n_spc; ind_spc++) {
                 reader.readLine(); // skip this

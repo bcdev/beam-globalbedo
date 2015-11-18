@@ -34,6 +34,14 @@ public class BbdrConstants {
         1.012f, 0.953f, 0.971f, 1.0f
     };
 
+    public final static float[] PROBAV_WAVELENGHTS = {
+            462.0f, 655.5f, 843.0f, 1599.0f
+    };
+
+    public final static float[] PROBAV_CALIBRATION_COEFFS = {
+            1.012f, 0.953f, 0.971f, 1.0f
+    };
+
     public final static float[] AVHRR_WAVELENGHTS = {
             645.0f, 830.0f
     };
@@ -88,6 +96,9 @@ public class BbdrConstants {
 
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
                     "B0", "B2", "B3", "MIR"};
+
+    public final static String[] PROBAV_TOA_BAND_NAMES = new String[]{
+            "TOA_REFL_BLUE", "TOA_REFL_RED", "TOA_REFL_NIR", "TOA_REFL_SWIR"};
 
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
