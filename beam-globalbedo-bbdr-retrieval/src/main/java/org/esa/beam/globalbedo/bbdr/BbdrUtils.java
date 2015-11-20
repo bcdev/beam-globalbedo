@@ -1,12 +1,20 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
+import Jama.Matrix;
+import com.bc.ceres.glevel.MultiLevelImage;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.auxdata.Luts;
 import org.esa.beam.util.math.LookupTable;
 
 import javax.imageio.stream.ImageInputStream;
 import javax.media.jai.JAI;
 import javax.media.jai.PlanarImage;
+import javax.media.jai.RenderedOp;
+import javax.media.jai.operator.AddConstDescriptor;
+import javax.media.jai.operator.MultiplyConstDescriptor;
 import java.awt.image.RenderedImage;
 import java.awt.image.renderable.ParameterBlock;
 import java.io.IOException;
@@ -241,9 +249,17 @@ public class BbdrUtils {
         }
     }
 
-    //////////////////////////////////////////////////////////////////
-    // end of public
-    //////////////////////////////////////////////////////////////////
+    public static void convertProbavToVgtReflectances(Product sourceProduct) {
+        for (int i = 0; i < BbdrConstants.PROBAV_TOA_BAND_NAMES.length; i++) {
+            Band specBand = sourceProduct.getBand(BbdrConstants.PROBAV_TOA_BAND_NAMES[i]);
+            final double factor = BbdrConstants.PROBAV_TO_VGT_FACTORS[i];
+            final double offset = BbdrConstants.PROBAV_TO_VGT_OFFSETS[i]/specBand.getScalingFactor();
+            final MultiLevelImage sourceImage = specBand.getSourceImage();
+            final RenderedOp multipliedImage = MultiplyConstDescriptor.create(sourceImage, new double[]{factor}, null);
+            final RenderedOp offsetImage = AddConstDescriptor.create(multipliedImage, new double[]{offset}, null);
+            specBand.setSourceImage(offsetImage);
+        }
+    }
 
     public static int getIndexBefore(float value, float[] array) {
         for (int i = 0; i < array.length; i++) {
@@ -289,6 +305,23 @@ public class BbdrUtils {
             e.printStackTrace();
         }
         return doy;
+    }
+
+    public static void fillTargetSampleWithNoDataValue(WritableSample[] targetSamples) {
+        for (WritableSample targetSample : targetSamples) {
+            targetSample.set(Float.NaN);
+        }
+    }
+
+
+    public static Matrix matrixSquare(double[] doubles) {
+        Matrix matrix = new Matrix(doubles.length, doubles.length);
+        for (int i = 0; i < doubles.length; i++) {
+            for (int j = 0; j < doubles.length; j++) {
+                matrix.set(i, j, doubles[i] * doubles[j]);
+            }
+        }
+        return matrix;
     }
 
 }

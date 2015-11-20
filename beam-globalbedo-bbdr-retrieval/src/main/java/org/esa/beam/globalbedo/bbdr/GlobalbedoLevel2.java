@@ -70,6 +70,10 @@ public class GlobalbedoLevel2 extends Operator {
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
         }
 
+        if (sensor == Sensor.PROBAV) {
+            BbdrUtils.convertProbavToVgtReflectances(sourceProduct);
+        }
+
         Product targetProduct;
         Product aotProduct;
         if (computeAotToBbdrProductOnly) {

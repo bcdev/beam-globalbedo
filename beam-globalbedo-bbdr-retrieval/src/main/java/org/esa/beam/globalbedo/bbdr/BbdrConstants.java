@@ -8,6 +8,8 @@ package org.esa.beam.globalbedo.bbdr;
  */
 public class BbdrConstants {
 
+    public static final int N_SPC = 3; // VIS, NIR, SW ; Broadband albedos
+
     public final static float[] MERIS_WAVELENGHTS = {
         412.0f, 442.0f, 490.0f, 510.0f, 560.0f,
         620.0f, 665.0f, 681.0f, 708.0f, 753.0f,
@@ -40,6 +42,14 @@ public class BbdrConstants {
 
     public final static float[] PROBAV_CALIBRATION_COEFFS = {
             1.012f, 0.953f, 0.971f, 1.0f
+    };
+
+    public final static double[] PROBAV_TO_VGT_FACTORS = {
+            0.9971, 0.9983, 1.0005, 1.0214
+    };
+
+    public final static double[] PROBAV_TO_VGT_OFFSETS = {
+            0.0034, 0.0029, 0.0024, 0.0062
     };
 
     public final static float[] AVHRR_WAVELENGHTS = {

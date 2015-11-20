@@ -244,8 +244,11 @@ public class AerosolOp2 extends Operator {
             skip += 4;
             geomFward = new PixelGeometry(90.0-tileValues[skip], tileValues[skip + 1], 90.0-tileValues[skip + 2], tileValues[skip + 3]);
             skip += 4;
-        }
-        else {
+        } else if (instrument.equals("PROBAV")) {
+            geomNadir = new PixelGeometry(tileValues[0], tileValues[1], tileValues[4], tileValues[5]);
+            geomFward = geomNadir;
+            skip += 6;  // we have the angles SZA, SAA, VZA_SWIR, VAA_SWIR, VZA_VNIR, VAA_VNIR !!!
+        } else {
             geomNadir = new PixelGeometry(tileValues[0], tileValues[1], tileValues[2], tileValues[3]);
             geomFward = geomNadir;
             skip += 4;

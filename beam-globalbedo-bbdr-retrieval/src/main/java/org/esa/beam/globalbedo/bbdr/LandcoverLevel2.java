@@ -29,8 +29,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
-import org.esa.beam.idepix.IdepixProducts;
-import org.esa.beam.landcover.LcUclCloudBuffer;
 import org.esa.beam.landcover.StatusPostProcessOp;
 
 import javax.media.jai.OpImage;
@@ -39,7 +37,7 @@ import java.awt.image.RenderedImage;
 import java.io.File;
 
 @OperatorMetadata(alias = "lc.l2",
-        description= "LC-CCI SDR Processor",
+        description = "LC-CCI SDR Processor",
         authors = "Marco Zuehlke, Olaf Danne, Grit Kirches",
         version = "2.0",
         copyright = "(C) 2015 by Brockmann Consult")
@@ -63,6 +61,10 @@ public class LandcoverLevel2 extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
+        if (sensor == Sensor.PROBAV) {
+            BbdrUtils.convertProbavToVgtReflectances(sourceProduct);
+        }
+
         Product aotProduct = processAot(sourceProduct);
         if (aotProduct == GaMasterOp.EMPTY_PRODUCT) {
             System.err.println("aotProduct is empty");
