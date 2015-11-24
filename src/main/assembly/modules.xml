@@ -32,6 +32,7 @@
             <includes>
                 <include>*:*aatsr-recalibration*</include>
                 <include>*:*beam-meris-radiometry*</include>
+                <include>*:*beam-proba-v-reader*</include>
                 <include>*:*beam-idepix-*</include>
                 <include>*:*watermask-*</include>
                 <!--<include>*:commons-compress*</include>-->
