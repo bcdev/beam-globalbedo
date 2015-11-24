@@ -18,47 +18,45 @@ package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.landcover.StatusPostProcessOp;
 import org.esa.beam.landcover.UclCloudDetection;
-import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.math.FracIndex;
-import org.esa.beam.util.math.LookupTable;
-
-import java.io.IOException;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
- * Computes SDR/BBDR and kernel parameters
- * // todo: make this an abstract class for BBDR computation. Implement for specific sensors.
+ * Computes SDR/BBDR and kernel parameters for MERIS
  *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
-@OperatorMetadata(alias = "ga.sdr",
-        description = "Computes BBDRs and kernel parameters",
+@OperatorMetadata(alias = "ga.bbdr.meris",
+        description = "Computes BBDRs and kernel parameters for MERIS",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.1",
         copyright = "(C) 2015 by Brockmann Consult")
-public class AbstractSdrOp extends PixelOperator {
+public class BbdrMerisOp extends AbstractBbdrOp {
 
     @SourceProduct
     private Product sourceProduct;
 
-    @Parameter(defaultValue = "")
-    private Sensor sensor;
+//    @Parameter(defaultValue = "false")
+//    private boolean sdrOnly;
+
+    @Parameter(defaultValue = "true")
+    private boolean doUclCloudDetection;
 
     @Parameter
     private String landExpression;
+
+    private static final Sensor sensor = Sensor.MERIS;
 
     private static final int SRC_LAND_MASK = 0;
     private static final int SRC_SNOW_MASK = 1;
@@ -87,30 +85,6 @@ public class AbstractSdrOp extends PixelOperator {
 
     private static final int TRG_AODERR = 23;
 
-    // Auxdata
-//    private Matrix nb_coef_arr_all; // = fltarr(n_spc, num_bd)
-//    private Matrix nb_intcp_arr_all; // = fltarr(n_spc)
-//    private double[] rmse_arr_all; // = fltarr(n_spc)
-//    private Matrix[] nb_coef_arr; // = fltarr(n_spc, num_bd)
-//    private double[] nb_intcp_arr_D; //= fltarr(n_spc)
-//    private double kpp_vol;
-//    private double kpp_geo;
-//
-//    private AotLookupTable aotLut;
-//    private LookupTable kxAotLut;
-//    private GasLookupTable gasLookupTable;
-//    private NskyLookupTable nskyDwLut;
-//    private NskyLookupTable nskyUpLut;
-//
-//    private double vzaMin;
-//    private double vzaMax;
-//    private double szaMin;
-//    private double szaMax;
-//    private double aotMin;
-//    private double aotMax;
-//    private double hsfMin;
-//    private double hsfMax;
-
     private UclCloudDetection uclCloudDetection;
 
     private static final double[] PATH_RADIANCE = new double[]{
@@ -122,110 +96,25 @@ public class AbstractSdrOp extends PixelOperator {
             0.81036, 0.86705, 0.88244, 0.88342, 0.92075,
             Double.NaN, 0.93152, 0.9444, 0.9422, 0.58212
     };
-    private Product varianceProduct;
-    private String commonLandExpr;
-
-    private BbdrAuxdata aux;
-
-    @Override
-    protected void prepareInputs() throws OperatorException {
-        super.prepareInputs();
-        aux = BbdrAuxdata.getInstance(sourceProduct, sensor);
-    }
-
-    @Override
-    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
-        super.configureTargetProduct(productConfigurer);
-
-        final Product targetProduct = productConfigurer.getTargetProduct();
-
-        // copy flag coding and flag images
-        ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-
-        targetProduct.setAutoGrouping("sdr_error:sdr");
-    }
-
-    @Override
-    protected void configureSourceSamples(SampleConfigurer configurator) {
-        commonLandExpr = landExpression;
-        final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
-
-        BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
-        bdSnow.name = "snow_mask";
-        bdSnow.expression = snowMaskExpression;
-        bdSnow.type = ProductData.TYPESTRING_INT8;
-
-        BandMathsOp snowOp = new BandMathsOp();
-        snowOp.setParameterDefaultValues();
-        snowOp.setSourceProduct(sourceProduct);
-        snowOp.setTargetBandDescriptors(bdSnow);
-        Product snowMaskProduct = snowOp.getTargetProduct();
-
-        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
-
-        ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
-        imageVarianceOp.setParameterDefaultValues();
-        imageVarianceOp.setSourceProduct(sourceProduct);
-        imageVarianceOp.setParameter("sensor", sensor);
-        varianceProduct = imageVarianceOp.getTargetProduct();
-
-        String l1InvalidExpression = "";
-        if (sensor == Sensor.MERIS) {
-            // cloud_classif_flags.F_INVALID is triggered, id any radiance == zero
-            l1InvalidExpression = "l1_flags.INVALID OR l1_flags.COSMETIC OR cloud_classif_flags.F_INVALID";
-        } else if (sensor == Sensor.VGT) {
-            l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
-        } else if (sensor == Sensor.PROBAV) {
-            l1InvalidExpression = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
-            l1InvalidExpression =
-                    "!SM_FLAGS.GOOD_BLUE OR !SM_FLAGS.GOOD_RED OR !SM_FLAGS.GOOD_NIR OR (!SM_FLAGS.GOOD_SWIR AND TOA_REFL_SWIR > 0.65)";
-        }
-
-        String statusExpression = l1InvalidExpression + " ? 0 : (cloud_classif_flags.F_CLOUD ? 4 :" +
-                "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
-                "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
-        BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
-        statusBd.name = "status";
-        statusBd.expression = statusExpression;
-        statusBd.type = ProductData.TYPESTRING_INT8;
-
-        BandMathsOp bandMathsOp = new BandMathsOp();
-        bandMathsOp.setParameterDefaultValues();
-        bandMathsOp.setTargetBandDescriptors(statusBd);
-        bandMathsOp.setSourceProduct(sourceProduct);
-        Product statusProduct = bandMathsOp.getTargetProduct();
-
-        configurator.defineSample(SRC_STATUS, "status", statusProduct);
-        if (sensor == Sensor.MERIS) {
-            configurator.defineSample(SRC_STATUS + 1, "dem_alt");
-        }
-
-    }
-
-    @Override
-    protected void configureTargetSamples(SampleConfigurer configurator) {
-    }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        int status = StatusPostProcessOp.STATUS_INVALID;
-        status = sourceSamples[SRC_STATUS].getInt();
-        if (status == StatusPostProcessOp.STATUS_WATER) {
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            // water, do simple atmospheric correction
-            targetSamples[sensor.getNumBands() * 2 + 2].set(status);
-            return;
-        } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
-            // not land and not snow
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            targetSamples[sensor.getNumBands() * 2 + 2].set(status);
-            return;
-        }
-        targetSamples[sensor.getNumBands() * 2 + 2].set(status);
+        int status;
+
+            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+                // only compute over land
+                BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
+
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
+        if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
+            sza = 90.0 - sza;
+            vza = 90.0 - vza;
+        }
         double aot = sourceSamples[SRC_AOT].getDouble();
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
@@ -240,18 +129,26 @@ public class AbstractSdrOp extends PixelOperator {
                 aot < aux.getAotMin() || aot > aux.getAotMax() ||
                 hsf < aux.getHsfMin() || hsf > aux.getHsfMax()) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
             return;
         }
-        targetSamples[sensor.getNumBands() * 2 + 1].set(aot);
+            targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+            targetSamples[TRG_VZA].set(vza);
+            targetSamples[TRG_SZA].set(sza);
+            targetSamples[TRG_DEM].set(hsf);
+            targetSamples[TRG_AOD].set(aot);
+            targetSamples[TRG_AODERR].set(delta_aot);
+
+        double ozo;
+        double cwv;
+        double gas;
 
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
 //      MERIS: OZO per-pixel, CWV as constant value
 //      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
-        double ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
-        double cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
-        double gas = ozo;
+        ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
+        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
+        gas = ozo;
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -262,10 +159,6 @@ public class AbstractSdrOp extends PixelOperator {
         double[] toa_rfl = new double[sensor.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
-            if (toaRefl == 0.0 || Double.isNaN(toaRefl)) {
-                // if toa_refl look bad, set to invalid
-                targetSamples[sensor.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
-            }
             toaRefl /= sensor.getCal2Meris()[i];
             toa_rfl[i] = toaRefl;
         }
@@ -276,6 +169,7 @@ public class AbstractSdrOp extends PixelOperator {
         }
         phi = min(phi, 179);
         phi = max(phi, 1);
+            targetSamples[TRG_RAA].set(phi);
 
         float[] tg = aux.getGasLookupTable().getTg((float) amf, (float) gas);
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
@@ -299,14 +193,13 @@ public class AbstractSdrOp extends PixelOperator {
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
-            targetSamples[i].set(rfl_pix[i]);
         }
 
         double rfl_red = rfl_pix[sensor.getIndexRed()];
         double rfl_nir = rfl_pix[sensor.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (sensor.getBndvi() * rfl_nir - sensor.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[sensor.getNumBands() * 2].set(ndvi_land);
+            targetSamples[TRG_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[sensor.getNumBands()];
         double[] err_aod = new double[sensor.getNumBands()];
@@ -342,14 +235,101 @@ public class AbstractSdrOp extends PixelOperator {
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
                 err_rad_cov).plusEquals(err_coreg_cov);
 
-        for (int i = 0; i < sensor.getNumBands(); i++) {
-            targetSamples[sensor.getNumBands() + i].set(err2_tot_cov.get(i, i));
+        // end of implementation needed for SDR. Now BBDR computation...
+
+        double ndviSum = sensor.getAndvi() + sensor.getBndvi();
+        double sig_ndvi_land = pow(
+                (pow(ndviSum * rfl_nir * sqrt(
+                        err2_tot_cov.get(sensor.getIndexRed(), sensor.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
+                        pow(ndviSum * rfl_red * sqrt(
+                                err2_tot_cov.get(sensor.getIndexNIR(), sensor.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+                ), 0.5);
+        targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
+
+        // BB conversion and error var-cov calculation
+
+        Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
+        Matrix bdr_mat_all = aux.getNb_coef_arr_all().times(rfl_pix_m).plus(aux.getNb_intcp_arr_all());
+
+        double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
+        for (int i = 0; i < bbdrsData.length; i++) {
+            targetSamples[i].set(bbdrsData[i]);
+        }
+
+        Matrix err2_mat_rfl = aux.getNb_coef_arr_all().times(err2_tot_cov).times(aux.getNb_coef_arr_all().transpose());
+        Matrix err2_n2b_all = new Matrix(BbdrConstants.N_SPC, BbdrConstants.N_SPC);
+        for (int i = 0; i < BbdrConstants.N_SPC; i++) {
+            err2_n2b_all.set(i, i, aux.getRmse_arr_all()[i] * aux.getRmse_arr_all()[i]);
+        }
+        Matrix err_sum = err2_mat_rfl.plus(err2_n2b_all);
+
+        int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
+        double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+        for (int i = 0; i < relevantErrIndices.length; i++) {
+            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+            targetSamples[TRG_ERRORS + i].set(err_final);
+        }
+
+        // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
+
+        double[][] f_int_nsky = aux.interpol_lut_Nsky(sza, vza, hsf, aot);
+
+        double phi_r = toRadians(phi);
+
+        double mu_phi = cos(phi_r);
+        double mu_ph_ang = mus * muv + sin(vza_r) * sin(sza_r) * mu_phi;
+        double ph_ang = acos(mu_ph_ang);
+
+        double kvol = ((PI / 2.0 - ph_ang) * cos(ph_ang) + sin(ph_ang)) / (mus + muv) - PI / 4.0;
+
+        double hb = 2.0;
+
+        double tan_vp = tan(vza_r);
+        double tan_sp = tan(sza_r);
+        double sec_vp = 1. / muv;
+        double sec_sp = 1. / mus;
+
+        double D2 = tan_vp * tan_vp + tan_sp * tan_sp - 2 * tan_vp * tan_sp * mu_phi;
+
+        double cost = hb * (pow((D2 + pow((tan_vp * tan_sp * sin(phi_r)), 2)), 0.5)) / (sec_vp + sec_sp);
+        cost = min(cost, 1.0);
+        double t = acos(cost);
+
+        double ocap = (t - sin(t) * cost) * (sec_vp + sec_sp) / PI;
+
+        double kgeo = 0.5 * (1. + mu_ph_ang) * sec_sp * sec_vp + ocap - sec_vp - sec_sp;
+
+        // Nsky-weighted kernels
+        Matrix rat_tdw_m = new Matrix(rat_tdw, rat_tdw.length);
+        Matrix rat_tup_m = new Matrix(rat_tup, rat_tup.length);
+        for (int i_bb = 0; i_bb < BbdrConstants.N_SPC; i_bb++) {
+            Matrix nb_coef_arr_D_m = aux.getNb_coef_arr()[i_bb];
+            Matrix m1 = nb_coef_arr_D_m.times(rat_tdw_m);
+            double rat_tdw_bb = m1.get(0, 0) + aux.getNb_intcp_arr_D()[i_bb];
+
+            Matrix m2 = nb_coef_arr_D_m.times(rat_tup_m);
+            double rat_tup_bb = m2.get(0, 0) + aux.getNb_intcp_arr_D()[i_bb];
+
+            // 1/(1-Delta_bb)=(1-rho*S)^2
+            Matrix sab_m = new Matrix(sab, sab.length);
+            Matrix m3 = nb_coef_arr_D_m.times(sab_m);
+            double delta_bb_inv = pow((1. - bdr_mat_all.get(0, 0) * (m3.get(0, 0) + aux.getNb_intcp_arr_D()[i_bb])), 2);
+
+            double t0 = (1. - rat_tdw_bb) * (1. - rat_tup_bb) * delta_bb_inv;
+            double t1 = (1. - rat_tdw_bb) * rat_tup_bb * delta_bb_inv;
+            double t2 = rat_tdw_bb * (1. - rat_tup_bb) * delta_bb_inv;
+            double t3 = (rat_tdw_bb * rat_tup_bb - (1. - 1. / delta_bb_inv)) * delta_bb_inv;
+            double kernel_land_0 = t0 * kvol + t1 * f_int_nsky[i_bb][0] + t2 * f_int_nsky[i_bb][2] + t3 * aux.getKpp_vol();
+            double kernel_land_1 = t0 * kgeo + t1 * f_int_nsky[i_bb][1] + t2 * f_int_nsky[i_bb][3] + t3 * aux.getKpp_geo();
+            targetSamples[TRG_KERN + (i_bb * 2)].set(kernel_land_0);
+            targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kernel_land_1);
         }
     }
 
     public static class Spi extends OperatorSpi {
+
         public Spi() {
-            super(AbstractSdrOp.class);
+            super(BbdrMerisOp.class);
         }
     }
 }
