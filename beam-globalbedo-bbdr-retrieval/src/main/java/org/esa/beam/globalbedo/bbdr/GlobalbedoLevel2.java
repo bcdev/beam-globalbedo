@@ -111,11 +111,30 @@ public class GlobalbedoLevel2 extends Operator {
             if (computeL1ToAotProductOnly) {
                 setTargetProduct(aotProduct);
             } else {
-                BbdrOp bbdrOp = new BbdrOp();
+                BbdrMasterOp bbdrOp;
+                switch (sensor.getInstrument()) {
+                    case "MERIS":
+                        bbdrOp = new BbdrMerisOp();
+                        break;
+                    case "VGT":
+                        bbdrOp = new BbdrVgtOp();
+                        break;
+                    case "PROBAV":
+                        bbdrOp = new BbdrProbavOp();
+                        break;
+                    case "AATSR":
+                    case "AATSR_FWARD":
+                    case "AVHRR":
+                        // todo
+                        throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
+                    default:
+                        throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
+                }
                 bbdrOp.setParameterDefaultValues();
                 bbdrOp.setSourceProduct(aotProduct);
                 bbdrOp.setParameter("sensor", sensor);
                 Product bbdrProduct = bbdrOp.getTargetProduct();
+
                 if (tile != null && !tile.isEmpty()) {
                     setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
                 } else {

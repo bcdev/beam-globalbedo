@@ -85,7 +85,7 @@ public class BbdrConstants {
 
     public final static String[] MERIS_ANCILLARY_BAND_NAMES = new String[]{
             MERIS_VZA_TP_NAME, MERIS_VAA_TP_NAME, MERIS_SZA_TP_NAME, MERIS_SAA_TP_NAME,
-            MERIS_DEM_BAND_NAME, MERIS_AOT_BAND_NAME, MERIS_AOTERR_BAND_NAME, MERIS_OZO_TP_NAME, null
+            MERIS_DEM_BAND_NAME, MERIS_AOT_BAND_NAME, MERIS_AOTERR_BAND_NAME, MERIS_OZO_TP_NAME
     };
 
     public final static String[] MERIS_SDR_BAND_NAMES = new String[]{
@@ -119,12 +119,12 @@ public class BbdrConstants {
 
     public final static String[] AATSR_NADIR_ANCILLARY_BAND_NAMES = new String[]{
             "view_elev_nadir", "view_azimuth_nadir", "sun_elev_nadir", "sun_azimuth_nadir",
-            "elevation", "aot", "aot_err", null, null
+            "elevation", "aot", "aot_err"
     };
 
     public final static String[] AATSR_FWARD_ANCILLARY_BAND_NAMES = new String[]{
             "view_elev_fward", "view_azimuth_fward", "sun_elev_fward", "sun_azimuth_fward",
-            "elevation", "aot", "aot_err", null, null
+            "elevation", "aot", "aot_err"
     };
 
     public final static String[] AATSR_SDR_BAND_NAMES_NADIR = new String[]{
@@ -163,7 +163,7 @@ public class BbdrConstants {
 
     public final static String[] PROBAV_ANCILLARY_BAND_NAMES = new String[]{
             "VZA_VNIR", "VAA_VNIR", "SZA", "SAA",
-            "elevation", "aot", "aot_err", null, null
+            "elevation", "aot", "aot_err"
     };
 
     public final static String[] PROBAV_SDR_BAND_NAMES = new String[]{

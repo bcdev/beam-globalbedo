@@ -26,17 +26,17 @@ import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
- * Computes SDR/BBDR and kernel parameters for MERIS
+ * Computes SDR/BBDR and kernel parameters for PROBA-V
  *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
-@OperatorMetadata(alias = "ga.bbdr.meris",
-        description = "Computes BBDRs and kernel parameters for MERIS",
+@OperatorMetadata(alias = "ga.bbdr.probav",
+        description = "Computes BBDRs and kernel parameters for PROBA-V",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.1",
         copyright = "(C) 2015 by Brockmann Consult")
-public class BbdrMerisOp extends BbdrMasterOp {
+public class BbdrProbavOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -81,7 +81,7 @@ public class BbdrMerisOp extends BbdrMasterOp {
 //      MERIS: OZO per-pixel, CWV as constant value
 //      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
-        ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
+        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
         cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
         gas = ozo;
 
@@ -91,10 +91,10 @@ public class BbdrMerisOp extends BbdrMasterOp {
         double mus = cos(sza_r);
         double amf = 1.0 / muv + 1.0 / mus;
 
-        double[] toa_rfl = new double[Sensor.MERIS.getNumBands()];
+        double[] toa_rfl = new double[Sensor.VGT.getNumBands()];
         for (int i = 0; i < toa_rfl.length; i++) {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
-            toaRefl /= Sensor.MERIS.getCal2Meris()[i];
+            toaRefl /= Sensor.VGT.getCal2Meris()[i];
             toa_rfl[i] = toaRefl;
         }
 
@@ -111,11 +111,11 @@ public class BbdrMerisOp extends BbdrMasterOp {
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
 
-        double[] sab = new double[Sensor.MERIS.getNumBands()];
-        double[] rat_tdw = new double[Sensor.MERIS.getNumBands()];
-        double[] rat_tup = new double[Sensor.MERIS.getNumBands()];
-        double[] rfl_pix = new double[Sensor.MERIS.getNumBands()];
-        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+        double[] sab = new double[Sensor.VGT.getNumBands()];
+        double[] rat_tdw = new double[Sensor.VGT.getNumBands()];
+        double[] rat_tup = new double[Sensor.VGT.getNumBands()];
+        double[] rfl_pix = new double[Sensor.VGT.getNumBands()];
+        for (int i = 0; i < Sensor.VGT.getNumBands(); i++) {
             double[] f_int = f_int_all[i];
 
             double rpw = f_int[0] * Math.PI / mus; // Path Radiance
@@ -130,31 +130,31 @@ public class BbdrMerisOp extends BbdrMasterOp {
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
         }
 
-        double rfl_red = rfl_pix[Sensor.MERIS.getIndexRed()];
-        double rfl_nir = rfl_pix[Sensor.MERIS.getIndexNIR()];
+        double rfl_red = rfl_pix[Sensor.VGT.getIndexRed()];
+        double rfl_nir = rfl_pix[Sensor.VGT.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
-        double ndvi_land = (Sensor.MERIS.getBndvi() * rfl_nir - Sensor.MERIS.getAndvi() * rfl_red) * norm_ndvi;
+        double ndvi_land = (Sensor.VGT.getBndvi() * rfl_nir - Sensor.VGT.getAndvi() * rfl_red) * norm_ndvi;
         targetSamples[TRG_NDVI].set(ndvi_land);
 
-        double[] err_rad = new double[Sensor.MERIS.getNumBands()];
-        double[] err_aod = new double[Sensor.MERIS.getNumBands()];
-        double[] err_cwv = new double[Sensor.MERIS.getNumBands()];
-        double[] err_ozo = new double[Sensor.MERIS.getNumBands()];
-        double[] err_coreg = new double[Sensor.MERIS.getNumBands()];
+        double[] err_rad = new double[Sensor.VGT.getNumBands()];
+        double[] err_aod = new double[Sensor.VGT.getNumBands()];
+        double[] err_cwv = new double[Sensor.VGT.getNumBands()];
+        double[] err_ozo = new double[Sensor.VGT.getNumBands()];
+        double[] err_coreg = new double[Sensor.VGT.getNumBands()];
 
-        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+        for (int i = 0; i < Sensor.VGT.getNumBands(); i++) {
             double[] f_int = f_int_all[i];
-            err_rad[i] = Sensor.MERIS.getRadiometricError() * toa_rfl[i];
+            err_rad[i] = Sensor.VGT.getRadiometricError() * toa_rfl[i];
 
-            double delta_cwv = Sensor.MERIS.getCwvError() * cwv;
-            double delta_ozo = Sensor.MERIS.getOzoError() * ozo;
+            double delta_cwv = Sensor.VGT.getCwvError() * cwv;
+            double delta_ozo = Sensor.VGT.getOzoError() * ozo;
 
             err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
             err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
             err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
-            err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            err_coreg[i] *= Sensor.VGT.getErrCoregScale();
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
@@ -162,8 +162,8 @@ public class BbdrMerisOp extends BbdrMasterOp {
         Matrix err_ozo_cov = BbdrUtils.matrixSquare(err_ozo);
         Matrix err_coreg_cov = BbdrUtils.matrixSquare(err_coreg);
 
-        Matrix err_rad_cov = new Matrix(Sensor.MERIS.getNumBands(), Sensor.MERIS.getNumBands());
-        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+        Matrix err_rad_cov = new Matrix(Sensor.VGT.getNumBands(), Sensor.VGT.getNumBands());
+        for (int i = 0; i < Sensor.VGT.getNumBands(); i++) {
             err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
         }
 
@@ -172,12 +172,12 @@ public class BbdrMerisOp extends BbdrMasterOp {
 
         // end of implementation which is same as for SDR. Now BBDR computation...
 
-        double ndviSum = Sensor.MERIS.getAndvi() + Sensor.MERIS.getBndvi();
+        double ndviSum = Sensor.VGT.getAndvi() + Sensor.VGT.getBndvi();
         double sig_ndvi_land = pow(
                 (pow(ndviSum * rfl_nir * sqrt(
-                        err2_tot_cov.get(Sensor.MERIS.getIndexRed(), Sensor.MERIS.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
+                        err2_tot_cov.get(Sensor.VGT.getIndexRed(), Sensor.VGT.getIndexRed())) * norm_ndvi * norm_ndvi, 2) +
                         pow(ndviSum * rfl_red * sqrt(
-                                err2_tot_cov.get(Sensor.MERIS.getIndexNIR(), Sensor.MERIS.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
+                                err2_tot_cov.get(Sensor.VGT.getIndexNIR(), Sensor.VGT.getIndexNIR())) * norm_ndvi * norm_ndvi, 2)
                 ), 0.5);
         targetSamples[TRG_NDVI + 1].set(sig_ndvi_land);
 
@@ -264,7 +264,7 @@ public class BbdrMerisOp extends BbdrMasterOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BbdrMerisOp.class);
+            super(BbdrProbavOp.class);
         }
     }
 }

@@ -22,9 +22,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.framework.gpf.pointop.PixelOperator;
-import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.landcover.StatusPostProcessOp;
 import org.esa.beam.util.ProductUtils;
@@ -33,59 +31,58 @@ import java.awt.*;
 
 /**
  * Computes SDR/BBDR and kernel parameters
- * // todo: make this an abstract class for BBDR computation. Implement for specific sensors.
  *
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
-@OperatorMetadata(alias = "ga.bbdr",
+@OperatorMetadata(alias = "ga.bbdr.master",
         description = "Computes BBDRs and kernel parameters",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.1",
         copyright = "(C) 2015 by Brockmann Consult")
-public abstract class AbstractBbdrOp extends PixelOperator {
+public class BbdrMasterOp extends PixelOperator {
 
     @SourceProduct
-    private Product sourceProduct;
+    protected Product sourceProduct;
 
     @Parameter(description = "Sensor")
-    private Sensor sensor;
+    protected Sensor sensor;
 
     @Parameter(defaultValue = "false")
-    private boolean sdrOnly;
+    protected boolean sdrOnly;
 
     @Parameter(defaultValue = "true")
-    private boolean doUclCloudDetection;
+    protected boolean doUclCloudDetection;
 
     @Parameter
-    private String landExpression;
+    protected String landExpression;
 
-    private static final int SRC_LAND_MASK = 0;
-    private static final int SRC_SNOW_MASK = 1;
-    private static final int SRC_VZA = 2;
-//    private static final int SRC_VAA = 3;
-//    private static final int SRC_SZA = 4;
-//    private static final int SRC_SAA = 5;
-//    private static final int SRC_DEM = 6;
-//    private static final int SRC_AOT = 7;
-//    private static final int SRC_AOT_ERR = 8;
-//    private static final int SRC_OZO = 9;
-//    private static final int SRC_WVP = 10;
-    private static final int SRC_TOA_RFL = 11;
+    protected static final int SRC_LAND_MASK = 0;
+    protected static final int SRC_SNOW_MASK = 1;
+    protected static final int SRC_VZA = 2;
+    protected static final int SRC_VAA = 3;
+    protected static final int SRC_SZA = 4;
+    protected static final int SRC_SAA = 5;
+    protected static final int SRC_DEM = 6;
+    protected static final int SRC_AOT = 7;
+    protected static final int SRC_AOT_ERR = 8;
+    protected static final int SRC_OZO = 9;
+    protected static final int SRC_WVP = 10;
+    protected static final int SRC_TOA_RFL = 11;
     protected int SRC_TOA_VAR;
     protected int SRC_STATUS;
 
-    private static final int TRG_ERRORS = 3;
-    private static final int TRG_KERN = 9;
-    private static final int TRG_NDVI = 15;
-    private static final int TRG_VZA = 17;
-    private static final int TRG_SZA = 18;
-    private static final int TRG_RAA = 19;
-    private static final int TRG_DEM = 20;
-    private static final int TRG_SNOW = 21;
-    private static final int TRG_AOD = 22;
+    protected static final int TRG_ERRORS = 3;
+    protected static final int TRG_KERN = 9;
+    protected static final int TRG_NDVI = 15;
+    protected static final int TRG_VZA = 17;
+    protected static final int TRG_SZA = 18;
+    protected static final int TRG_RAA = 19;
+    protected static final int TRG_DEM = 20;
+    protected static final int TRG_SNOW = 21;
+    protected static final int TRG_AOD = 22;
 
-    private static final int TRG_AODERR = 23;
+    protected static final int TRG_AODERR = 23;
 
     protected BbdrAuxdata aux;
 
@@ -320,10 +317,15 @@ public abstract class AbstractBbdrOp extends PixelOperator {
         }
     }
 
+    @Override
+    protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        // nothing to do here - should be overridden by sensor-specific implementations
+    }
+
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AbstractBbdrOp.class);
+            super(BbdrMasterOp.class);
         }
     }
 }

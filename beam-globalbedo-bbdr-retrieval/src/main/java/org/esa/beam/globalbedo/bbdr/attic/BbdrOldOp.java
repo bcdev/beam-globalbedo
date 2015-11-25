@@ -14,7 +14,7 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.globalbedo.bbdr;
+package org.esa.beam.globalbedo.bbdr.attic;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
@@ -33,6 +33,7 @@ import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.globalbedo.bbdr.*;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.landcover.StatusPostProcessOp;
 import org.esa.beam.landcover.UclCloudDetection;
@@ -66,7 +67,7 @@ import static java.lang.StrictMath.toRadians;
                   authors = "Marco Zuehlke, Olaf Danne",
                   version = "1.1",
                   copyright = "(C) 2015 by Brockmann Consult")
-public class BbdrOp extends PixelOperator {
+public class BbdrOldOp extends PixelOperator {
 
     @SourceProduct
     private Product sourceProduct;
@@ -996,7 +997,7 @@ public class BbdrOp extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BbdrOp.class);
+            super(BbdrOldOp.class);
         }
     }
 }

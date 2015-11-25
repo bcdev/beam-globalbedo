@@ -173,6 +173,24 @@
                 <artifactId>beam-proba-v-reader</artifactId>
                 <version>${beamVersion}</version>
             </dependency>
+            <!-- We need to include the jhdf* here for Calvalus usage. They are included in beam-proba-v-reader
+             as well, and in BEAM they are unpacked directly-->
+            <!--<dependency>-->
+                <!--<groupId>ncsa.hdf</groupId>-->
+                <!--<artifactId>jhdf4obj</artifactId>-->
+                <!--<version>2.7</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>ncsa.hdf</groupId>-->
+                <!--<artifactId>jhdf5obj</artifactId>-->
+                <!--<version>2.7</version>-->
+            <!--</dependency>-->
+            <!--<dependency>-->
+                <!--<groupId>ncsa.hdf</groupId>-->
+                <!--<artifactId>jhdfobj</artifactId>-->
+                <!--<version>2.7</version>-->
+            <!--</dependency>-->
+
             <dependency>
                 <groupId>org.esa.beam</groupId>
                 <artifactId>beam-meris-radiometry</artifactId>

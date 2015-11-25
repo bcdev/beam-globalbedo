@@ -14,12 +14,13 @@
  * with this program; if not, see http://www.gnu.org/licenses/
  */
 
-package org.esa.beam.globalbedo.bbdr;
+package org.esa.beam.globalbedo.bbdr.attic;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.globalbedo.bbdr.attic.BbdrOldOp;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -36,7 +37,7 @@ public class BbdrOpTest {
     @Test
     @Ignore
     public void testMerisSdrPixel() {
-        BbdrOp bbdrOp = new BbdrOp();
+        BbdrOldOp bbdrOp = new BbdrOldOp();
         bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(createSourceProduct());
         bbdrOp.setParameter("landMaskExpression", "true");
@@ -104,7 +105,7 @@ public class BbdrOpTest {
     @Test
     public void testMatrixSquare() {
         double[] in = {2, 4, 6};
-        Matrix squareMatrix = BbdrOp.matrixSquare(in);
+        Matrix squareMatrix = BbdrOldOp.matrixSquare(in);
         assertNotNull(squareMatrix);
         assertEquals(3, squareMatrix.getColumnDimension());
         assertEquals(3, squareMatrix.getRowDimension());
