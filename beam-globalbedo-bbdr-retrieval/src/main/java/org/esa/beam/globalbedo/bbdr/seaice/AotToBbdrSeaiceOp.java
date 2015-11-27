@@ -25,7 +25,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.globalbedo.bbdr.BbdrAatsrOp;
+import org.esa.beam.globalbedo.bbdr.attic.BbdrAatsrOldOp;
 import org.esa.beam.globalbedo.bbdr.Sensor;
 import org.esa.beam.gpf.operators.standard.MergeOp;
 import org.esa.beam.util.ProductUtils;
@@ -66,13 +66,13 @@ public class AotToBbdrSeaiceOp extends Operator {
         Product bbdrProduct;
         if (sensor == Sensor.AATSR || sensor == Sensor.AATSR_FWARD) {
             bbdrParams.put("sensor", sensor);
-            bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+            bbdrProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOldOp.class), bbdrParams, fillSourceProds);
         } else if (sensor == Sensor.AATSR) {
             bbdrParams.put("sensor", Sensor.AATSR);
-            Product bbdrNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+            Product bbdrNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOldOp.class), bbdrParams, fillSourceProds);
             bbdrParams.clear();
             bbdrParams.put("sensor", Sensor.AATSR_FWARD);
-            Product bbdrFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOp.class), bbdrParams, fillSourceProds);
+            Product bbdrFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAatsrOldOp.class), bbdrParams, fillSourceProds);
             // merge fward into nadir product...
             MergeOp mergeOp = new MergeOp();
             mergeOp.setParameterDefaultValues();

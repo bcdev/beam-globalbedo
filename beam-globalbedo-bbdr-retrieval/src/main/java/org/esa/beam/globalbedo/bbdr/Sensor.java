@@ -19,15 +19,28 @@ package org.esa.beam.globalbedo.bbdr;
 import static org.esa.beam.globalbedo.bbdr.BbdrConstants.*;
 
 /**
- * Encapsulates the differences between the 3 sensors and the 2 different views for AATSR
+ * Encapsulates the differences between the different sensors and the 2 different views for AATSR
  */
 public enum Sensor {
 
-    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0),
-    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2),
-    AATSR_FWARD("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4),
-    VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1),
-    AVHRR("AVHRR", 2, 0.0, 0, 1, 1.0, 1.0, 0.0, 0.0, AVHRR_CALIBRATION_COEFFS, AVHRR_WAVELENGHTS, 1.0);
+    // todo: define all numbers as constants
+    MERIS("MERIS", 15, 0.02, 6, 12, 1.0, 0.999, 0.04, 0.05, MERIS_CALIBRATION_COEFFS, MERIS_WAVELENGHTS, 1.0,
+          MERIS_TOA_BAND_NAMES, MERIS_ANCILLARY_BAND_NAMES, MERIS_SDR_BAND_NAMES, MERIS_SDR_ERROR_BAND_NAMES,
+          LAND_EXPR_MERIS, L1_INVALID_EXPR_MERIS),
+    AATSR("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.2,
+          AATSR_TOA_BAND_NAMES_NADIR, AATSR_NADIR_ANCILLARY_BAND_NAMES, AATSR_SDR_BAND_NAMES_NADIR, AATSR_SDR_ERROR_BAND_NAMES_NADIR,
+          LAND_EXPR_AATSR, ""),
+    AATSR_FWARD("AATSR", 4, 0.05, 1, 2, 1.008, 0.997, 0.04, 0.15, AATSR_CALIBRATION_COEFFS, AATSR_WAVELENGHTS, 1.4,
+                AATSR_TOA_BAND_NAMES_FWARD, AATSR_FWARD_ANCILLARY_BAND_NAMES, AATSR_SDR_BAND_NAMES_FWARD, AATSR_SDR_ERROR_BAND_NAMES_FWARD,
+                COMMON_LAND_EXPR_AATSR_FWARD, ""),
+    VGT("VGT", 4, 0.05, 1, 2, 1.096, 1.089, 0.04, 0.05, VGT_CALIBRATION_COEFFS, VGT_WAVELENGHTS, 1.1,
+        VGT_TOA_BAND_NAMES, VGT_ANCILLARY_BAND_NAMES, VGT_SDR_BAND_NAMES, VGT_SDR_ERROR_BAND_NAMES,
+        LAND_EXPR_VGT, L1_INVALID_EXPR_VGT),
+    PROBAV("PROBAV", 4, 0.05, 1, 2, 1.096, 1.089, 0.04, 0.05, PROBAV_CALIBRATION_COEFFS, PROBAV_WAVELENGHTS, 1.1,
+           PROBAV_TOA_BAND_NAMES, PROBAV_ANCILLARY_BAND_NAMES, PROBAV_SDR_BAND_NAMES, PROBAV_SDR_ERROR_BAND_NAMES,
+           LAND_EXPR_PROBAV, L1_INVALID_EXPR_PROBAV);
+//    AVHRR("AVHRR", 2, 0.0, 0, 1, 1.0, 1.0, 0.0, 0.0, AVHRR_CALIBRATION_COEFFS, AVHRR_WAVELENGHTS, 1.0,
+//          AVHRR_TOA_BAND_NAMES, AVHRRV_SDR_BAND_NAMES, AVHRR_SDR_ERROR_BAND_NAMES);   todo
 
     private final String instrument;
     private final int numBands;
@@ -41,9 +54,18 @@ public enum Sensor {
     private final float[] cal2Meris;
     private final float[] wavelength;
     private final double errCoregScale;
+    private final String[] toaBandNames;
+    private final String[] ancillaryBandNames;
+    private final String[] sdrBandNames;
+    private final String[] sdrErrorBandNames;
+    private final String landExpr;
+    private final String l1InvalidExpr;
 
-    private Sensor(String instrument, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI,
-                   double bNDVI, double cwvError, double ozoError, float[] cal2Meris, float[] wavelength, double errCoregScale) {
+
+    Sensor(String instrument, int numBands, double radiometricError, int indexRed, int indexNIR, double aNDVI,
+                   double bNDVI, double cwvError, double ozoError, float[] cal2Meris, float[] wavelength, double errCoregScale,
+           String[] toaBandNames, String[] ancillaryBandNames, String[] sdrBandBandNames, String[] sdrErrorBandNames,
+           String landExpr, String l1InvalidExpr) {
         this.instrument = instrument;
         this.numBands = numBands;
         this.radiometricError = radiometricError;
@@ -56,6 +78,12 @@ public enum Sensor {
         this.cal2Meris = cal2Meris;
         this.wavelength = wavelength;
         this.errCoregScale = errCoregScale;
+        this.toaBandNames = toaBandNames;
+        this.ancillaryBandNames = ancillaryBandNames;
+        this.sdrBandNames = sdrBandBandNames;
+        this.sdrErrorBandNames = sdrErrorBandNames;
+        this.landExpr = landExpr;
+        this.l1InvalidExpr = l1InvalidExpr;
     }
 
     public String getInstrument() {
@@ -107,5 +135,29 @@ public enum Sensor {
 
     public double getErrCoregScale() {
         return errCoregScale;
+    }
+
+    public String[] getToaBandNames() {
+        return toaBandNames;
+    }
+
+    public String[] getAncillaryBandNames() {
+        return ancillaryBandNames;
+    }
+
+    public String[] getSdrBandNames() {
+        return sdrBandNames;
+    }
+
+    public String[] getSdrErrorBandNames() {
+        return sdrErrorBandNames;
+    }
+
+    public String getLandExpr() {
+        return landExpr;
+    }
+
+    public String getL1InvalidExpr() {
+        return l1InvalidExpr;
     }
 }

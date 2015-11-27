@@ -121,8 +121,9 @@ public class GaMasterOp extends Operator {
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
         final boolean isAatsrProduct = productType.equals(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
         final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
+        final boolean isProbavProduct = productType.startsWith("PROBA-V SYNTHESIS");
 
-        Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isAatsrProduct ^ isVgtProduct));
+        Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isAatsrProduct ^ isVgtProduct ^ isProbavProduct));
 
         Product reflProduct = null;
         if (isMerisProduct) {
@@ -142,8 +143,10 @@ public class GaMasterOp extends Operator {
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AatsrPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         } else if (isVgtProduct) {
             instrument = "VGT";
-//            if (sourceProduct.getSceneRasterWidth() > 40000) throw new OperatorException("Product too large, who would do a global grid at 0.008deg resolution???");
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+        } else if (isProbavProduct) {
+            instrument = "PROBAV";
+            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ProbavPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         }
         if (reflProduct == EMPTY_PRODUCT) {
             setTargetProduct(EMPTY_PRODUCT);
@@ -221,6 +224,7 @@ public class GaMasterOp extends Operator {
 
             boolean copyBand = (copyToaReflBands && !tarP.containsBand(sourceBandName) && sourceBand.getSpectralWavelength() > 0);
             copyBand = copyBand || (instrument.equals("VGT") && InstrumentConsts.getInstance().isVgtAuxBand(sourceBand));
+            copyBand = copyBand || (instrument.equals("PROBAV") && InstrumentConsts.getInstance().isProbavAuxBand(sourceBand));
             copyBand = copyBand || (sourceBandName.equals("elevation"));
             copyBand = copyBand || (gaCopyCTP && sourceBandName.equals("cloud_top_press"));
 

@@ -15,10 +15,11 @@ import java.util.Map;
 
 /**
  * Instrument specific constants
- * @author akheckel
  *
- * TODO: revise validPixel Expression: properly include range of LUTs
- * TODO: revise validPixel Expression: enable separate treatment of snow pixels
+ * @author akheckel
+ *         <p/>
+ *         TODO: revise validPixel Expression: properly include range of LUTs
+ *         TODO: revise validPixel Expression: enable separate treatment of snow pixels
  */
 class InstrumentConsts {
 
@@ -26,9 +27,9 @@ class InstrumentConsts {
 
     private final String[] supportedInstruments;
 
-/****************************************
- * MERIS
- ****************************************/
+    /****************************************
+     * MERIS
+     ****************************************/
 
     private final String idepixFlagBandName = "cloud_classif_flags";
     private final String idepixFwardFlagBandName = "cloud_classif_flags_fward";
@@ -48,7 +49,7 @@ class InstrumentConsts {
 
     private InstrumentConsts() {
 
-        this.supportedInstruments = new String[]{"MERIS", "VGT", "AATSR"};
+        this.supportedInstruments = new String[]{"MERIS", "VGT", "AATSR", "PROBAV"};
 
         this.reflecNames = new HashMap<String, String[]>(supportedInstruments.length);
         String[] merisReflectanceNames = {
@@ -71,7 +72,8 @@ class InstrumentConsts {
         reflecNames.put(supportedInstruments[0], merisReflectanceNames);
         /***************************************
          VGT
-         */String[] vgtReflectanceNames = {"B0", "B2", "B3", "MIR"};
+         */
+        String[] vgtReflectanceNames = {"B0", "B2", "B3", "MIR"};
         reflecNames.put(supportedInstruments[1], vgtReflectanceNames);
         /***************************************
          AATSR
@@ -86,6 +88,9 @@ class InstrumentConsts {
                 "reflec_fward_1600",
         };
         reflecNames.put(supportedInstruments[2], aatsrReflectanceNames);
+
+        String[] probavReflectanceNames = {"TOA_REFL_BLUE", "TOA_REFL_RED", "TOA_REFL_NIR", "TOA_REFL_SWIR"};
+        reflecNames.put(supportedInstruments[3], probavReflectanceNames);
 
         this.geomNames = new HashMap<String, String[]>(supportedInstruments.length);
         String[] merisGeomNames = {
@@ -109,6 +114,9 @@ class InstrumentConsts {
         };
         geomNames.put(supportedInstruments[2], aatsrGeomNames);
 
+        String[] probavGeomNames = {"SZA", "SAA", "VZA_SWIR", "VAA_SWIR", "VZA_VNIR", "VAA_VNIR"};
+        geomNames.put(supportedInstruments[3], probavGeomNames);
+
         this.fitWeights = new HashMap<String, double[]>(supportedInstruments.length);
         double[] merisFitWeights = {1.0, 1.0, 1.0, 1.0, 0.2, 1.0, 1.0, 1.0,
                 0.5, 0.5, 0.0, 0.5, 0.5, 0.5, 0.0};
@@ -117,6 +125,9 @@ class InstrumentConsts {
         fitWeights.put(supportedInstruments[1], vgtFitWeights);
         double[] aatsrFitWeights = {1.5, 1.0, 1.0, 1.55};
         fitWeights.put(supportedInstruments[2], aatsrFitWeights);
+
+        double[] probavFitWeights = {1.0, 1.0, 0.5, 0.1};
+        fitWeights.put(supportedInstruments[3], probavFitWeights);
 
         this.validRetrievalExpr = new HashMap<String, String>(supportedInstruments.length);
         String merisValidRetrievalExpr = "(!l1_flags.INVALID "
@@ -148,6 +159,12 @@ class InstrumentConsts {
                 + " && reflec_fward_0870 >= 0"
                 + " && reflec_fward_1600 >= 0 )";
         validRetrievalExpr.put(supportedInstruments[2], aatsrValidRetrievalExpr);
+        String probavValidRetrievaExpr = "(SM_FLAGS.GOOD_BLUE && SM_FLAGS.GOOD_RED && SM_FLAGS.GOOD_NIR && (SM_FLAGS.GOOD_SWIR or TOA_REFL_SWIR <= 0.65) "
+                + " &&  " + idepixFlagBandName + ".F_LAND "
+                + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW "
+                + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "
+                + " && (SZA<70)) ";
+        validRetrievalExpr.put(supportedInstruments[3], probavValidRetrievaExpr);
 
         this.validAotOutExpr = new HashMap<String, String>(supportedInstruments.length);
         String merisValAotOutputExpr = "(!l1_flags.INVALID "
@@ -175,6 +192,11 @@ class InstrumentConsts {
                 + " && reflec_fward_0870 >= 0"
                 + " && reflec_fward_1600 >= 0 )";
         validAotOutExpr.put(supportedInstruments[2], aatsrValAotOutputExpr);
+        String probavValAotOutputExpr = "(SM_FLAGS.GOOD_BLUE && SM_FLAGS.GOOD_RED && SM_FLAGS.GOOD_NIR "
+                + " &&  " + idepixFlagBandName + ".F_LAND "
+                + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
+                + " && (SZA<70)) ";
+        validAotOutExpr.put(supportedInstruments[3], probavValAotOutputExpr);
 
         this.nLutBands = new HashMap<String, Integer>(supportedInstruments.length);
         int merisNLutBands = 15;
@@ -183,6 +205,8 @@ class InstrumentConsts {
         nLutBands.put(supportedInstruments[1], vgtNLutBands);
         int aatsrNLutBands = 4;
         nLutBands.put(supportedInstruments[2], aatsrNLutBands);
+        int probavNLutBands = 4;
+        nLutBands.put(supportedInstruments[3], probavNLutBands);
 
         this.surfPressureName = new HashMap<String, String>(supportedInstruments.length);
         String merisSurfPressureName = "surfPressEstimate";
@@ -191,6 +215,8 @@ class InstrumentConsts {
         surfPressureName.put(supportedInstruments[1], vgtSurfPressureName);
         String aatsrSurfPressureName = "surfPressEstimate";
         surfPressureName.put(supportedInstruments[2], aatsrSurfPressureName);
+        String probavSurfPressureName = "surfPressEstimate";
+        surfPressureName.put(supportedInstruments[3], probavSurfPressureName);
 
         this.ozoneName = new HashMap<String, String>(supportedInstruments.length);
         String merisOzoneName = "ozone";
@@ -199,6 +225,8 @@ class InstrumentConsts {
         ozoneName.put(supportedInstruments[1], vgtOzoneName);
         String aatsrOzoneName = "ozoneConst";
         ozoneName.put(supportedInstruments[2], aatsrOzoneName);
+        String probavOzoneName = "NOT AVAILABLE";
+        ozoneName.put(supportedInstruments[3], probavOzoneName);
 
         this.ndviName = "toaNdvi";
         this.ndviExpression = new HashMap<String, String>(supportedInstruments.length);
@@ -208,6 +236,8 @@ class InstrumentConsts {
         ndviExpression.put(supportedInstruments[1], vgtNdviExp);
         String aatsrNdviExp = "(reflec_nadir_0870 - reflec_nadir_0670) / (reflec_nadir_0870 + reflec_nadir_0670)";
         ndviExpression.put(supportedInstruments[2], aatsrNdviExp);
+        String probavNdviExp = "NDVI";
+        ndviExpression.put(supportedInstruments[3], probavNdviExp);
     }
 
     public static InstrumentConsts getInstance() {
@@ -264,7 +294,7 @@ class InstrumentConsts {
         return ndviName;
     }
 
-    public String getNdviExpression(String instrument){
+    public String getNdviExpression(String instrument) {
         return this.ndviExpression.get(instrument);
     }
 
@@ -293,7 +323,7 @@ class InstrumentConsts {
 
     public boolean isVgtAuxBand(Band b) {
         String bname = b.getName();
-        for (String geomName : getGeomBandNames("VGT")){
+        for (String geomName : getGeomBandNames("VGT")) {
             if (bname.equals(geomName)) {
                 return true;
             }
@@ -301,10 +331,21 @@ class InstrumentConsts {
         return bname.equals(getOzoneName("VGT")) || bname.equals("WVG");
     }
 
+    public boolean isProbavAuxBand(Band b) {
+        String bname = b.getName();
+        for (String geomName : getGeomBandNames("PROBAV")) {
+            if (bname.equals(geomName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     String getNirName(String instrument) {
         if (instrument.equals("MERIS")) return "reflectance_13";
-        if (instrument.equals("VGT"))   return "B3";
+        if (instrument.equals("VGT")) return "B3";
         if (instrument.equals("AATSR")) return "reflec_nadir_0870";
+        if (instrument.equals("PROBAV")) return "TOA_REFL_NIR";
         return "";
     }
 

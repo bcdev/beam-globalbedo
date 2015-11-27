@@ -244,8 +244,11 @@ public class AerosolOp2 extends Operator {
             skip += 4;
             geomFward = new PixelGeometry(90.0-tileValues[skip], tileValues[skip + 1], 90.0-tileValues[skip + 2], tileValues[skip + 3]);
             skip += 4;
-        }
-        else {
+        } else if (instrument.equals("PROBAV")) {
+            geomNadir = new PixelGeometry(tileValues[0], tileValues[1], tileValues[4], tileValues[5]);
+            geomFward = geomNadir;
+            skip += 6;  // we have the angles SZA, SAA, VZA_SWIR, VAA_SWIR, VZA_VNIR, VAA_VNIR !!!
+        } else {
             geomNadir = new PixelGeometry(tileValues[0], tileValues[1], tileValues[2], tileValues[3]);
             geomFward = geomNadir;
             skip += 4;
@@ -517,8 +520,9 @@ public class AerosolOp2 extends Operator {
     }
 
     private void readLookupTable() throws IOException {
-        ImageInputStream aotIis = Luts.getAotLutData(instrument);
-        ImageInputStream gasIis = Luts.getCwvLutData(instrument);
+        final String lutInstrument = instrument.equals("PROBAV") ? "VGT" : instrument;
+        ImageInputStream aotIis = Luts.getAotLutData(lutInstrument);
+        ImageInputStream gasIis = Luts.getCwvLutData(lutInstrument);
         int nLutBands = InstrumentConsts.getInstance().getnLutBands(instrument);
         momo = new MomoLut(aotIis, gasIis, nLutBands);
     }

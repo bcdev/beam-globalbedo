@@ -31,28 +31,29 @@ public class GlobalbedoAvhrrLevel2 extends Operator {
     @Parameter(defaultValue = "")
     private String tile;
 
-    private static final Sensor sensor = Sensor.AVHRR;
+//    private static final Sensor sensor = Sensor.AVHRR;
 
     @Override
     public void initialize() throws OperatorException {
-        Logger logger = BeamLogManager.getSystemLogger();
-
-        if (sourceProduct.getPreferredTileSize() == null) {
-            sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
-            logger.log(Level.ALL, "adjusting tile size to: " + sourceProduct.getPreferredTileSize());
-        }
-
-        BbdrAvhrrOp bbdrOp = new BbdrAvhrrOp();
-        bbdrOp.setParameterDefaultValues();
-        bbdrOp.setSourceProduct(sourceProduct);
-        bbdrOp.setParameter("sensor", sensor);
-        Product bbdrProduct = bbdrOp.getTargetProduct();
-        if (tile != null && !tile.isEmpty()) {
-            setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
-        } else {
-            setTargetProduct(bbdrProduct);
-        }
-        getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
+        // todo
+//        Logger logger = BeamLogManager.getSystemLogger();
+//
+//        if (sourceProduct.getPreferredTileSize() == null) {
+//            sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
+//            logger.log(Level.ALL, "adjusting tile size to: " + sourceProduct.getPreferredTileSize());
+//        }
+//
+//        BbdrAvhrrOp bbdrOp = new BbdrAvhrrOp();
+//        bbdrOp.setParameterDefaultValues();
+//        bbdrOp.setSourceProduct(sourceProduct);
+//        bbdrOp.setParameter("sensor", sensor);
+//        Product bbdrProduct = bbdrOp.getTargetProduct();
+//        if (tile != null && !tile.isEmpty()) {
+//            setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
+//        } else {
+//            setTargetProduct(bbdrProduct);
+//        }
+//        getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
     }
 
     public static class Spi extends OperatorSpi {

@@ -30,6 +30,9 @@
         <module>beam-spot-vgt-reader</module>
     </dependency>
     <dependency>
+        <module>beam-proba-v-reader</module>
+    </dependency>
+    <dependency>
         <module>beam-visat</module>
         <optional>true</optional>
     </dependency>

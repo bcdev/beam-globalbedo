@@ -32,6 +32,10 @@
             <includes>
                 <include>*:*aatsr-recalibration*</include>
                 <include>*:*beam-meris-radiometry*</include>
+                <include>*:*beam-proba-v-reader*</include>
+                <include>*:*jhdf4obj*</include>       <!-- we need to include the jhdf* here for Calvalus usage -->
+                <include>*:*jhdf5obj*</include>
+                <include>*:*jhdfobj*</include>
                 <include>*:*beam-idepix-*</include>
                 <include>*:*watermask-*</include>
                 <!--<include>*:commons-compress*</include>-->

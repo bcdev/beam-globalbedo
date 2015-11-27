@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -84,7 +84,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
     private boolean useUclCloudForShadow;
 
     @SourceProduct(alias = "l1b")
-    private Product l1bProduct;
+    private Product l1bProduct;  // l1bProduct may have other dimensions than the other products !!!!
     @SourceProduct(alias = "status")
     private Product statusProduct;
     @SourceProduct(alias = "ctp")
@@ -118,15 +118,15 @@ public class StatusPostProcessOp extends MerisBasisOp {
         waterParameters.put("resolution", 50);
         waterParameters.put("subSamplingFactorX", 3);
         waterParameters.put("subSamplingFactorY", 3);
-        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, l1bProduct);
+        Product waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, statusProduct);
         waterFractionBand = waterMaskProduct.getBand("land_water_fraction");
 
-        geoCoding = l1bProduct.getGeoCoding();
+        geoCoding = statusProduct.getGeoCoding();
 
         origStatusBand = statusProduct.getBand(STATUS_BAND);
-        szaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
-        saaTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
-        altTPG = l1bProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
+        szaTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME);
+        saaTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME);
+        altTPG = statusProduct.getTiePointGrid(EnvisatConstants.MERIS_DEM_ALTITUDE_DS_NAME);
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int extendedWidth;
         int extendedHeight;
@@ -138,8 +138,8 @@ public class StatusPostProcessOp extends MerisBasisOp {
             extendedHeight = 16;
         }
 
-        rectCalculator = new RectangleExtender(new Rectangle(l1bProduct.getSceneRasterWidth(),
-                                                             l1bProduct.getSceneRasterHeight()),
+        rectCalculator = new RectangleExtender(new Rectangle(statusProduct.getSceneRasterWidth(),
+                                                             statusProduct.getSceneRasterHeight()),
                                                extendedWidth, extendedHeight
         );
 
@@ -165,7 +165,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
             for (int x = sourceRectangle.x; x < sourceRectangle.x + sourceRectangle.width; x++) {
 
                 if (targetRectangle.contains(x, y)) {
-                    final int srcStatus = sourceStatusTile.getSampleInt(x, y);
+                    int srcStatus = sourceStatusTile.getSampleInt(x, y);
                     targetStatusTile.setSample(x, y, srcStatus);
 
                     if (gaRefineClassificationNearCoastlines) {
@@ -344,7 +344,8 @@ public class StatusPostProcessOp extends MerisBasisOp {
     }
 
     private static void setStatusCloudBuffer(int x, int y, Tile statusTile) {
-        if (!isStatusCloud(x, y, statusTile)) {
+        int srcStatus = statusTile.getSampleInt(x, y);
+        if (!(srcStatus == STATUS_CLOUD || srcStatus == STATUS_UCL_CLOUD || srcStatus == STATUS_INVALID)) {
             statusTile.setSample(x, y, STATUS_CLOUD_BUFFER);
         }
     }

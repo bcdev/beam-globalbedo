@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2014 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -29,8 +29,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
-import org.esa.beam.idepix.IdepixProducts;
-import org.esa.beam.landcover.LcUclCloudBuffer;
 import org.esa.beam.landcover.StatusPostProcessOp;
 
 import javax.media.jai.OpImage;
@@ -38,12 +36,11 @@ import javax.media.jai.TileCache;
 import java.awt.image.RenderedImage;
 import java.io.File;
 
-/**
- * GlobAlbedo Level 2 processor (LC-CCI specific) for BBDR and kernel parameter computation, and tile extraction
- *
- * @author Marco Zuehlke
- */
-@OperatorMetadata(alias = "lc.l2")
+@OperatorMetadata(alias = "lc.l2",
+        description = "LC-CCI SDR Processor",
+        authors = "Marco Zuehlke, Olaf Danne, Grit Kirches",
+        version = "2.0",
+        copyright = "(C) 2015 by Brockmann Consult")
 public class LandcoverLevel2 extends Operator {
 
     @SourceProduct
@@ -59,16 +56,25 @@ public class LandcoverLevel2 extends Operator {
     @Parameter(defaultValue = "true")
     private boolean useUclCloudForShadow;
 
+    @Parameter(defaultValue = "false")
+    private boolean attachFileTileCache;
+
     @Override
     public void initialize() throws OperatorException {
+        if (sensor == Sensor.PROBAV) {
+            BbdrUtils.convertProbavToVgtReflectances(sourceProduct);
+        }
+
         Product aotProduct = processAot(sourceProduct);
         if (aotProduct == GaMasterOp.EMPTY_PRODUCT) {
             System.err.println("aotProduct is empty");
             setTargetProduct(GaMasterOp.EMPTY_PRODUCT);
             return;
         }
-        attachFileTileCache(aotProduct);
-        setTargetProduct(processBbdr(aotProduct));
+        if (attachFileTileCache) {
+            attachFileTileCache(aotProduct);
+        }
+        setTargetProduct(processSdr(aotProduct));
     }
 
     private Product processAot(Product product) {
@@ -87,25 +93,45 @@ public class LandcoverLevel2 extends Operator {
         return gaMasterOp.getTargetProduct();
     }
 
-    private Product processBbdr(Product aotProduct) {
-        BbdrOp bbdrOp = new BbdrOp();
-        bbdrOp.setParameterDefaultValues();
-        bbdrOp.setSourceProduct(aotProduct);
-        bbdrOp.setParameter("sensor", sensor);
-        bbdrOp.setParameter("sdrOnly", true);
-        bbdrOp.setParameter("doUclCloudDetection", doUclCloudDetection);
-        bbdrOp.setParameter("landExpression", "cloud_classif_flags.F_CLEAR_LAND or cloud_classif_flags.F_CLEAR_SNOW");
-        Product sdrProduct = bbdrOp.getTargetProduct();
+    private Product processSdr(Product aotProduct) {
+        BbdrMasterOp sdrOp;
+        switch (sensor.getInstrument()) {
+            case "MERIS":
+                sdrOp = new SdrMerisOp();
+                break;
+            case "VGT":
+                sdrOp = new SdrVgtOp();
+                break;
+            case "PROBAV":
+                sdrOp = new SdrProbavOp();
+                break;
+            case "AATSR":
+            case "AATSR_FWARD":
+            case "AVHRR":
+                // todo
+                throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
+            default:
+                throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
+        }
+        sdrOp.setParameterDefaultValues();
+        sdrOp.setSourceProduct(aotProduct);
+        sdrOp.setParameter("sensor", sensor);
+        sdrOp.setParameter("sdrOnly", true);
+        sdrOp.setParameter("doUclCloudDetection", doUclCloudDetection);
+        Product sdrProduct = sdrOp.getTargetProduct();
 
-        StatusPostProcessOp statusPostProcessOp = new StatusPostProcessOp();
-        statusPostProcessOp.setParameterDefaultValues();
-        statusPostProcessOp.setParameter("useUclCloudForShadow", useUclCloudForShadow);
-        statusPostProcessOp.setSourceProduct("l1b", sourceProduct);
-        statusPostProcessOp.setSourceProduct("status", sdrProduct);
-        statusPostProcessOp.setSourceProduct("ctp", aotProduct);
+        if (sensor == Sensor.MERIS) {
+            StatusPostProcessOp statusPostProcessOp = new StatusPostProcessOp();
+            statusPostProcessOp.setParameterDefaultValues();
+            statusPostProcessOp.setParameter("useUclCloudForShadow", useUclCloudForShadow);
+            statusPostProcessOp.setSourceProduct("l1b", sourceProduct);
+            statusPostProcessOp.setSourceProduct("status", sdrProduct);
+            statusPostProcessOp.setSourceProduct("ctp", aotProduct);
 
-        Product statusProduct = statusPostProcessOp.getTargetProduct();
-        return statusProduct;
+            return statusPostProcessOp.getTargetProduct();
+        } else {
+            return sdrProduct;
+        }
     }
 
     private void attachFileTileCache(Product product) {
