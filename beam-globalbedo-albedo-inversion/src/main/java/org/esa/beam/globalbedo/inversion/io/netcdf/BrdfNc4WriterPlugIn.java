@@ -98,18 +98,42 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                     addNc4BrdfVarVariableAttribute(writeable, b);
                 }
             }
+
         }
 
         private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Band b) throws IOException {
             // todo
-            if (b.getName().equals(NcConstants.LAT_BAND_NAME)) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, b);
-            } else if (b.getName().equals(NcConstants.LON_BAND_NAME)) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, b);
-            } else {
-                // the optional debug bands
-                addNc4BrdfAncillaryVariableAttribute(writeable, b);
-            }
+            //            Entropy
+//            Goodness_of_Fit
+//            Relative_Entropy
+//            Time_to_the_Closest_Sample
+//            Weighted_Number_of_Samples
+//            Proportion_NSamples
+//            lat
+//            lon
+//            time
+//            if (b.getName().equals(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Entropy", Float.NaN, "-");
+//            } else if (b.getName().equals(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Relative Entropy", Float.NaN, "-");
+//            } else if (b.getName().equals(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Weighted number of BRDF samples", Float.NaN, "-");
+//            } else if (b.getName().equals(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Goodness of Fit", Float.NaN, "-");
+//            } else if (b.getName().equals(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Snow Fraction", Float.NaN, "-");
+//            } else if (b.getName().equals(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME)) {
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Number of days to the closest sample", 1.0f, "days");
+//            } else if (b.getName().equals(NcConstants.LAT_BAND_NAME)) {
+//                addNc4BrdfLatLonVariableAttribute(writeable, b);
+//            } else if (b.getName().equals(NcConstants.LON_BAND_NAME)) {
+//                addNc4BrdfLatLonVariableAttribute(writeable, b);
+//            } else if (b.getName().equals(NcConstants.LTIME_BAND_NAME)) {
+//                addNc4BrdfAncillarVariableAttribute(writeable, b);
+//            } else {
+//                // the optional debug bands
+//                addNc4BrdfAncillaryVariableAttribute(writeable, b);
+//            }
         }
 
         private void addGlobalAttributes(NFileWriteable writeable, Product product) throws IOException {
@@ -156,7 +180,10 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("units", b.getUnit());
         }
 
-        private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
+                                                          String longname,
+                                                          float fillValue,
+                                                          String unit) throws IOException {
            // todo
         }
 

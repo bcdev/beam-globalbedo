@@ -11,6 +11,6 @@ package org.esa.beam.globalbedo.inversion.io.netcdf;
 public class NcConstants {
     public static final String LAT_BAND_NAME = "lat";
     public static final String LON_BAND_NAME = "lon";
-    public static final String SZA_BAND_NAME = "sun_zenith";
+    public static final String TIME_BAND_NAME = "lon";
 
 }
