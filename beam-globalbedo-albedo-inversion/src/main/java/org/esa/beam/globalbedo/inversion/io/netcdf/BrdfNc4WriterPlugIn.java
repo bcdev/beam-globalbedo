@@ -4,7 +4,6 @@ import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
 import org.esa.beam.dataio.netcdf.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
-import org.esa.beam.dataio.netcdf.metadata.profiles.beam.BeamGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
 import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
@@ -50,7 +49,8 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfilePartWriter createGeoCodingPartWriter() {
-        return new BeamGeocodingPart();
+//        return new BeamGeocodingPart();
+        return new AlbedoInversionGeocodingPart();
     }
 
     @Override
@@ -81,62 +81,57 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             NFileWriteable writeable = ctx.getNetcdfFileWriteable();
             tileSize = ImageManager.getPreferredTileSize(product);
 
-            writeable.addDimension("time", 1);  // todo: do we want this? yes, for Alex Loew?! make configurable!
             writeable.addDimension("y", product.getSceneRasterHeight());
             writeable.addDimension("x", product.getSceneRasterWidth());
 
-            addGlobalAttributes(writeable, product);
+            addGlobalAttributes(writeable);
 
             for (String bandName : PARAMETER_BAND_NAMES) {
                 Band b = product.getBand(bandName);
-                addNc4BrdfMeanVariableAttribute(writeable, b);
+                if (b != null) {
+                    addNc4BrdfMeanVariableAttribute(writeable, b);
+                }
             }
 
             for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                 for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
                     Band b = product.getBand(UNCERTAINTY_BAND_NAMES[i][j]);
-                    addNc4BrdfVarVariableAttribute(writeable, b);
+                    if (b != null) {
+                        addNc4BrdfVarVariableAttribute(writeable, b);
+                    }
                 }
             }
 
+            addAcAncillaryVariableAttributes(writeable, product);
         }
 
-        private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Band b) throws IOException {
-            // todo
-            //            Entropy
-//            Goodness_of_Fit
-//            Relative_Entropy
-//            Time_to_the_Closest_Sample
-//            Weighted_Number_of_Samples
-//            Proportion_NSamples
-//            lat
-//            lon
-//            time
-//            if (b.getName().equals(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Entropy", Float.NaN, "-");
-//            } else if (b.getName().equals(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Relative Entropy", Float.NaN, "-");
-//            } else if (b.getName().equals(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Weighted number of BRDF samples", Float.NaN, "-");
-//            } else if (b.getName().equals(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Goodness of Fit", Float.NaN, "-");
-//            } else if (b.getName().equals(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Snow Fraction", Float.NaN, "-");
-//            } else if (b.getName().equals(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME)) {
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b, "Number of days to the closest sample", 1.0f, "days");
-//            } else if (b.getName().equals(NcConstants.LAT_BAND_NAME)) {
-//                addNc4BrdfLatLonVariableAttribute(writeable, b);
-//            } else if (b.getName().equals(NcConstants.LON_BAND_NAME)) {
-//                addNc4BrdfLatLonVariableAttribute(writeable, b);
-//            } else if (b.getName().equals(NcConstants.LTIME_BAND_NAME)) {
-//                addNc4BrdfAncillarVariableAttribute(writeable, b);
-//            } else {
-//                // the optional debug bands
-//                addNc4BrdfAncillaryVariableAttribute(writeable, b);
-//            }
+        private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Product p) throws IOException {
+            addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME),
+                                                 "Entropy", Float.NaN, null);
+            addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
+                                                 "Relative Entropy", Float.NaN, null);
+            addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
+                                                 "Weighted number of BRDF samples", Float.NaN, null);
+            addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
+                                                 "Goodness of Fit", Float.NaN, "-");
+            final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
+            if (proportionNSamplesBand != null) {
+                addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", Float.NaN, null);
+            }
+            addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME),
+                                                 "Number of days to the closest sample", 1.0f, "days");
+            final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
+            if (latBand != null) {
+                addNc4BrdfLatLonVariableAttribute(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
+            }
+            final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
+            if (lonBand != null) {
+                addNc4BrdfLatLonVariableAttribute(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
+            }
+            // todo: time, crs
         }
 
-        private void addGlobalAttributes(NFileWriteable writeable, Product product) throws IOException {
+        private void addGlobalAttributes(NFileWriteable writeable) throws IOException {
             // todo: clarify/discuss attribute entries
             writeable.addGlobalAttribute("Conventions", "CF-1.6");
             writeable.addGlobalAttribute("history", "QA4ECV Processing, 2014-2017");
@@ -150,10 +145,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
         }
 
         private void addNc4BrdfMeanVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
-            NVariable variable = writeable.addVariable(b.getName(),
-                                                       DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32),
-                                                       tileSize, writeable.getDimensions());
-
+            NVariable variable = addNc4Variable(writeable, b);
             // e.g. "mean_VIS_f0" --> "Mean of parameter F0 in VIS"
             final String[] bSplit = b.getName().split("_");
             final String longName = "Mean of parameter " + bSplit[2].toUpperCase() + " in " + bSplit[1];
@@ -161,30 +153,52 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("fill_value", b.getNoDataValue());
             variable.addAttribute("scale_factor", b.getScalingFactor());
             variable.addAttribute("add_offset", b.getScalingOffset());
-            variable.addAttribute("units", b.getUnit());
+//            variable.addAttribute("units", "-");
         }
 
         private void addNc4BrdfVarVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
-            NVariable variable = writeable.addVariable(b.getName(),
-                                                       DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32),
-                                                       tileSize, writeable.getDimensions());
-
+            NVariable variable = addNc4Variable(writeable, b);
             // e.g. "VAR_VIS_f0_NIR_f1" --> "Covariance(VIS_F0,NIR_F1)"
             final String[] bSplit = b.getName().split("_");
             final String longName = "Covariance(" + bSplit[1] + "_" + bSplit[2].toUpperCase() + "," +
                     bSplit[3] + "_" + bSplit[4].toUpperCase() + ")";
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", b.getNoDataValue());
-            variable.addAttribute("scale_factor", b.getScalingFactor());
-            variable.addAttribute("add_offset", b.getScalingOffset());
-            variable.addAttribute("units", b.getUnit());
+//            variable.addAttribute("scale_factor", b.getScalingFactor());
+//            variable.addAttribute("add_offset", b.getScalingOffset());
+//            variable.addAttribute("units", "-");
         }
 
         private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
-                                                          String longname,
+                                                          String longName,
                                                           float fillValue,
                                                           String unit) throws IOException {
-           // todo
+            NVariable variable = addNc4Variable(writeable, b);
+            variable.addAttribute("long_name", longName);
+            variable.addAttribute("fill_value", fillValue);
+            variable.addAttribute("scale_factor", b.getScalingFactor());
+            variable.addAttribute("add_offset", b.getScalingOffset());
+            if (unit != null) {
+                variable.addAttribute("units", unit);
+            }
+        }
+
+        private void addNc4BrdfLatLonVariableAttribute(NFileWriteable writeable, Band b,
+                                                       String longName,
+                                                       String standardName,
+                                                       String unit) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            variable.addAttribute("long_name", longName);
+            variable.addAttribute("long_name", standardName);
+            if (unit != null) {
+                variable.addAttribute("units", unit);
+            }
+        }
+
+        private NVariable addNc4Variable(NFileWriteable writeable, Band b) throws IOException {
+            return writeable.addVariable(b.getName(),
+                                         DataTypeUtils.getNetcdfDataType(ProductData.TYPE_FLOAT32),
+                                         tileSize, writeable.getDimensions());
         }
 
     }
