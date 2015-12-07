@@ -9,7 +9,9 @@ import org.esa.beam.dataio.netcdf.nc.NVariable;
 import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
 import org.esa.beam.dataio.netcdf.util.Constants;
 import org.esa.beam.dataio.netcdf.util.DataTypeUtils;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.jai.ImageManager;
@@ -23,10 +25,7 @@ import java.util.TimeZone;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 27.11.2015
- * Time: 17:26
+ * Writer for CF compliant BRDF NetCDF4 output
  *
  * @author olafd
  */
@@ -49,7 +48,6 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfilePartWriter createGeoCodingPartWriter() {
-//        return new BeamGeocodingPart();
         return new AlbedoInversionGeocodingPart();
     }
 
@@ -113,7 +111,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
                                                  "Weighted number of BRDF samples", Float.NaN, null);
             addNc4BrdfAncillaryVariableAttribute(writeable, p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
-                                                 "Goodness of Fit", Float.NaN, "-");
+                                                 "Goodness of Fit", Float.NaN, null);
             final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
             if (proportionNSamplesBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", Float.NaN, null);
@@ -128,7 +126,6 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             if (lonBand != null) {
                 addNc4BrdfLatLonVariableAttribute(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
             }
-            // todo: time, crs
         }
 
         private void addGlobalAttributes(NFileWriteable writeable) throws IOException {
@@ -151,9 +148,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final String longName = "Mean of parameter " + bSplit[2].toUpperCase() + " in " + bSplit[1];
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", b.getNoDataValue());
-            variable.addAttribute("scale_factor", b.getScalingFactor());
-            variable.addAttribute("add_offset", b.getScalingOffset());
-//            variable.addAttribute("units", "-");
+            variable.addAttribute("coordinates", "lat lon");
         }
 
         private void addNc4BrdfVarVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
@@ -164,9 +159,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                     bSplit[3] + "_" + bSplit[4].toUpperCase() + ")";
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", b.getNoDataValue());
-//            variable.addAttribute("scale_factor", b.getScalingFactor());
-//            variable.addAttribute("add_offset", b.getScalingOffset());
-//            variable.addAttribute("units", "-");
+            variable.addAttribute("coordinates", "lat lon");
         }
 
         private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
@@ -176,8 +169,9 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", fillValue);
-            variable.addAttribute("scale_factor", b.getScalingFactor());
-            variable.addAttribute("add_offset", b.getScalingOffset());
+            variable.addAttribute("coordinates", "lat lon");
+//            variable.addAttribute("scale_factor", b.getScalingFactor());
+//            variable.addAttribute("add_offset", b.getScalingOffset());
             if (unit != null) {
                 variable.addAttribute("units", unit);
             }
