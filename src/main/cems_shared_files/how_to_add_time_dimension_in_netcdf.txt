@@ -1,0 +1,76 @@
+SEE http://disc.sci.gsfc.nasa.gov/recipes/?q=recipes/How-to-Concatenate-the-Time-Dimension-of-netCDF-Files-with-NCO:
+
+--> this is likely what Alex Loew finally needs, and which, together with specific BEAM NetCDF4-GA writer, fully replaces Said's 'AddAttributes.java' ...
+--> use NCO >= 4.4.2 which we have on CEMS!! A lot of the following does not work with version 4.3.1 on gamaster!
+--> create same for final albedo files
+
+1. create time aggregation cdl template (only once):
+ - pico -w time_agg.cdl 
+ # edit this (units TBD, e.g. 1970-01-01):
+ netcdf time_agg {
+	dimensions:
+		time = 1 ;
+	variables:
+		long time(time) ;
+		time:long_name = "time" ;
+		time:units = "days since 1970-01-01" ;
+	data:
+		time = 1 ;
+}
+
+2. create netcdf version of this (only once):
+- ncgen -b -o time_agg.nc time_agg.cdl
+
+3. do a time 'aggregation' with just one input file 'test_nc4.nc' to aggregate:
+- ncecat -O -u time 'test_nc4.nc' test_nc4_agg.nc
+In the end, loop over all years, doys, tiles (files GlobAlbedo.brdf.mergeyyyyDDD.hXXvYY.nc
+
+4. add variable time to the aggregated file 'test_nc4_agg.nc' with NCO command ncks:
+- ncks -A time_agg.nc test_nc4_agg.nc
+((gives a warning:
+ncks: WARNING nco_fl_open() reports current extended filetype = NC_FORMAT_HDF5 does not equal previous extended filetype = NC_FORMAT_NC3
+but it seems that we can ignore))
+
+
+==> gives this final output 'test_nc4_agg.nc':
+netcdf test_nc4_agg {
+dimensions:
+        time = UNLIMITED ; // (1 currently)
+        y = 1200 ;
+        x = 1200 ;
+variables:
+        float mean_VIS_f0(time, y, x) ;
+                mean_VIS_f0:long_name = "Mean of parameter F0 in VIS" ;
+                mean_VIS_f0:fill_value = -9999. ;
+                mean_VIS_f0:coordinates = "lat lon" ;
+        float mean_VIS_f1(time, y, x) ;
+...
+...
+float lat(y, x) ;
+                lat:units = "degrees_north" ;
+                lat:long_name = "latitude coordinate" ;
+                lat:standard_name = "latitude" ;
+        float lon(y, x) ;
+                lon:units = "degrees_east" ;
+                lon:long_name = "longitude coordinate" ;
+                lon:standard_name = "longitude" ;
+        int crs(time) ;
+                crs:wkt = "PROJCS[\"MODIS Sinusoidal\", \r\n  GEOGCS[\"WGS 84\", \r\n    DATUM[\"WGS_1984\", \r\n      SPHEROID[\"WGS 84\", 6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]], \r\n      AUTHORITY[\"EPSG\",\"6326\"]], \r\n    PRIMEM[\"Greenwich\", 0.0, AUTHORITY[\"EPSG\",\"8901\"]], \r\n    UNIT[\"degree\", 0.017453292519943295], \r\n    AXIS[\"Longitude\", EAST], \r\n    AXIS[\"Latitude\", NORTH], \r\n    AUTHORITY[\"EPSG\",\"4326\"]], \r\n  PROJECTION[\"Sinusoidal\"], \r\n  PARAMETER[\"semi_major\", 6371007.181], \r\n  PARAMETER[\"semi_minor\", 6371007.181], \r\n  PARAMETER[\"central_meridian\", 0.0], \r\n  PARAMETER[\"scale_factor\", 1.0], \r\n  PARAMETER[\"false_easting\", 0.0], \r\n  PARAMETER[\"false_northing\", 0.0], \r\n  UNIT[\"m\", 1.0], \r\n  AXIS[\"x\", EAST], \r\n  AXIS[\"y\", NORTH], \r\n  AUTHORITY[\"SR-ORG\",\"6974\"]]" ;
+                crs:i2m = "926.6254330558,0.0,0.0,-926.6254330558,-463.3127165279,3336314.8717165277" ;
+                crs:long_name = "Coordinate Reference System" ;
+                crs:comment = "A coordinate reference system (CRS) defines defines how the georeferenced spatial data relates to real locations on the Earth\'s surface" ;
+        int time(time) ;
+                time:long_name = "time" ;
+                time:units = "days since 1970-01-01" ;
+
+// global attributes:
+                :Conventions = "CF-1.6" ;
+                :title = "QA4ECV BRDF Product" ;
+                :institution = "Mullard Space Science Laboratory, Department of Space and Climate Physics, University College London" ;
+                :source = "Satellite observations, BRDF/Albedo Inversion Model" ;
+                :references = "GlobAlbedo ATBD V3.1" ;
+                :comment = "none" ;
+                :nco_openmp_thread_number = 1 ;
+                :history = "Mon Dec  7 16:57:36 2015: ncks -A time_agg.nc test_nc4_agg.nc\nMon Dec  7 16:56:39 2015: ncecat -O -u time test_nc4.nc test_nc4_agg.nc\nQA4ECV Processing, 2014-2017" ;
+                :NCO = "4.4.2" ;
+}
