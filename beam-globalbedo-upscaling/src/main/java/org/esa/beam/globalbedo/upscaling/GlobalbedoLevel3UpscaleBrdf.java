@@ -64,7 +64,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
     private int scaling;
 
-    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"},
+    @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"},
                description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 

@@ -60,7 +60,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
     @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
     int scaling;
 
-    @Parameter(defaultValue = "DIMAP", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
+    @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
     @TargetProduct

@@ -22,18 +22,16 @@ import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
 
-import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
-
 /**
- * Writer for CF compliant BRDF NetCDF4 output
+ * Writer for CF compliant Albedo NetCDF4 output
  *
  * @author olafd
  */
-public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
+public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public String[] getFormatNames() {
-        return new String[]{"NetCDF4-GA-BRDF"};
+        return new String[]{"NetCDF4-GA-ALBEDO"};
     }
 
     @Override
@@ -43,7 +41,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public String getDescription(Locale locale) {
-        return "QA4ECV BRDF NetCDF4 products";
+        return "QA4ECV Albedo NetCDF4 products";
     }
 
     @Override
@@ -53,7 +51,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfileInitPartWriter createInitialisationPartWriter() {
-        return new BrdfNc4MainPart();
+        return new AlbedoNc4MainPart();
     }
 
     @Override
@@ -62,15 +60,19 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
     }
 
 
-    private class BrdfNc4MainPart implements ProfileInitPartWriter {
+    private class AlbedoNc4MainPart implements ProfileInitPartWriter {
 
-        private final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
-        private final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
+        private final String[] BHR_BAND_NAMES = IOUtils.getAlbedoBhrBandNames();
+        private final String[] DHR_BAND_NAMES = IOUtils.getAlbedoDhrBandNames();
+        private final String[] BHR_ALPHA_BAND_NAMES = IOUtils.getAlbedoBhrAlphaBandNames();
+        private final String[] DHR_ALPHA_BAND_NAMES = IOUtils.getAlbedoDhrAlphaBandNames();
+        private final String[] BHR_SIGMA_BAND_NAMES = IOUtils.getAlbedoBhrSigmaBandNames();
+        private final String[] DHR_SIGMA_BAND_NAMES = IOUtils.getAlbedoDhrSigmaBandNames();
 
         private final SimpleDateFormat COMPACT_ISO_FORMAT = new SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'");
         private Dimension tileSize;
 
-        BrdfNc4MainPart() {
+        AlbedoNc4MainPart() {
             COMPACT_ISO_FORMAT.setTimeZone(TimeZone.getTimeZone("UTC"));
         }
 
@@ -84,31 +86,54 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
             addGlobalAttributes(writeable);
 
-            for (String bandName : PARAMETER_BAND_NAMES) {
+            for (String bandName : BHR_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4BrdfMeanVariableAttribute(writeable, b);
+                    addNc4BhrVariableAttribute(writeable, b);
                 }
             }
 
-            for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
-                for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                    Band b = product.getBand(UNCERTAINTY_BAND_NAMES[i][j]);
-                    if (b != null) {
-                        addNc4BrdfVarVariableAttribute(writeable, b);
-                    }
+            for (String bandName : DHR_BAND_NAMES) {
+                Band b = product.getBand(bandName);
+                if (b != null) {
+                    addNc4DhrVariableAttribute(writeable, b);
                 }
             }
+
+            for (String bandName : BHR_ALPHA_BAND_NAMES) {
+                Band b = product.getBand(bandName);
+                if (b != null) {
+                    addNc4BhrAlphaVariableAttribute(writeable, b);
+                }
+            }
+
+            for (String bandName : DHR_ALPHA_BAND_NAMES) {
+                Band b = product.getBand(bandName);
+                if (b != null) {
+                    addNc4DhrAlphaVariableAttribute(writeable, b);
+                }
+            }
+
+            for (String bandName : BHR_SIGMA_BAND_NAMES) {
+                Band b = product.getBand(bandName);
+                if (b != null) {
+                    addNc4BhrSigmaVariableAttribute(writeable, b);
+                }
+
+            }
+
+            for (String bandName : DHR_SIGMA_BAND_NAMES) {
+                Band b = product.getBand(bandName);
+                if (b != null) {
+                    addNc4DhrSigmaVariableAttribute(writeable, b);
+                }
+            }
+
 
             addAcAncillaryVariableAttributes(writeable, product);
         }
 
         private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Product p) throws IOException {
-            final Band ntropyBand = p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
-            if (ntropyBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, ntropyBand,
-                                                     "Entropy", Float.NaN, null);
-            }
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, relEntropyBand,
@@ -117,21 +142,24 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, weightedNumSamplesBand,
-                                                     "Weighted number of BRDF samples", Float.NaN, null);
+                                                     "Weighted number of albedo samples", Float.NaN, null);
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, goodnessOfFitBand,
                                                      "Goodness of Fit", Float.NaN, null);
             }
-            final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
-            if (proportionNSamplesBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", Float.NaN, null);
+            final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
+            if (snowFractionBand != null) {
+                addNc4BrdfAncillaryVariableAttribute(writeable, snowFractionBand, "Snow Fraction", Float.NaN, null);
             }
-            final Band daysClosestSampleBand = p.getBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-            if (daysClosestSampleBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, daysClosestSampleBand,
-                                                     "Number of days to the closest sample", 1.0f, "days");
+            final Band dataMaskBand = p.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
+            if (dataMaskBand != null) {
+                addNc4BrdfAncillaryVariableAttribute(writeable, dataMaskBand, "Data Mask", Float.NaN, null);
+            }
+            final Band szaBand = p.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
+            if (szaBand != null) {
+                addNc4BrdfAncillaryVariableAttribute(writeable, szaBand, "Solar Zenith Angle", Float.NaN, null);
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
@@ -147,7 +175,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             // todo: clarify/discuss attribute entries
             writeable.addGlobalAttribute("Conventions", "CF-1.6");
             writeable.addGlobalAttribute("history", "QA4ECV Processing, 2014-2017");
-            writeable.addGlobalAttribute("title", "QA4ECV BRDF Product");
+            writeable.addGlobalAttribute("title", "QA4ECV Albedo Product");
             writeable.addGlobalAttribute("institution", "Mullard Space Science Laboratory, " +
                     "Department of Space and Climate Physics, University College London");
             writeable.addGlobalAttribute("source", "Satellite observations, BRDF/Albedo Inversion Model");
@@ -155,26 +183,64 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("comment", "none");
         }
 
-        private void addNc4BrdfMeanVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BhrVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
-            // e.g. "mean_VIS_f0" --> "Mean of parameter F0 in VIS"
+            // e.g. "BHR_NIR" --> "Bi-Hemisphere Reflectance albedo - NIR band"
             final String[] bSplit = b.getName().split("_");
-            final String longName = "Mean of parameter " + bSplit[2].toUpperCase() + " in " + bSplit[1];
+            final String longName = "Bi-Hemisphere Reflectance albedo - " + bSplit[1].toUpperCase() + " band";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addNc4DhrVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            // e.g. "DHR_NIR" --> "Directional Hemisphere Reflectance albedo - NIR band"
+            final String[] bSplit = b.getName().split("_");
+            final String longName = "Directional Hemisphere Reflectance albedo - " + bSplit[1].toUpperCase() + " band";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addNc4BhrAlphaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            // e.g. "BHR_alpha_NIR_SW" --> "Bi-Hemisphere Reflectance albedo - (NIR,SW) alpha correlation term"
+            final String[] bSplit = b.getName().split("_");
+            final String longName = "Bi-Hemisphere Reflectance albedo - (" +
+                    bSplit[2].toUpperCase() + "," + bSplit[3].toUpperCase() + ") alpha correlation term";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addNc4DhrAlphaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            // e.g. "BHR_alpha_NIR_SW" --> "Bi-Hemisphere Reflectance albedo - (NIR,SW) alpha correlation term"
+            final String[] bSplit = b.getName().split("_");
+            final String longName = "Directional Hemisphere Reflectance albedo - (" +
+                    bSplit[2].toUpperCase() + "," + bSplit[3].toUpperCase() + ") alpha correlation term";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addNc4BhrSigmaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            // e.g. "BHR_sigma_NIR" --> "Uncertainty of Bi-Hemisphere Reflectance albedo - NIR band"
+            final String[] bSplit = b.getName().split("_");
+            final String longName = "Uncertainty of Bi-Hemisphere Reflectance albedo - " +
+                    bSplit[2].toUpperCase() + " band";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addNc4DhrSigmaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+            NVariable variable = addNc4Variable(writeable, b);
+            // e.g. "DHR_sigma_NIR" --> "Uncertainty of Directional Hemisphere Reflectance albedo - NIR band"
+            final String[] bSplit = b.getName().split("_");
+            final String longName = "Uncertainty of Directional Hemisphere Reflectance albedo - " +
+                    bSplit[2].toUpperCase() + " band";
+            addAlbedoVariableAttributes(b, variable, longName);
+        }
+
+        private void addAlbedoVariableAttributes(Band b, NVariable variable, String longName) throws IOException {
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", b.getNoDataValue());
             variable.addAttribute("coordinates", "lat lon");
         }
 
-        private void addNc4BrdfVarVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
-            NVariable variable = addNc4Variable(writeable, b);
-            // e.g. "VAR_VIS_f0_NIR_f1" --> "Covariance(VIS_F0,NIR_F1)"
-            final String[] bSplit = b.getName().split("_");
-            final String longName = "Covariance(" + bSplit[1] + "_" + bSplit[2].toUpperCase() + "," +
-                    bSplit[3] + "_" + bSplit[4].toUpperCase() + ")";
-            variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", b.getNoDataValue());
-            variable.addAttribute("coordinates", "lat lon");
-        }
 
         private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
                                                           String longName,

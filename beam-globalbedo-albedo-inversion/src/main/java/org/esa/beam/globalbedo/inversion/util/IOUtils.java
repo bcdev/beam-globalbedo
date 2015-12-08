@@ -506,7 +506,7 @@ public class IOUtils {
     public static String[] getAlbedoDhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "DHR_sigma" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "DHR_sigma_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }
@@ -514,7 +514,7 @@ public class IOUtils {
     public static String[] getAlbedoBhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "BHR_sigma" + waveBandsOffsetMap.get(i);
+            bandNames[i] = "BHR_sigma_" + waveBandsOffsetMap.get(i);
         }
         return bandNames;
     }

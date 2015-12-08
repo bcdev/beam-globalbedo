@@ -72,8 +72,8 @@ public class Brdf2Albedo {
 
 
     private String newAttr[] = {"DHR_VIS", "DHR_NIR", "DHR_SW", "BHR_VIS", "BHR_NIR",
-            "BHR_SW", "DHR_sigmaVIS", "DHR_sigmaNIR", "DHR_sigmaSW",
-            "BHR_sigmaVIS", "BHR_sigmaNIR", "BHR_sigmaSW", "DHR_alpha_VIS_NIR",
+            "BHR_SW", "DHR_sigma_VIS", "DHR_sigma_NIR", "DHR_sigma_SW",
+            "BHR_sigma_VIS", "BHR_sigma_NIR", "BHR_sigma_SW", "DHR_alpha_VIS_NIR",
             "DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW", "BHR_alpha_VIS_NIR",
             "BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"};
 
