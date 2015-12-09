@@ -94,9 +94,12 @@ public class InversionOp extends PixelOperator {
     private double priorScaleFactor;
 
     @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    // Oct. 2015:
+//    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
     private String priorMeanBandNamePrefix;
 
     @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
     private String priorSdBandNamePrefix;
 
     @Parameter(defaultValue = "7", description = "Prior broad bands start index (default fits to the latest prior version)")
@@ -173,15 +176,16 @@ public class InversionOp extends PixelOperator {
             for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
                 for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                     final String indexString = Integer.toString(priorBandStartIndex + i);
-                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
 //                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
+                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
                     // Oct. 2015 version, e.g. Mean_VIS_f0
-                    final String meanBandName = priorMeanBandNamePrefix + IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
+//                    final String meanBandName = priorMeanBandNamePrefix + IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
                     configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
 
 //                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
                     // 2014, e.g. SD:_BAND_7_PARAMETER_F1
-//                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
                     // Oct. 2015 version:
                     // SD:_BAND_7_PARAMETER_F0 --> now Cov_VIS_f0_VIS_f0
                     // SD:_BAND_7_PARAMETER_F1 --> now Cov_VIS_f1_VIS_f1
@@ -192,9 +196,9 @@ public class InversionOp extends PixelOperator {
                     // SD:_BAND_9_PARAMETER_F0 --> now Cov_SW_f0_SW_f0
                     // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
                     // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
-                    final String sdMeanBandName = priorSdBandNamePrefix +
-                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j+
-                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
+//                    final String sdMeanBandName = priorSdBandNamePrefix +
+//                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j+
+//                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
                     configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
                 }
             }

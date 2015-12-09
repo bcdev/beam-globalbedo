@@ -58,9 +58,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     private String priorFileNamePrefix;
 
     @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    // Oct. 2015:
+//    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
     private String priorMeanBandNamePrefix;
 
     @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
     private String priorSdBandNamePrefix;
 
     @Parameter(description = "MODIS tile")
