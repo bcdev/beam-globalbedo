@@ -57,6 +57,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix") // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
+    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    private String priorMeanBandNamePrefix;
+
+    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    private String priorSdBandNamePrefix;
+
     @Parameter(description = "MODIS tile")
     private String tile;
 
@@ -131,6 +137,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 // merge Snow/NoSnow products...
                 MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
                 mergeBrdfOp.setParameterDefaultValues();
+                mergeBrdfOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
+                mergeBrdfOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
                 mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
                 mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
                 mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);

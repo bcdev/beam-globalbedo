@@ -46,8 +46,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
     // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
-    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
     private String priorMeanBandNamePrefix;
+
+    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    private String priorSdBandNamePrefix;
+
 
     @Parameter(description = "MODIS tile")
     private String tile;
@@ -160,6 +164,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("usePrior", usePrior);
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             inversionOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
+            inversionOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
             Product inversionProduct = inversionOp.getTargetProduct();
 
             if (computeSeaice) {
