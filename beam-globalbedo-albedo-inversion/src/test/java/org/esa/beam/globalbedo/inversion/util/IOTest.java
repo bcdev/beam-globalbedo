@@ -21,23 +21,34 @@ public class IOTest extends TestCase {
     private int dim1;
     private int dim2;
     private File testfile;
-    File existingTileInfoFile;
+    private File file_h18v04;
+    private File file_h25v06;
+    private String rootDir;
 
     @Override
     public void setUp() throws Exception {
+        rootDir = System.getProperty("user.home");
         dim1 = 1200;
         dim2 = 1200;
         testfile = new File(System.getProperty("user.home") + File.separator + "muell.txt");
         testfile.createNewFile();
+
+        file_h18v04 = new File(rootDir + File.separator + "h18v04");
+        file_h18v04.mkdir();
+        file_h25v06 = new File(rootDir + File.separator + "h25v06");
+        file_h25v06.mkdir();
     }
 
     @Override
     public void tearDown() throws Exception {
-        if (existingTileInfoFile != null && existingTileInfoFile.exists()) {
-            existingTileInfoFile.delete();
-        }
         if (testfile != null && testfile.exists()) {
             testfile.deleteOnExit();
+        }
+        if (file_h18v04 != null && file_h18v04.exists()) {
+            file_h18v04.deleteOnExit();
+        }
+        if (file_h25v06 != null && file_h25v06.exists()) {
+            file_h25v06.deleteOnExit();
         }
     }
 
@@ -547,12 +558,6 @@ public class IOTest extends TestCase {
     }
 
     public void testGetTileDirectories() throws Exception {
-        String rootDir = System.getProperty("user.home");
-        File h18v04 = new File(rootDir + File.separator + "h18v04");
-        if (!h18v04.exists()) h18v04.mkdir();
-        File h25v06 = new File(rootDir + File.separator + "h25v06");
-        if (!h25v06.exists()) h25v06.mkdir();
-
         File[] tileDirs = IOUtils.getTileDirectories(rootDir);
         assertNotNull(tileDirs);
         assertEquals(2, tileDirs.length);
