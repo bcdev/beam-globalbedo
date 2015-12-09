@@ -36,6 +36,9 @@ public class IOTest extends TestCase {
         if (existingTileInfoFile != null && existingTileInfoFile.exists()) {
             existingTileInfoFile.delete();
         }
+        if (testfile != null && testfile.exists()) {
+            testfile.deleteOnExit();
+        }
     }
 
     public void testGetDailyBBDRFiles() {
