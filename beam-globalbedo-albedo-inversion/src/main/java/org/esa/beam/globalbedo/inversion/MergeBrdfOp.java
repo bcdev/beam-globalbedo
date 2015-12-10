@@ -91,7 +91,7 @@ public class MergeBrdfOp extends PixelOperator {
     @SourceProduct(description = "BRDF NoSnow product")
     private Product noSnowProduct;
 
-    @SourceProduct(description = "Prior product")
+    @SourceProduct(description = "Prior product", optional = true)
     private Product priorProduct;
 
     @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
@@ -115,10 +115,6 @@ public class MergeBrdfOp extends PixelOperator {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (x == 500 && y == 860) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-
         final double nSamplesSnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length +
                 SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double nSamplesSnow = AlbedoInversionUtils.isValid(nSamplesSnowDataValue) ? nSamplesSnowDataValue : 0.0;
@@ -129,8 +125,6 @@ public class MergeBrdfOp extends PixelOperator {
 
         final double totalNSamples = nSamplesSnow + nSamplesNoSnow;
 
-        final double priorMaskDataValue = sourceSamples[SRC_PRIOR_MASK].getDouble();
-        final double priorMask = AlbedoInversionUtils.isValid(priorMaskDataValue) ? priorMaskDataValue : 0.0;
 
         final double entropySnowDataValue = sourceSamples[SRC_SNOW_PARAMETERS.length + SRC_SNOW_UNCERTAINTIES.length +
                 SRC_SNOW_ENTROPY].getDouble();
@@ -141,6 +135,12 @@ public class MergeBrdfOp extends PixelOperator {
 
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
+
+        double priorMask = 0.0;
+        if (priorProduct != null) {
+            final double priorMaskDataValue = sourceSamples[SRC_PRIOR_MASK].getDouble();
+            priorMask = AlbedoInversionUtils.isValid(priorMaskDataValue) ? priorMaskDataValue : 0.0;
+        }
 
         if (totalNSamples > 0.0 && (!areSnowSamplesZero() || !areNoSnowSamplesZero())) {
             if ((nSamplesNoSnow == 0.0 && !areNoSnowSamplesZero()) && priorMask == 3.0) {
@@ -335,7 +335,10 @@ public class MergeBrdfOp extends PixelOperator {
     }
 
     private boolean priorMaskOk(double priorMask) {
-        return priorMask != 0.0 && priorMask != 2.0 && priorMask != 3.0 && priorMask != 5.0 && priorMask != 15.0;
+        final boolean maskValueOk =
+                priorMask != 0.0 && priorMask != 2.0 && priorMask != 3.0 && priorMask != 5.0 && priorMask != 15.0;
+        // just do not mask if we have no Prior product
+        return priorProduct == null || maskValueOk;
     }
 
     @Override
@@ -461,20 +464,22 @@ public class MergeBrdfOp extends PixelOperator {
         // prior product:
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
-        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
-            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
-                final String indexString = Integer.toString(priorBandStartIndex + i);
-                final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                final int srcPriorMeanIndex = 2 * sourceSampleOffset + NUM_ALBEDO_PARAMETERS * i + j;
-                configurator.defineSample(srcPriorMeanIndex, meanBandName, priorProduct);
-
-                final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                final int srcPriorSdIndex = 2 * sourceSampleOffset + priorOffset + NUM_ALBEDO_PARAMETERS * i + j;
-                configurator.defineSample(srcPriorSdIndex, sdMeanBandName, priorProduct);
-            }
+//        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+//            for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+//                final String indexString = Integer.toString(priorBandStartIndex + i);
+//                final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
+//                final int srcPriorMeanIndex = 2 * sourceSampleOffset + NUM_ALBEDO_PARAMETERS * i + j;
+//                configurator.defineSample(srcPriorMeanIndex, meanBandName, priorProduct);
+//
+//                final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
+//                final int srcPriorSdIndex = 2 * sourceSampleOffset + priorOffset + NUM_ALBEDO_PARAMETERS * i + j;
+//                configurator.defineSample(srcPriorSdIndex, sdMeanBandName, priorProduct);
+//            }
+//        }
+//        configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+        if (priorProduct != null) {
+            configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
         }
-        configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
-        configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
     }
 
     @Override
