@@ -64,6 +64,8 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     private class BrdfNc4MainPart implements ProfileInitPartWriter {
 
+        private static final float NODATA = AlbedoInversionConstants.NO_DATA_VALUE;
+
         private final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
         private final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
 
@@ -104,34 +106,34 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
         }
 
         private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Product p) throws IOException {
-            final Band ntropyBand = p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
-            if (ntropyBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, ntropyBand,
-                                                     "Entropy", Float.NaN, null);
+            final Band entropyBand = p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
+            if (entropyBand != null) {
+                addNc4BrdfAncillaryVariableAttribute(writeable, entropyBand,
+                                                     "Entropy", NODATA, null);
             }
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, relEntropyBand,
-                                                     "Relative Entropy", Float.NaN, null);
+                                                     "Relative Entropy", NODATA, null);
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, weightedNumSamplesBand,
-                                                     "Weighted number of BRDF samples", Float.NaN, null);
+                                                     "Weighted number of BRDF samples", NODATA, null);
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, goodnessOfFitBand,
-                                                     "Goodness of Fit", Float.NaN, null);
+                                                     "Goodness of Fit", NODATA, null);
             }
             final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
             if (proportionNSamplesBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", Float.NaN, null);
+                addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", NODATA, null);
             }
             final Band daysClosestSampleBand = p.getBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
             if (daysClosestSampleBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, daysClosestSampleBand,
-                                                     "Number of days to the closest sample", 1.0f, "days");
+                                                     "Number of days to the closest sample", NODATA, "days");
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {

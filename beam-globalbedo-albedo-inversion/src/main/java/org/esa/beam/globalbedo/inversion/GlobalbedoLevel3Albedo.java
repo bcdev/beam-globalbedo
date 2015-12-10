@@ -66,6 +66,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
     private String priorSdBandNamePrefix;
 
+    @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
+    private boolean usePrior = true;
+
     @Parameter(description = "MODIS tile")
     private String tile;
 
@@ -99,7 +102,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
         logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
 
-        Product priorProduct;
+        Product priorProduct = null;
         Product brdfMergedProduct = null;
         if (computeSeaice) {
             Product brdfSeaiceProduct;
@@ -117,15 +120,17 @@ public class GlobalbedoLevel3Albedo extends Operator {
             }
             logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 
-            try {
-                priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
-            } catch (IOException e) {
-                throw new OperatorException("Cannot load prior product: " + e.getMessage());
+            if (usePrior) {
+                try {
+                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
+                } catch (IOException e) {
+                    throw new OperatorException("Cannot load prior product: " + e.getMessage());
+                }
+                if (priorProduct == null) {
+                    logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
+                }
             }
 
-            if (priorProduct == null) {
-                logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
-            }
 
             Product brdfSnowProduct;
             Product brdfNoSnowProduct;
@@ -136,7 +141,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 throw new OperatorException("Cannot load BRDF product: " + e.getMessage());
             }
 
-            if (brdfSnowProduct != null && brdfNoSnowProduct != null && priorProduct != null) {
+            if (brdfSnowProduct != null && brdfNoSnowProduct != null && (!usePrior || priorProduct != null)) {
                 // merge Snow/NoSnow products...
                 MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
                 mergeBrdfOp.setParameterDefaultValues();
@@ -144,7 +149,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 mergeBrdfOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
                 mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
                 mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
-                mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
+                if (priorProduct != null) {
+                    mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
+                }
                 brdfMergedProduct = mergeBrdfOp.getTargetProduct();
             } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
                 logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +

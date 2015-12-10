@@ -4,10 +4,7 @@ import org.esa.beam.dataio.netcdf.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
-import org.esa.beam.framework.datamodel.GeoCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.TiePointGeoCoding;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.StringUtils;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
@@ -39,7 +36,9 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
             final String value = StringUtils.arrayToString(names, " ");
             ctx.getNetcdfFileWriteable().addGlobalAttribute(TIEPOINT_COORDINATES, value);
         } else {
-            if (geoCoding instanceof CrsGeoCoding) {
+            final boolean isPixelGeoCoding2 = geoCoding.getClass().getName().endsWith("PixelGeoCoding2");
+            // PixelGeoCoding2 is experimental and not public
+            if (geoCoding instanceof CrsGeoCoding || geoCoding instanceof PixelGeoCoding || isPixelGeoCoding2) {
                 addWktAsVariable(ctx.getNetcdfFileWriteable(), geoCoding);
             }
         }
@@ -47,17 +46,20 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
 
     private void addWktAsVariable(NFileWriteable ncFile, GeoCoding geoCoding) throws IOException {
         final CoordinateReferenceSystem crs = geoCoding.getMapCRS();
-        final double[] matrix = new double[6];
-        final MathTransform transform = geoCoding.getImageToMapTransform();
-        if (transform instanceof AffineTransform) {
-            ((AffineTransform) transform).getMatrix(matrix);
+        if (crs != null && crs.toWKT() != null) {
+            final double[] matrix = new double[6];
+            final MathTransform transform = geoCoding.getImageToMapTransform();
+            if (transform instanceof AffineTransform) {
+                ((AffineTransform) transform).getMatrix(matrix);
+            }
+
+            final NVariable crsVariable = ncFile.addScalarVariable("crs", DataType.INT);
+            crsVariable.addAttribute("wkt", crs.toWKT());
+            crsVariable.addAttribute("i2m", StringUtils.arrayToCsv(matrix));
+            crsVariable.addAttribute("long_name", "Coordinate Reference System");
+            final String crsCommentString = "A coordinate reference system (CRS) defines defines how the georeferenced " +
+                    "spatial data relates to real locations on the Earth\'s surface";
+            crsVariable.addAttribute("comment", crsCommentString);
         }
-        final NVariable crsVariable = ncFile.addScalarVariable("crs", DataType.INT);
-        crsVariable.addAttribute("wkt", crs.toWKT());
-        crsVariable.addAttribute("i2m", StringUtils.arrayToCsv(matrix));
-        crsVariable.addAttribute("long_name", "Coordinate Reference System");
-        final String crsCommentString = "A coordinate reference system (CRS) defines defines how the georeferenced " +
-                "spatial data relates to real locations on the Earth\'s surface";
-        crsVariable.addAttribute("comment", crsCommentString);
     }
 }

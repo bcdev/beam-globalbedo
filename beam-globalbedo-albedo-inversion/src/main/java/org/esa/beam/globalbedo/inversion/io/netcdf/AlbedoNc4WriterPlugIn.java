@@ -62,6 +62,8 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     private class AlbedoNc4MainPart implements ProfileInitPartWriter {
 
+        private static final float NODATA = AlbedoInversionConstants.NO_DATA_VALUE;
+
         private final String[] BHR_BAND_NAMES = IOUtils.getAlbedoBhrBandNames();
         private final String[] DHR_BAND_NAMES = IOUtils.getAlbedoDhrBandNames();
         private final String[] BHR_ALPHA_BAND_NAMES = IOUtils.getAlbedoBhrAlphaBandNames();
@@ -137,29 +139,29 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, relEntropyBand,
-                                                     "Relative Entropy", Float.NaN, null);
+                                                     "Relative Entropy", NODATA, null);
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, weightedNumSamplesBand,
-                                                     "Weighted number of albedo samples", Float.NaN, null);
+                                                     "Weighted number of albedo samples", NODATA, null);
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
                 addNc4BrdfAncillaryVariableAttribute(writeable, goodnessOfFitBand,
-                                                     "Goodness of Fit", Float.NaN, null);
+                                                     "Goodness of Fit", NODATA, null);
             }
             final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
             if (snowFractionBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, snowFractionBand, "Snow Fraction", Float.NaN, null);
+                addNc4BrdfAncillaryVariableAttribute(writeable, snowFractionBand, "Snow Fraction", NODATA, null);
             }
             final Band dataMaskBand = p.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
             if (dataMaskBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, dataMaskBand, "Data Mask", Float.NaN, null);
+                addNc4BrdfAncillaryVariableAttribute(writeable, dataMaskBand, "Data Mask", NODATA, null);
             }
             final Band szaBand = p.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
             if (szaBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, szaBand, "Solar Zenith Angle", Float.NaN, null);
+                addNc4BrdfAncillaryVariableAttribute(writeable, szaBand, "Solar Zenith Angle", NODATA, null);
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
