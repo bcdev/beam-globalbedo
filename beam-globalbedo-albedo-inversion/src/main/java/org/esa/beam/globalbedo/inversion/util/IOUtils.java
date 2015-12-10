@@ -140,19 +140,18 @@ public class IOUtils {
         return null;
     }
 
-    public static Product getReprojectedPriorProduct(Product priorProduct, String tile,
+    public static void attachGeoCodingToPriorProduct(Product priorProduct, String tile,
                                                      Product tileInfoProduct) throws IOException {
         if (tileInfoProduct != null) {
             // we just need to copy the geooding, not to reproject...
             ProductUtils.copyGeoCoding(tileInfoProduct, priorProduct);
         } else {
             // create geocoding manually in case we do not have a 'tileInfo'...
-            priorProduct.setGeoCoding(getModisTileGeocoding(tile));
+            priorProduct.setGeoCoding(getSinusoidalTileGeocoding(tile));
         }
-        return priorProduct;
     }
 
-    public static CrsGeoCoding getModisTileGeocoding(String tile) {
+    public static CrsGeoCoding getSinusoidalTileGeocoding(String tile) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);
         if (tileIndex == -1) {
@@ -174,6 +173,24 @@ public class IOUtils {
         }
         return geoCoding;
     }
+
+//    public static CrsGeoCoding getSinusoidalGlobalGeocoding(int downscalingFactor) {
+//        final double easting = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
+//        final double northing = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
+//        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+//        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH * 36 / downscalingFactor;
+//        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
+//        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
+//        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
+//        try {
+//            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+//            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+//        } catch (Exception e) {
+//            BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
+//            return null;
+//        }
+//    }
+
 
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();

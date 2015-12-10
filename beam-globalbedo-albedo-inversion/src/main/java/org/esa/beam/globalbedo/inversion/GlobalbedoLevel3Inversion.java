@@ -15,8 +15,6 @@ import org.esa.beam.util.logging.BeamLogManager;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -113,16 +111,14 @@ public class GlobalbedoLevel3Inversion extends Operator {
             String fullAccumulatorDir = bbdrRootDir + File.separator + "FullAcc"
                     + File.separator + year + File.separator + tile;
 
-            // STEP 3: we need to reproject the priors for further use...
-            Product reprojectedPriorProduct = null;
+            // STEP 3: we need to attach a geocoding to the Prior product...
             if (usePrior) {
                 try {
                     Product tileInfoProduct = null;
                     if (tileInfoFilename != null) {
                         tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
                     }
-                    reprojectedPriorProduct = IOUtils.getReprojectedPriorProduct(priorProduct, tile,
-                                                                                 tileInfoProduct);
+                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, tileInfoProduct);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                 }
@@ -143,8 +139,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
             InversionOp inversionOp = new InversionOp();
             inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
-            if (reprojectedPriorProduct != null) {
-                inversionOp.setSourceProduct("priorProduct", reprojectedPriorProduct);
+            if (priorProduct != null) {
+                inversionOp.setSourceProduct("priorProduct", priorProduct);
             } else {
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
@@ -178,9 +174,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
                         throw new OperatorException("Cannot attach geocoding from BBDR PST product: ", e);
                     }
                 }
-            } else if (reprojectedPriorProduct == null) {
+            } else if (priorProduct == null) {
                 // same in the standard mode without using priors...
-                inversionProduct.setGeoCoding(IOUtils.getModisTileGeocoding(tile));
+                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
             }
 
             // todo: adapt and activate if needed

@@ -6,12 +6,15 @@ import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.logging.BeamLogManager;
+import org.geotools.referencing.CRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import org.opengis.referencing.operation.MathTransform;
 import ucar.ma2.DataType;
 
 import java.awt.geom.AffineTransform;
 import java.io.IOException;
+import java.util.logging.Level;
 
 /**
  * Geocoding part to allow specific GA/QA4ECV modifications in netcdf attributes
@@ -36,9 +39,7 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
             final String value = StringUtils.arrayToString(names, " ");
             ctx.getNetcdfFileWriteable().addGlobalAttribute(TIEPOINT_COORDINATES, value);
         } else {
-            final boolean isPixelGeoCoding2 = geoCoding.getClass().getName().endsWith("PixelGeoCoding2");
-            // PixelGeoCoding2 is experimental and not public
-            if (geoCoding instanceof CrsGeoCoding || geoCoding instanceof PixelGeoCoding || isPixelGeoCoding2) {
+            if (geoCoding instanceof CrsGeoCoding) {
                 addWktAsVariable(ctx.getNetcdfFileWriteable(), geoCoding);
             }
         }
@@ -62,4 +63,5 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
             crsVariable.addAttribute("comment", crsCommentString);
         }
     }
+
 }
