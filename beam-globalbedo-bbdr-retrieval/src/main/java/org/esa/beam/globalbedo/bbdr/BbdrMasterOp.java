@@ -72,6 +72,9 @@ public class BbdrMasterOp extends PixelOperator {
     protected int SRC_TOA_VAR;
     protected int SRC_STATUS;
 
+    protected int SRC_ERA_INTERIM_OZO_TIME = 50;
+    protected int SRC_ERA_INTERIM_WVP_TIME = 51;
+
     protected static final int TRG_ERRORS = 3;
     protected static final int TRG_KERN = 9;
     protected static final int TRG_NDVI = 15;

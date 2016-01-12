@@ -17,9 +17,12 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.landcover.StatusPostProcessOp;
 
@@ -38,6 +41,17 @@ import static java.lang.StrictMath.toRadians;
         version = "1.1",
         copyright = "(C) 2015 by Brockmann Consult")
 public class SdrProbavOp extends BbdrMasterOp {
+
+    @SourceProduct(description = "ERA Interim product with OZO and CWV")
+    private Product eraInterimProduct;
+
+    @Override
+    protected void configureSourceSamples(SampleConfigurer configurator) {
+        super.configureSourceSamples(configurator);
+
+        configurator.defineSample(SRC_ERA_INTERIM_OZO_TIME, "tco3", eraInterimProduct);
+        configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
+    }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -80,17 +94,21 @@ public class SdrProbavOp extends BbdrMasterOp {
         }
         targetSamples[Sensor.VGT.getNumBands() * 2 + 1].set(aot);
 
-        double ozo;
-        double cwv;
-        double gas;
+//        double ozo;
+//        double cwv;
 
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
 //      MERIS: OZO per-pixel, CWV as constant value
 //      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
-        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
-        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
-        gas = ozo;
+//      PROBA-V: CWV as constant value, OZO as constant value --> now from era interim (GK/MB, 20160111)
+//        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32
+//        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
+
+        // 1 [atm-cm] = 1000 [DU] = 0.0214144[kg/m²]. We use atm.cm in algo, see Meris! Era interim comes as kg m-2
+        final double ozo_conversion = 0.0214144;
+        final double ozo = sourceSamples[SRC_ERA_INTERIM_OZO_TIME].getDouble()/ozo_conversion;
+        final double cwv = sourceSamples[SRC_ERA_INTERIM_WVP_TIME].getDouble();
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -116,8 +134,8 @@ public class SdrProbavOp extends BbdrMasterOp {
         phi = min(phi, 179);
         phi = max(phi, 1);
 
-        float[] tg = aux.getGasLookupTable().getTg((float) amf, (float) gas);
-        float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
+        float[] tg = aux.getGasLookupTable().getTg((float) amf, (float) ozo);
+        float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) ozo);
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
 
