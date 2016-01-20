@@ -39,9 +39,6 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class BbdrVgtOp extends BbdrMasterOp {
 
-    @Parameter(defaultValue = "false")
-    protected boolean useAotClimatology;
-
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {

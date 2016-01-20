@@ -19,7 +19,6 @@ package org.esa.beam.globalbedo.bbdr;
 import Jama.Matrix;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
@@ -39,15 +38,16 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class BbdrMerisOp extends BbdrMasterOp {
 
-    @Parameter(defaultValue = "false")
-    protected boolean useAotClimatology;
-
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            return;
+        if (!singlePixelMode) {
+            targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
+            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+                // only compute over land
+                BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
         }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
@@ -79,10 +79,10 @@ public class BbdrMerisOp extends BbdrMasterOp {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_DEM].set(hsf);
+
         targetSamples[TRG_AOD].set(aot);
         targetSamples[TRG_AODERR].set(delta_aot);
 

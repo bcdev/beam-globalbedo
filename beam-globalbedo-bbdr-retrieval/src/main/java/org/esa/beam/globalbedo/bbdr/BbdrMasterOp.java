@@ -54,6 +54,12 @@ public class BbdrMasterOp extends PixelOperator {
     @Parameter(defaultValue = "true")
     protected boolean doUclCloudDetection;
 
+    @Parameter(defaultValue = "false")
+    protected boolean singlePixelMode;
+
+    @Parameter(defaultValue = "false")
+    protected boolean useAotClimatology;
+
     @Parameter
     protected String landExpression;
 
@@ -136,7 +142,7 @@ public class BbdrMasterOp extends PixelOperator {
     }
 
     private void addSdrBands(Product targetProduct) {
-        for (int i=0; i<sensor.getToaBandNames().length; i++) {
+        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
             Band srcBand = sourceProduct.getBand(sensor.getToaBandNames()[i]);
             Band band = targetProduct.addBand(sensor.getSdrBandNames()[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
@@ -146,7 +152,7 @@ public class BbdrMasterOp extends PixelOperator {
     }
 
     private void addSdrErrorBands(Product targetProduct) {
-        for (int i=0; i<sensor.getToaBandNames().length; i++) {
+        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
             Band srcBand = sourceProduct.getBand(sensor.getToaBandNames()[i]);
             Band band = targetProduct.addBand(sensor.getSdrErrorBandNames()[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
@@ -199,13 +205,37 @@ public class BbdrMasterOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
-
         final String commonLandExpr;
         if (landExpression != null && !landExpression.isEmpty()) {
             commonLandExpr = landExpression;
         } else {
             commonLandExpr = sensor.getLandExpr();
         }
+
+        int ancillaryIndex = SRC_VZA;
+        for (int i = 0; i < sensor.getAncillaryBandNames().length; i++) {
+            configurator.defineSample(ancillaryIndex++, sensor.getAncillaryBandNames()[i]);
+        }
+
+        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
+            configurator.defineSample(SRC_TOA_RFL + i, sensor.getToaBandNames()[i], sourceProduct);
+        }
+
+        SRC_TOA_VAR = SRC_TOA_RFL + sensor.getToaBandNames().length;
+
+        ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
+        imageVarianceOp.setParameterDefaultValues();
+        imageVarianceOp.setSourceProduct(sourceProduct);
+        imageVarianceOp.setParameter("sensor", sensor);
+        Product varianceProduct = imageVarianceOp.getTargetProduct();
+        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
+            configurator.defineSample(SRC_TOA_VAR + i, sensor.getToaBandNames()[i], varianceProduct);
+        }
+
+        if (singlePixelMode) {
+            return;
+        }
+
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
 
         BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
@@ -221,11 +251,6 @@ public class BbdrMasterOp extends PixelOperator {
 
         configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
 
-        int ancillaryIndex = SRC_VZA;
-        for (int i=0; i<sensor.getAncillaryBandNames().length; i++) {
-            configurator.defineSample(ancillaryIndex++, sensor.getAncillaryBandNames()[i]);
-        }
-
         BandMathsOp.BandDescriptor bdLand = new BandMathsOp.BandDescriptor();
         bdLand.name = "land_mask";
         bdLand.expression = commonLandExpr;
@@ -239,20 +264,6 @@ public class BbdrMasterOp extends PixelOperator {
 
         configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
 
-        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
-            configurator.defineSample(SRC_TOA_RFL + i, sensor.getToaBandNames()[i], sourceProduct);
-        }
-        SRC_TOA_VAR = SRC_TOA_RFL + sensor.getToaBandNames().length;
-
-        ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
-        imageVarianceOp.setParameterDefaultValues();
-        imageVarianceOp.setSourceProduct(sourceProduct);
-        imageVarianceOp.setParameter("sensor", sensor);
-        Product varianceProduct = imageVarianceOp.getTargetProduct();
-
-        for (int i = 0; i < sensor.getToaBandNames().length; i++) {
-            configurator.defineSample(SRC_TOA_VAR + i, sensor.getToaBandNames()[i], varianceProduct);
-        }
         if (sdrOnly) {
             SRC_STATUS = SRC_TOA_RFL + sensor.getToaBandNames().length * 2;
 
