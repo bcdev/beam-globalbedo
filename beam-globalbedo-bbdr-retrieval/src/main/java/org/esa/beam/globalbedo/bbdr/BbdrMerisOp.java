@@ -19,6 +19,7 @@ package org.esa.beam.globalbedo.bbdr;
 import Jama.Matrix;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
@@ -38,6 +39,9 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class BbdrMerisOp extends BbdrMasterOp {
 
+    @Parameter(defaultValue = "false")
+    protected boolean useAotClimatology;
+
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
@@ -50,8 +54,17 @@ public class BbdrMerisOp extends BbdrMasterOp {
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        double aot = sourceSamples[SRC_AOT].getDouble();
-        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+        double aot;
+        double delta_aot;
+        if (useAotClimatology) {
+            aot = 0.15;  // reasonable constant for the moment
+            // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
+            delta_aot = 0.0;
+        } else {
+            aot = sourceSamples[SRC_AOT].getDouble();
+            delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+        }
+
         double hsf = sourceSamples[SRC_DEM].getDouble();
 
         hsf *= 0.001; // convert m to km
