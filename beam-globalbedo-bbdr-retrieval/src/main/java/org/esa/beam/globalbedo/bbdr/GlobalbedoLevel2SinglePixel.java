@@ -18,13 +18,15 @@ package org.esa.beam.globalbedo.bbdr;
 
 
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.FlagCoding;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.dataop.dem.ElevationModel;
+import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
+import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
+import org.esa.beam.framework.dataop.resamp.Resampling;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
@@ -33,9 +35,13 @@ import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.StringUtils;
+import org.esa.beam.util.io.FileUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.operator.ConstantDescriptor;
+import java.awt.*;
+import java.io.File;
 import java.text.ParseException;
 import java.util.logging.Logger;
 
@@ -60,7 +66,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
         Product bbdrInputProduct = null;
-
+//        ((File)sourceProduct.getProductReader().getInput()).getAbsolutePath()
         if (sourceProduct.getStartTime() == null) {
             try {
                 // todo: these are test times. get correct start/stop from product name!!
@@ -80,7 +86,12 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
                     sourceProduct.getFlagCodingGroup().add(merisL1bFlagCoding);
                     sourceProduct.getBand("l1_flags").setSampleCoding(merisL1bFlagCoding);
                 }
-                bbdrInputProduct = prepareMerisBbdrInputProduct();
+                try {
+                    bbdrInputProduct = prepareMerisBbdrInputProduct();
+                } catch (Exception e) {
+                    // todo
+                    e.printStackTrace();
+                }
                 bbdrOp = new BbdrMerisOp();
                 break;
             case "VGT":
@@ -93,6 +104,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         }
 
         bbdrOp.setSourceProduct(bbdrInputProduct);
+
         bbdrOp.setParameterDefaultValues();
         bbdrOp.setParameter("sensor", sensor);
         bbdrOp.setParameter("singlePixelMode", true);
@@ -100,7 +112,12 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         Product bbdrProduct = bbdrOp.getTargetProduct();
 
         setTargetProduct(bbdrProduct);
+
+        final String filename = ((File) sourceProduct.getProductReader().getInput()).getName();
+        getTargetProduct().setName(FileUtils.getFilenameWithoutExtension(filename));
         getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
+        getTargetProduct().setStartTime(sourceProduct.getStartTime());
+        getTargetProduct().setEndTime(sourceProduct.getEndTime());
     }
 
     private Product prepareVgtBbdrInputProduct() {
@@ -108,12 +125,15 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         return null;
     }
 
-    private Product prepareMerisBbdrInputProduct() {
+    private Product prepareMerisBbdrInputProduct() throws Exception {
         int index = 0;
         for (Band srcBand : sourceProduct.getBands()) {
             final String srcName = srcBand.getName();
             if (srcName.startsWith("radiance_")) {
-                srcBand.setSpectralBandIndex(index++);
+                srcBand.setSpectralBandIndex(index);
+                srcBand.setSpectralWavelength(BbdrConstants.MERIS_WAVELENGHTS[index]);
+                srcBand.setSolarFlux(EnvisatConstants.MERIS_SOLAR_FLUXES[index]);
+                index++;
             }
         }
 
@@ -136,12 +156,15 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
             }
         }
 
-//        radiometryProduct.getBand("dem_alt").setName("elevation");
-        CreateElevationBandOp createElevationBandOp = new CreateElevationBandOp();
-        createElevationBandOp.setParameterDefaultValues();
-        createElevationBandOp.setSourceProduct(radiometryProduct);
-        Product elevProduct = createElevationBandOp.getTargetProduct();
-        ProductUtils.copyBand("elevation", elevProduct, radiometryProduct, true);
+        final Band latBand = sourceProduct.getBand("latitude");
+        final Band lonBand = sourceProduct.getBand("longitude");
+        final Tile latTile = getSourceTile(latBand, new Rectangle(0, 0, 1, 1));
+        final Tile lonTile = getSourceTile(lonBand, new Rectangle(0, 0, 1, 1));
+        final float latitude = latTile.getSampleFloat(0, 0);
+        final float longitude = lonTile.getSampleFloat(0, 0);
+        final float elevation = getDem().getElevation(new GeoPos(latitude, longitude));
+        final Band elevationBand = radiometryProduct.addBand("elevation", ProductData.TYPE_FLOAT32);
+        elevationBand.setRasterData(ProductData.createInstance(new float[]{elevation}));
 
         final int w = radiometryProduct.getSceneRasterWidth();
         final int h = radiometryProduct.getSceneRasterHeight();
@@ -164,6 +187,19 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         flagCoding.addFlag("COASTLINE", BitSetter.setFlag(0, 6), null);
         flagCoding.addFlag("INVALID", BitSetter.setFlag(0, 7), null);
         return flagCoding;
+    }
+
+    private ElevationModel getDem() {
+        final ElevationModelRegistry elevationModelRegistry = ElevationModelRegistry.getInstance();
+        ElevationModelDescriptor demDescriptor = elevationModelRegistry.getDescriptor("GMTED2010_30");
+        if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
+            demDescriptor = elevationModelRegistry.getDescriptor("GETASSE30");
+            if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
+                throw new OperatorException(" No DEM installed (neither GETASSE30 nor GMTED2010_30).");
+            }
+        }
+        getLogger().info("Dsing DEM: " + demDescriptor.getName());
+        return demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
     }
 
 

@@ -223,6 +223,10 @@ public class BbdrMasterOp extends PixelOperator {
 
         SRC_TOA_VAR = SRC_TOA_RFL + sensor.getToaBandNames().length;
 
+        if (singlePixelMode) {
+            return;
+        }
+
         ImageVarianceOp imageVarianceOp = new ImageVarianceOp();
         imageVarianceOp.setParameterDefaultValues();
         imageVarianceOp.setSourceProduct(sourceProduct);
@@ -230,10 +234,6 @@ public class BbdrMasterOp extends PixelOperator {
         Product varianceProduct = imageVarianceOp.getTargetProduct();
         for (int i = 0; i < sensor.getToaBandNames().length; i++) {
             configurator.defineSample(SRC_TOA_VAR + i, sensor.getToaBandNames()[i], varianceProduct);
-        }
-
-        if (singlePixelMode) {
-            return;
         }
 
         final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";

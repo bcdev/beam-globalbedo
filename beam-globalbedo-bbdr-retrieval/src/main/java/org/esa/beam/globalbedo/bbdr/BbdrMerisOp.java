@@ -166,8 +166,11 @@ public class BbdrMerisOp extends BbdrMasterOp {
             err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
-            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
-            err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            err_coreg[i] = 0.0;
+            if (!singlePixelMode) {
+                err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+                err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            }
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
