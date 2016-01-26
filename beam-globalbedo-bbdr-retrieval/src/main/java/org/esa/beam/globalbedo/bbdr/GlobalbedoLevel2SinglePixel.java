@@ -17,12 +17,9 @@
 package org.esa.beam.globalbedo.bbdr;
 
 
+import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.*;
-import org.esa.beam.framework.dataop.dem.ElevationModel;
-import org.esa.beam.framework.dataop.dem.ElevationModelDescriptor;
-import org.esa.beam.framework.dataop.dem.ElevationModelRegistry;
-import org.esa.beam.framework.dataop.resamp.Resampling;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -30,12 +27,12 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
-import org.esa.beam.globalbedo.sdr.operators.CreateElevationBandOp;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
-import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.io.FileUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -62,6 +59,13 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
     @Parameter(defaultValue = "")
     private String tile;
 
+    @Parameter(defaultValue = ".")
+    private String bbdrDir;
+
+    private String bbdrFileName;
+    private float latitude;
+    private float longitude;
+
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
@@ -77,9 +81,15 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
             }
         }
 
+        Band latBand = null;
+        Band lonBand = null;
+
         BbdrMasterOp bbdrOp;
         switch (sensor.getInstrument()) {
             case "MERIS":
+                latBand = sourceProduct.getBand("latitude");
+                lonBand = sourceProduct.getBand("longitude");
+
                 sourceProduct.setProductType("MER_RR_L1b");
                 if (sourceProduct.getFlagCodingGroup().getNodeCount() == 0) {
                     final FlagCoding merisL1bFlagCoding = createMerisL1bFlagCoding("l1_flags");
@@ -103,6 +113,11 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
                 throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
         }
 
+        final Tile latTile = getSourceTile(latBand, new Rectangle(0, 0, 1, 1));
+        final Tile lonTile = getSourceTile(lonBand, new Rectangle(0, 0, 1, 1));
+        latitude = latTile.getSampleFloat(0, 0);
+        longitude = lonTile.getSampleFloat(0, 0);
+
         bbdrOp.setSourceProduct(bbdrInputProduct);
 
         bbdrOp.setParameterDefaultValues();
@@ -111,13 +126,33 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         bbdrOp.setParameter("useAotClimatology", true);
         Product bbdrProduct = bbdrOp.getTargetProduct();
 
+        ProductUtils.copyBand("latitude", sourceProduct, bbdrProduct, true);
+        ProductUtils.copyBand("longitude", sourceProduct, bbdrProduct, true);
+
+        setBbdrFilename(bbdrProduct);
+
         setTargetProduct(bbdrProduct);
 
-        final String filename = ((File) sourceProduct.getProductReader().getInput()).getName();
-        getTargetProduct().setName(FileUtils.getFilenameWithoutExtension(filename));
         getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
         getTargetProduct().setStartTime(sourceProduct.getStartTime());
         getTargetProduct().setEndTime(sourceProduct.getEndTime());
+
+        writeCsvProduct(getTargetProduct(), bbdrFileName);
+    }
+
+    private void setBbdrFilename(Product bbdrProduct) {
+        final String modisTile = BbdrUtils.getModisTileFromLatLon(latitude, longitude);
+        final CrsGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
+        bbdrProduct.setGeoCoding(sinusoidalTileGeocoding);
+        PixelPos pixelPos = sinusoidalTileGeocoding.getPixelPos(new GeoPos(latitude, longitude), null);
+        final int pixelPosX = (int) pixelPos.getX();
+        final int pixelPosY = (int) pixelPos.getY();
+
+        final String sourceFileName = ((File) sourceProduct.getProductReader().getInput()).getName();
+        bbdrProduct.setName(FileUtils.getFilenameWithoutExtension(sourceFileName));
+
+        bbdrFileName = bbdrProduct.getName() + "_BBDR_" + modisTile + "_" +
+                String.format("%04d", pixelPosX) + "_" + String.format("%04d", pixelPosY);
     }
 
     private Product prepareVgtBbdrInputProduct() {
@@ -156,27 +191,25 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
             }
         }
 
-        final Band latBand = sourceProduct.getBand("latitude");
-        final Band lonBand = sourceProduct.getBand("longitude");
-        final Tile latTile = getSourceTile(latBand, new Rectangle(0, 0, 1, 1));
-        final Tile lonTile = getSourceTile(lonBand, new Rectangle(0, 0, 1, 1));
-        final float latitude = latTile.getSampleFloat(0, 0);
-        final float longitude = lonTile.getSampleFloat(0, 0);
-        final float elevation = getDem().getElevation(new GeoPos(latitude, longitude));
+        final float elevation = BbdrUtils.getDem().getElevation(new GeoPos(latitude, longitude));
         final Band elevationBand = radiometryProduct.addBand("elevation", ProductData.TYPE_FLOAT32);
         elevationBand.setRasterData(ProductData.createInstance(new float[]{elevation}));
 
         final int w = radiometryProduct.getSceneRasterWidth();
         final int h = radiometryProduct.getSceneRasterHeight();
+        if (w != 1 || h != 1) {
+            throw new OperatorException("Products with more than one pixel are not supported in single-pixel mode!");
+        }
+
         radiometryProduct.addBand("aot", ProductData.TYPE_FLOAT32).
-                setSourceImage(ConstantDescriptor.create((float)w, (float)h, new Float[]{0.15f}, null)); // dummy
+                setSourceImage(ConstantDescriptor.create((float) w, (float) h, new Float[]{0.15f}, null)); // dummy
         radiometryProduct.addBand("aot_err", ProductData.TYPE_FLOAT32).
                 setSourceImage(ConstantDescriptor.create(1.0f, 1.0f, new Float[]{0.0f}, null)); // dummy
 
         return radiometryProduct;
     }
 
-    public static FlagCoding createMerisL1bFlagCoding(String flagIdentifier) {
+    private static FlagCoding createMerisL1bFlagCoding(String flagIdentifier) {
         FlagCoding flagCoding = new FlagCoding(flagIdentifier);
         flagCoding.addFlag("COSMETIC", BitSetter.setFlag(0, 0), null);
         flagCoding.addFlag("DUPLICATED", BitSetter.setFlag(0, 1), null);
@@ -189,17 +222,13 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         return flagCoding;
     }
 
-    private ElevationModel getDem() {
-        final ElevationModelRegistry elevationModelRegistry = ElevationModelRegistry.getInstance();
-        ElevationModelDescriptor demDescriptor = elevationModelRegistry.getDescriptor("GMTED2010_30");
-        if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
-            demDescriptor = elevationModelRegistry.getDescriptor("GETASSE30");
-            if (demDescriptor == null || !demDescriptor.isDemInstalled()) {
-                throw new OperatorException(" No DEM installed (neither GETASSE30 nor GMTED2010_30).");
-            }
-        }
-        getLogger().info("Dsing DEM: " + demDescriptor.getName());
-        return demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
+
+    private void writeCsvProduct(Product product, String productName) {
+        File dir = new File(bbdrDir);
+        dir.mkdirs();
+        File file = new File(dir, productName + ".csv");
+        WriteOp writeOp = new WriteOp(product, file, "CSV");
+        writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
 
