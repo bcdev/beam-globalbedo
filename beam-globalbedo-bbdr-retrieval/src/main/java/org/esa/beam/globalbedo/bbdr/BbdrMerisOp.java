@@ -40,18 +40,31 @@ public class BbdrMerisOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            return;
+        if (!singlePixelMode) {
+            targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
+            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+                // only compute over land
+                BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
         }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        double aot = sourceSamples[SRC_AOT].getDouble();
-        double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+        double aot;
+        double delta_aot;
+        if (useAotClimatology) {
+            aot = 0.15;  // reasonable constant for the moment
+            // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
+            delta_aot = 0.0;
+        } else {
+            aot = sourceSamples[SRC_AOT].getDouble();
+            delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+        }
+
         double hsf = sourceSamples[SRC_DEM].getDouble();
 
         hsf *= 0.001; // convert m to km
@@ -66,10 +79,10 @@ public class BbdrMerisOp extends BbdrMasterOp {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_DEM].set(hsf);
+
         targetSamples[TRG_AOD].set(aot);
         targetSamples[TRG_AODERR].set(delta_aot);
 
@@ -153,8 +166,11 @@ public class BbdrMerisOp extends BbdrMasterOp {
             err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
-            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
-            err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            err_coreg[i] = 0.0;
+            if (!singlePixelMode) {
+                err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+                err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            }
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);

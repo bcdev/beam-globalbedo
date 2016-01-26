@@ -46,6 +46,9 @@ public class LandcoverLevel2 extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @SourceProduct(optional = true)
+    private Product eraInterimProduct;
+
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
@@ -104,6 +107,7 @@ public class LandcoverLevel2 extends Operator {
                 break;
             case "PROBAV":
                 sdrOp = new SdrProbavOp();
+                sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
                 break;
             case "AATSR":
             case "AATSR_FWARD":

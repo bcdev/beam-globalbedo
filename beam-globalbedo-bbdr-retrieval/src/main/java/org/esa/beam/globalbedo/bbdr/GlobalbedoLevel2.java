@@ -58,6 +58,9 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "true")     // in line with GA FPS processing, BEAM 4.9.0.1. Better set to false??
     private boolean gaUseL1bLandWaterFlag;
 
+    @Parameter(defaultValue = "false", label = " If set, we shall use AOT climatology (no retrieval)")
+    private boolean useAotClimatology;
+
     @Parameter(defaultValue = "")
     private String tile;
 
@@ -115,12 +118,17 @@ public class GlobalbedoLevel2 extends Operator {
                 switch (sensor.getInstrument()) {
                     case "MERIS":
                         bbdrOp = new BbdrMerisOp();
+                        bbdrOp.setParameterDefaultValues();
+                        bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                         break;
                     case "VGT":
                         bbdrOp = new BbdrVgtOp();
+                        bbdrOp.setParameterDefaultValues();
+                        bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                         break;
                     case "PROBAV":
                         bbdrOp = new BbdrProbavOp();
+                        bbdrOp.setParameterDefaultValues();
                         break;
                     case "AATSR":
                     case "AATSR_FWARD":
@@ -130,7 +138,6 @@ public class GlobalbedoLevel2 extends Operator {
                     default:
                         throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
                 }
-                bbdrOp.setParameterDefaultValues();
                 bbdrOp.setSourceProduct(aotProduct);
                 bbdrOp.setParameter("sensor", sensor);
                 Product bbdrProduct = bbdrOp.getTargetProduct();

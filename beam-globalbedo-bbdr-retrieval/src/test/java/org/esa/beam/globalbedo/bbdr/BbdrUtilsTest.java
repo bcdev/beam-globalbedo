@@ -41,13 +41,36 @@ public class BbdrUtilsTest {
         assertEquals(31.73, sza, 1.E-2);
     }
 
-//    @Test
-//    public void testGetUtFromSza() {
-//        double sza = 31.73 * MathUtils.DTOR;
-//        double doy = 111.0 + 4./24.;
-//        double lat = MathUtils.DTOR * 45;
-//        double ut = UtFromSzaOp.computeUtFromSza(sza, lat, doy);
-//
-//        assertEquals(31.73, ut, 1.E-2);
-//    }
+    @Test
+    public void testGetModisTileFromLatLon() {
+        // Texas
+        float lat = 34.2f;
+        float lon = -101.71f;
+        assertEquals("h09v05", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // MeckPomm
+        lat = 53.44f;
+        lon = 10.57f;
+        assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // New Zealand
+        lat = -39.5f;
+        lon = 176.71f;
+        assertEquals("h31v12", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Antarctica
+        lat = -84.2f;
+        lon = -160.71f;
+        assertEquals("h16v17", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Siberia
+        lat = 65.2f;
+        lon = 111.71f;
+        assertEquals("h22v02", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Madagascar
+        lat = -28.0f;
+        lon = 46.1f;
+        assertEquals("h22v11", BbdrUtils.getModisTileFromLatLon(lat, lon));
+    }
 }

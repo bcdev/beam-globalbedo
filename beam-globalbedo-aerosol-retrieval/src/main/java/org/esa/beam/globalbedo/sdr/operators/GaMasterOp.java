@@ -86,8 +86,8 @@ public class GaMasterOp extends Operator {
     @Parameter(defaultValue = "false", label = " Use the LC cloud buffer algorithm")
     private boolean gaLcCloudBuffer;
 
-    @Parameter(defaultValue = "false", label = " If set, we are in BBDR Seaice mode (no AOT retrieval)")
-    private boolean isBbdrSeaice;
+    @Parameter(defaultValue = "false", label = " If set, we shall use AOT climatology (no retrieval)")
+    private boolean useAotClimatology;
 
     @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
     private boolean gaRefineClassificationNearCoastlines;
@@ -158,7 +158,7 @@ public class GaMasterOp extends Operator {
         // - aot_err
         // to reflProduct, and set this as targetProduct, and return.
         // we will set the climatological value (or zero AOT) in BBDR Op
-        if (isBbdrSeaice) {
+        if (useAotClimatology) {
             reflProduct.addBand("aot", ProductData.TYPE_FLOAT32);
             reflProduct.addBand("aot_err", ProductData.TYPE_FLOAT32);
             setTargetProduct(reflProduct);
