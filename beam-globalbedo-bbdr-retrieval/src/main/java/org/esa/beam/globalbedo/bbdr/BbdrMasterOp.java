@@ -84,14 +84,19 @@ public class BbdrMasterOp extends PixelOperator {
     protected static final int TRG_ERRORS = 3;
     protected static final int TRG_KERN = 9;
     protected static final int TRG_NDVI = 15;
-    protected static final int TRG_VZA = 17;
-    protected static final int TRG_SZA = 18;
-    protected static final int TRG_RAA = 19;
-    protected static final int TRG_DEM = 20;
-    protected static final int TRG_SNOW = 21;
-    protected static final int TRG_AOD = 22;
 
-    protected static final int TRG_AODERR = 23;
+    protected static final int TRG_VZA = 40;
+    protected static final int TRG_SZA = 41;
+    protected static final int TRG_VAA = 42;
+    protected static final int TRG_SAA = 43;
+    protected static final int TRG_RAA = 44;
+    protected static final int TRG_DEM = 45;
+    protected static final int TRG_SNOW = 46;
+    protected static final int TRG_AOD = 47;
+    protected static final int TRG_AODERR = 48;
+
+    protected static final int TRG_SDR_STATUS = 100;
+    protected static final int TRG_SDR_NDVI = 101;
 
     protected BbdrAuxdata aux;
 
@@ -165,9 +170,9 @@ public class BbdrMasterOp extends PixelOperator {
         Band ndvi = targetProduct.addBand("ndvi", ProductData.TYPE_FLOAT32);
         ndvi.setNoDataValue(Float.NaN);
         ndvi.setNoDataValueUsed(true);
-        Band aod = targetProduct.addBand("aod", ProductData.TYPE_FLOAT32);
-        aod.setNoDataValue(Float.NaN);
-        aod.setNoDataValueUsed(true);
+//        Band aod = targetProduct.addBand("aod", ProductData.TYPE_FLOAT32);
+//        aod.setNoDataValue(Float.NaN);
+//        aod.setNoDataValueUsed(true);
     }
 
     private void addStatusBand(Product targetProduct) {
@@ -296,9 +301,8 @@ public class BbdrMasterOp extends PixelOperator {
             for (int i = 0; i < sensor.getSdrErrorBandNames().length; i++) {
                 configurator.defineSample(index++, sensor.getSdrErrorBandNames()[i]);
             }
-            configurator.defineSample(index++, "ndvi");
-            configurator.defineSample(index++, "aod");
-            configurator.defineSample(index, "status");
+            configurator.defineSample(TRG_SDR_NDVI, "ndvi");
+            configurator.defineSample(TRG_SDR_STATUS, "status");
         } else {
             configurator.defineSample(0, "BB_VIS");
             configurator.defineSample(1, "BB_NIR");

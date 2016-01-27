@@ -46,12 +46,6 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "MERIS")
     private Sensor sensor;
 
-    @Parameter(defaultValue = "false")
-    private boolean computeL1ToAotProductOnly;
-
-    @Parameter(defaultValue = "false")
-    private boolean computeAotToBbdrProductOnly;
-
     @Parameter(defaultValue = "false")     // cloud/snow flag refinement. Was not part of GA FPS processing.
     private boolean gaRefineClassificationNearCoastlines;
 
@@ -60,6 +54,12 @@ public class GlobalbedoLevel2 extends Operator {
 
     @Parameter(defaultValue = "false", label = " If set, we shall use AOT climatology (no retrieval)")
     private boolean useAotClimatology;
+
+    @Parameter(defaultValue = "false", label = " If set, only SDR are computed and written")
+    private boolean computeSdr;
+
+    @Parameter(defaultValue = "false", label = " If set, BBDR are computed from previously written SDR")
+    private boolean computeBbdrFromSdr;
 
     @Parameter(defaultValue = "")
     private String tile;
@@ -77,32 +77,32 @@ public class GlobalbedoLevel2 extends Operator {
             BbdrUtils.convertProbavToVgtReflectances(sourceProduct);
         }
 
-        Product targetProduct;
+        Product productToProcess;
         Product aotProduct;
-        if (computeAotToBbdrProductOnly) {
-            aotProduct = sourceProduct;
-        } else {
-            if (tile != null && !tile.isEmpty()) {
-                Geometry geometry = TileExtractor.computeProductGeometry(TileExtractor.reproject(sourceProduct, tile));
-                if (geometry == null) {
-                    throw new OperatorException("Could not get geometry for product");
-                }
-                SubsetOp subsetOp = new SubsetOp();
-                subsetOp.setParameterDefaultValues();
-                subsetOp.setGeoRegion(geometry);
-                subsetOp.setSourceProduct(sourceProduct);
-                targetProduct = subsetOp.getTargetProduct();
-            } else {
-                targetProduct = sourceProduct;
+        if (tile != null && !tile.isEmpty()) {
+            Geometry geometry = TileExtractor.computeProductGeometry(TileExtractor.reproject(sourceProduct, tile));
+            if (geometry == null) {
+                throw new OperatorException("Could not get geometry for product");
             }
+            SubsetOp subsetOp = new SubsetOp();
+            subsetOp.setParameterDefaultValues();
+            subsetOp.setGeoRegion(geometry);
+            subsetOp.setSourceProduct(sourceProduct);
+            productToProcess = subsetOp.getTargetProduct();
+        } else {
+            productToProcess = sourceProduct;
+        }
 
+        if (computeBbdrFromSdr) {
+            aotProduct = productToProcess;
+        } else {
             GaMasterOp gaMasterOp = new GaMasterOp();
             gaMasterOp.setParameterDefaultValues();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
             gaMasterOp.setParameter("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);    // todo: default tbd
             gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
-            gaMasterOp.setSourceProduct(targetProduct);
+            gaMasterOp.setSourceProduct(productToProcess);
             aotProduct = gaMasterOp.getTargetProduct();
         }
 
@@ -111,44 +111,51 @@ public class GlobalbedoLevel2 extends Operator {
             logger.log(Level.ALL, "No AOT product generated for source product: " + sourceProduct.getName() +
                     " --> cannot create BBDR product.");
         } else {
-            if (computeL1ToAotProductOnly) {
-                setTargetProduct(aotProduct);
-            } else {
-                BbdrMasterOp bbdrOp;
-                switch (sensor.getInstrument()) {
-                    case "MERIS":
+            BbdrMasterOp bbdrOp;
+            switch (sensor.getInstrument()) {
+                case "MERIS":
+                    if (computeSdr) {
+                        bbdrOp = new SdrMerisOp();
+                    } else if (computeBbdrFromSdr) {
+                        bbdrOp = new BbdrFromSdrMerisOp();
+                    } else {
                         bbdrOp = new BbdrMerisOp();
-                        bbdrOp.setParameterDefaultValues();
-                        bbdrOp.setParameter("useAotClimatology", useAotClimatology);
-                        break;
-                    case "VGT":
-                        bbdrOp = new BbdrVgtOp();
-                        bbdrOp.setParameterDefaultValues();
-                        bbdrOp.setParameter("useAotClimatology", useAotClimatology);
-                        break;
-                    case "PROBAV":
-                        bbdrOp = new BbdrProbavOp();
-                        bbdrOp.setParameterDefaultValues();
-                        break;
-                    case "AATSR":
-                    case "AATSR_FWARD":
-                    case "AVHRR":
-                        // todo
-                        throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
-                    default:
-                        throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
-                }
-                bbdrOp.setSourceProduct(aotProduct);
-                bbdrOp.setParameter("sensor", sensor);
-                Product bbdrProduct = bbdrOp.getTargetProduct();
-
-                if (tile != null && !tile.isEmpty()) {
-                    setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
-                } else {
-                    setTargetProduct(bbdrProduct);
-                }
-                getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
+                    }
+                    bbdrOp.setParameterDefaultValues();
+                    if (computeSdr) {
+                        bbdrOp.setParameter("sdrOnly", true);
+                        bbdrOp.setParameter("writeGeometryAndAOT", true);
+                    }
+                    bbdrOp.setParameter("useAotClimatology", useAotClimatology);
+                    break;
+                case "VGT":
+                    bbdrOp = new BbdrVgtOp();
+                    bbdrOp.setParameterDefaultValues();
+                    bbdrOp.setParameter("useAotClimatology", useAotClimatology);
+                    break;
+                case "PROBAV":
+                    bbdrOp = new BbdrProbavOp();
+                    bbdrOp.setParameterDefaultValues();
+                    break;
+                case "AATSR":
+                case "AATSR_FWARD":
+                case "AVHRR":
+                    // todo
+                    throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
+                default:
+                    throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
             }
+
+            bbdrOp.setSourceProduct(aotProduct);
+            bbdrOp.setParameter("sensor", sensor);
+            Product bbdrProduct = bbdrOp.getTargetProduct();
+
+            if (tile != null && !tile.isEmpty()) {
+                setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
+            } else {
+                setTargetProduct(bbdrProduct);
+            }
+            getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
         }
     }
 

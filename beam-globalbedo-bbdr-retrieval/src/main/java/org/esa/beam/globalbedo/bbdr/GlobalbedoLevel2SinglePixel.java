@@ -28,6 +28,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
@@ -142,7 +143,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
 
     private void setBbdrFilename(Product bbdrProduct) {
         final String modisTile = BbdrUtils.getModisTileFromLatLon(latitude, longitude);
-        final CrsGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
+        final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
         bbdrProduct.setGeoCoding(sinusoidalTileGeocoding);
         PixelPos pixelPos = sinusoidalTileGeocoding.getPixelPos(new GeoPos(latitude, longitude), null);
         final int pixelPosX = (int) pixelPos.getX();

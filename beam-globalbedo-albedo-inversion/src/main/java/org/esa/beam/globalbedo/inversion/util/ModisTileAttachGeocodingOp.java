@@ -68,7 +68,7 @@ public class ModisTileAttachGeocodingOp extends Operator {
                 1.0*AlbedoInversionConstants.MODIS_TILE_HEIGHT/imageHeight;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING);
-            final CrsGeoCoding geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+            final ModisTileGeoCoding geoCoding = new ModisTileGeoCoding(crs, easting, northing, pixelSizeX, pixelSizeY);
             targetProduct.setGeoCoding(geoCoding);
         } catch (Exception e) {
             throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);

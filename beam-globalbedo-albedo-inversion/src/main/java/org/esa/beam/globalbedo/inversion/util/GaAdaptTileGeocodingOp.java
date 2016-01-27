@@ -75,7 +75,7 @@ public class GaAdaptTileGeocodingOp extends Operator {
         return targetProduct;
     }
 
-    private static CrsGeoCoding getModisTileGeocoding(String tile) {
+    private static ModisTileGeoCoding getModisTileGeocoding(String tile) {
         // todo: after testing, adapt public method in IOUtils accordingly
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);
@@ -91,11 +91,10 @@ public class GaAdaptTileGeocodingOp extends Operator {
         final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-        CrsGeoCoding geoCoding;
+        ModisTileGeoCoding geoCoding;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            geoCoding = new CrsGeoCoding(crs,
-                                         imageWidth, imageHeight,
+            geoCoding = new ModisTileGeoCoding(crs,
                                          easting, northing,
                                          pixelSizeX, pixelSizeY,
                                          referencePixelX, referencePixelY);

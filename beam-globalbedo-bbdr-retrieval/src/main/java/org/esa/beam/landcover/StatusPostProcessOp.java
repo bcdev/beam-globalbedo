@@ -33,6 +33,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.gpf.operators.meris.MerisBasisOp;
 import org.esa.beam.idepix.algorithms.CloudShadowFronts;
 import org.esa.beam.idepix.util.IdepixUtils;
@@ -272,7 +273,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
 
         final int waterFractionCenter = waterFractionTile.getSampleInt(x, y);
         boolean isTiePointGeo = geoCoding instanceof TiePointGeoCoding;
-        boolean isCrsGeo = geoCoding instanceof CrsGeoCoding;
+        boolean isCrsGeo = geoCoding instanceof CrsGeoCoding || geoCoding instanceof ModisTileGeoCoding;
 
         for (int i = LEFT_BORDER; i <= RIGHT_BORDER; i++) {
             for (int j = TOP_BORDER; j <= BOTTOM_BORDER; j++) {

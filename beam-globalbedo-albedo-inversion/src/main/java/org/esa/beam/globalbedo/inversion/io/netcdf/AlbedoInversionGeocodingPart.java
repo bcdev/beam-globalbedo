@@ -5,6 +5,7 @@ import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.geotools.referencing.CRS;
@@ -39,7 +40,7 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
             final String value = StringUtils.arrayToString(names, " ");
             ctx.getNetcdfFileWriteable().addGlobalAttribute(TIEPOINT_COORDINATES, value);
         } else {
-            if (geoCoding instanceof CrsGeoCoding) {
+            if (geoCoding instanceof CrsGeoCoding || geoCoding instanceof ModisTileGeoCoding) {
                 addWktAsVariable(ctx.getNetcdfFileWriteable(), geoCoding);
             }
         }
