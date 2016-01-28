@@ -95,8 +95,13 @@ public class BbdrMasterOp extends PixelOperator {
     protected static final int TRG_AOD = 47;
     protected static final int TRG_AODERR = 48;
 
+    protected static final int TRG_OG = 50;
+    protected static final int TRG_WVG = 51;
+
     protected static final int TRG_SDR_STATUS = 100;
     protected static final int TRG_SDR_NDVI = 101;
+
+    protected static final int TRG_SINGLE_SDR = 200;
 
     protected BbdrAuxdata aux;
 
@@ -139,6 +144,12 @@ public class BbdrMasterOp extends PixelOperator {
                 band.setNoDataValue(Float.NaN);
                 band.setNoDataValueUsed(true);
             }
+
+            if (singlePixelMode) {
+                // add SDR bands
+                addSdrBands(targetProduct);
+            }
+
             targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
 
             // copy flag coding and flag images
@@ -332,6 +343,13 @@ public class BbdrMasterOp extends PixelOperator {
             configurator.defineSample(TRG_SNOW, "snow_mask");
             configurator.defineSample(TRG_AOD, "AOD550");
             configurator.defineSample(TRG_AODERR, "sig_AOD550");
+
+            if (singlePixelMode) {
+                int index = TRG_SINGLE_SDR;
+                for (int i = 0; i < sensor.getSdrBandNames().length; i++) {
+                    configurator.defineSample(index++, sensor.getSdrBandNames()[i]);
+                }
+            }
         }
     }
 

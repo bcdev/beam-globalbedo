@@ -117,7 +117,7 @@ public class GlobalbedoLevel2 extends Operator {
                     if (computeSdr) {
                         bbdrOp = new SdrMerisOp();
                     } else if (computeBbdrFromSdr) {
-                        bbdrOp = new BbdrFromSdrMerisOp();
+                        bbdrOp = new BbdrFromSdrOp();
                     } else {
                         bbdrOp = new BbdrMerisOp();
                     }
@@ -129,8 +129,18 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
                 case "VGT":
-                    bbdrOp = new BbdrVgtOp();
+                    if (computeSdr) {
+                        bbdrOp = new SdrVgtOp();
+                    } else if (computeBbdrFromSdr) {
+                        bbdrOp = new BbdrFromSdrOp();
+                    } else {
+                        bbdrOp = new BbdrVgtOp();
+                    }
                     bbdrOp.setParameterDefaultValues();
+                    if (computeSdr) {
+                        bbdrOp.setParameter("sdrOnly", true);
+                        bbdrOp.setParameter("writeGeometryAndAOT", true);
+                    }
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
                 case "PROBAV":

@@ -102,7 +102,6 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
             configurator.defineSample(index + i, sensor.getSdrErrorBandNames()[i], sourceProduct);
         }
 
-        index += sensor.getSdrErrorBandNames().length;
         configurator.defineSample(SRC_VZA, "VZA", sourceProduct);
         configurator.defineSample(SRC_SZA, "SZA", sourceProduct);
         configurator.defineSample(SRC_VAA, "VAA", sourceProduct);
@@ -116,14 +115,10 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         final int status = sourceSamples[SRC_STATUS].getInt();
-        if (x == 500 && y == 1000) {
-            System.out.println("status = " + status);
-        }
         if (!singlePixelMode) {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
 
-            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-//            if (status != 1 && status != 3) {
+            if (status != 1 && status != 3) {
                 // only compute over land or snow
                 BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
                 return;
@@ -131,10 +126,6 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
         }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
-        if (Double.isNaN(vza)) {
-            // todo: implement correct filtering of land/snow pixels only!!
-            return;
-        }
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
@@ -145,8 +136,8 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
             // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
             delta_aot = 0.0;
         } else {
-            aot = sourceSamples[SRC_AOT].getDouble();
-            delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+            aot = sourceSamples[SRC_AOD].getDouble();
+            delta_aot = sourceSamples[SRC_AOD_ERR].getDouble();
         }
 
         double hsf = sourceSamples[SRC_DEM].getDouble();
@@ -175,9 +166,9 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
 
         // prepare SDR --> BBDR computation...
         double[] rfl_pix = new double[Sensor.MERIS.getNumBands()];
-         for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
             rfl_pix[i] = sourceSamples[i].getDouble();
-         }
+        }
 
         double rfl_red = rfl_pix[Sensor.MERIS.getIndexRed()];
         double rfl_nir = rfl_pix[Sensor.MERIS.getIndexNIR()];
@@ -186,21 +177,29 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
         double ndvi_land = (Sensor.MERIS.getBndvi() * rfl_nir - Sensor.MERIS.getAndvi() * rfl_red) * norm_ndvi;
         targetSamples[TRG_NDVI].set(ndvi_land);
 
-        Matrix err2_tot_cov = BbdrUtils.matrixSquare(new double[Sensor.MERIS.getNumBands()]);
-         for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
-             err2_tot_cov.set(i, i, sourceSamples[Sensor.MERIS.getNumBands() + i].getDouble());
-         }
-
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
         double muv = cos(vza_r);
         double mus = cos(sza_r);
+        double amf = 1.0 / muv + 1.0 / mus;
 
         double phi = abs(saa - vaa);
         if (phi > 180.0) {
             phi = 360.0 - phi;
         }
         phi = max(min(phi, 179), 1);
+        targetSamples[TRG_RAA].set(phi);
+
+        double[] err_rad = new double[Sensor.MERIS.getNumBands()];
+        double[] err_aod = new double[Sensor.MERIS.getNumBands()];
+        double[] err_cwv = new double[Sensor.MERIS.getNumBands()];
+        double[] err_ozo = new double[Sensor.MERIS.getNumBands()];
+        double[] err_coreg = new double[Sensor.MERIS.getNumBands()];
+
+        final float ozo = BbdrConstants.OZO_CONSTANT_VALUE;
+        final float gas = ozo;
+        final float cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+        float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, gas);
 
         double[] sab = new double[Sensor.MERIS.getNumBands()];
         double[] rat_tdw = new double[Sensor.MERIS.getNumBands()];
@@ -211,7 +210,39 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
             sab[i] = f_int[2];        // Spherical Albedo
             rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
             rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
+
+
+            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
+            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
+
+            // compute back to toaRefl for original error estimation
+            final double toa_rfl = (rpw + ttot*rfl_pix[i] - sab[i]*rpw*rfl_pix[i])/(1.0 - sab[i]*rfl_pix[i]);
+            err_rad[i] = Sensor.MERIS.getRadiometricError() * toa_rfl;
+
+            double delta_cwv = Sensor.MERIS.getCwvError() * cwv;
+            double delta_ozo = Sensor.MERIS.getOzoError() * ozo;
+
+            err_aod[i] = abs((f_int[5] + f_int[6] * rfl_pix[i]) * delta_aot);
+            err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
+            err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
+
+            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+            err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            err_coreg[i] = 0.05*rfl_pix[i]; // test
         }
+
+        Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
+        Matrix err_cwv_cov = BbdrUtils.matrixSquare(err_cwv);
+        Matrix err_ozo_cov = BbdrUtils.matrixSquare(err_ozo);
+        Matrix err_coreg_cov = BbdrUtils.matrixSquare(err_coreg);
+
+        Matrix err_rad_cov = new Matrix(Sensor.MERIS.getNumBands(), Sensor.MERIS.getNumBands());
+        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+            err_rad_cov.set(i, i, err_rad[i] * err_rad[i]);
+        }
+
+        Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
+                err_rad_cov).plusEquals(err_coreg_cov);
 
         // start SDR --> BBDR computation
 
@@ -244,7 +275,8 @@ public class BbdrFromSdrMerisOp extends BbdrMasterOp {
         int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
         double[] columnPackedCopy = err_sum.getColumnPackedCopy();
         for (int i = 0; i < relevantErrIndices.length; i++) {
-            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+            // todo: there is no Math.abs here in the original BbdrOp, so we may get NaNs - is that a bug?!
+            final double err_final = sqrt(Math.abs(columnPackedCopy[relevantErrIndices[i]]));
             targetSamples[TRG_ERRORS + i].set(err_final);
         }
 
