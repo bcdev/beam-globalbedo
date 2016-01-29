@@ -30,12 +30,13 @@ public class GasLookupTable {
     }
 
     public void load(Product sourceProduct) throws IOException {
-        if (sourceProduct != null && sensor == Sensor.VGT) {
-            float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
-            setGasVal(ozoMeanValue);
-        } else {
-            setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
-        }
+//        if (sourceProduct != null && sensor == Sensor.VGT) {
+//            float ozoMeanValue = BbdrUtils.getImageMeanValue(sourceProduct.getBand(BbdrConstants.VGT_OZO_BAND_NAME).getGeophysicalImage());
+//            setGasVal(ozoMeanValue);
+//        } else {
+//            setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
+//        }
+        setGasVal(BbdrConstants.CWV_CONSTANT_VALUE);
         loadCwvOzoLookupTableArray(sensor);
         loadCwvOzoKxLookupTableArray(sensor);
     }

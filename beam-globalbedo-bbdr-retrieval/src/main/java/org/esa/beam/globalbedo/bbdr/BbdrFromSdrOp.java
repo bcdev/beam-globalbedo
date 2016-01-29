@@ -170,6 +170,10 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
             rfl_pix[i] = sourceSamples[i].getDouble();
         }
 
+        if (x == 900 && y == 100) {
+            System.out.println("x = " + x);
+        }
+
         double rfl_red = rfl_pix[sensor.getIndexRed()];
         double rfl_nir = rfl_pix[sensor.getIndexNIR()];
 
@@ -199,6 +203,7 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
         final float ozo = BbdrConstants.OZO_CONSTANT_VALUE;
         final float gas = ozo;
         final float cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, gas);
 
         double[] sab = new double[sensor.getNumBands()];
@@ -210,7 +215,6 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
             sab[i] = f_int[2];        // Spherical Albedo
             rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
             rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
-
 
             double rpw = f_int[0] * Math.PI / mus; // Path Radiance
             double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)

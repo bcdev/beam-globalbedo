@@ -183,6 +183,10 @@ public class BbdrVgtOp extends BbdrMasterOp {
 
         // end of implementation which is same as for SDR. Now BBDR computation...
 
+        if (x == 900 && y == 100) {
+            System.out.println("x = " + x);
+        }
+
         double ndviSum = Sensor.VGT.getAndvi() + Sensor.VGT.getBndvi();
         double sig_ndvi_land = pow(
                 (pow(ndviSum * rfl_nir * sqrt(
