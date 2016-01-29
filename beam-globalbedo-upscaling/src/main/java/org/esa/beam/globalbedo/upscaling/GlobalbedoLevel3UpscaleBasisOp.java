@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.jai.ImageManager;
@@ -107,11 +108,11 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
             try {
                 final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
                 final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
-                CrsGeoCoding geoCoding = new CrsGeoCoding(mapCRS, width, height,
-                                                          MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X,
-                                                          MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y,
-                                                          pixelSizeX,
-                                                          pixelSizeY);
+                ModisTileGeoCoding geoCoding = new ModisTileGeoCoding(mapCRS,
+                                                                MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X,
+                                                                MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y,
+                                                                pixelSizeX,
+                                                                pixelSizeY);
                 upscaledProduct.setGeoCoding(geoCoding);
             } catch (Exception e) {
                 throw new OperatorException("Cannot attach geocoding for mosaic: ", e);

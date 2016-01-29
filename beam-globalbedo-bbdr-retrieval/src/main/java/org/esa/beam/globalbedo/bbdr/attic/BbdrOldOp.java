@@ -385,9 +385,9 @@ public class BbdrOldOp extends PixelOperator {
             configurator.defineSample(SRC_VAA, BbdrConstants.MERIS_VAA_TP_NAME);
             configurator.defineSample(SRC_SZA, BbdrConstants.MERIS_SZA_TP_NAME);
             configurator.defineSample(SRC_SAA, BbdrConstants.MERIS_SAA_TP_NAME);
-            configurator.defineSample(SRC_DEM, BbdrConstants.MERIS_DEM_BAND_NAME);
-            configurator.defineSample(SRC_AOT, BbdrConstants.MERIS_AOT_BAND_NAME);
-            configurator.defineSample(SRC_AOT_ERR, BbdrConstants.MERIS_AOTERR_BAND_NAME);
+            configurator.defineSample(SRC_DEM, BbdrConstants.DEM_BAND_NAME);
+            configurator.defineSample(SRC_AOT, BbdrConstants.AOT_BAND_NAME);
+            configurator.defineSample(SRC_AOT_ERR, BbdrConstants.AOTERR_BAND_NAME);
             configurator.defineSample(SRC_OZO, BbdrConstants.MERIS_OZO_TP_NAME);
 
             toaBandNames = new String[BbdrConstants.MERIS_TOA_BAND_NAMES.length];

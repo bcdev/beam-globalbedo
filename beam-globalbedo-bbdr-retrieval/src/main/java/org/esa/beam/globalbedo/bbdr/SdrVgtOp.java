@@ -17,11 +17,16 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.landcover.StatusPostProcessOp;
 import org.esa.beam.landcover.UclCloudDetection;
@@ -44,6 +49,45 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class SdrVgtOp extends BbdrMasterOp {
 
+    @Parameter(defaultValue = "false")
+    private boolean writeGeometryAndAOT;
+
+
+    @Override
+    protected void configureTargetProduct(ProductConfigurer productConfigurer) {
+        super.configureTargetProduct(productConfigurer);
+
+        final Product targetProduct = productConfigurer.getTargetProduct();
+        if (writeGeometryAndAOT) {
+            String[] bandNames = {
+                    "VZA", "SZA", "VAA", "SAA",
+                    "DEM", "AOD550", "sig_AOD550", "OG", "WVG"
+            };
+            for (String bandName : bandNames) {
+                Band band = targetProduct.addBand(bandName, ProductData.TYPE_FLOAT32);
+                band.setNoDataValue(Float.NaN);
+                band.setNoDataValueUsed(true);
+            }
+        }
+    }
+
+    @Override
+    protected void configureTargetSamples(SampleConfigurer configurator) {
+        super.configureTargetSamples(configurator);
+
+        if (writeGeometryAndAOT) {
+            configurator.defineSample(TRG_VZA, "VZA");
+            configurator.defineSample(TRG_SZA, "SZA");
+            configurator.defineSample(TRG_VAA, "VAA");
+            configurator.defineSample(TRG_SAA, "SAA");
+            configurator.defineSample(TRG_DEM, "DEM");
+            configurator.defineSample(TRG_AOD, "AOD550");
+            configurator.defineSample(TRG_AODERR, "sig_AOD550");
+            configurator.defineSample(TRG_OG, "OG");
+            configurator.defineSample(TRG_WVG, "WVG");
+        }
+    }
+
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status;
@@ -51,15 +95,15 @@ public class SdrVgtOp extends BbdrMasterOp {
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
         } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
             // not land and not snow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+        targetSamples[TRG_SDR_STATUS].set(status);
 
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
@@ -80,10 +124,9 @@ public class SdrVgtOp extends BbdrMasterOp {
                 hsf < aux.getHsfMin() || hsf > aux.getHsfMax()) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // write status
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+            targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 1].set(aot);
 
         double ozo;
         double cwv;
@@ -109,7 +152,7 @@ public class SdrVgtOp extends BbdrMasterOp {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
             if (toaRefl == 0.0 || Double.isNaN(toaRefl)) {
                 // if toa_refl look bad, set to invalid
-                targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+                targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             }
             toaRefl /= Sensor.VGT.getCal2Meris()[i];
             toa_rfl[i] = toaRefl;
@@ -147,7 +190,7 @@ public class SdrVgtOp extends BbdrMasterOp {
         double rfl_nir = rfl_pix[Sensor.VGT.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (Sensor.VGT.getBndvi() * rfl_nir - Sensor.VGT.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[Sensor.VGT.getNumBands() * 2].set(ndvi_land);
+        targetSamples[TRG_SDR_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[Sensor.VGT.getNumBands()];
         double[] err_aod = new double[Sensor.VGT.getNumBands()];
@@ -185,6 +228,18 @@ public class SdrVgtOp extends BbdrMasterOp {
 
         for (int i = 0; i < Sensor.VGT.getNumBands(); i++) {
             targetSamples[Sensor.VGT.getNumBands() + i].set(err2_tot_cov.get(i, i));
+        }
+
+        if (writeGeometryAndAOT) {
+            targetSamples[TRG_SZA].set(sza);
+            targetSamples[TRG_VZA].set(vza);
+            targetSamples[TRG_SAA].set(saa);
+            targetSamples[TRG_VAA].set(vaa);
+            targetSamples[TRG_DEM].set(sourceSamples[SRC_DEM].getDouble());
+            targetSamples[TRG_AOD].set(aot);
+            targetSamples[TRG_AODERR].set(delta_aot);
+            targetSamples[TRG_OG].set(sourceSamples[SRC_OZO].getDouble());
+            targetSamples[TRG_WVG].set(sourceSamples[SRC_WVP].getDouble());
         }
         // end of implementation needed for SDR
 

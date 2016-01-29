@@ -28,6 +28,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.meris.radiometry.MerisRadiometryCorrectionOp;
 import org.esa.beam.meris.radiometry.equalization.ReprocessingVersion;
@@ -40,6 +41,8 @@ import javax.media.jai.operator.ConstantDescriptor;
 import java.awt.*;
 import java.io.File;
 import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.logging.Logger;
 
 /**
@@ -142,7 +145,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
 
     private void setBbdrFilename(Product bbdrProduct) {
         final String modisTile = BbdrUtils.getModisTileFromLatLon(latitude, longitude);
-        final CrsGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
+        final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
         bbdrProduct.setGeoCoding(sinusoidalTileGeocoding);
         PixelPos pixelPos = sinusoidalTileGeocoding.getPixelPos(new GeoPos(latitude, longitude), null);
         final int pixelPosX = (int) pixelPos.getX();
@@ -151,8 +154,9 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         final String sourceFileName = ((File) sourceProduct.getProductReader().getInput()).getName();
         bbdrProduct.setName(FileUtils.getFilenameWithoutExtension(sourceFileName));
 
+        final String dateString = getCurrentDate();
         bbdrFileName = bbdrProduct.getName() + "_BBDR_" + modisTile + "_" +
-                String.format("%04d", pixelPosX) + "_" + String.format("%04d", pixelPosY);
+                String.format("%04d", pixelPosX) + "_" + String.format("%04d", pixelPosY) + "_v" + dateString;
     }
 
     private Product prepareVgtBbdrInputProduct() {
@@ -229,6 +233,13 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         File file = new File(dir, productName + ".csv");
         WriteOp writeOp = new WriteOp(product, file, "CSV");
         writeOp.writeProduct(ProgressMonitor.NULL);
+    }
+
+    public static String getCurrentDate() {
+//        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");//dd/MM/yyyy
+        SimpleDateFormat sdfDate = new SimpleDateFormat("yyyyMMdd");//dd/MM/yyyy
+        Date now = new Date();
+        return sdfDate.format(now);
     }
 
 

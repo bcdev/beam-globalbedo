@@ -22,6 +22,7 @@ import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.geotools.referencing.CRS;
@@ -92,7 +93,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         product.setStartTime(firstMosaicProduct.getStartTime());
         product.setEndTime(firstMosaicProduct.getEndTime());
 
-        CrsGeoCoding crsGeoCoding;
+        ModisTileGeoCoding crsGeoCoding;
         if (mosaicAdam || mosaicAdamPriors) {
             crsGeoCoding = getMosaicGeocoding(10);
         } else {
@@ -282,7 +283,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
     }
 
-    private static CrsGeoCoding getMosaicGeocoding(int downscalingFactor) {
+    private static ModisTileGeoCoding getMosaicGeocoding(int downscalingFactor) {
         final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
         final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
         final String crsString = MosaicConstants.MODIS_SIN_PROJECTION_CRS_STRING;
@@ -292,7 +293,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+            return new ModisTileGeoCoding(crs, easting, northing, pixelSizeX, pixelSizeY);
         } catch (Exception e) {
             BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
             return null;

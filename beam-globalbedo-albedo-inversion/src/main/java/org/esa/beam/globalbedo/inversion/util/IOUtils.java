@@ -2,7 +2,6 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
@@ -151,7 +150,7 @@ public class IOUtils {
         }
     }
 
-    public static CrsGeoCoding getSinusoidalTileGeocoding(String tile) {
+    public static ModisTileGeoCoding getSinusoidalTileGeocoding(String tile) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);
         if (tileIndex == -1) {
@@ -164,10 +163,10 @@ public class IOUtils {
         final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-        CrsGeoCoding geoCoding;
+        ModisTileGeoCoding geoCoding;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-            geoCoding = new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
+            geoCoding = new ModisTileGeoCoding(crs, easting, northing, pixelSizeX, pixelSizeY);
         } catch (Exception e) {
             throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
         }

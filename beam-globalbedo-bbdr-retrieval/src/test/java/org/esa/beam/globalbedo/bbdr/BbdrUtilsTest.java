@@ -53,15 +53,21 @@ public class BbdrUtilsTest {
         lon = 10.57f;
         assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
 
-        // New Zealand
+        // Barrow (a left edge tile)
+        lat = 65.0f;
+        lon = -175.0f;
+        assertEquals("h10v02", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // New Zealand (a right edged tile)
         lat = -39.5f;
         lon = 176.71f;
         assertEquals("h31v12", BbdrUtils.getModisTileFromLatLon(lat, lon));
 
+
         // Antarctica
         lat = -84.2f;
-        lon = -160.71f;
-        assertEquals("h16v17", BbdrUtils.getModisTileFromLatLon(lat, lon));
+        lon = 160.71f;
+        assertEquals("h19v17", BbdrUtils.getModisTileFromLatLon(lat, lon));
 
         // Siberia
         lat = 65.2f;

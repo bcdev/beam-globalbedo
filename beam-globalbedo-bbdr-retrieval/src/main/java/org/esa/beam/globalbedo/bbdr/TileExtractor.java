@@ -64,6 +64,10 @@ public class TileExtractor extends Operator implements Output {
 
     @Parameter
     private String bbdrDir;
+
+    @Parameter(defaultValue = "false")
+    protected boolean sdrOnly;
+
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
     private Geometry sourceGeometry;
@@ -93,7 +97,7 @@ public class TileExtractor extends Operator implements Output {
             Callable<TileProduct> callable = new Callable<TileProduct>() {
                 @Override
                 public TileProduct call() throws Exception {
-                    Product reprojected = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+                    Product reprojected = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName, sdrOnly);
                     return new TileProduct(reprojected, tileName);
                 }
             };
@@ -118,7 +122,7 @@ public class TileExtractor extends Operator implements Output {
     private void doExtract_simple() {
         for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
             String tileName = tileCoordinates.getTileName(index);
-            Product reproject = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName);
+            Product reproject = getReprojectedProductWithData(sourceProduct, sourceGeometry, tileName, sdrOnly);
             if (reproject != null) {
                 writeTileProduct(reproject, tileName);
             }
@@ -136,15 +140,21 @@ public class TileExtractor extends Operator implements Output {
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
-    private static Product getReprojectedProductWithData(Product src, Geometry sourceGeometry, String tileName) {
+    private static Product getReprojectedProductWithData(Product src, Geometry sourceGeometry,
+                                                         String tileName, boolean sdrOnly) {
         Product reproject = reproject(src, tileName);
         Geometry reprojectGeometry = computeProductGeometry(reproject);
 
         if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
             int parallelism = JAI.getDefaultInstance().getTileScheduler().getParallelism();
             reproject.setPreferredTileSize(reproject.getSceneRasterWidth(), reproject.getSceneRasterHeight() / parallelism);
-            Band bb_vis = reproject.getBand("BB_VIS");
-            if (containsFloatData(bb_vis, bb_vis.getNoDataValue())) {
+            Band referenceBand;
+            if (sdrOnly) {
+                referenceBand = reproject.getBand("sdr_1");
+            } else {
+                referenceBand = reproject.getBand("BB_VIS");
+            }
+            if (containsFloatData(referenceBand, referenceBand.getNoDataValue())) {
                 return reproject;
             }
         }

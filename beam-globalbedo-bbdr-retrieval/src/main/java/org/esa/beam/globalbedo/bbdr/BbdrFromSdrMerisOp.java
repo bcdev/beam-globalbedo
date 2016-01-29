@@ -17,10 +17,14 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import Jama.Matrix;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
+import org.esa.beam.gpf.operators.standard.BandMathsOp;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
@@ -31,20 +35,91 @@ import static java.lang.StrictMath.toRadians;
  * @author Olaf Danne
  * @author Marco Zuehlke
  */
-@OperatorMetadata(alias = "ga.bbdr.meris",
-        description = "Computes BBDRs and kernel parameters for MERIS",
+@OperatorMetadata(alias = "ga.bbdr.from.sdr.meris",
+        description = "Computes BBDRs and kernel parameters for MERIS, using previously computed SDR as input",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.1",
         copyright = "(C) 2015 by Brockmann Consult")
-public class BbdrMerisOp extends BbdrMasterOp {
+public class BbdrFromSdrMerisOp extends BbdrMasterOp {
+
+    private static final int SRC_VZA = 50;
+    private static final int SRC_SZA = 51;
+    private static final int SRC_VAA = 52;
+    private static final int SRC_SAA = 53;
+    private static final int SRC_DEM = 54;
+    private static final int SRC_AOD = 55;
+    private static final int SRC_AOD_ERR = 56;
+
+    private static final int SRC_LAND_MASK = 60;
+    private static final int SRC_SNOW_MASK = 61;
+
+    private static final int SRC_STATUS = 70;
+
+    @Override
+    protected void configureSourceSamples(SampleConfigurer configurator) {
+        final String commonLandExpr;
+        if (landExpression != null && !landExpression.isEmpty()) {
+            commonLandExpr = landExpression;
+        } else {
+            commonLandExpr = sensor.getLandExpr();
+        }
+
+        final String snowMaskExpression = "cloud_classif_flags.F_CLEAR_SNOW";
+
+        BandMathsOp.BandDescriptor bdSnow = new BandMathsOp.BandDescriptor();
+        bdSnow.name = "snow_mask";
+        bdSnow.expression = snowMaskExpression;
+        bdSnow.type = ProductData.TYPESTRING_INT8;
+
+        BandMathsOp snowOp = new BandMathsOp();
+        snowOp.setParameterDefaultValues();
+        snowOp.setSourceProduct(sourceProduct);
+        snowOp.setTargetBandDescriptors(bdSnow);
+        Product snowMaskProduct = snowOp.getTargetProduct();
+
+        configurator.defineSample(SRC_SNOW_MASK, snowMaskProduct.getBandAt(0).getName(), snowMaskProduct);
+
+        BandMathsOp.BandDescriptor bdLand = new BandMathsOp.BandDescriptor();
+        bdLand.name = "land_mask";
+        bdLand.expression = commonLandExpr;
+        bdLand.type = ProductData.TYPESTRING_INT8;
+
+        BandMathsOp landOp = new BandMathsOp();
+        landOp.setParameterDefaultValues();
+        landOp.setSourceProduct(sourceProduct);
+        landOp.setTargetBandDescriptors(bdLand);
+        Product landMaskProduct = landOp.getTargetProduct();
+
+        configurator.defineSample(SRC_LAND_MASK, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+
+
+        for (int i = 0; i < sensor.getSdrBandNames().length; i++) {
+            configurator.defineSample(i, sensor.getSdrBandNames()[i], sourceProduct);
+        }
+
+        int index = sensor.getSdrBandNames().length;
+        for (int i = 0; i < sensor.getSdrErrorBandNames().length; i++) {
+            configurator.defineSample(index + i, sensor.getSdrErrorBandNames()[i], sourceProduct);
+        }
+
+        configurator.defineSample(SRC_VZA, "VZA", sourceProduct);
+        configurator.defineSample(SRC_SZA, "SZA", sourceProduct);
+        configurator.defineSample(SRC_VAA, "VAA", sourceProduct);
+        configurator.defineSample(SRC_SAA, "SAA", sourceProduct);
+        configurator.defineSample(SRC_DEM, "DEM", sourceProduct);
+        configurator.defineSample(SRC_AOD, "AOD550", sourceProduct);
+        configurator.defineSample(SRC_AOD_ERR, "sig_AOD550", sourceProduct);
+        configurator.defineSample(SRC_STATUS, "status", sourceProduct);
+    }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        final int status = sourceSamples[SRC_STATUS].getInt();
         if (!singlePixelMode) {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
 
-            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-                // only compute over land
+            if (status != 1 && status != 3) {
+                // only compute over land or snow
                 BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
                 return;
             }
@@ -61,8 +136,8 @@ public class BbdrMerisOp extends BbdrMasterOp {
             // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
             delta_aot = 0.0;
         } else {
-            aot = sourceSamples[SRC_AOT].getDouble();
-            delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
+            aot = sourceSamples[SRC_AOD].getDouble();
+            delta_aot = sourceSamples[SRC_AOD_ERR].getDouble();
         }
 
         double hsf = sourceSamples[SRC_DEM].getDouble();
@@ -86,17 +161,21 @@ public class BbdrMerisOp extends BbdrMasterOp {
         targetSamples[TRG_AOD].set(aot);
         targetSamples[TRG_AODERR].set(delta_aot);
 
-        double ozo;
-        double cwv;
-        double gas;
 
-//      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
-//      MERIS: OZO per-pixel, CWV as constant value
-//      AATSR: OZO and CWV as constant value
-//      VGT: CWV per-pixel, OZO as constant value
-        ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
-        cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5
-        gas = ozo;
+        // end of implementation which is same as for SDR. Now BBDR computation...
+
+        // prepare SDR --> BBDR computation...
+        double[] rfl_pix = new double[Sensor.MERIS.getNumBands()];
+        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+            rfl_pix[i] = sourceSamples[i].getDouble();
+        }
+
+        double rfl_red = rfl_pix[Sensor.MERIS.getIndexRed()];
+        double rfl_nir = rfl_pix[Sensor.MERIS.getIndexNIR()];
+
+        double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
+        double ndvi_land = (Sensor.MERIS.getBndvi() * rfl_nir - Sensor.MERIS.getAndvi() * rfl_red) * norm_ndvi;
+        targetSamples[TRG_NDVI].set(ndvi_land);
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -104,54 +183,12 @@ public class BbdrMerisOp extends BbdrMasterOp {
         double mus = cos(sza_r);
         double amf = 1.0 / muv + 1.0 / mus;
 
-        double[] toa_rfl = new double[Sensor.MERIS.getNumBands()];
-        for (int i = 0; i < toa_rfl.length; i++) {
-            double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
-            toaRefl /= Sensor.MERIS.getCal2Meris()[i];
-            toa_rfl[i] = toaRefl;
-        }
-
         double phi = abs(saa - vaa);
         if (phi > 180.0) {
             phi = 360.0 - phi;
         }
-        phi = min(phi, 179);
-        phi = max(phi, 1);
+        phi = max(min(phi, 179), 1);
         targetSamples[TRG_RAA].set(phi);
-
-        float[] tg = aux.getGasLookupTable().getTg((float) amf, (float) gas);
-        float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
-
-        double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
-
-        double[] sab = new double[Sensor.MERIS.getNumBands()];
-        double[] rat_tdw = new double[Sensor.MERIS.getNumBands()];
-        double[] rat_tup = new double[Sensor.MERIS.getNumBands()];
-        double[] rfl_pix = new double[Sensor.MERIS.getNumBands()];
-        for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
-            double[] f_int = f_int_all[i];
-
-            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
-            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
-            sab[i] = f_int[2];        // Spherical Albedo
-            rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
-            rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
-
-            toa_rfl[i] = toa_rfl[i] / tg[i];
-
-            double x_term = (toa_rfl[i] - rpw) / ttot;
-            rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
-            if (singlePixelMode) {
-                // write to target product
-                targetSamples[TRG_SINGLE_SDR+i].set(rfl_pix[i]);
-            }
-        }
-
-        double rfl_red = rfl_pix[Sensor.MERIS.getIndexRed()];
-        double rfl_nir = rfl_pix[Sensor.MERIS.getIndexNIR()];
-        double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
-        double ndvi_land = (Sensor.MERIS.getBndvi() * rfl_nir - Sensor.MERIS.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[TRG_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[Sensor.MERIS.getNumBands()];
         double[] err_aod = new double[Sensor.MERIS.getNumBands()];
@@ -159,9 +196,28 @@ public class BbdrMerisOp extends BbdrMasterOp {
         double[] err_ozo = new double[Sensor.MERIS.getNumBands()];
         double[] err_coreg = new double[Sensor.MERIS.getNumBands()];
 
+        final float ozo = BbdrConstants.OZO_CONSTANT_VALUE;
+        final float gas = ozo;
+        final float cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+        float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, gas);
+
+        double[] sab = new double[Sensor.MERIS.getNumBands()];
+        double[] rat_tdw = new double[Sensor.MERIS.getNumBands()];
+        double[] rat_tup = new double[Sensor.MERIS.getNumBands()];
+        double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
         for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
             double[] f_int = f_int_all[i];
-            err_rad[i] = Sensor.MERIS.getRadiometricError() * toa_rfl[i];
+            sab[i] = f_int[2];        // Spherical Albedo
+            rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
+            rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
+
+
+            double rpw = f_int[0] * Math.PI / mus; // Path Radiance
+            double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
+
+            // compute back to toaRefl for original error estimation
+            final double toa_rfl = (rpw + ttot*rfl_pix[i] - sab[i]*rpw*rfl_pix[i])/(1.0 - sab[i]*rfl_pix[i]);
+            err_rad[i] = Sensor.MERIS.getRadiometricError() * toa_rfl;
 
             double delta_cwv = Sensor.MERIS.getCwvError() * cwv;
             double delta_ozo = Sensor.MERIS.getOzoError() * ozo;
@@ -170,11 +226,9 @@ public class BbdrMerisOp extends BbdrMasterOp {
             err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
-            err_coreg[i] = 0.0;
-            if (!singlePixelMode) {
-                err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
-                err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
-            }
+            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+            err_coreg[i] *= Sensor.MERIS.getErrCoregScale();
+            err_coreg[i] = 0.05*rfl_pix[i]; // test
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
@@ -190,7 +244,7 @@ public class BbdrMerisOp extends BbdrMasterOp {
         Matrix err2_tot_cov = err_aod_cov.plusEquals(err_cwv_cov).plusEquals(err_ozo_cov).plusEquals(
                 err_rad_cov).plusEquals(err_coreg_cov);
 
-        // end of implementation which is same as for SDR. Now BBDR computation...
+        // start SDR --> BBDR computation
 
         double ndviSum = Sensor.MERIS.getAndvi() + Sensor.MERIS.getBndvi();
         double sig_ndvi_land = pow(
@@ -206,9 +260,9 @@ public class BbdrMerisOp extends BbdrMasterOp {
         Matrix rfl_pix_m = new Matrix(rfl_pix, rfl_pix.length);
         Matrix bdr_mat_all = aux.getNb_coef_arr_all().times(rfl_pix_m).plus(aux.getNb_intcp_arr_all());
 
-        double[] bbdrsData = bdr_mat_all.getColumnPackedCopy();
-        for (int i = 0; i < bbdrsData.length; i++) {
-            targetSamples[i].set(bbdrsData[i]);
+        double[] bbdrData = bdr_mat_all.getColumnPackedCopy();
+        for (int i = 0; i < bbdrData.length; i++) {
+            targetSamples[i].set(bbdrData[i]);
         }
 
         Matrix err2_mat_rfl = aux.getNb_coef_arr_all().times(err2_tot_cov).times(aux.getNb_coef_arr_all().transpose());
@@ -221,7 +275,8 @@ public class BbdrMerisOp extends BbdrMasterOp {
         int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
         double[] columnPackedCopy = err_sum.getColumnPackedCopy();
         for (int i = 0; i < relevantErrIndices.length; i++) {
-            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+            // todo: there is no Math.abs here in the original BbdrOp, so we may get NaNs - is that a bug?!
+            final double err_final = sqrt(Math.abs(columnPackedCopy[relevantErrIndices[i]]));
             targetSamples[TRG_ERRORS + i].set(err_final);
         }
 
@@ -284,7 +339,7 @@ public class BbdrMerisOp extends BbdrMasterOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(BbdrMerisOp.class);
+            super(BbdrFromSdrMerisOp.class);
         }
     }
 }
