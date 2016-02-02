@@ -60,6 +60,9 @@ public class BbdrMasterOp extends PixelOperator {
     @Parameter(defaultValue = "false")
     protected boolean useAotClimatology;
 
+    @Parameter(defaultValue = "0.15f")
+    protected float aotClimatologyValue;
+
     @Parameter
     protected String landExpression;
 

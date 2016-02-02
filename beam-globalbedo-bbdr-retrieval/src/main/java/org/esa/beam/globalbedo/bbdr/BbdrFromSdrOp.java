@@ -114,12 +114,16 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        if (x == 146 && y == 1961) {
+            System.out.println("x = " + x);
+        }
+
         final int status = sourceSamples[SRC_STATUS].getInt();
         if (!singlePixelMode) {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
 
             if (status != 1 && status != 3) {
-                // only compute over land or snow
+                // only compute over clear land or snow
                 BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
                 return;
             }
@@ -170,6 +174,10 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
             rfl_pix[i] = sourceSamples[i].getDouble();
         }
 
+        if (x == 900 && y == 100) {
+            System.out.println("x = " + x);
+        }
+
         double rfl_red = rfl_pix[sensor.getIndexRed()];
         double rfl_nir = rfl_pix[sensor.getIndexNIR()];
 
@@ -199,6 +207,7 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
         final float ozo = BbdrConstants.OZO_CONSTANT_VALUE;
         final float gas = ozo;
         final float cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, gas);
 
         double[] sab = new double[sensor.getNumBands()];
@@ -211,12 +220,11 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
             rat_tdw[i] = 1.0 - f_int[3];  // tdif_dw / ttot_dw
             rat_tup[i] = 1.0 - f_int[4];  // tup_dw / ttot_dw
 
-
             double rpw = f_int[0] * Math.PI / mus; // Path Radiance
             double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
 
             // compute back to toaRefl for original error estimation
-            final double toa_rfl = (rpw + ttot*rfl_pix[i] - sab[i]*rpw*rfl_pix[i])/(1.0 - sab[i]*rfl_pix[i]);
+            final double toa_rfl = (rpw + ttot * rfl_pix[i] - sab[i] * rpw * rfl_pix[i]) / (1.0 - sab[i] * rfl_pix[i]);
             err_rad[i] = sensor.getRadiometricError() * toa_rfl;
 
             double delta_cwv = sensor.getCwvError() * cwv;
@@ -228,7 +236,7 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
 
             err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
             err_coreg[i] *= sensor.getErrCoregScale();
-            err_coreg[i] = 0.05*rfl_pix[i]; // test
+            err_coreg[i] = 0.05 * rfl_pix[i]; // test
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);

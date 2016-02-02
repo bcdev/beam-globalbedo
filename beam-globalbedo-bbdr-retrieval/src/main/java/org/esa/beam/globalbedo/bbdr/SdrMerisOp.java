@@ -120,6 +120,18 @@ public class SdrMerisOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+
+        if (writeGeometryAndAOT) {
+            // copy these source pixels in any case
+            targetSamples[TRG_SZA].set(sourceSamples[SRC_SZA].getDouble());
+            targetSamples[TRG_VZA].set(sourceSamples[SRC_VZA].getDouble());
+            targetSamples[TRG_SAA].set(sourceSamples[SRC_SAA].getDouble());
+            targetSamples[TRG_VAA].set(sourceSamples[SRC_VAA].getDouble());
+            targetSamples[TRG_DEM].set(sourceSamples[SRC_DEM].getDouble());
+            targetSamples[TRG_AOD].set(sourceSamples[SRC_AOT].getDouble());
+            targetSamples[TRG_AODERR].set(sourceSamples[SRC_AOT_ERR].getDouble());
+        }
+
         final int status = sourceSamples[SRC_STATUS].getInt();
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
@@ -284,18 +296,7 @@ public class SdrMerisOp extends BbdrMasterOp {
             targetSamples[Sensor.MERIS.getNumBands() + i].set(err2_tot_cov.get(i, i));
         }
 
-
-        if (writeGeometryAndAOT) {
-            targetSamples[TRG_SZA].set(sza);
-            targetSamples[TRG_VZA].set(vza);
-            targetSamples[TRG_SAA].set(saa);
-            targetSamples[TRG_VAA].set(vaa);
-            targetSamples[TRG_DEM].set(sourceSamples[SRC_DEM].getDouble());
-            targetSamples[TRG_AOD].set(aot);
-            targetSamples[TRG_AODERR].set(delta_aot);
-        }
         // end of implementation needed for SDR
-
     }
 
     public static class Spi extends OperatorSpi {

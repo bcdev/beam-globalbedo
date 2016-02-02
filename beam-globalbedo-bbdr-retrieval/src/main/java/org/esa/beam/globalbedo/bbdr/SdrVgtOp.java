@@ -20,7 +20,6 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -29,9 +28,6 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.landcover.StatusPostProcessOp;
-import org.esa.beam.landcover.UclCloudDetection;
-
-import java.io.IOException;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
@@ -90,7 +86,24 @@ public class SdrVgtOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        int status;
+
+        if (x == 100 && y == 500 ) {
+            System.out.println("x = " + x);
+        }
+        if (writeGeometryAndAOT) {
+            // copy these source pixels in any case
+            targetSamples[TRG_SZA].set(sourceSamples[SRC_SZA].getDouble());
+            targetSamples[TRG_VZA].set(sourceSamples[SRC_VZA].getDouble());
+            targetSamples[TRG_SAA].set(sourceSamples[SRC_SAA].getDouble());
+            targetSamples[TRG_VAA].set(sourceSamples[SRC_VAA].getDouble());
+            targetSamples[TRG_DEM].set(sourceSamples[SRC_DEM].getDouble());
+            targetSamples[TRG_AOD].set(sourceSamples[SRC_AOT].getDouble());
+            targetSamples[TRG_AODERR].set(sourceSamples[SRC_AOT_ERR].getDouble());
+            targetSamples[TRG_OG].set(sourceSamples[SRC_OZO].getDouble());
+            targetSamples[TRG_WVG].set(sourceSamples[SRC_WVP].getDouble());
+        }
+
+        final int status;
         status = sourceSamples[SRC_STATUS].getInt();
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
@@ -186,6 +199,10 @@ public class SdrVgtOp extends BbdrMasterOp {
             targetSamples[i].set(rfl_pix[i]);
         }
 
+        if (x == 900 && y == 100) {
+            System.out.println("x = " + x);
+        }
+
         double rfl_red = rfl_pix[Sensor.VGT.getIndexRed()];
         double rfl_nir = rfl_pix[Sensor.VGT.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
@@ -230,17 +247,6 @@ public class SdrVgtOp extends BbdrMasterOp {
             targetSamples[Sensor.VGT.getNumBands() + i].set(err2_tot_cov.get(i, i));
         }
 
-        if (writeGeometryAndAOT) {
-            targetSamples[TRG_SZA].set(sza);
-            targetSamples[TRG_VZA].set(vza);
-            targetSamples[TRG_SAA].set(saa);
-            targetSamples[TRG_VAA].set(vaa);
-            targetSamples[TRG_DEM].set(sourceSamples[SRC_DEM].getDouble());
-            targetSamples[TRG_AOD].set(aot);
-            targetSamples[TRG_AODERR].set(delta_aot);
-            targetSamples[TRG_OG].set(sourceSamples[SRC_OZO].getDouble());
-            targetSamples[TRG_WVG].set(sourceSamples[SRC_WVP].getDouble());
-        }
         // end of implementation needed for SDR
 
     }

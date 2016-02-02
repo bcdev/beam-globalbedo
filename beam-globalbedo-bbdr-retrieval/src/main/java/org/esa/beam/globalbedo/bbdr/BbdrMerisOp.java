@@ -57,7 +57,7 @@ public class BbdrMerisOp extends BbdrMasterOp {
         double aot;
         double delta_aot;
         if (useAotClimatology) {
-            aot = 0.15;  // reasonable constant for the moment
+            aot = aotClimatologyValue;  // reasonable constant for the moment
             // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
             delta_aot = 0.0;
         } else {
