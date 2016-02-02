@@ -19,7 +19,6 @@ package org.esa.beam.globalbedo.bbdr;
 import Jama.Matrix;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 
@@ -41,10 +40,14 @@ public class BbdrVgtOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
-            // only compute over land
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            return;
+        if (!singlePixelMode) {
+            targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
+            if (!sourceSamples[SRC_LAND_MASK].getBoolean()) {
+                // only compute over land
+                BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+                return;
+            }
         }
 
         double vza = sourceSamples[SRC_VZA].getDouble();
@@ -54,7 +57,7 @@ public class BbdrVgtOp extends BbdrMasterOp {
         double aot;
         double delta_aot;
         if (useAotClimatology) {
-            aot = 0.15;  // reasonable constant for the moment
+            aot = aotClimatologyValue;  // reasonable constant for the moment
             // todo: really use 'climatology_ratios.nc' from A.Heckel (collocated as slave with given source product)
             delta_aot = 0.0;
         } else {
@@ -76,10 +79,11 @@ public class BbdrVgtOp extends BbdrMasterOp {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_DEM].set(hsf);
+
         targetSamples[TRG_AOD].set(aot);
         targetSamples[TRG_AODERR].set(delta_aot);
 
@@ -139,6 +143,10 @@ public class BbdrVgtOp extends BbdrMasterOp {
 
             double x_term = (toa_rfl[i] - rpw) / ttot;
             rfl_pix[i] = x_term / (1. + sab[i] * x_term); //calculation of SDR
+            if (singlePixelMode) {
+                // write to target product
+                targetSamples[TRG_SINGLE_SDR+i].set(rfl_pix[i]);
+            }
         }
 
         double rfl_red = rfl_pix[Sensor.VGT.getIndexRed()];
@@ -164,8 +172,10 @@ public class BbdrVgtOp extends BbdrMasterOp {
             err_cwv[i] = abs((kx_tg[i][0][0] + kx_tg[i][0][1] * rfl_pix[i]) * delta_cwv);
             err_ozo[i] = abs((kx_tg[i][1][0] + kx_tg[i][1][1] * rfl_pix[i]) * delta_ozo);
 
-            err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
-            err_coreg[i] *= Sensor.VGT.getErrCoregScale();
+            if (!singlePixelMode) {
+                err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
+                err_coreg[i] *= Sensor.VGT.getErrCoregScale();
+            }
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
@@ -182,10 +192,6 @@ public class BbdrVgtOp extends BbdrMasterOp {
                 err_rad_cov).plusEquals(err_coreg_cov);
 
         // end of implementation which is same as for SDR. Now BBDR computation...
-
-        if (x == 900 && y == 100) {
-            System.out.println("x = " + x);
-        }
 
         double ndviSum = Sensor.VGT.getAndvi() + Sensor.VGT.getBndvi();
         double sig_ndvi_land = pow(

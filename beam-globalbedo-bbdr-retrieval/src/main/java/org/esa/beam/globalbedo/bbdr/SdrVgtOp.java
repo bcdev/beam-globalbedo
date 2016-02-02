@@ -20,7 +20,6 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
-import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
@@ -29,9 +28,6 @@ import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.landcover.StatusPostProcessOp;
-import org.esa.beam.landcover.UclCloudDetection;
-
-import java.io.IOException;
 
 import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;

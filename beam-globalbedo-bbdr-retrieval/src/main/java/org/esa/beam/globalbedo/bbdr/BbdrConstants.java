@@ -143,8 +143,6 @@ public class BbdrConstants {
     public final static String[] AATSR_SDR_ERROR_BAND_NAMES_FWARD = new String[]{
             "sdr_error_fward_0550", "sdr_error_fward_0670", "sdr_error_fward_0870", "sdr_error_fward_1600"};
 
-    public final static String VGT_OZO_BAND_NAME = "OG";
-
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
                     "B0", "B2", "B3", "MIR"};
 
@@ -183,7 +181,9 @@ public class BbdrConstants {
 
     public static final float NO_DATA_VALUE = -9999.0f;
 
-    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+//    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+    public static final String COMMON_LAND_EXPR =
+        "(!cloud_classif_flags.F_CLOUD AND !cloud_classif_flags.F_CLOUD_BUFFER) OR cloud_classif_flags.F_CLEAR_SNOW";
     public static final String COMMON_LAND_EXPR_AATSR_FWARD =
             "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
 
@@ -198,5 +198,10 @@ public class BbdrConstants {
     public static final String L1_INVALID_EXPR_VGT = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
     public static final String L1_INVALID_EXPR_PROBAV =
             "!SM_FLAGS.GOOD_BLUE OR !SM_FLAGS.GOOD_RED OR !SM_FLAGS.GOOD_NIR OR (!SM_FLAGS.GOOD_SWIR AND TOA_REFL_SWIR > 0.65)";
+
+    public static final String AEROSOL_CLIMATOLOGY_FILE = "climatology_ratios.nc";
+    public static final String AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME = "AOD550_aer_mo_time";
+
+    public static final float AOT_CONST_VALUE = 0.15f;
 }
 

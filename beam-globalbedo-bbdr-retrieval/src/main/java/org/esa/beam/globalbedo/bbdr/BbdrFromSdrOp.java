@@ -114,12 +114,16 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        if (x == 146 && y == 1961) {
+            System.out.println("x = " + x);
+        }
+
         final int status = sourceSamples[SRC_STATUS].getInt();
         if (!singlePixelMode) {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
 
             if (status != 1 && status != 3) {
-                // only compute over land or snow
+                // only compute over clear land or snow
                 BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
                 return;
             }
@@ -220,7 +224,7 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
             double ttot = f_int[1] / mus;    // Total TOA flux (Isc*Tup*Tdw)
 
             // compute back to toaRefl for original error estimation
-            final double toa_rfl = (rpw + ttot*rfl_pix[i] - sab[i]*rpw*rfl_pix[i])/(1.0 - sab[i]*rfl_pix[i]);
+            final double toa_rfl = (rpw + ttot * rfl_pix[i] - sab[i] * rpw * rfl_pix[i]) / (1.0 - sab[i] * rfl_pix[i]);
             err_rad[i] = sensor.getRadiometricError() * toa_rfl;
 
             double delta_cwv = sensor.getCwvError() * cwv;
@@ -232,7 +236,7 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
 
             err_coreg[i] = sourceSamples[SRC_TOA_VAR + i].getDouble();
             err_coreg[i] *= sensor.getErrCoregScale();
-            err_coreg[i] = 0.05*rfl_pix[i]; // test
+            err_coreg[i] = 0.05 * rfl_pix[i]; // test
         }
 
         Matrix err_aod_cov = BbdrUtils.matrixSquare(err_aod);
