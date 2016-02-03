@@ -23,6 +23,12 @@
             <artifactId>beam-core</artifactId>
         </dependency>
 
+        <dependency>
+            <groupId>org.esa.beam</groupId>
+            <artifactId>beam-netcdf</artifactId>
+        </dependency>
+
+
         <!-- External modules -->
         <dependency>
             <groupId>junit</groupId>

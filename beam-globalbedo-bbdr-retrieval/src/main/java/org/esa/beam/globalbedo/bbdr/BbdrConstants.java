@@ -199,9 +199,7 @@ public class BbdrConstants {
     public static final String L1_INVALID_EXPR_PROBAV =
             "!SM_FLAGS.GOOD_BLUE OR !SM_FLAGS.GOOD_RED OR !SM_FLAGS.GOOD_NIR OR (!SM_FLAGS.GOOD_SWIR AND TOA_REFL_SWIR > 0.65)";
 
-    public static final String AEROSOL_CLIMATOLOGY_FILE = "climatology_ratios.nc";
     public static final String AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME = "AOD550_aer_mo_time";
-
     public static final float AOT_CONST_VALUE = 0.15f;
 }
 

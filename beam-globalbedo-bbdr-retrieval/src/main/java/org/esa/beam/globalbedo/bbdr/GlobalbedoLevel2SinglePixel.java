@@ -19,7 +19,6 @@ package org.esa.beam.globalbedo.bbdr;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.envisat.EnvisatConstants;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -28,6 +27,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.auxdata.AerosolClimatology;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.gpf.operators.standard.WriteOp;
@@ -40,7 +40,6 @@ import org.esa.beam.util.io.FileUtils;
 import javax.media.jai.operator.ConstantDescriptor;
 import java.awt.*;
 import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -245,11 +244,9 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
         final String monthString = dateTimeString.substring(4, 6);
         final int month = Integer.parseInt(monthString);
 
-        final String aotFilename = BbdrConstants.AEROSOL_CLIMATOLOGY_FILE;
-        final String aotFilePath = GlobalbedoLevel2SinglePixel.class.getResource(aotFilename).getPath();
+        final Product aotProduct = AerosolClimatology.getInstance().getAotProduct();
 
-        try {
-            final Product aotProduct = ProductIO.readProduct(new File(aotFilePath));
+        if (aotProduct != null) {
             final Band aotBand = aotProduct.getBand(BbdrConstants.AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME + month);
             final int aotProductWidth = aotProduct.getSceneRasterWidth();
             final int aotProductHeight = aotProduct.getSceneRasterHeight();
@@ -257,9 +254,8 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
             final GeoCoding geoCoding = aotProduct.getGeoCoding();
             final PixelPos pixelPos = geoCoding.getPixelPos(new GeoPos(latitude, longitude), null);
             return aotTile.getSampleFloat((int) pixelPos.x, (int) pixelPos.y);
-
-        } catch (IOException e) {
-            getLogger().log(Level.ALL, "Warning: cannot open AOT climatology file. Use constant value of 0.15.");
+        } else {
+            getLogger().log(Level.ALL, "Will use constant AOT value of 0.15.");
             return BbdrConstants.AOT_CONST_VALUE;
         }
     }
