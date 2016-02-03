@@ -1,0 +1,31 @@
+<module>
+    <manifestVersion>1.0.0</manifestVersion>
+    <symbolicName>beam-globalbedo-auxdata</symbolicName>
+    <version>0.1</version>
+    <name>Globalbedo Auxdata</name>
+    <description>
+        Globalbedo Auxdata module.
+    </description>
+    <vendor>Brockmann Consult GmbH</vendor>
+    <contactAddress>
+        Max Planck Str.2, 21502 Geesthacht (Germany)
+    </contactAddress>
+    <copyright>(C) 2011-2015 by Brockmann Consult GmbH</copyright>
+    <url>http://envisat.esa.int/beam</url>
+    <licenseUrl>http://www.gnu.org/licenses/gpl.html</licenseUrl>
+
+    <packaging>dir</packaging>
+
+    <changelog/>
+    
+    
+    <categories>Application,Processor,MERIS,AATSR</categories>
+
+	<dependency>
+        <module>beam-core</module>
+    </dependency>
+	 <dependency>
+        <module>beam-netcdf</module>
+    </dependency>
+
+</module>

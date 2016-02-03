@@ -1,13 +1,10 @@
 package org.esa.beam.globalbedo.bbdr;
 
-import junit.framework.Assert;
-import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.globalbedo.auxdata.AerosolClimatology;
 import org.junit.Test;
 
-import java.io.File;
-import java.io.IOException;
 import java.text.ParseException;
 
 import static org.junit.Assert.*;
@@ -42,27 +39,6 @@ public class GlobalbedoLevel2SinglePixelTest {
             fail(e.getMessage());
         }
 
-    }
-
-    @Test
-    public void testAerosolClimatology() {
-        final String filename = BbdrConstants.AEROSOL_CLIMATOLOGY_FILE;
-        final String testFilePath = GlobalbedoLevel2SinglePixel.class.getResource(filename).getPath();
-        assertNotNull(testFilePath);
-
-        try {
-            final Product aotProduct = ProductIO.readProduct(new File(testFilePath));
-            assertNotNull(aotProduct);
-            assertEquals("NetCDF", aotProduct.getProductType());
-            assertEquals(360, aotProduct.getSceneRasterWidth());
-            assertEquals(180, aotProduct.getSceneRasterHeight());
-            assertNotNull(aotProduct.getGeoCoding());
-            for (int i=1; i<=12; i++) {
-                assertNotNull(aotProduct.getBand(BbdrConstants.AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME + i));
-            }
-        } catch (IOException e) {
-            fail(e.getMessage());
-        }
     }
 
 }
