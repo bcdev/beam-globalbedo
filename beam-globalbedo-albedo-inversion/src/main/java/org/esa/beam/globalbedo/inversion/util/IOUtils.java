@@ -41,15 +41,16 @@ public class IOUtils {
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
         final List<String> merisBbdrFileList = getDailyBBDRFilenames(merisBbdrFiles, daystring);
 
-        final String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
-        final String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
-        final List<String> aatsrBbdrFileList = getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
+//        final String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
+//        final String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
+//        final List<String> aatsrBbdrFileList = getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         final List<String> vgtBbdrFileList = getDailyBBDRFilenames(vgtBbdrFiles, daystring);
 
-        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
+//        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
+        final int numberOfInputProducts = merisBbdrFileList.size() + vgtBbdrFileList.size();
         Product[] bbdrProducts = new Product[numberOfInputProducts];
 
         int productIndex = 0;
@@ -59,12 +60,12 @@ public class IOUtils {
             bbdrProducts[productIndex] = product;
             productIndex++;
         }
-        for (String aatsrBBDRFileName : aatsrBbdrFileList) {
-            String sourceProductFileName = aatsrBbdrDir + File.separator + aatsrBBDRFileName;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
+//        for (String aatsrBBDRFileName : aatsrBbdrFileList) {
+//            String sourceProductFileName = aatsrBbdrDir + File.separator + aatsrBBDRFileName;
+//            Product product = ProductIO.readProduct(sourceProductFileName);
+//            bbdrProducts[productIndex] = product;
+//            productIndex++;
+//        }
         for (String vgtBBDRFileName : vgtBbdrFileList) {
             String sourceProductFileName = vgtBbdrDir + File.separator + vgtBBDRFileName;
             Product product = ProductIO.readProduct(sourceProductFileName);

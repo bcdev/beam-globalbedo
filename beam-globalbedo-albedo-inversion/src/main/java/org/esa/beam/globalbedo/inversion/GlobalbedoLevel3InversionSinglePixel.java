@@ -1,11 +1,13 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -36,12 +38,6 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
     @Parameter(description = "Day of Year", interval = "[1,366]")
     private int doy;
-
-    @Parameter(description = "Start Day of Year", interval = "[1,366]")
-    private int startDoy;
-
-    @Parameter(description = "End Day of Year", interval = "[1,366]")
-    private int endDoy;
 
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
@@ -80,28 +76,25 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         }
 
         if (inputProducts != null && inputProducts.length > 0) {
-            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
-                    + File.separator + year + File.separator + tile;
-            if (computeSnow) {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-            }  else {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
-            }
+//            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
+//                    + File.separator + year + File.separator + tile;
+//            if (computeSnow) {
+//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+//            }  else {
+//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+//            }
 
-            // STEP 2: do accumulation, write to binary file
-            Product accumulationProduct;
-            // make sure that binary output is written sequentially
-            JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-            String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
-            final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-            DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
-            accumulationOp.setParameterDefaultValues();
-            accumulationOp.setSourceProducts(inputProducts);
-            accumulationOp.setParameter("computeSnow", computeSnow);
-            accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
-            accumulationProduct = accumulationOp.getTargetProduct();
+            // STEP 2: do daily accumulation
+            Product dailyAccumulationProduct;
+            DailyAccumulationOp dailyAccumulationOp = new DailyAccumulationOp();
+            dailyAccumulationOp.setParameterDefaultValues();
+            dailyAccumulationOp.setSourceProducts(inputProducts);
+            dailyAccumulationOp.setParameter("computeSnow", computeSnow);
+            dailyAccumulationProduct = dailyAccumulationOp.getTargetProduct();
 
-            setTargetProduct(accumulationProduct);
+            // STEP 2: do full accumulation
+
+            setTargetProduct(dailyAccumulationProduct);
         } else {
             logger.log(Level.ALL, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
