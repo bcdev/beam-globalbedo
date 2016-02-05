@@ -14,6 +14,8 @@ import org.esa.beam.util.logging.BeamLogManager;
 import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -36,8 +38,8 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(description = "Year")
     private int year;
 
-    @Parameter(description = "Day of Year", interval = "[1,366]")
-    private int doy;
+//    @Parameter(description = "Day of Year", interval = "[1,366]")
+//    private int doy;
 
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
@@ -67,46 +69,50 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
         Logger logger = BeamLogManager.getSystemLogger();
 
-        // STEP 1: get BBDR input product list...
+        // procedure:
+        // - input: year, process in memory all doys of this year
+        // 1. produce all daily accs in wings period: array dailyAccs[540][81+9+1+1]
+        //    (for this, generate test fake data from 2005 to 2007 in folders:
+        //    /group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest/BBDR_single/h18v03
+        //    /group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest/BBDR_single/h22v07
+        // 2. loop 1..46: produce all full accs for doys of year: fullAccs[46][81+9+1+1]]
+        // 3. loop 1..46: produce all BRDF products for doys of year and snow/nosnow (write to single-pixel csv files)
+
+        // maybe in separate module (use MergeBrdfOp):
+        // 4. loop 1..46: produce all merged BRDF products for doys of year (write to single-pixel csv files)
+        // maybe in separate module (use BrdfToAlbedoOp):
+        // 5. loop 1..46: produce all Albedo products from merged BRDF products for doys of year (write to single-pixel csv files)
+
+        Accumulator[] allDailyAccs = new Accumulator[540];
+        // todo: loop over all 540 days...
         Product[] inputProducts;
         try {
-            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
+            // STEP 1: get BBDR input product list...
+            final List<Product> inputProductList = new ArrayList<>();
+            // todo: this is wrong!! we need an inputProductList per single day of the 540!!
+            inputProductList.addAll(IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, year));
+            inputProductList.addAll(IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, year-1));
+            inputProductList.addAll(IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, year+1));
+            inputProducts = inputProductList.toArray(new Product[inputProductList.size()]);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
         if (inputProducts != null && inputProducts.length > 0) {
-//            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
-//                    + File.separator + year + File.separator + tile;
-//            if (computeSnow) {
-//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-//            }  else {
-//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
-//            }
-
             // STEP 2: do daily accumulation
-            Product dailyAccumulationProduct;
-            DailyAccumulationOp dailyAccumulationOp = new DailyAccumulationOp();
-            dailyAccumulationOp.setParameterDefaultValues();
-            dailyAccumulationOp.setSourceProducts(inputProducts);
-            dailyAccumulationOp.setParameter("computeSnow", computeSnow);
-            dailyAccumulationProduct = dailyAccumulationOp.getTargetProduct();
+            DailyAccumulationSinglePixel dailyAccumulationSinglePixel =
+                    new DailyAccumulationSinglePixel(inputProducts, computeSnow);
+            final Accumulator dailyAcc = dailyAccumulationSinglePixel.compute();
 
             // STEP 2: do full accumulation
 
-            setTargetProduct(dailyAccumulationProduct);
-        } else {
-            logger.log(Level.ALL, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
-                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
-            //  no BBDR input - just set a dummy target product
-            Product dummyProduct = new Product("dummy", "dummy", 1, 1);
-            setTargetProduct(dummyProduct);
         }
+        // todo: end loop over all days. Start full acc for the 46 doys
 
-        getTargetProduct().setName("SUCCESS_dailyacc_" + year + "_" + doy);
-
-        logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
-                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
+//        getTargetProduct().setName("SUCCESS_dailyacc_" + year + "_" + doy);
+//
+//        logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
+//                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 
     public static class Spi extends OperatorSpi {
