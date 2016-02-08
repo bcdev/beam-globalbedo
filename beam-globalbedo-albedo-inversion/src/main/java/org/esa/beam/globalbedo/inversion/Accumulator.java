@@ -55,6 +55,14 @@ public class Accumulator {
         return new Accumulator(M, V, E, mask);
     }
 
+    public static Accumulator createZeroAccumulator() {
+        final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
+                                        3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        final Matrix zeroE = new Matrix(1, 1);
+
+        return new Accumulator(zeroM, zeroV, zeroE, 0);
+    }
 
     // getters and setters...
     public Matrix getM() {

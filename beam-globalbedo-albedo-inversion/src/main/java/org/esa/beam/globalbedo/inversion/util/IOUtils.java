@@ -69,16 +69,18 @@ public class IOUtils {
         return bbdrProducts;
     }
 
-    public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir, String tile, int year) throws
-            IOException {
+    public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
+                                                                        String tile,
+                                                                        int year,
+                                                                        int iDay) throws IOException {
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
-        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles);
+        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, iDay);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
-        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles);
+        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, iDay);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -119,13 +121,16 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    static List<String> getDailyBBDRFilenamesSinglePixel(String[] bbdrFilenames) {
+    static List<String> getDailyBBDRFilenamesSinglePixel(String[] bbdrFilenames, int year, int iDay) {
         List<String> dailyBBDRFilenames = new ArrayList<>();
+        final String dateString = AlbedoInversionUtils.getDateFromDoy(year, iDay);
         if (bbdrFilenames != null && bbdrFilenames.length > 0)
             for (String s : bbdrFilenames)
-                if ((s.endsWith(".dim") || s.endsWith(".nc") ||
-                        s.endsWith(".dim.gz") || s.endsWith(".nc.gz"))) {
-                    dailyBBDRFilenames.add(s);
+                if (s.contains(dateString)) {
+                    if ((s.endsWith(".dim") || s.endsWith(".nc") ||
+                            s.endsWith(".dim.gz") || s.endsWith(".nc.gz"))) {
+                        dailyBBDRFilenames.add(s);
+                    }
                 }
 
         Collections.sort(dailyBBDRFilenames);

@@ -32,8 +32,6 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l3.fullacc")
 public class GlobalbedoLevel3FullAccumulation extends Operator implements Output {
 
-    private static final double HALFLIFE = 11.54;
-
     private int rasterWidth;
     private int rasterHeight;
 
@@ -277,7 +275,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
 
     private static float getWeight(String filename, AlbedoInput inputProduct) {
         final int difference = getDayDifference(filename, inputProduct);
-        return (float) Math.exp(-1.0 * Math.abs(difference) / HALFLIFE);
+        return (float) Math.exp(-1.0 * Math.abs(difference) / AlbedoInversionConstants.HALFLIFE);
     }
 
 

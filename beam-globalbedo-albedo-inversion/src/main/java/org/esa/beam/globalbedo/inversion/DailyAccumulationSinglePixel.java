@@ -45,7 +45,7 @@ public class DailyAccumulationSinglePixel {
         if (isLandFilter(sourceProductIndex) || isSnowFilter(sourceProductIndex) ||
                 isBBDRFilter(bbdr) || isSDFilter(SD)) {
             // do not consider non-land pixels, non-snowfilter pixels, pixels with BBDR == 0.0 or -9999.0, SD == 0.0
-            return getZeroAccumulator();
+            return Accumulator.createZeroAccumulator();
         }
 
         // get kernels...
@@ -94,22 +94,13 @@ public class DailyAccumulationSinglePixel {
         if (inverseCDiagFlat != null) {
             kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
         } else {
-            return getZeroAccumulator();
+            return Accumulator.createZeroAccumulator();
         }
         final Matrix V = kernelTimesInvCDiag.times(bbdr);
         final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
         // return result
         return new Accumulator(M, V, E, 1);
-    }
-
-    private Accumulator getZeroAccumulator() {
-        final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        final Matrix zeroE = new Matrix(1, 1);
-
-        return new Accumulator(zeroM, zeroV, zeroE, 0);
     }
 
     private Matrix getBBDR(int sourceProductIndex) {
