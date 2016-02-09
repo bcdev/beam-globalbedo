@@ -1,5 +1,8 @@
 package org.esa.beam.globalbedo.inversion;
 
+import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -8,8 +11,13 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
+import org.esa.beam.gpf.operators.standard.SubsetOp;
+import org.esa.beam.gpf.operators.standard.WriteOp;
+import org.esa.beam.util.io.FileUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import java.awt.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -32,6 +40,9 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
+
+    @Parameter(defaultValue = "", description = "Inversion target directory")
+    private String inversionDir;
 
     @Parameter(description = "MODIS tile")
     private String tile;
@@ -81,6 +92,11 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     public void initialize() throws OperatorException {
 
         Logger logger = BeamLogManager.getSystemLogger();
+
+        if (inversionDir == null) {
+            inversionDir = gaRootDir + File.separator + "Inversion_single" + File.separator + year +
+                    File.separator + tile;
+        }
 
         // procedure:
         // - input: year, process in memory all doys of this year
@@ -134,6 +150,8 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         }
         final Accumulator[] allDailyAccs = allDailyAccsList.toArray(new Accumulator[allDailyAccsList.size()]);
 
+
+
         for (int doy = 1; doy < 46; doy += 8) {    // todo: use constants
             // STEP 2: do full accumulation
             //  Start full acc for the 46 doys
@@ -168,9 +186,19 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                         + File.separator + year + File.separator + tile;
 
                 // STEP 3: we need to attach a geocoding to the Prior product...
+                Product priorSinglePixelProduct = null;
                 if (usePrior) {
                     try {
                         IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
+                        SubsetOp subsetOp = new SubsetOp();
+                        subsetOp.setParameterDefaultValues();
+                        subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
+                        priorSinglePixelProduct = subsetOp.getTargetProduct();
+                        if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
+                                priorSinglePixelProduct.getSceneRasterHeight() != 1) {
+                            logger.log(Level.WARNING, ("Prior subset does not match 1x1 dimension - will not use this Prior!"));
+                            usePrior = false;
+                        }
                     } catch (IOException e) {
                         throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                     }
@@ -185,11 +213,10 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 // e.g.:
                 // - store pixelX, pixelY from original BBDR single pixel files
                 // - then take prior product for given year/doy/tile/Xsnow and extract matrix for that pixel
-                if (priorProduct != null) {
-                    inversionSinglePixelOp.setSourceProduct("priorProduct", priorProduct);
+                if (usePrior && priorSinglePixelProduct != null) {
+                    inversionSinglePixelOp.setSourceProduct("priorProduct", priorSinglePixelProduct);
                 } else {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(1, 1);
                     inversionSinglePixelOp.setSourceProduct("priorProduct", dummySourceProduct);
                 }
                 inversionSinglePixelOp.setParameter("year", year);
@@ -201,7 +228,6 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 inversionSinglePixelOp.setParameter("usePrior", usePrior);
                 inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
                 inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
-                // todo: make sure we get a 1x1 product!
                 Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
 
                 if (priorProduct == null) {
@@ -209,7 +235,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                     inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
                 }
 
-                setTargetProduct(inversionProduct);     // todo: use WriteOp for the 46 BRDF products
+                writeCsvProduct(inversionProduct, getInversionFilename(doy));
             } else {
                 logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                         IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
@@ -218,7 +244,29 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
             logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
         }
+
+        setTargetProduct(new Product("dummy", "dummy", 1, 1));
     }
+
+    private String getInversionFilename(int doy) {
+        // we want e.g.:
+        // ../GlobAlbedoTest/Inversion_single/Snow/2005/h18v03/
+        //   GlobAlbedo.brdf.single.2005121.h18v04.<pixelX>.<pixelY>.Snow.nc
+        final String snowString = computeSnow ? "Snow" : "NoSnow";
+        final String inversionFileName = "GlobAlbedo.brdf.single." + year + "." + doy + "." + tile + "." +
+                pixelX + "." + pixelY + "." + snowString;
+        return inversionFileName;
+    }
+
+
+    private void writeCsvProduct(Product product, String productName) {
+        File dir = new File(inversionDir);
+        dir.mkdirs();
+        File file = new File(dir, productName + ".csv");
+        WriteOp writeOp = new WriteOp(product, file, "CSV");
+        writeOp.writeProduct(ProgressMonitor.NULL);
+    }
+
 
     public static class Spi extends OperatorSpi {
 

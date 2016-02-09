@@ -304,7 +304,7 @@ public class AlbedoInversionUtils {
         }
 //        b.setDataElems(bData); // deprecated
         b.setRasterData(ProductData.createInstance(bData));
-        product.setPreferredTileSize(product.getSceneRasterWidth(), 45);
+        product.setPreferredTileSize(product.getSceneRasterWidth(), Math.min(45, product.getSceneRasterHeight()));
 
         return product;
     }
