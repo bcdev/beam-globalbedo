@@ -10,12 +10,11 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 
 import java.awt.*;
 
-@OperatorMetadata(alias = "ga.inversion.fullacctodimap",
+@OperatorMetadata(alias = "ga.l3.acc2dimap",
                   description = "Utility operator to write a full or daily accumulator into a Dimap product for debugging.",
                   version = "1.0",
                   copyright = "(C) 2013 by Brockmann Consult")
@@ -28,7 +27,7 @@ public class AccToDimapOp extends Operator {
     private int doy;
 
     @Parameter(description = "Full accumulator filename (full path)")
-    private String fullAccumulatorFilePath;
+    private String accumulatorFilePath;
 
     @Parameter(description = "raster width", defaultValue="1200")
     private int rasterWidth;
@@ -43,13 +42,13 @@ public class AccToDimapOp extends Operator {
 
     @Override
     public void initialize() throws OperatorException {
-        System.out.println("Reading accumulator file: " + fullAccumulatorFilePath);
+        System.out.println("Reading accumulator file: " + accumulatorFilePath);
         int numBands =  IOUtils.getDailyAccumulatorBandNames().length;
         if (isFullAcc) {
             numBands++;
         }
         fullAcc = IOUtils.getAccumulatorFromBinaryFile
-                (year, doy, fullAccumulatorFilePath,
+                (year, doy, accumulatorFilePath,
                  numBands,
                  rasterWidth, rasterHeight, isFullAcc);
 
@@ -89,7 +88,7 @@ public class AccToDimapOp extends Operator {
             sumMatrixIndex = 9 * i + j;
         } else if (targetBand.getName().startsWith("V")) {
             final int j = Integer.parseInt(targetBand.getName().substring(2, 3));
-            sumMatrixIndex = 9 * j;
+            sumMatrixIndex = 81 + j;
         } else {
             sumMatrixIndex = 90;
         }

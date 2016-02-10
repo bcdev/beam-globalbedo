@@ -238,6 +238,10 @@ public class InversionOp extends PixelOperator {
 //        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
+        if (x == 1030 && y == 520) {
+            System.out.println("x = " + x);
+        }
+
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 

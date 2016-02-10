@@ -311,4 +311,26 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(236, referenceDate[1]);
     }
 
+    public void testJamaMatrixSolve() {
+        Matrix A = new Matrix(2, 2, 0.0);
+        A.set(0, 0, 1.0);
+        A.set(0, 1, 2.0);
+        A.set(1, 0, 3.0);
+        A.set(1, 0, 4.0);
+        Matrix b = new Matrix(2, 1, 0.0);
+        b.set(0, 0, 5.0);
+        b.set(1, 0, 6.0);
+        Matrix x = A.solve(b);
+        System.out.println("x = " + x.toString());
+
+        A.set(0, 0, 1.00001);
+        A.set(0, 1, 2.00002);
+        A.set(1, 0, 2.9993);
+        A.set(1, 0, 4.0001);
+        b.set(0, 0, 5.0002);
+        b.set(1, 0, 5.9994);
+        x = A.solve(b);
+        System.out.println("x = " + x.toString());
+
+    }
 }

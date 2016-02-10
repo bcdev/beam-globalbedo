@@ -115,28 +115,36 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         List<Accumulator> allDailyAccsList = new ArrayList<>();
         for (int iDay = -90; iDay < 455; iDay++) {
             int currentYear = year;
+            int currentDay;          // currentDay is in [0,365] !!
             if (iDay < 0) {
                 currentYear--;
-                iDay += 365;
-            }
-            if (iDay > 365) {
+                currentDay = iDay + 365;
+            } else if (iDay > 365) {
                 currentYear++;
-                currentYear++;
+                currentDay = iDay - 365;
+            } else {
+                currentDay = iDay;
             }
+
             Product[] inputProducts;
             try {
                 // STEP 1: get BBDR input product list...
                 // todo: apply pixelX, pixelY and version filter
                 final List<Product> inputProductList =
-                        IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, iDay);
+                        IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, currentDay);
                 inputProducts = inputProductList.toArray(new Product[inputProductList.size()]);
             } catch (IOException e) {
                 throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
             }
 
+            if (iDay == 121) {
+                System.out.println("iDay = " + iDay);
+            }
             if (inputProducts.length > 0) {
                 // STEP 2: do daily accumulation
-                logger.log(Level.ALL, "Daily acc 'single': tile: " + tile + ", year: " + year + ", day: ");
+
+                logger.log(Level.ALL, "Daily acc 'single': tile: " +
+                        tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
                 for (Product inputProduct : inputProducts) {
                     logger.log(Level.ALL, "       - ': " + inputProduct.getName());
                 }
@@ -152,7 +160,8 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
 
 
-        for (int doy = 1; doy < 46; doy += 8) {    // todo: use constants
+//        for (int doy = 1; doy < 361; doy += 8) {    // todo: use constants
+        for (int doy = 121; doy < 122; doy += 8) {    // todo: use constants
             // STEP 2: do full accumulation
             //  Start full acc for the 46 doys
             FullAccumulationSinglePixel fullAccumulationSinglePixel = new FullAccumulationSinglePixel(year, doy);
@@ -182,8 +191,6 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 // STEP 2: set paths...
                 final String bbdrString = "BBDR_single";
                 final String bbdrRootDir = gaRootDir + File.separator + bbdrString;
-                String fullAccumulatorDir = bbdrRootDir + File.separator + "FullAcc"
-                        + File.separator + year + File.separator + tile;
 
                 // STEP 3: we need to attach a geocoding to the Prior product...
                 Product priorSinglePixelProduct = null;
@@ -192,6 +199,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                         IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
                         SubsetOp subsetOp = new SubsetOp();
                         subsetOp.setParameterDefaultValues();
+                        subsetOp.setSourceProduct(priorProduct);
                         subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
                         priorSinglePixelProduct = subsetOp.getTargetProduct();
                         if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
@@ -224,6 +232,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 inversionSinglePixelOp.setParameter("doy", doy);
                 inversionSinglePixelOp.setParameter("pixelX", pixelX);
                 inversionSinglePixelOp.setParameter("pixelY", pixelY);
+                inversionSinglePixelOp.setParameter("fullAccumulator", fullAcc);
                 inversionSinglePixelOp.setParameter("computeSnow", computeSnow);
                 inversionSinglePixelOp.setParameter("usePrior", usePrior);
                 inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
@@ -253,7 +262,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         // ../GlobAlbedoTest/Inversion_single/Snow/2005/h18v03/
         //   GlobAlbedo.brdf.single.2005121.h18v04.<pixelX>.<pixelY>.Snow.nc
         final String snowString = computeSnow ? "Snow" : "NoSnow";
-        final String inversionFileName = "GlobAlbedo.brdf.single." + year + "." + doy + "." + tile + "." +
+        final String inversionFileName = "GlobAlbedo.brdf.single." + year + "." + IOUtils.getDoyString(doy) + "." + tile + "." +
                 pixelX + "." + pixelY + "." + snowString;
         return inversionFileName;
     }

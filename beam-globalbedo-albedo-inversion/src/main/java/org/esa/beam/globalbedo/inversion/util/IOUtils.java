@@ -72,15 +72,15 @@ public class IOUtils {
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
                                                                         String tile,
                                                                         int year,
-                                                                        int iDay) throws IOException {
+                                                                        int day) throws IOException {
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
-        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, iDay);
+        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
-        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, iDay);
+        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -95,7 +95,8 @@ public class IOUtils {
         }
 
         if (accInputProductList.size() == 0) {
-            BeamLogManager.getSystemLogger().log(Level.ALL, "No BBDR source products found for year " + year + " ...");
+            BeamLogManager.getSystemLogger().log(Level.ALL, "No BBDR source products found for year/day " +
+                    year + "/" + IOUtils.getDoyString(day) + " ...");
         }
 
         return accInputProductList;
@@ -127,8 +128,7 @@ public class IOUtils {
         if (bbdrFilenames != null && bbdrFilenames.length > 0)
             for (String s : bbdrFilenames)
                 if (s.contains(dateString)) {
-                    if ((s.endsWith(".dim") || s.endsWith(".nc") ||
-                            s.endsWith(".dim.gz") || s.endsWith(".nc.gz"))) {
+                    if ((s.endsWith(".csv") || s.endsWith(".nc"))) {
                         dailyBBDRFilenames.add(s);
                     }
                 }

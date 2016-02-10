@@ -271,6 +271,10 @@ public class InversionSinglePixelOp extends PixelOperator {
             }
 
             if (maskAcc != 0.0) {
+                // todo: we get differences from standard processing as we use here double precision throughout
+                // daily acc --> full acc
+                // test here with matrix elements casted down to float and then back to double
+                // vAccNew := (double) ((float) vAcc.get(0,0)) etc.
                 parameters = mAcc.solve(vAcc);
                 entropy = getEntropy(mAcc);
                 if (usePrior && prior != null && prior.getM() != null) {

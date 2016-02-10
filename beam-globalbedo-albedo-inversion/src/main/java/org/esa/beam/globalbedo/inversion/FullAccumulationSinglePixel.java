@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.util.logging.Level;
@@ -32,19 +33,38 @@ public class FullAccumulationSinglePixel {
         tmpAcc[0][0] = Accumulator.createZeroAccumulator();
         daysToTheClosestSample[0][0] = Integer.MAX_VALUE;
 
-        for (int iDailyAcc = 0; iDailyAcc < numDailyAccs; iDailyAcc++) {   // we have 90 + 365 + 90
-            BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulation: reading daily acc file = " + iDailyAcc + " ...");
 
-            int dayDifference = getDayDifference(iDailyAcc);
+        for (int iDay = -90; iDay < numDailyAccs-90; iDay++) {   // we have 90 + 365 + 90
+            if (iDay == 121) {
+                System.out.println("iDay = " + iDay);
+            }
+
+            int currentYear = year;
+            int currentDay;          // currentDay is in [0,365] !!
+            if (iDay < 0) {
+                currentYear--;
+                currentDay = iDay + 365;
+            } else if (iDay > 365) {
+                currentYear++;
+                currentDay = iDay - 365;
+            } else {
+                currentDay = iDay;
+            }
+
+            BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulation for year/day:  " +
+                    currentYear + "/" + IOUtils.getDoyString(currentDay) + " ...");
+
+            int dayDifference = getDayDifference(currentDay);
             final float weight = getWeight(dayDifference);
 
-            tmpAcc[0][0].setM(tmpAcc[0][0].getM().plus(allDailyAccs[iDailyAcc].getM().times(weight)));
-            tmpAcc[0][0].setV(tmpAcc[0][0].getV().plus(allDailyAccs[iDailyAcc].getV().times(weight)));
-            tmpAcc[0][0].setE(tmpAcc[0][0].getE().plus(allDailyAccs[iDailyAcc].getE().times(weight)));
+            tmpAcc[0][0].setM(tmpAcc[0][0].getM().plus(allDailyAccs[iDay+90].getM().times(weight)));
+            tmpAcc[0][0].setV(tmpAcc[0][0].getV().plus(allDailyAccs[iDay+90].getV().times(weight)));
+            tmpAcc[0][0].setE(tmpAcc[0][0].getE().plus(allDailyAccs[iDay+90].getE().times(weight)));
 
             // now update doy of closest sample...
-            final double mask = allDailyAccs[iDailyAcc].getMask();
+            final double mask = allDailyAccs[iDay+90].getMask();
             if (mask > 0.0 ) {
+                tmpAcc[0][0].setMask(1.0);
                 final float value = (float) (Math.abs(dayDifference) + 1);
                 if (value < daysToTheClosestSample[0][0]) {
                     daysToTheClosestSample[0][0] = (float) (Math.abs(dayDifference) + 1);
@@ -62,7 +82,8 @@ public class FullAccumulationSinglePixel {
         } else if (dailAccDay > 90 + 365) {
             referenceYear++;
         }
-        final int difference = 365 * (year - referenceYear) + (doy - dailAccDay);
+//        final int difference = 365 * (year - referenceYear) + (doy - dailAccDay);
+        final int difference = 365 * (year - referenceYear) + ((doy+8) - dailAccDay); // this is like in old code
         return Math.abs(difference);
     }
 
