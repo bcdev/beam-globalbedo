@@ -241,6 +241,9 @@ public class InversionOp extends PixelOperator {
         if (x == 1030 && y == 520) {
             System.out.println("x = " + x);
         }
+        if (x == 837 && y == 370) {
+            System.out.println("x = " + x);
+        }
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
@@ -262,11 +265,14 @@ public class InversionOp extends PixelOperator {
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
-            final Matrix mAcc = accumulator.getM();
-            Matrix vAcc = accumulator.getV();
-            final Matrix eAcc = accumulator.getE();
+//            final Matrix mAcc = accumulator.getM();
+//            Matrix vAcc = accumulator.getV();
+//            final Matrix eAcc = accumulator.getE();
+            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
+            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
+            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
 
-            if (usePrior) {
+            if (usePrior && prior != null) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     double m_ii_accum = mAcc.get(i, i);
                     if (prior.getM() != null) {

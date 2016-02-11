@@ -852,8 +852,8 @@ public class IOUtils {
     private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
         List<String> brdfFileList = new ArrayList<>();
         for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && (s.endsWith(".dim") || s.endsWith(".nc"))) ||
-                    (snow && s.contains(".Snow") && (s.endsWith(".dim") || s.endsWith(".nc")))) {
+            if ((!snow && s.contains(".NoSnow") && (s.endsWith(".dim") || s.endsWith(".nc") || s.endsWith(".csv"))) ||
+                    (snow && s.contains(".Snow") && (s.endsWith(".dim") || s.endsWith(".nc") || s.endsWith(".csv")))) {
                 brdfFileList.add(s);
             }
         }

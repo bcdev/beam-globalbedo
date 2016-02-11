@@ -1,5 +1,7 @@
 package org.esa.beam.globalbedo.inversion;
 
+import Jama.Matrix;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -57,14 +59,20 @@ public class FullAccumulationSinglePixel {
             int dayDifference = getDayDifference(currentDay);
             final float weight = getWeight(dayDifference);
 
-            tmpAcc[0][0].setM(tmpAcc[0][0].getM().plus(allDailyAccs[iDay+90].getM().times(weight)));
-            tmpAcc[0][0].setV(tmpAcc[0][0].getV().plus(allDailyAccs[iDay+90].getV().times(weight)));
-            tmpAcc[0][0].setE(tmpAcc[0][0].getE().plus(allDailyAccs[iDay+90].getE().times(weight)));
+            final Matrix dailyAccM = allDailyAccs[iDay+90].getM();
+            final Matrix dailyAccV = allDailyAccs[iDay+90].getV();
+            final Matrix dailyAccE = allDailyAccs[iDay+90].getE();
+            final double dailyAccMask = allDailyAccs[iDay+90].getMask();
+//            final Matrix dailyAccM = AlbedoInversionUtils.getMatrix2DTruncated(allDailyAccs[iDay+90].getM());
+//            final Matrix dailyAccV = AlbedoInversionUtils.getMatrix2DTruncated(allDailyAccs[iDay+90].getV());
+//            final Matrix dailyAccE = AlbedoInversionUtils.getMatrix2DTruncated(allDailyAccs[iDay+90].getE());
+            tmpAcc[0][0].setM(tmpAcc[0][0].getM().plus(dailyAccM.times(weight)));
+            tmpAcc[0][0].setV(tmpAcc[0][0].getV().plus(dailyAccV.times(weight)));
+            tmpAcc[0][0].setE(tmpAcc[0][0].getE().plus(dailyAccE.times(weight)));
+            tmpAcc[0][0].setMask(tmpAcc[0][0].getMask() + dailyAccMask*weight);
 
             // now update doy of closest sample...
-            final double mask = allDailyAccs[iDay+90].getMask();
-            if (mask > 0.0 ) {
-                tmpAcc[0][0].setMask(1.0);
+            if (dailyAccMask > 0.0 ) {
                 final float value = (float) (Math.abs(dayDifference) + 1);
                 if (value < daysToTheClosestSample[0][0]) {
                     daysToTheClosestSample[0][0] = (float) (Math.abs(dayDifference) + 1);

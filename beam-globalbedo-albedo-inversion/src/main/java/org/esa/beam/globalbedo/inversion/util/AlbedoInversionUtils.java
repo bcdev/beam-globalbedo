@@ -424,4 +424,35 @@ public class AlbedoInversionUtils {
             return (365 - day) + referenceDay;
         }
     }
+
+    public static  Matrix getMatrix2DTruncated(Matrix m) {
+        // this is just because we want to have float precision as in standard algo, where we go down to floats
+        // when writing/reading the binary accumulators.
+        final double[][] mArray = m.getArray();
+        for (int i=0; i<mArray.length; i++) {
+            for (int j = 0; j < mArray[0].length; j++) {
+                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
+                mArray[i][j] = dElem;
+            }
+        }
+        return new Matrix(mArray);
+    }
+
+    public static  Matrix getMatrix1DTruncated(Matrix m) {
+        // this is just because we want to have float precision as in standard algo, where we go down to floats
+        // when writing/reading the binary accumulators.
+        final double[][] mArray = m.getArray();
+        for (int i=0; i<mArray.length; i++) {
+            for (int j = 0; j < mArray[0].length; j++) {
+                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
+                mArray[i][j] = dElem;
+            }
+        }
+        return new Matrix(mArray);
+    }
+
+    public static double truncate(double d) {
+        return Math.round(d * 1000.) / 1000.;
+    }
+
 }
