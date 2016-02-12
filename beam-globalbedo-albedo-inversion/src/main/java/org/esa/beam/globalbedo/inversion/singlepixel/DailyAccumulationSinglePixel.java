@@ -1,24 +1,42 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.singlepixel;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.globalbedo.inversion.Accumulator;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 import java.awt.image.Raster;
 
+/**
+ * Daily accumulation for single pixel mode.
+ *
+ * @author olafd
+ */
 public class DailyAccumulationSinglePixel {
 
     private Product[] sourceProducts;
 
     private boolean computeSnow;
 
+    /**
+     * DailyAccumulationSinglePixel constructor
+     *
+     * @param sourceProducts - the input products to accumulate
+     * @param computeSnow - if true, only snowpixels will be considered
+     */
     public DailyAccumulationSinglePixel(Product[] sourceProducts, boolean computeSnow) {
         this.sourceProducts = sourceProducts;
         this.computeSnow = computeSnow;
     }
 
-    public Accumulator compute() {
+    /**
+     * Performs the daily accumulation
+     *
+     * @return daily accumulator
+     */
+    public Accumulator accumulate() {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
@@ -234,7 +252,7 @@ public class DailyAccumulationSinglePixel {
                 bbSw == 0.0  || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
     }
 
-    static boolean isSDFilter(double[] SD) {
+    private boolean isSDFilter(double[] SD) {
         return (SD[0] == 0.0 && SD[1] == 0.0 && SD[2] == 0.0);
     }
 

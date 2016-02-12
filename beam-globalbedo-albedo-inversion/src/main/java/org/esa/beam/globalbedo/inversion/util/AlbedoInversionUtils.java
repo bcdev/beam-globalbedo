@@ -10,6 +10,7 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.math.MathUtils;
 
+import java.awt.image.Raster;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -450,6 +451,19 @@ public class AlbedoInversionUtils {
         }
         return new Matrix(mArray);
     }
+
+    public static GeoPos getLatLonFromProduct(Product inputProduct) {
+        final Band latBand = inputProduct.getBand(AlbedoInversionConstants.LAT_BAND_NAME);
+        final Raster latData = latBand.getSourceImage().getData();
+        final float latitude = latData.getSampleFloat(0, 0, 0);
+
+        final Band lonBand = inputProduct.getBand(AlbedoInversionConstants.LON_BAND_NAME);
+        final Raster lonData = lonBand.getSourceImage().getData();
+        final float longitude = lonData.getSampleFloat(0, 0, 0);
+
+        return new GeoPos(latitude, longitude);
+    }
+
 
     public static double truncate(double d) {
         return Math.round(d * 1000.) / 1000.;

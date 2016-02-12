@@ -1,20 +1,19 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.singlepixel;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.inversion.Accumulator;
+import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
-import org.esa.beam.util.io.FileUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.*;
@@ -27,12 +26,14 @@ import java.util.logging.Logger;
 
 /**
  * 'Master' operator for the whole single pixel BRDF computation (daily acc, full acc, inversion)
- * todo: adapt implementation!
  *
  * @author Olaf Danne
- * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.inversion.single")
+@OperatorMetadata(alias = "ga.l3.inversion.single",
+        description = "'Master' operator for the whole single pixel BRDF computation (daily acc, full acc, inversion)",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2016 by Brockmann Consult")
 public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
@@ -50,8 +51,8 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(description = "Year")
     private int year;
 
-//    @Parameter(description = "Day of Year", interval = "[1,366]")
-//    private int doy;
+    @Parameter(description = "Day of Year", interval = "[1,366]")
+    private int doy;
 
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
@@ -88,14 +89,18 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(defaultValue = "", description = "y pixel index in tile (as string with leding zero)")
     private String pixelY;
 
+    private float latitude = Float.NaN;
+    private float longitude = Float.NaN;
+
     @Override
     public void initialize() throws OperatorException {
 
         Logger logger = BeamLogManager.getSystemLogger();
 
         if (inversionDir == null) {
+            final String snowDir = computeSnow ? "Snow" : "NoSnow";
             inversionDir = gaRootDir + File.separator + "Inversion_single" + File.separator + year +
-                    File.separator + tile;
+                    File.separator + tile + File.separator + snowDir;
         }
 
         // procedure:
@@ -115,33 +120,34 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         List<Accumulator> allDailyAccsList = new ArrayList<>();
         for (int iDay = -90; iDay < 455; iDay++) {
             int currentYear = year;
-            int currentDay;          // currentDay is in [0,365] !!
+            int currentDay = iDay;          // currentDay is in [0,365] !!
             if (iDay < 0) {
                 currentYear--;
                 currentDay = iDay + 365;
             } else if (iDay > 365) {
                 currentYear++;
                 currentDay = iDay - 365;
-            } else {
-                currentDay = iDay;
             }
 
             Product[] inputProducts;
             try {
                 // STEP 1: get BBDR input product list...
-                // todo: apply pixelX, pixelY and version filter
                 final List<Product> inputProductList =
-                        IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, currentDay);
+                        IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, currentDay,
+                                                                        pixelX, pixelY, versionString);
                 inputProducts = inputProductList.toArray(new Product[inputProductList.size()]);
             } catch (IOException e) {
                 throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
             }
 
-            if (iDay == 121) {
-                System.out.println("iDay = " + iDay);
-            }
             if (inputProducts.length > 0) {
                 // STEP 2: do daily accumulation
+
+                if (Float.isNaN(latitude) || Float.isNaN(longitude)) {
+                    final GeoPos latLon = AlbedoInversionUtils.getLatLonFromProduct(inputProducts[0]);
+                    latitude = latLon.getLat();
+                    longitude = latLon.getLon();
+                }
 
                 logger.log(Level.ALL, "Daily acc 'single': tile: " +
                         tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
@@ -150,7 +156,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 }
                 DailyAccumulationSinglePixel dailyAccumulationSinglePixel =
                         new DailyAccumulationSinglePixel(inputProducts, computeSnow);
-                final Accumulator dailyAcc = dailyAccumulationSinglePixel.compute();
+                final Accumulator dailyAcc = dailyAccumulationSinglePixel.accumulate();
                 allDailyAccsList.add(dailyAcc);
             } else {
                 allDailyAccsList.add(Accumulator.createZeroAccumulator());
@@ -158,101 +164,87 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         }
         final Accumulator[] allDailyAccs = allDailyAccsList.toArray(new Accumulator[allDailyAccsList.size()]);
 
+        // STEP 2: Full accumulation
+        FullAccumulationSinglePixel fullAccumulationSinglePixel = new FullAccumulationSinglePixel(year, doy);
+        FullAccumulator fullAcc = fullAccumulationSinglePixel.accumulate(allDailyAccs);
 
-
-//        for (int doy = 1; doy < 361; doy += 8) {    // todo: use constants
-        for (int doy = 121; doy < 122; doy += 8) {    // todo: use constants
-            // STEP 2: do full accumulation
-            //  Start full acc for the 46 doys
-            FullAccumulationSinglePixel fullAccumulationSinglePixel = new FullAccumulationSinglePixel(year, doy);
-            FullAccumulator fullAcc = fullAccumulationSinglePixel.accumulate(allDailyAccs);  // todo
-
-
-            // STEP 3: Inversion
-            Product priorProduct = null;
-            if (usePrior) {
-                // STEP 1: get Prior input file...
-                String priorDir = priorRootDir + File.separator + tile;
-                if (priorRootDirSuffix != null) {
-                    priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
-                }
-
-                logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
-
-                try {
-                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
-                } catch (IOException e) {
-                    throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                                                        " - cannot proceed...: " + e.getMessage());
-                }
+        // STEP 3: Inversion
+        Product priorProduct = null;
+        if (usePrior) {
+            // STEP 1: get Prior input file...
+            String priorDir = priorRootDir + File.separator + tile;
+            if (priorRootDirSuffix != null) {
+                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
 
-            if (!usePrior || (usePrior && priorProduct != null)) {
-                // STEP 2: set paths...
-                final String bbdrString = "BBDR_single";
-                final String bbdrRootDir = gaRootDir + File.separator + bbdrString;
+            logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
-                // STEP 3: we need to attach a geocoding to the Prior product...
-                Product priorSinglePixelProduct = null;
-                if (usePrior) {
-                    try {
-                        IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
-                        SubsetOp subsetOp = new SubsetOp();
-                        subsetOp.setParameterDefaultValues();
-                        subsetOp.setSourceProduct(priorProduct);
-                        subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
-                        priorSinglePixelProduct = subsetOp.getTargetProduct();
-                        if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
-                                priorSinglePixelProduct.getSceneRasterHeight() != 1) {
-                            logger.log(Level.WARNING, ("Prior subset does not match 1x1 dimension - will not use this Prior!"));
-                            usePrior = false;
-                        }
-                    } catch (IOException e) {
-                        throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
-                    }
-                }
-
-                // STEP 5: do inversion...
-
-                InversionSinglePixelOp inversionSinglePixelOp = new InversionSinglePixelOp();
-                inversionSinglePixelOp.setParameterDefaultValues();
-                Product dummySourceProduct;
-                // todo: properly extract the Prior info for given single pixel:
-                // e.g.:
-                // - store pixelX, pixelY from original BBDR single pixel files
-                // - then take prior product for given year/doy/tile/Xsnow and extract matrix for that pixel
-                if (usePrior && priorSinglePixelProduct != null) {
-                    inversionSinglePixelOp.setSourceProduct("priorProduct", priorSinglePixelProduct);
-                } else {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(1, 1);
-                    inversionSinglePixelOp.setSourceProduct("priorProduct", dummySourceProduct);
-                }
-                inversionSinglePixelOp.setParameter("year", year);
-                inversionSinglePixelOp.setParameter("tile", tile);
-                inversionSinglePixelOp.setParameter("doy", doy);
-                inversionSinglePixelOp.setParameter("pixelX", pixelX);
-                inversionSinglePixelOp.setParameter("pixelY", pixelY);
-                inversionSinglePixelOp.setParameter("fullAccumulator", fullAcc);
-                inversionSinglePixelOp.setParameter("computeSnow", computeSnow);
-                inversionSinglePixelOp.setParameter("usePrior", usePrior);
-                inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
-                inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
-                Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
-
-                if (priorProduct == null) {
-                    // same in the standard mode without using priors...
-                    inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-                }
-
-                writeCsvProduct(inversionProduct, getInversionFilename(doy));
-            } else {
-                logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
-                        IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
+            try {
+                priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
+            } catch (IOException e) {
+                throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
+                                                    " - cannot proceed...: " + e.getMessage());
             }
-
-            logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
-                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
         }
+
+        if (!usePrior || (usePrior && priorProduct != null)) {
+            // STEP 3: we need to attach a geocoding to the Prior product...
+            Product priorSinglePixelProduct = null;
+            if (usePrior && priorProduct != null) {
+                try {
+                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
+                    SubsetOp subsetOp = new SubsetOp();
+                    subsetOp.setParameterDefaultValues();
+                    subsetOp.setSourceProduct(priorProduct);
+                    subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
+                    priorSinglePixelProduct = subsetOp.getTargetProduct();
+                    if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
+                            priorSinglePixelProduct.getSceneRasterHeight() != 1) {
+                        logger.log(Level.WARNING, ("Prior subset does not match 1x1 dimension - will not use this Prior!"));
+                        usePrior = false;
+                    }
+                } catch (IOException e) {
+                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
+                }
+            }
+
+            // STEP 5: do inversion...
+
+            InversionSinglePixelOp inversionSinglePixelOp = new InversionSinglePixelOp();
+            inversionSinglePixelOp.setParameterDefaultValues();
+            Product dummySourceProduct;
+            if (usePrior && priorSinglePixelProduct != null) {
+                inversionSinglePixelOp.setSourceProduct("priorProduct", priorSinglePixelProduct);
+            } else {
+                dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(1, 1);
+                inversionSinglePixelOp.setSourceProduct("priorProduct", dummySourceProduct);
+            }
+
+            inversionSinglePixelOp.setParameter("year", year);
+            inversionSinglePixelOp.setParameter("tile", tile);
+            inversionSinglePixelOp.setParameter("doy", doy);
+            inversionSinglePixelOp.setParameter("latitude", latitude);
+            inversionSinglePixelOp.setParameter("longitude", longitude);
+            inversionSinglePixelOp.setParameter("fullAccumulator", fullAcc);
+            inversionSinglePixelOp.setParameter("computeSnow", computeSnow);
+            inversionSinglePixelOp.setParameter("usePrior", usePrior);
+            inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
+            inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
+            Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
+
+            if (priorProduct == null) {
+                // same in the standard mode without using priors...
+                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+            }
+
+            writeCsvProduct(inversionProduct, getInversionFilename(doy));
+        } else {
+            logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
+                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
+        }
+
+        logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
 
         setTargetProduct(new Product("dummy", "dummy", 1, 1));
     }

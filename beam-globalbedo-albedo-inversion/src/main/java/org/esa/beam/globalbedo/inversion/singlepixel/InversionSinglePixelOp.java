@@ -1,11 +1,10 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.singlepixel;
 
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.SingularValueDecomposition;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -14,6 +13,10 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.globalbedo.inversion.Accumulator;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.FullAccumulator;
+import org.esa.beam.globalbedo.inversion.Prior;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
@@ -21,18 +24,15 @@ import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
 /**
- * Pixel operator implementing the inversion part of python breadboard.
- * The breadboard file is 'AlbedoInversion_multisensor_FullAccum_MultiProcessing.py' provided by Gerardo Lopez Saldana.
+ * Pixel operator for inversion of a single pixel
  *
  * @author Olaf Danne
- * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion",
-        description = "Performs final inversion from fully accumulated optimal estimation matrices",
+        description = "Pixel operator for inversion of a single pixel",
         authors = "Olaf Danne",
         version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
-
+        copyright = "(C) 2016 by Brockmann Consult")
 public class InversionSinglePixelOp extends PixelOperator {
 
     public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
@@ -54,6 +54,8 @@ public class InversionSinglePixelOp extends PixelOperator {
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
     private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
+    private static final int TRG_LAT = 5;
+    private static final int TRG_LON = 6;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
@@ -79,14 +81,17 @@ public class InversionSinglePixelOp extends PixelOperator {
     @Parameter(description = "Day of year")
     private int doy;
 
+    @Parameter(description = "Latitude")
+    private float latitude;
+
+    @Parameter(description = "Latitude")
+    private float longitude;
+
     @Parameter(description = "Full accumulator")
     private FullAccumulator fullAccumulator;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
-
-    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
-    private boolean computeSeaice;
 
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
@@ -140,6 +145,8 @@ public class InversionSinglePixelOp extends PixelOperator {
         productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        productConfigurer.addBand(LAT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        productConfigurer.addBand(LON_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
     }
 
     @Override
@@ -206,6 +213,8 @@ public class InversionSinglePixelOp extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+        configurator.defineSample(offset + TRG_LAT, LAT_BAND_NAME);
+        configurator.defineSample(offset + TRG_LON, LON_BAND_NAME);
     }
 
     @Override
@@ -213,7 +222,7 @@ public class InversionSinglePixelOp extends PixelOperator {
         // we have only one pixel to process!!
 
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1, AlbedoInversionConstants.NO_DATA_VALUE);
-        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
+        Matrix uncertainties;
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
@@ -234,12 +243,12 @@ public class InversionSinglePixelOp extends PixelOperator {
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
         if (singlePixelAccumulator[0][0] != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
-//            final Matrix mAcc = singlePixelAccumulator[0][0].getM();
-//            Matrix vAcc = singlePixelAccumulator[0][0].getV();
-//            final Matrix eAcc = singlePixelAccumulator[0][0].getE();
-            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getM());
-            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getV());
-            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getE());
+            final Matrix mAcc = singlePixelAccumulator[0][0].getM();
+            Matrix vAcc = singlePixelAccumulator[0][0].getV();
+            final Matrix eAcc = singlePixelAccumulator[0][0].getE();
+//            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getM());
+//            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getV());
+//            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(singlePixelAccumulator[0][0].getE());
 //            mAcc.set(2,2, 5955.84); // test!!!
 
             if (usePrior && prior != null) {
@@ -368,6 +377,8 @@ public class InversionSinglePixelOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
+        targetSamples[offset + TRG_LAT].set(latitude);
+        targetSamples[offset + TRG_LON].set(longitude);
 
     }
 

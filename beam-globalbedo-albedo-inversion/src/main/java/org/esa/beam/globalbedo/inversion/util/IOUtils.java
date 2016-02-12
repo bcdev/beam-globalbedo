@@ -72,15 +72,19 @@ public class IOUtils {
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
                                                                         String tile,
                                                                         int year,
-                                                                        int day) throws IOException {
+                                                                        int day,
+                                                                        String pixelX, String pixelY,
+                                                                        String versionString) throws IOException {
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
-        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day);
+        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day,
+                                                                                pixelX, pixelY, versionString);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
-        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day);
+        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day,
+                                                                              pixelX, pixelY, versionString);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -122,12 +126,14 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    static List<String> getDailyBBDRFilenamesSinglePixel(String[] bbdrFilenames, int year, int iDay) {
+    static List<String> getDailyBBDRFilenamesSinglePixel(String[] bbdrFilenames, int year, int iDay,
+                                                         String pixelX, String pixelY, String versionString) {
         List<String> dailyBBDRFilenames = new ArrayList<>();
         final String dateString = AlbedoInversionUtils.getDateFromDoy(year, iDay);
         if (bbdrFilenames != null && bbdrFilenames.length > 0)
             for (String s : bbdrFilenames)
-                if (s.contains(dateString)) {
+                if (s.contains(dateString) && s.contains(pixelX + "_" + pixelY)) {
+                    if (versionString == null || (versionString != null && s.contains(versionString)))
                     if ((s.endsWith(".csv") || s.endsWith(".nc"))) {
                         dailyBBDRFilenames.add(s);
                     }
