@@ -3,15 +3,14 @@ package org.esa.beam.globalbedo.inversion.util;
 import Jama.Matrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
+import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.math.MathUtils;
 
+import java.awt.image.Raster;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -215,6 +214,65 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * gets the corresponding MODIS tile for a given lat/lon pair
+     *
+     * @param latitude - the latitude
+     * @param longitude - the longitude
+     *
+     * @return String
+     */
+    public static String getModisTileFromLatLon(float latitude, float longitude) {
+        int latTileIndex = (90 - (int)latitude)/10;   // e.g. latTileIndex = 3 for 55.49N
+        final int yIndexInTile =
+                (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT * (90.0 - latTileIndex*10.0 - latitude) / 10.0);
+
+        // check tiles on that latitude
+        // e.g. h06v03, h07v03,..., h29v03:
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+        if (longitude >= 0.0) {
+            for (int lonIndex = 18; lonIndex < 36; lonIndex++) {
+                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
+                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
+                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
+                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
+                    // our latitude, and check if our longitude is in between them
+                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
+                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
+                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
+                        return tileToCheck;
+                    }
+                    // we haven't found the tile yet, but are at the off-planet eastern edge now. So this must be the one.
+                    if (!rightGeoPos.isValid())                                                                    {
+                        return tileToCheck;
+                    }
+                }
+            }
+        } else {
+            for (int lonIndex = 17; lonIndex >= 0; lonIndex--) {
+                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
+                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
+                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
+                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
+                    // our latitude, and check if our longitude is in between them
+                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
+                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
+                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
+                        return tileToCheck;
+                    }
+                    // we haven't found the tile yet, but are at the off-planet western edge now. So this must be the one.
+                    if (!leftGeoPos.isValid())                                                                    {
+                        return tileToCheck;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+
+
+    /**
      * Computes solar zenith angle at local noon as function of Geoposition and DoY
      *
      * @param geoPos - geoposition
@@ -247,7 +305,7 @@ public class AlbedoInversionUtils {
         }
 //        b.setDataElems(bData); // deprecated
         b.setRasterData(ProductData.createInstance(bData));
-        product.setPreferredTileSize(product.getSceneRasterWidth(), 45);
+        product.setPreferredTileSize(product.getSceneRasterWidth(), Math.min(45, product.getSceneRasterHeight()));
 
         return product;
     }
@@ -367,4 +425,48 @@ public class AlbedoInversionUtils {
             return (365 - day) + referenceDay;
         }
     }
+
+    public static  Matrix getMatrix2DTruncated(Matrix m) {
+        // this is just because we want to have float precision as in standard algo, where we go down to floats
+        // when writing/reading the binary accumulators.
+        final double[][] mArray = m.getArray();
+        for (int i=0; i<mArray.length; i++) {
+            for (int j = 0; j < mArray[0].length; j++) {
+                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
+                mArray[i][j] = dElem;
+            }
+        }
+        return new Matrix(mArray);
+    }
+
+    public static  Matrix getMatrix1DTruncated(Matrix m) {
+        // this is just because we want to have float precision as in standard algo, where we go down to floats
+        // when writing/reading the binary accumulators.
+        final double[][] mArray = m.getArray();
+        for (int i=0; i<mArray.length; i++) {
+            for (int j = 0; j < mArray[0].length; j++) {
+                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
+                mArray[i][j] = dElem;
+            }
+        }
+        return new Matrix(mArray);
+    }
+
+    public static GeoPos getLatLonFromProduct(Product inputProduct) {
+        final Band latBand = inputProduct.getBand(AlbedoInversionConstants.LAT_BAND_NAME);
+        final Raster latData = latBand.getSourceImage().getData();
+        final float latitude = latData.getSampleFloat(0, 0, 0);
+
+        final Band lonBand = inputProduct.getBand(AlbedoInversionConstants.LON_BAND_NAME);
+        final Raster lonData = lonBand.getSourceImage().getData();
+        final float longitude = lonData.getSampleFloat(0, 0, 0);
+
+        return new GeoPos(latitude, longitude);
+    }
+
+
+    public static double truncate(double d) {
+        return Math.round(d * 1000.) / 1000.;
+    }
+
 }

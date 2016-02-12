@@ -3,6 +3,9 @@ package org.esa.beam.globalbedo.inversion.util;
 import Jama.Matrix;
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.GeoPos;
+import org.junit.Test;
+
+import java.text.DecimalFormat;
 
 /**
  * @author Olaf Danne
@@ -160,6 +163,45 @@ public class AlbedoInversionTest extends TestCase {
         tile = "h13v14";
         assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
         assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
+    }
+
+    @Test
+    public void testGetModisTileFromLatLon() {
+        // Texas
+        float lat = 34.2f;
+        float lon = -101.71f;
+        assertEquals("h09v05", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // MeckPomm
+        lat = 53.44f;
+        lon = 10.57f;
+        assertEquals("h18v03", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // Barrow (a left edge tile)
+        lat = 65.0f;
+        lon = -175.0f;
+        assertEquals("h10v02", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // New Zealand (a right edged tile)
+        lat = -39.5f;
+        lon = 176.71f;
+        assertEquals("h31v12", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+
+        // Antarctica
+        lat = -84.2f;
+        lon = 160.71f;
+        assertEquals("h19v17", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // Siberia
+        lat = 65.2f;
+        lon = 111.71f;
+        assertEquals("h22v02", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // Madagascar
+        lat = -28.0f;
+        lon = 46.1f;
+        assertEquals("h22v11", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
     }
 
     public void testGetSunZenith() {

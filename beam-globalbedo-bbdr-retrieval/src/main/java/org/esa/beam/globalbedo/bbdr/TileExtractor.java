@@ -148,14 +148,22 @@ public class TileExtractor extends Operator implements Output {
         if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
             int parallelism = JAI.getDefaultInstance().getTileScheduler().getParallelism();
             reproject.setPreferredTileSize(reproject.getSceneRasterWidth(), reproject.getSceneRasterHeight() / parallelism);
-            Band referenceBand;
+            Band referenceBand = null;
             if (sdrOnly) {
-                referenceBand = reproject.getBand("sdr_1");
+                for (String bandname : reproject.getBandNames()) {
+                    if (bandname.startsWith("sdr")) {
+                        referenceBand = reproject.getBand(bandname);
+                    }
+                }
             } else {
                 referenceBand = reproject.getBand("BB_VIS");
             }
-            if (containsFloatData(referenceBand, referenceBand.getNoDataValue())) {
-                return reproject;
+            if (referenceBand != null) {
+                if (containsFloatData(referenceBand, referenceBand.getNoDataValue())) {
+                    return reproject;
+                }
+            } else {
+                return null;
             }
         }
         return null;

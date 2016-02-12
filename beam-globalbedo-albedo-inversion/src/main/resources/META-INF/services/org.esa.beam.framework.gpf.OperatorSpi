@@ -4,7 +4,9 @@ org.esa.beam.globalbedo.inversion.DailyAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3DailyAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3FullAccumulation$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Inversion$Spi
+org.esa.beam.globalbedo.inversion.singlepixel.GlobalbedoLevel3InversionSinglePixel$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
+org.esa.beam.globalbedo.inversion.singlepixel.GlobalbedoLevel3AlbedoSinglePixel$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi

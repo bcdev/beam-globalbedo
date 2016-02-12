@@ -38,6 +38,9 @@ public class AlbedoInversionConstants {
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD = "Days_to_the_Closest_Sample";
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME= "Time_to_the_Closest_Sample";    // for CEMS todo: generalize!!
 
+    public static final String LAT_BAND_NAME= "latitude";
+    public static final String LON_BAND_NAME= "longitude";
+
     public static final String PRIOR_NSAMPLES_NAME =  "N samples";
     public static final String PRIOR_MASK_NAME =  "Mask";
 

@@ -41,26 +41,16 @@ public class IOUtils {
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
         final List<String> merisBbdrFileList = getDailyBBDRFilenames(merisBbdrFiles, daystring);
 
-        final String aatsrBbdrDir = bbdrRootDir + File.separator + "AATSR" + File.separator + year + File.separator + tile;
-        final String[] aatsrBbdrFiles = (new File(aatsrBbdrDir)).list();
-        final List<String> aatsrBbdrFileList = getDailyBBDRFilenames(aatsrBbdrFiles, daystring);
-
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         final List<String> vgtBbdrFileList = getDailyBBDRFilenames(vgtBbdrFiles, daystring);
 
-        final int numberOfInputProducts = merisBbdrFileList.size() + aatsrBbdrFileList.size() + vgtBbdrFileList.size();
+        final int numberOfInputProducts = merisBbdrFileList.size() + vgtBbdrFileList.size();
         Product[] bbdrProducts = new Product[numberOfInputProducts];
 
         int productIndex = 0;
         for (String merisBBDRFileName : merisBbdrFileList) {
             String sourceProductFileName = merisBbdrDir + File.separator + merisBBDRFileName;
-            Product product = ProductIO.readProduct(sourceProductFileName);
-            bbdrProducts[productIndex] = product;
-            productIndex++;
-        }
-        for (String aatsrBBDRFileName : aatsrBbdrFileList) {
-            String sourceProductFileName = aatsrBbdrDir + File.separator + aatsrBBDRFileName;
             Product product = ProductIO.readProduct(sourceProductFileName);
             bbdrProducts[productIndex] = product;
             productIndex++;
@@ -79,27 +69,41 @@ public class IOUtils {
         return bbdrProducts;
     }
 
-    public static Product[] getAccumulationInputProducts(String bbdrRootDir,
-                                                         String[] sensors,
-                                                         String tile,
-                                                         int[] referenceDate) throws IOException {
-        final int referenceYear = referenceDate[0];
-        final int referenceDoy = referenceDate[1];
+    public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
+                                                                        String tile,
+                                                                        int year,
+                                                                        int day,
+                                                                        String pixelX, String pixelY,
+                                                                        String versionString) throws IOException {
 
-        final String daystring = AlbedoInversionUtils.getDateFromDoy(referenceYear, referenceDoy);
-        List<Product> bbdrProductsList = new ArrayList<>();
-        for (String sensor : sensors) {
-            final String sensorBbdrDir = bbdrRootDir + File.separator + sensor + File.separator + referenceYear + File.separator + tile;
-            final String[] sensorBbdrFiles = (new File(sensorBbdrDir)).list();
-            final List<String> sensorBbdrFileList = getDailyBBDRFilenames(sensorBbdrFiles, daystring);
-            for (String sensorBbdrFileName : sensorBbdrFileList) {
-                String sourceProductFileName = sensorBbdrDir + File.separator + sensorBbdrFileName;
-                Product product = ProductIO.readProduct(sourceProductFileName);
-                bbdrProductsList.add(product);
-            }
+        final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
+        final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
+        final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day,
+                                                                                pixelX, pixelY, versionString);
+
+        final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
+        final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
+        final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day,
+                                                                              pixelX, pixelY, versionString);
+
+        List<Product> accInputProductList = new ArrayList<>();
+        for (String merisBBDRFileName : merisBbdrFileList) {
+            String sourceProductFileName = merisBbdrDir + File.separator + merisBBDRFileName;
+            Product product = ProductIO.readProduct(sourceProductFileName);
+            accInputProductList.add(product);
+        }
+        for (String vgtBBDRFileName : vgtBbdrFileList) {
+            String sourceProductFileName = vgtBbdrDir + File.separator + vgtBBDRFileName;
+            Product product = ProductIO.readProduct(sourceProductFileName);
+            accInputProductList.add(product);
         }
 
-        return bbdrProductsList.toArray(new Product[bbdrProductsList.size()]);
+        if (accInputProductList.size() == 0) {
+            BeamLogManager.getSystemLogger().log(Level.ALL, "No BBDR source products found for year/day " +
+                    year + "/" + IOUtils.getDoyString(day) + " ...");
+        }
+
+        return accInputProductList;
     }
 
     /**
@@ -116,6 +120,23 @@ public class IOUtils {
                 if ((s.endsWith(".dim") || s.endsWith(".nc") ||
                         s.endsWith(".dim.gz") || s.endsWith(".nc.gz")) && s.contains(daystring)) {
                     dailyBBDRFilenames.add(s);
+                }
+
+        Collections.sort(dailyBBDRFilenames);
+        return dailyBBDRFilenames;
+    }
+
+    static List<String> getDailyBBDRFilenamesSinglePixel(String[] bbdrFilenames, int year, int iDay,
+                                                         String pixelX, String pixelY, String versionString) {
+        List<String> dailyBBDRFilenames = new ArrayList<>();
+        final String dateString = AlbedoInversionUtils.getDateFromDoy(year, iDay);
+        if (bbdrFilenames != null && bbdrFilenames.length > 0)
+            for (String s : bbdrFilenames)
+                if (s.contains(dateString) && s.contains(pixelX + "_" + pixelY)) {
+                    if (versionString == null || (versionString != null && s.contains(versionString)))
+                    if ((s.endsWith(".csv") || s.endsWith(".nc"))) {
+                        dailyBBDRFilenames.add(s);
+                    }
                 }
 
         Collections.sort(dailyBBDRFilenames);
@@ -159,8 +180,6 @@ public class IOUtils {
         final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
         final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
         final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
         ModisTileGeoCoding geoCoding;
@@ -224,7 +243,6 @@ public class IOUtils {
     }
 
     public static String getDoyString(int doy) {
-        String doyString = Integer.toString(doy);
         if (doy < 0 || doy > 366) {
             return null;
         } else {
@@ -233,7 +251,6 @@ public class IOUtils {
     }
 
     public static String getMonthString(int month) {
-        String monthString = Integer.toString(month);
         if (month < 0 || month > 12) {
             return null;
         } else {
@@ -477,19 +494,19 @@ public class IOUtils {
 
     }
 
-    public static String[][] getNewPriorCovarianceBandNames() {
-        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            // only UR triangle matrix
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                bandNames[i][j] = "Cov_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
-            }
-        }
-        return bandNames;
-
-    }
+//    public static String[][] getNewPriorCovarianceBandNames() {
+//        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+//                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+//        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+//            // only UR triangle matrix
+//            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+//                bandNames[i][j] = "Cov_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
+//                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
+//            }
+//        }
+//        return bandNames;
+//
+//    }
 
     public static String[] getAlbedoDhrBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -841,8 +858,8 @@ public class IOUtils {
     private static List<String> getBrdfProductNames(String[] brdfFiles, boolean snow) {
         List<String> brdfFileList = new ArrayList<>();
         for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && (s.endsWith(".dim") || s.endsWith(".nc"))) ||
-                    (snow && s.contains(".Snow") && (s.endsWith(".dim") || s.endsWith(".nc")))) {
+            if ((!snow && s.contains(".NoSnow") && (s.endsWith(".dim") || s.endsWith(".nc") || s.endsWith(".csv"))) ||
+                    (snow && s.contains(".Snow") && (s.endsWith(".dim") || s.endsWith(".nc") || s.endsWith(".csv")))) {
                 brdfFileList.add(s);
             }
         }

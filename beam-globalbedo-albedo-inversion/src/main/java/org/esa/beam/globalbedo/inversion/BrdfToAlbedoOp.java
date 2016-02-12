@@ -64,6 +64,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
+    private String latBandName;
+    private String lonBandName;
 
     private static final int[] TRG_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_DHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -76,14 +78,23 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private static final int TRG_GOODNESS_OF_FIT = 2;
     private static final int TRG_SNOW_FRACTION = 3;
     private static final int TRG_DATA_MASK = 4;
-    private static final int TRG_SZA = 5;
 
+
+    private static final int TRG_SZA = 5;
+    private static final int TRG_LAT = 6;
+    private static final int TRG_LON = 7;
 
     @SourceProduct(description = "BRDF merged product")
     private Product brdfMergedProduct;
 
     @Parameter(description = "doy")
     private int doy;
+
+    @Parameter(description = "Geoposition")
+    private GeoPos latLon ;
+
+    @Parameter(defaultValue = "false", description = "If true, a single pixel is processed (CSV I/O)")
+    private boolean singlePixelMode ;
 
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
@@ -104,9 +115,16 @@ public class BrdfToAlbedoOp extends PixelOperator {
         Uncertainties = U^T C^-1 U , U is stored as a 1X9 vector (transpose), so, actually U^T is the regulat 9x1 vector
         */
 
-        final PixelPos pixelPos = new PixelPos(x, y);
-        final GeoPos geoPos = brdfMergedProduct.getGeoCoding().getGeoPos(pixelPos, null);
-        final double SZAdeg = AlbedoInversionUtils.computeSza(geoPos, doy);
+        if (x == 1030 && y == 520) {
+            System.out.println("x = " + x);
+        }
+
+        if (!singlePixelMode) {
+            // the standard mode. In single pixel mode, lat/lon are provided
+            final PixelPos pixelPos = new PixelPos(x, y);
+            latLon = brdfMergedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+        }
+        final double SZAdeg = AlbedoInversionUtils.computeSza(latLon, doy);
         final double SZA = SZAdeg * MathUtils.DTOR;
 
         final Matrix C = getCMatrixFromInversionProduct(sourceSamples);
@@ -361,6 +379,14 @@ public class BrdfToAlbedoOp extends PixelOperator {
                 b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             }
         }
+
+        if (singlePixelMode) {
+            latBandName = AlbedoInversionConstants.LAT_BAND_NAME;
+            targetProduct.addBand(latBandName, ProductData.TYPE_FLOAT32);
+
+            lonBandName = AlbedoInversionConstants.LON_BAND_NAME;
+            targetProduct.addBand(lonBandName, ProductData.TYPE_FLOAT32);
+        }
     }
 
     @Override
@@ -455,6 +481,12 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index, szaBandName);
+
+        if (singlePixelMode) {
+            index++;
+            configurator.defineSample(index++, latBandName);
+            configurator.defineSample(index, lonBandName);
+        }
     }
 
 
@@ -568,6 +600,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
         targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
         targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
         targetSamples[index + TRG_SZA].set(result.getSza());
+        if (singlePixelMode) {
+            targetSamples[index + TRG_LAT].set(latLon.getLat());
+            targetSamples[index + TRG_LON].set(latLon.getLon());
+        }
     }
 
     private Matrix getCMatrixFromInversionProduct(Sample[] sourceSamples) {

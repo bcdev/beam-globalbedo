@@ -25,6 +25,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -170,6 +171,11 @@ public class GlobalbedoLevel3Albedo extends Operator {
         }
 
         if (brdfMergedProduct != null) {
+            if (brdfMergedProduct.getGeoCoding() == null) {
+                final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(tile);
+                brdfMergedProduct.setGeoCoding(sinusoidalTileGeocoding);
+            }
+
             if (mergedProductOnly) {
                 setTargetProduct(brdfMergedProduct);
             } else {
