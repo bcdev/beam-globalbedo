@@ -8,6 +8,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
@@ -92,6 +93,11 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(defaultValue = "", description = "y pixel index in tile (as string with leding zero)")
     private String pixelY;
 
+
+    @SourceProduct(description = "Prior product as single pixel (i.e. CSV)", optional = true)
+    private Product priorPixelProduct;
+
+
     private float latitude = Float.NaN;
     private float longitude = Float.NaN;
 
@@ -173,14 +179,15 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
         // STEP 3: Inversion
         Product priorProduct = null;
-        if (usePrior) {
+        if (usePrior && priorPixelProduct == null) {
             // STEP 1: get Prior input file...
             String priorDir = priorRootDir + File.separator + tile;
             if (priorRootDirSuffix != null) {
                 priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
 
-            logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
+            logger.log(Level.ALL, "No single pixel Prior set - searching for prior file in directory: '" +
+                    priorDir + "'...");
 
             try {
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
@@ -190,66 +197,70 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
             }
         }
 
-        if (!usePrior || (usePrior && priorProduct != null)) {
+        if (!usePrior || (usePrior && (priorProduct != null || priorPixelProduct != null))) {
             // STEP 3: we need to attach a geocoding to the Prior product...
             Product priorSinglePixelProduct = null;
-            if (usePrior && priorProduct != null) {
-                try {
-                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
-                    SubsetOp subsetOp = new SubsetOp();
-                    subsetOp.setParameterDefaultValues();
-                    subsetOp.setSourceProduct(priorProduct);
-                    subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
-                    priorSinglePixelProduct = subsetOp.getTargetProduct();
-                    if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
-                            priorSinglePixelProduct.getSceneRasterHeight() != 1) {
-                        logger.log(Level.WARNING, ("Prior subset does not match 1x1 dimension - will not use this Prior!"));
-                        usePrior = false;
+            if (usePrior) {
+                if (priorProduct != null) {
+                    try {
+                        IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, null);
+                        SubsetOp subsetOp = new SubsetOp();
+                        subsetOp.setParameterDefaultValues();
+                        subsetOp.setSourceProduct(priorProduct);
+                        subsetOp.setRegion(new Rectangle(Integer.parseInt(pixelX), Integer.parseInt(pixelY), 1, 1));
+                        priorSinglePixelProduct = subsetOp.getTargetProduct();
+                        if (priorSinglePixelProduct.getSceneRasterWidth() != 1 ||
+                                priorSinglePixelProduct.getSceneRasterHeight() != 1) {
+                            logger.log(Level.WARNING, ("Prior subset does not match 1x1 dimension - will not use this Prior!"));
+                            usePrior = false;
+                        }
+                    } catch (IOException e) {
+                        throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
                     }
-                } catch (IOException e) {
-                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
+                } else {
+                    priorSinglePixelProduct = priorPixelProduct;
                 }
-            }
 
-            // STEP 5: do inversion...
+                // STEP 5: do inversion...
 
-            InversionSinglePixelOp inversionSinglePixelOp = new InversionSinglePixelOp();
-            inversionSinglePixelOp.setParameterDefaultValues();
-            Product dummySourceProduct;
-            if (usePrior && priorSinglePixelProduct != null) {
-                inversionSinglePixelOp.setSourceProduct("priorProduct", priorSinglePixelProduct);
+                InversionSinglePixelOp inversionSinglePixelOp = new InversionSinglePixelOp();
+                inversionSinglePixelOp.setParameterDefaultValues();
+                Product dummySourceProduct;
+                if (usePrior && priorSinglePixelProduct != null) {
+                    inversionSinglePixelOp.setSourceProduct("priorProduct", priorSinglePixelProduct);
+                } else {
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(1, 1);
+                    inversionSinglePixelOp.setSourceProduct("priorProduct", dummySourceProduct);
+                }
+
+                inversionSinglePixelOp.setParameter("year", year);
+                inversionSinglePixelOp.setParameter("tile", tile);
+                inversionSinglePixelOp.setParameter("doy", doy);
+                inversionSinglePixelOp.setParameter("latitude", latitude);
+                inversionSinglePixelOp.setParameter("longitude", longitude);
+                inversionSinglePixelOp.setParameter("fullAccumulator", fullAcc);
+                inversionSinglePixelOp.setParameter("computeSnow", computeSnow);
+                inversionSinglePixelOp.setParameter("usePrior", usePrior);
+                inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
+                inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
+                Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
+
+                if (priorProduct == null) {
+                    // same in the standard mode without using priors...
+                    inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                }
+
+                writeCsvProduct(inversionProduct, getInversionFilename(doy));
             } else {
-                dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(1, 1);
-                inversionSinglePixelOp.setSourceProduct("priorProduct", dummySourceProduct);
+                logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
+                        IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
             }
 
-            inversionSinglePixelOp.setParameter("year", year);
-            inversionSinglePixelOp.setParameter("tile", tile);
-            inversionSinglePixelOp.setParameter("doy", doy);
-            inversionSinglePixelOp.setParameter("latitude", latitude);
-            inversionSinglePixelOp.setParameter("longitude", longitude);
-            inversionSinglePixelOp.setParameter("fullAccumulator", fullAcc);
-            inversionSinglePixelOp.setParameter("computeSnow", computeSnow);
-            inversionSinglePixelOp.setParameter("usePrior", usePrior);
-            inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
-            inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
-            Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
+            logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
 
-            if (priorProduct == null) {
-                // same in the standard mode without using priors...
-                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-            }
-
-            writeCsvProduct(inversionProduct, getInversionFilename(doy));
-        } else {
-            logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
-                    IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
+            setTargetProduct(new Product("dummy", "dummy", 1, 1));
         }
-
-        logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
-                IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
-
-        setTargetProduct(new Product("dummy", "dummy", 1, 1));
     }
 
     private String getInversionFilename(int doy) {
