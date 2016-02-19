@@ -42,33 +42,38 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class SdrProbavOp extends BbdrMasterOp {
 
-    @SourceProduct(description = "ERA Interim product with OZO and CWV")
+    @SourceProduct(description = "ERA Interim product with OZO and CWV", optional = true)
     private Product eraInterimProduct;
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
         super.configureSourceSamples(configurator);
 
-        configurator.defineSample(SRC_ERA_INTERIM_OZO_TIME, "tco3", eraInterimProduct);
-        configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
+        if (eraInterimProduct != null) {
+            configurator.defineSample(SRC_ERA_INTERIM_OZO_TIME, "tco3", eraInterimProduct);
+            configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
+        }
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status;
         status = sourceSamples[SRC_STATUS].getInt();
+//        if (status == StatusPostProcessOp.STATUS_CLOUD_SHADOW) {
+//            System.out.println("status = " + status);
+//        }
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
         } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
             // not land and not snow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+        targetSamples[TRG_SDR_STATUS].set(status);
 
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
@@ -89,10 +94,10 @@ public class SdrProbavOp extends BbdrMasterOp {
                 hsf < aux.getHsfMin() || hsf > aux.getHsfMax()) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // write status
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+            targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 1].set(aot);
+//        targetSamples[TRG_AOD].set(aot);
 
 //        double ozo;
 //        double cwv;
@@ -107,8 +112,12 @@ public class SdrProbavOp extends BbdrMasterOp {
 
         // 1 [atm-cm] = 1000 [DU] = 0.0214144[kg/m²]. We use atm.cm in algo, see Meris! Era interim comes as kg m-2
         final double ozo_conversion = 0.0214144;
-        final double ozo = sourceSamples[SRC_ERA_INTERIM_OZO_TIME].getDouble()/ozo_conversion;
-        final double cwv = sourceSamples[SRC_ERA_INTERIM_WVP_TIME].getDouble();
+        double ozo = BbdrConstants.OZO_CONSTANT_VALUE / ozo_conversion;
+        double cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+        if (eraInterimProduct != null) {
+            ozo = sourceSamples[SRC_ERA_INTERIM_OZO_TIME].getDouble() / ozo_conversion;
+            cwv = sourceSamples[SRC_ERA_INTERIM_WVP_TIME].getDouble();
+        }
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -121,7 +130,7 @@ public class SdrProbavOp extends BbdrMasterOp {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
             if (toaRefl == 0.0 || Double.isNaN(toaRefl)) {
                 // if toa_refl look bad, set to invalid
-                targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+                targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             }
             toaRefl /= Sensor.VGT.getCal2Meris()[i];
             toa_rfl[i] = toaRefl;
@@ -159,7 +168,7 @@ public class SdrProbavOp extends BbdrMasterOp {
         double rfl_nir = rfl_pix[Sensor.VGT.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (Sensor.VGT.getBndvi() * rfl_nir - Sensor.VGT.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[Sensor.VGT.getNumBands() * 2].set(ndvi_land);
+        targetSamples[TRG_SDR_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[Sensor.VGT.getNumBands()];
         double[] err_aod = new double[Sensor.VGT.getNumBands()];

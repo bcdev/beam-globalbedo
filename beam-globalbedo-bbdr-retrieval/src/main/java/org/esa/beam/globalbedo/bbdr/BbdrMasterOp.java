@@ -286,9 +286,13 @@ public class BbdrMasterOp extends PixelOperator {
         if (sdrOnly) {
             SRC_STATUS = SRC_TOA_RFL + sensor.getToaBandNames().length * 2;
 
-            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : (cloud_classif_flags.F_CLOUD ? 4 :" +
-                    "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
-                    "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
+//            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : (cloud_classif_flags.F_CLOUD ? 4 :" +
+//                    "((cloud_classif_flags.F_CLEAR_SNOW) ? 3 :" +
+//                    "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
+
+            // todo: discuss what we want
+            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : (cloud_classif_flags.F_CLOUD_SHADOW ? 5 : (cloud_classif_flags.F_CLOUD ? 4 : (cloud_classif_flags.F_CLEAR_SNOW ? 3 : (cloud_classif_flags.F_WATER ? 2 : 1 ))))";
+
             BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
             statusBd.name = "status";
             statusBd.expression = statusExpression;

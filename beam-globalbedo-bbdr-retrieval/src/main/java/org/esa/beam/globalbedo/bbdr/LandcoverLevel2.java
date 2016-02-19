@@ -107,7 +107,9 @@ public class LandcoverLevel2 extends Operator {
                 break;
             case "PROBAV":
                 sdrOp = new SdrProbavOp();
-                sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
+                if (eraInterimProduct != null) {
+                    sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
+                }
                 break;
             case "AATSR":
             case "AATSR_FWARD":
