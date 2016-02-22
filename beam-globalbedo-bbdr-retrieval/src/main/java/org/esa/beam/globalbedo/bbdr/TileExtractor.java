@@ -151,7 +151,7 @@ public class TileExtractor extends Operator implements Output {
             Band referenceBand = null;
             if (sdrOnly) {
                 for (String bandname : reproject.getBandNames()) {
-                    if (bandname.startsWith("sdr")) {
+                    if (bandname.startsWith("sdr") || isMfgBand(bandname) || isAvhrrLtdrBand(bandname)) {
                         referenceBand = reproject.getBand(bandname);
                     }
                 }
@@ -167,6 +167,15 @@ public class TileExtractor extends Operator implements Output {
             }
         }
         return null;
+    }
+
+    private static boolean isMfgBand(String bandname) {
+        return bandname.toLowerCase().startsWith("brf");
+    }
+
+    private static boolean isAvhrrLtdrBand(String bandname) {
+        return bandname.toLowerCase().startsWith("srefl") || bandname.toLowerCase().equals("szen") ||
+                bandname.toLowerCase().equals("vzen") || bandname.toLowerCase().equals("relaz");
     }
 
     private static boolean containsFloatData(Band band, double noDataValue) {
