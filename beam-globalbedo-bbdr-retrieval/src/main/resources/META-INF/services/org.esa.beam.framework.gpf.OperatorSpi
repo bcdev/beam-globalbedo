@@ -4,6 +4,7 @@ org.esa.beam.globalbedo.bbdr.BbdrFromSdrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrProbavOp$Spi
+org.esa.beam.globalbedo.bbdr.Modis09StatusBitMaskOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrProbavOp$Spi
