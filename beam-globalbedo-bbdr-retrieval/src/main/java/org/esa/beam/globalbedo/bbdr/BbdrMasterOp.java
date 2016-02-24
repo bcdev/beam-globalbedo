@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2016 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -195,7 +195,7 @@ public class BbdrMasterOp extends PixelOperator {
         statusBand.setNoDataValueUsed(true);
 
         final IndexCoding indexCoding = new IndexCoding("status");
-        ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[7];
+        ColorPaletteDef.Point[] points = new ColorPaletteDef.Point[8];
         indexCoding.addIndex("land", StatusPostProcessOp.STATUS_LAND, "");
         points[0] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_LAND, Color.GREEN, "land");
 
@@ -216,6 +216,9 @@ public class BbdrMasterOp extends PixelOperator {
 
         indexCoding.addIndex("ucl_cloud", StatusPostProcessOp.STATUS_UCL_CLOUD, "");
         points[6] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_UCL_CLOUD, Color.ORANGE, "ucl_cloud");
+
+        indexCoding.addIndex("haze", StatusPostProcessOp.STATUS_HAZE, "");
+        points[7] = new ColorPaletteDef.Point(StatusPostProcessOp.STATUS_HAZE, Color.LIGHT_GRAY, "haze");
 
         targetProduct.getIndexCodingGroup().add(indexCoding);
         statusBand.setSampleCoding(indexCoding);
@@ -291,7 +294,12 @@ public class BbdrMasterOp extends PixelOperator {
 //                    "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
 
             // todo: discuss what we want
-            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : (cloud_classif_flags.F_CLOUD ? 4 : (cloud_classif_flags.F_CLOUD_SHADOW ? 5 : (cloud_classif_flags.F_CLEAR_SNOW ? 3 : (cloud_classif_flags.F_WATER ? 2 : 1 ))))";
+            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
+                    "(cloud_classif_flags.F_CLOUD_SHADOW ? 5 : " +
+                    "(cloud_classif_flags.F_CLOUD ? 4 : " +
+                    "(cloud_classif_flags.F_HAZE ? 11 : " +
+                    "(cloud_classif_flags.F_CLEAR_SNOW ? 3 : " +
+                    "(cloud_classif_flags.F_WATER ? 2 : 1 )))))";
 
             BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
             statusBd.name = "status";
