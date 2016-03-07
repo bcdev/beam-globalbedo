@@ -52,6 +52,12 @@ public class ProbavPrepOp extends Operator {
 
     @SourceProduct
     private Product sourceProduct;
+
+    @SourceProduct(alias = "probavUrbanProduct", optional = true,
+            label = "ProbaV urban product",
+            description = "Urban product (only considered for Proba-V Idepix classification, otherwise ignored).")
+    private Product probavUrbanProduct;
+
     @TargetProduct
     private Product targetProduct;
 
@@ -85,12 +91,22 @@ public class ProbavPrepOp extends Operator {
         // and add flag band to targetProduct
         Product idepixProduct;
         if (needPixelClassif) {
-            Map<String, Object> pixelClassParam = new HashMap<>(4);
-            pixelClassParam.put("gaCopyRadiances", false);
-            pixelClassParam.put("gaCopyAnnotations", false);
-            pixelClassParam.put("gaComputeFlagsOnly", true);
-            pixelClassParam.put("gaCloudBufferWidth", 3);
-            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
+//            Map<String, Object> pixelClassParam = new HashMap<>(4);
+//            pixelClassParam.put("gaCopyRadiances", false);
+//            pixelClassParam.put("gaCopyAnnotations", false);
+//            pixelClassParam.put("gaComputeFlagsOnly", true);
+//            pixelClassParam.put("gaCloudBufferWidth", 3);
+//            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
+            GlobAlbedoOp globAlbedoOp = new GlobAlbedoOp();
+            globAlbedoOp.setParameterDefaultValues();
+            globAlbedoOp.setParameter("gaCopyRadiances", false);
+            globAlbedoOp.setParameter("gaCopyAnnotations", false);
+            globAlbedoOp.setParameter("gaComputeFlagsOnly", true);
+            globAlbedoOp.setParameter("gaCloudBufferWidth", 3);
+            globAlbedoOp.setSourceProduct(szaSubProduct);
+            globAlbedoOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            idepixProduct =  globAlbedoOp.getTargetProduct();
+
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
         }
 
