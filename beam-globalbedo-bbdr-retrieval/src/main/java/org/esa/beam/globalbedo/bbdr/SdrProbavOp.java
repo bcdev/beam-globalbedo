@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2016 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -67,7 +67,9 @@ public class SdrProbavOp extends BbdrMasterOp {
             // water, do simple atmospheric correction
             targetSamples[TRG_SDR_STATUS].set(status);
             return;
-        } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
+        } else if (status != StatusPostProcessOp.STATUS_LAND &&
+                status != StatusPostProcessOp.STATUS_SNOW &&
+                status != StatusPostProcessOp.STATUS_HAZE) {
             // not land and not snow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             targetSamples[TRG_SDR_STATUS].set(status);
