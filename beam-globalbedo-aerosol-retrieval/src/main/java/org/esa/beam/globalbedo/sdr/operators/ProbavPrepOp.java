@@ -104,7 +104,9 @@ public class ProbavPrepOp extends Operator {
             globAlbedoOp.setParameter("gaComputeFlagsOnly", true);
             globAlbedoOp.setParameter("gaCloudBufferWidth", 3);
             globAlbedoOp.setSourceProduct(szaSubProduct);
-            globAlbedoOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            if (probavUrbanProduct != null) {
+                globAlbedoOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            }
             idepixProduct =  globAlbedoOp.getTargetProduct();
 
             ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);

@@ -156,7 +156,9 @@ public class GaMasterOp extends Operator {
             ProbavPrepOp probavPrepOp = new ProbavPrepOp();
             probavPrepOp.setParameterDefaultValues();
             probavPrepOp.setSourceProduct(sourceProduct);
-            probavPrepOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            if (probavUrbanProduct != null) {
+                probavPrepOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            }
             reflProduct =  probavPrepOp.getTargetProduct();
 
         }

@@ -98,7 +98,9 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("gaComputeCloudShadow", false);
         gaMasterOp.setParameter("gaComputeCloudBuffer", false);
         gaMasterOp.setSourceProduct(product);
-        gaMasterOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+        if (probavUrbanProduct != null) {
+            gaMasterOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+        }
         return gaMasterOp.getTargetProduct();
     }
 
