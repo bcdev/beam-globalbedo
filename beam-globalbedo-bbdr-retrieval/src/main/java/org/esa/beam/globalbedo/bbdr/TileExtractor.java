@@ -22,7 +22,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
-import org.esa.beam.dataio.dimap.DimapProductConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
@@ -68,9 +67,14 @@ public class TileExtractor extends Operator implements Output {
     @Parameter(defaultValue = "false")
     protected boolean sdrOnly;
 
+    @Parameter(defaultValue = "648")   // default 36x18 (all). set resasonable limit for testing in case of low memory
+    protected int maxTiles;
+
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
     private Geometry sourceGeometry;
+
+    private int tileCounter = 0;
 
     @Override
     public void initialize() throws OperatorException {
@@ -107,8 +111,9 @@ public class TileExtractor extends Operator implements Output {
             try {
                 Future<TileProduct> future = ecs.take();
                 TileProduct tileProduct = future.get();
-                if (tileProduct.product != null) {
+                if (tileProduct.product != null && tileCounter < maxTiles) {
                     writeTileProduct(tileProduct.product, tileProduct.tileName);
+                    tileCounter++;
                 }
             } catch (InterruptedException e) {
                 throw new OperatorException(e);
@@ -170,7 +175,8 @@ public class TileExtractor extends Operator implements Output {
     }
 
     private static boolean isMfgBand(String bandname) {
-        return bandname.toLowerCase().startsWith("brf");
+//        return bandname.toLowerCase().startsWith("brf");
+        return bandname.toLowerCase().startsWith("spectral_brf") || bandname.toLowerCase().startsWith("broadband_brf");
     }
 
     private static boolean isAvhrrLtdrBand(String bandname) {

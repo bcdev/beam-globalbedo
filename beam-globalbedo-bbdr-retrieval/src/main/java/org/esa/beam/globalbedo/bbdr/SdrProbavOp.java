@@ -59,9 +59,16 @@ public class SdrProbavOp extends BbdrMasterOp {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status;
         status = sourceSamples[SRC_STATUS].getInt();
-//        if (status == StatusPostProcessOp.STATUS_CLOUD_SHADOW) {
-//            System.out.println("status = " + status);
-//        }
+
+        if (x == 811 && y == 1294) {
+            // ok
+            System.out.println("x,y,status = " + x + "," + y + "," +status);
+        }
+        if (x == 812 && y == 1294) {
+            // ???
+            System.out.println("x,y,status = " + x + "," + y + "," +status);
+        }
+
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
@@ -69,8 +76,9 @@ public class SdrProbavOp extends BbdrMasterOp {
             return;
         } else if (status != StatusPostProcessOp.STATUS_LAND &&
                 status != StatusPostProcessOp.STATUS_SNOW &&
+                status != StatusPostProcessOp.STATUS_CLOUD_SHADOW &&  // request JM, 20160314
                 status != StatusPostProcessOp.STATUS_HAZE) {
-            // not land and not snow
+            // not land and not snow and not haze and not cloud shadow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             targetSamples[TRG_SDR_STATUS].set(status);
             return;

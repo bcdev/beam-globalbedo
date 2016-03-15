@@ -294,13 +294,23 @@ public class BbdrMasterOp extends PixelOperator {
 //                    "((cloud_classif_flags.F_WATER) ? 2 : 1)))";
 
             // todo: discuss what we want
+//            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
+//                    "(cloud_classif_flags.F_HAZE ? 11 : " +
+//                    "(cloud_classif_flags.F_CLOUD_BUFFER ? 6 : " +
+//                    "(cloud_classif_flags.F_CLOUD_SHADOW ? 5 : " +
+//                    "(cloud_classif_flags.F_CLOUD ? 4 : " +
+//                    "(cloud_classif_flags.F_CLEAR_SNOW ? 3 : " +
+//                    "(cloud_classif_flags.F_WATER ? 2 : 1 ))))))";
+
+            // JM, 20160315:
             String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
-                    "(cloud_classif_flags.F_HAZE ? 11 : " +
+                    "(cloud_classif_flags.F_HAZE AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND cloud_classif_flags.F_LAND ? 11 : " +
                     "(cloud_classif_flags.F_CLOUD_BUFFER ? 6 : " +
-                    "(cloud_classif_flags.F_CLOUD_SHADOW ? 5 : " +
-                    "(cloud_classif_flags.F_CLOUD ? 4 : " +
-                    "(cloud_classif_flags.F_CLEAR_SNOW ? 3 : " +
-                    "(cloud_classif_flags.F_WATER ? 2 : 1 ))))))";
+                    "(cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND cloud_classif_flags.F_LAND ? 5 : " +
+                    "(cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_HAZE ? 4 : " +
+                    "(cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 3 : " +
+                    "(cloud_classif_flags.F_CLEAR_WATER AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 2 : 1 ))))))";
+
 
             BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
             statusBd.name = "status";
