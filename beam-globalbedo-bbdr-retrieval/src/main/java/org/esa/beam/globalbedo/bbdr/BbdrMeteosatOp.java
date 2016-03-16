@@ -10,6 +10,8 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.ProductUtils;
 
 import java.io.IOException;
@@ -82,25 +84,70 @@ public class BbdrMeteosatOp extends Operator {
             }
         }
 
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+
+
         final Band latBand = latlonProduct.getBand(latBandName);
         latBand.setValidPixelExpression("lat != 90 && lon != 90");
         final Band lonBand = latlonProduct.getBand(lonBandName);
         lonBand.setValidPixelExpression("lat != 90 && lon != 90");
         try {
-            targetProductOrigProj.setGeoCoding(new MeteosatGeoCoding(latBand, lonBand, regionID));
+            final MeteosatGeoCoding meteosatGeoCoding = new MeteosatGeoCoding(latBand, lonBand, regionID);
+            targetProductOrigProj.setGeoCoding(meteosatGeoCoding);
+
+            for (int i=0; i<modisTileCoordinates.getTileCount(); i++) {
+                final String tileName = modisTileCoordinates.getTileName(i);
+                checkIfModisTileIntersectsMeteosatDisk(tileName, meteosatGeoCoding);
+            }
+//            checkIfModisTileIntersectsMeteosatDisk("h09v08", meteosatGeoCoding);
+//            checkIfModisTileIntersectsMeteosatDisk("h26v08", meteosatGeoCoding);
+//            checkIfModisTileIntersectsMeteosatDisk("h09v09", meteosatGeoCoding);
+//            checkIfModisTileIntersectsMeteosatDisk("h09v09", meteosatGeoCoding);
+
+
+            // now reproject onto given MODIS SIN tile...
+            return TileExtractor.reproject(targetProductOrigProj, tile);
         } catch (IOException e) {
             throw new OperatorException
                     ("Cannot attach Meteosat geocoding to target product: " + e.getMessage());
         }
 
-        final int tileIndex = ModisTileCoordinates.getInstance().findTileIndex(tile);
-        final double upperLeftX = ModisTileCoordinates.getInstance().getUpperLeftX(tileIndex);
-        final double upperLeftY = ModisTileCoordinates.getInstance().getUpperLeftY(tileIndex);
-        final GeoPos geoPos =
-                targetProductOrigProj.getGeoCoding().getGeoPos(new PixelPos((float) upperLeftX, (float) upperLeftY), null);
+    }
 
-        // now reproject onto given MODIS SIN tile...
-        return TileExtractor.reproject(targetProductOrigProj, tile);
+    static boolean checkIfModisTileIntersectsMeteosatDisk(String tile, MeteosatGeoCoding meteosatGeoCoding) {
+        final ModisTileGeoCoding tileGeoCoding = IOUtils.getSinusoidalTileGeocoding(tile);
+
+        final PixelPos ulPixelPos = new PixelPos(0.5f, 0.5f);
+        final PixelPos urPixelPos = new PixelPos(1200.5f, 0.5f);
+        final PixelPos llPixelPos = new PixelPos(0.5f, 1200.5f);
+        final PixelPos lrPixelPos = new PixelPos(1200.5f, 1200.5f);
+
+        final GeoPos ulGeoPos = tileGeoCoding.getGeoPos(ulPixelPos, null);
+        PixelPos meteosatPixelPos = meteosatGeoCoding.getPixelPos(ulGeoPos, null);
+        if (!Float.isNaN(meteosatPixelPos.x) && !Float.isNaN(meteosatPixelPos.y)) {
+            System.out.println(tile);
+            return true;
+        }
+        final GeoPos urGeoPos = tileGeoCoding.getGeoPos(urPixelPos, null);
+        meteosatPixelPos = meteosatGeoCoding.getPixelPos(urGeoPos, null);
+        if (!Float.isNaN(meteosatPixelPos.x) && !Float.isNaN(meteosatPixelPos.y)) {
+            System.out.println(tile);
+            return true;
+        }
+        final GeoPos llGeoPos = tileGeoCoding.getGeoPos(llPixelPos, null);
+        meteosatPixelPos = meteosatGeoCoding.getPixelPos(llGeoPos, null);
+        if (!Float.isNaN(meteosatPixelPos.x) && !Float.isNaN(meteosatPixelPos.y)) {
+            System.out.println(tile);
+            return true;
+        }
+        final GeoPos lrGeoPos = tileGeoCoding.getGeoPos(lrPixelPos, null);
+        meteosatPixelPos = meteosatGeoCoding.getPixelPos(lrGeoPos, null);
+        if (!Float.isNaN(meteosatPixelPos.x) && !Float.isNaN(meteosatPixelPos.y)) {
+            System.out.println(tile);
+            return true;
+        }
+
+        return false;
     }
 
     @SuppressWarnings({"UnusedDeclaration"})

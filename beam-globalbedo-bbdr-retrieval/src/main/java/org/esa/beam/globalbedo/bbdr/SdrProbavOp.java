@@ -89,7 +89,7 @@ public class SdrProbavOp extends BbdrMasterOp {
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        double aot = sourceSamples[SRC_AOT].getDouble();
+        double aot = Math.max(1.E-3, sourceSamples[SRC_AOT].getDouble());
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
 

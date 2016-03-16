@@ -90,7 +90,7 @@
         <ceresVersion>[0.14,0.15-SNAPSHOT)</ceresVersion>
         <beamVersion>[5.0,5.1-SNAPSHOT)</beamVersion>
         <!--<idepixVersion>2.2.19-SNAPSHOT</idepixVersion>-->
-        <idepixVersion>2.2.25-SNAPSHOT</idepixVersion>
+        <idepixVersion>2.2.26-SNAPSHOT</idepixVersion>
     </properties>
 
     <dependencyManagement>
