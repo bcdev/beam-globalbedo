@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2016 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -65,6 +65,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
     public static final int STATUS_CLOUD_SHADOW = 5;
     public static final int STATUS_CLOUD_BUFFER = 6;
     public static final int STATUS_UCL_CLOUD = 10;
+    public static final int STATUS_HAZE = 11;
 
     static final String STATUS_BAND = "status";
 

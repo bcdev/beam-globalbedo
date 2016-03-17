@@ -80,7 +80,7 @@ public class GlobalbedoLevel2 extends Operator {
         Product productToProcess;
         Product aotProduct;
         if (tile != null && !tile.isEmpty()) {
-            Geometry geometry = TileExtractor.computeProductGeometry(TileExtractor.reproject(sourceProduct, tile));
+            Geometry geometry = TileExtractor.computeProductGeometry(TileExtractor.reprojectToModisTile(sourceProduct, tile));
             if (geometry == null) {
                 throw new OperatorException("Could not get geometry for product");
             }
@@ -162,7 +162,7 @@ public class GlobalbedoLevel2 extends Operator {
             Product bbdrProduct = bbdrOp.getTargetProduct();
 
             if (tile != null && !tile.isEmpty()) {
-                setTargetProduct(TileExtractor.reproject(bbdrProduct, tile));
+                setTargetProduct(TileExtractor.reprojectToModisTile(bbdrProduct, tile));
             } else {
                 setTargetProduct(bbdrProduct);
             }

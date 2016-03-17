@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Brockmann Consult GmbH (info@brockmann-consult.de)
+ * Copyright (C) 2016 Brockmann Consult GmbH (info@brockmann-consult.de)
  *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the Free
@@ -42,39 +42,54 @@ import static java.lang.StrictMath.toRadians;
         copyright = "(C) 2015 by Brockmann Consult")
 public class SdrProbavOp extends BbdrMasterOp {
 
-    @SourceProduct(description = "ERA Interim product with OZO and CWV")
+    @SourceProduct(description = "ERA Interim product with OZO and CWV", optional = true)
     private Product eraInterimProduct;
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
         super.configureSourceSamples(configurator);
 
-        configurator.defineSample(SRC_ERA_INTERIM_OZO_TIME, "tco3", eraInterimProduct);
-        configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
+        if (eraInterimProduct != null) {
+            configurator.defineSample(SRC_ERA_INTERIM_OZO_TIME, "tco3", eraInterimProduct);
+            configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
+        }
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         int status;
         status = sourceSamples[SRC_STATUS].getInt();
+
+        if (x == 811 && y == 1294) {
+            // ok
+            System.out.println("x,y,status = " + x + "," + y + "," +status);
+        }
+        if (x == 812 && y == 1294) {
+            // ???
+            System.out.println("x,y,status = " + x + "," + y + "," +status);
+        }
+
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
-        } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
-            // not land and not snow
+        } else if (status != StatusPostProcessOp.STATUS_LAND &&
+                status != StatusPostProcessOp.STATUS_SNOW &&
+                status != StatusPostProcessOp.STATUS_CLOUD_SHADOW &&  // request JM, 20160314
+                status != StatusPostProcessOp.STATUS_HAZE) {
+            // not land and not snow and not haze and not cloud shadow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+            targetSamples[TRG_SDR_STATUS].set(status);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(status);
+        targetSamples[TRG_SDR_STATUS].set(status);
 
         double vza = sourceSamples[SRC_VZA].getDouble();
         double vaa = sourceSamples[SRC_VAA].getDouble();
         double sza = sourceSamples[SRC_SZA].getDouble();
         double saa = sourceSamples[SRC_SAA].getDouble();
-        double aot = sourceSamples[SRC_AOT].getDouble();
+        double aot = Math.max(1.E-3, sourceSamples[SRC_AOT].getDouble());
         double delta_aot = sourceSamples[SRC_AOT_ERR].getDouble();
         double hsf = sourceSamples[SRC_DEM].getDouble();
 
@@ -89,10 +104,10 @@ public class SdrProbavOp extends BbdrMasterOp {
                 hsf < aux.getHsfMin() || hsf > aux.getHsfMax()) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // write status
-            targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+            targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             return;
         }
-        targetSamples[Sensor.VGT.getNumBands() * 2 + 1].set(aot);
+//        targetSamples[TRG_AOD].set(aot);
 
 //        double ozo;
 //        double cwv;
@@ -107,8 +122,12 @@ public class SdrProbavOp extends BbdrMasterOp {
 
         // 1 [atm-cm] = 1000 [DU] = 0.0214144[kg/m²]. We use atm.cm in algo, see Meris! Era interim comes as kg m-2
         final double ozo_conversion = 0.0214144;
-        final double ozo = sourceSamples[SRC_ERA_INTERIM_OZO_TIME].getDouble()/ozo_conversion;
-        final double cwv = sourceSamples[SRC_ERA_INTERIM_WVP_TIME].getDouble();
+        double ozo = BbdrConstants.OZO_CONSTANT_VALUE / ozo_conversion;
+        double cwv = BbdrConstants.CWV_CONSTANT_VALUE;
+        if (eraInterimProduct != null) {
+            ozo = sourceSamples[SRC_ERA_INTERIM_OZO_TIME].getDouble() / ozo_conversion;
+            cwv = sourceSamples[SRC_ERA_INTERIM_WVP_TIME].getDouble();
+        }
 
         double vza_r = toRadians(vza);
         double sza_r = toRadians(sza);
@@ -121,7 +140,7 @@ public class SdrProbavOp extends BbdrMasterOp {
             double toaRefl = sourceSamples[SRC_TOA_RFL + i].getDouble();
             if (toaRefl == 0.0 || Double.isNaN(toaRefl)) {
                 // if toa_refl look bad, set to invalid
-                targetSamples[Sensor.VGT.getNumBands() * 2 + 2].set(StatusPostProcessOp.STATUS_INVALID);
+                targetSamples[TRG_SDR_STATUS].set(StatusPostProcessOp.STATUS_INVALID);
             }
             toaRefl /= Sensor.VGT.getCal2Meris()[i];
             toa_rfl[i] = toaRefl;
@@ -159,7 +178,7 @@ public class SdrProbavOp extends BbdrMasterOp {
         double rfl_nir = rfl_pix[Sensor.VGT.getIndexNIR()];
         double norm_ndvi = 1.0 / (rfl_nir + rfl_red);
         double ndvi_land = (Sensor.VGT.getBndvi() * rfl_nir - Sensor.VGT.getAndvi() * rfl_red) * norm_ndvi;
-        targetSamples[Sensor.VGT.getNumBands() * 2].set(ndvi_land);
+        targetSamples[TRG_SDR_NDVI].set(ndvi_land);
 
         double[] err_rad = new double[Sensor.VGT.getNumBands()];
         double[] err_aod = new double[Sensor.VGT.getNumBands()];

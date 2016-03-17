@@ -22,7 +22,6 @@ import com.vividsolutions.jts.geom.Geometry;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
-import org.esa.beam.dataio.dimap.DimapProductConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
@@ -33,6 +32,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.ImageUtils;
@@ -68,9 +68,14 @@ public class TileExtractor extends Operator implements Output {
     @Parameter(defaultValue = "false")
     protected boolean sdrOnly;
 
+    @Parameter(defaultValue = "648")   // default 36x18 (all). set resasonable limit for testing in case of low memory
+    protected int maxTiles;
+
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
     private Geometry sourceGeometry;
+
+    private int tileCounter = 0;
 
     @Override
     public void initialize() throws OperatorException {
@@ -107,8 +112,9 @@ public class TileExtractor extends Operator implements Output {
             try {
                 Future<TileProduct> future = ecs.take();
                 TileProduct tileProduct = future.get();
-                if (tileProduct.product != null) {
+                if (tileProduct.product != null && tileCounter < maxTiles) {
                     writeTileProduct(tileProduct.product, tileProduct.tileName);
+                    tileCounter++;
                 }
             } catch (InterruptedException e) {
                 throw new OperatorException(e);
@@ -142,7 +148,7 @@ public class TileExtractor extends Operator implements Output {
 
     private static Product getReprojectedProductWithData(Product src, Geometry sourceGeometry,
                                                          String tileName, boolean sdrOnly) {
-        Product reproject = reproject(src, tileName);
+        Product reproject = reprojectToModisTile(src, tileName);
         Geometry reprojectGeometry = computeProductGeometry(reproject);
 
         if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
@@ -151,7 +157,7 @@ public class TileExtractor extends Operator implements Output {
             Band referenceBand = null;
             if (sdrOnly) {
                 for (String bandname : reproject.getBandNames()) {
-                    if (bandname.startsWith("sdr")) {
+                    if (bandname.startsWith("sdr") || isMfgBand(bandname) || isAvhrrLtdrBand(bandname)) {
                         referenceBand = reproject.getBand(bandname);
                     }
                 }
@@ -169,6 +175,16 @@ public class TileExtractor extends Operator implements Output {
         return null;
     }
 
+    private static boolean isMfgBand(String bandname) {
+//        return bandname.toLowerCase().startsWith("brf");
+        return bandname.toLowerCase().startsWith("spectral_brf") || bandname.toLowerCase().startsWith("broadband_brf");
+    }
+
+    private static boolean isAvhrrLtdrBand(String bandname) {
+        return bandname.toLowerCase().startsWith("srefl") || bandname.toLowerCase().equals("szen") ||
+                bandname.toLowerCase().equals("vzen") || bandname.toLowerCase().equals("relaz");
+    }
+
     private static boolean containsFloatData(Band band, double noDataValue) {
         Raster data = band.getSourceImage().getData(null);
         DataBuffer dataBuffer = data.getDataBuffer();
@@ -182,7 +198,7 @@ public class TileExtractor extends Operator implements Output {
         return false;
     }
 
-    public static Product reproject(Product bbdrProduct, String tileName) {
+    public static Product reprojectToModisTile(Product bbdrProduct, String tileName) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tileName);
         if (tileIndex == -1) {
@@ -195,25 +211,7 @@ public class TileExtractor extends Operator implements Output {
         repro.setParameterDefaultValues();
         repro.setParameter("easting", easting);
         repro.setParameter("northing", northing);
-
-        repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                "GEOGCS[\"WGS 84\"," +
-                "  DATUM[\"WGS_1984\"," +
-                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                "PROJECTION[\"Sinusoidal\"]," +
-                "PARAMETER[\"false_easting\",0.0]," +
-                "PARAMETER[\"false_northing\",0.0]," +
-                "PARAMETER[\"central_meridian\",0.0]," +
-                "PARAMETER[\"semi_major\",6371007.181]," +
-                "PARAMETER[\"semi_minor\",6371007.181]," +
-                "UNIT[\"m\",1.0]," +
-                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
-
+        repro.setParameter("crs", AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING);
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", false);
         repro.setParameter("referencePixelX", 0.0);

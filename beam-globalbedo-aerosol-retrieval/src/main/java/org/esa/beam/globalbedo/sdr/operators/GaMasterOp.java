@@ -55,6 +55,12 @@ public class GaMasterOp extends Operator {
 
     @SourceProduct
     private Product sourceProduct;
+
+    @SourceProduct(alias = "probavUrbanProduct", optional = true,
+            label = "ProbaV urban product",
+            description = "Urban product (only considered for Proba-V Idepix classification, otherwise ignored).")
+    private Product probavUrbanProduct;
+
     @TargetProduct
     private Product targetProduct;
 
@@ -146,7 +152,15 @@ public class GaMasterOp extends Operator {
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         } else if (isProbavProduct) {
             instrument = "PROBAV";
-            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ProbavPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+//            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ProbavPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+            ProbavPrepOp probavPrepOp = new ProbavPrepOp();
+            probavPrepOp.setParameterDefaultValues();
+            probavPrepOp.setSourceProduct(sourceProduct);
+            if (probavUrbanProduct != null) {
+                probavPrepOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            }
+            reflProduct =  probavPrepOp.getTargetProduct();
+
         }
         if (reflProduct == EMPTY_PRODUCT) {
             setTargetProduct(EMPTY_PRODUCT);

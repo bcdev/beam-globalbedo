@@ -46,6 +46,11 @@ public class LandcoverLevel2 extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
+    @SourceProduct(alias = "urban", optional = true,
+            label = "ProbaV urban product",
+            description = "Urban product (only considered for Proba-V Idepix classification, otherwise ignored).")
+    private Product probavUrbanProduct;
+
     @SourceProduct(optional = true)
     private Product eraInterimProduct;
 
@@ -93,6 +98,9 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("gaComputeCloudShadow", false);
         gaMasterOp.setParameter("gaComputeCloudBuffer", false);
         gaMasterOp.setSourceProduct(product);
+        if (probavUrbanProduct != null) {
+            gaMasterOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+        }
         return gaMasterOp.getTargetProduct();
     }
 
@@ -107,7 +115,9 @@ public class LandcoverLevel2 extends Operator {
                 break;
             case "PROBAV":
                 sdrOp = new SdrProbavOp();
-                sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
+                if (eraInterimProduct != null) {
+                    sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
+                }
                 break;
             case "AATSR":
             case "AATSR_FWARD":
