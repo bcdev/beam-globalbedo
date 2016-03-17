@@ -52,13 +52,14 @@ public class BbdrConstants {
             0.0034, 0.0029, 0.0024, 0.0062
     };
 
-    public final static float[] AVHRR_WAVELENGHTS = {
-            645.0f, 830.0f
-    };
-
-    public final static float[] AVHRR_CALIBRATION_COEFFS = {
-            1.0f, 1.0f
-    };
+    // later:
+//    public final static float[] AVHRR_WAVELENGHTS = {
+//            645.0f, 830.0f
+//    };
+//
+//    public final static float[] AVHRR_CALIBRATION_COEFFS = {
+//            1.0f, 1.0f
+//    };
 
 
     // MERIS has ozone, but no water vapour image
@@ -201,24 +202,6 @@ public class BbdrConstants {
 
     public static final String AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME = "AOD550_aer_mo_time";
     public static final float AOT_CONST_VALUE = 0.15f;
-
-    public static final String[] METEOSAT_DISK_000_TILES = {
-            "h09v09", "h10v06", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
-    };
 
 }
 
