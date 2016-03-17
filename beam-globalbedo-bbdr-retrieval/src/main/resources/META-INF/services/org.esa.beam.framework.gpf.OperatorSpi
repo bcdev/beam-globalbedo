@@ -13,6 +13,7 @@ org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2SinglePixel$Spi
 org.esa.beam.globalbedo.bbdr.LandcoverLevel2$Spi
 org.esa.beam.globalbedo.bbdr.TileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.MeteosatTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.seaice.PolarStereographicOp$Spi
 org.esa.beam.globalbedo.bbdr.seaice.BbdrSeaiceOp$Spi
 org.esa.beam.globalbedo.bbdr.GaPassThroughOp$Spi

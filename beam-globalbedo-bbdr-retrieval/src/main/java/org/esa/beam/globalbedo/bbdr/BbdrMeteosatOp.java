@@ -1,8 +1,10 @@
 package org.esa.beam.globalbedo.bbdr;
 
-import com.vividsolutions.jts.geom.Geometry;
 import org.esa.beam.dataio.MeteosatGeoCoding;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -26,8 +28,9 @@ import java.io.IOException;
                 "attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile. " +
                 "Suitable lat/lon bands must be passed as parameters.",
         authors = "Olaf Danne",
+        internal = true,
         version = "1.0",
-        copyright = "(c) 2014 by Brockmann Consult")
+        copyright = "(c) 2016 by Brockmann Consult")
 public class BbdrMeteosatOp extends Operator {
     @SourceProduct
     private Product sourceProduct;
@@ -99,14 +102,14 @@ public class BbdrMeteosatOp extends Operator {
                 final String tileName = modisTileCoordinates.getTileName(i);
                 checkIfModisTileIntersectsMeteosatDisk(tileName, meteosatGeoCoding);
             }
-//            checkIfModisTileIntersectsMeteosatDisk("h09v08", meteosatGeoCoding);
-//            checkIfModisTileIntersectsMeteosatDisk("h26v08", meteosatGeoCoding);
-//            checkIfModisTileIntersectsMeteosatDisk("h09v09", meteosatGeoCoding);
-//            checkIfModisTileIntersectsMeteosatDisk("h09v09", meteosatGeoCoding);
-
 
             // now reproject onto given MODIS SIN tile...
-            return TileExtractor.reproject(targetProductOrigProj, tile);
+            if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding)) {
+                return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
+            } else {
+                throw new OperatorException
+                        ("Tile '" + tile + "' has no ontersection with Meteosat disk.");
+            }
         } catch (IOException e) {
             throw new OperatorException
                     ("Cannot attach Meteosat geocoding to target product: " + e.getMessage());

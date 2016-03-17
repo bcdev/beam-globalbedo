@@ -303,7 +303,8 @@ public class BbdrMasterOp extends PixelOperator {
 //                    "(cloud_classif_flags.F_WATER ? 2 : 1 ))))))";
 
             // JM, 20160315:
-            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
+//            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
+            String statusExpression = "cloud_classif_flags.F_INVALID ? 0 : " +
                     "(cloud_classif_flags.F_HAZE AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND cloud_classif_flags.F_LAND ? 11 : " +
                     "(cloud_classif_flags.F_CLOUD_BUFFER ? 6 : " +
                     "(cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND cloud_classif_flags.F_LAND ? 5 : " +

@@ -11,29 +11,29 @@ public class BbdrConstants {
     public static final int N_SPC = 3; // VIS, NIR, SW ; Broadband albedos
 
     public final static float[] MERIS_WAVELENGHTS = {
-        412.0f, 442.0f, 490.0f, 510.0f, 560.0f,
-        620.0f, 665.0f, 681.0f, 708.0f, 753.0f,
-        760.0f, 778.0f, 865.0f, 885.0f, 900.0f
+            412.0f, 442.0f, 490.0f, 510.0f, 560.0f,
+            620.0f, 665.0f, 681.0f, 708.0f, 753.0f,
+            760.0f, 778.0f, 865.0f, 885.0f, 900.0f
     };
 
     public final static float[] MERIS_CALIBRATION_COEFFS = {
-        1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
+            1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
 
     public final static float[] AATSR_WAVELENGHTS = {
-         550.0f, 670.0f, 870.0f, 1600.0f
+            550.0f, 670.0f, 870.0f, 1600.0f
     };
 
     public final static float[] AATSR_CALIBRATION_COEFFS = {
-        1.0253f, 1.0093f, 1.0265f, 1.0f
+            1.0253f, 1.0093f, 1.0265f, 1.0f
     };
 
     public final static float[] VGT_WAVELENGHTS = {
-         450.0f, 645.0f, 835.0f, 1665.0f
+            450.0f, 645.0f, 835.0f, 1665.0f
     };
 
     public final static float[] VGT_CALIBRATION_COEFFS = {
-        1.012f, 0.953f, 0.971f, 1.0f
+            1.012f, 0.953f, 0.971f, 1.0f
     };
 
     public final static float[] PROBAV_WAVELENGHTS = {
@@ -116,7 +116,7 @@ public class BbdrConstants {
 
 
     public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
-                    "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
+            "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
 
     public final static String[] AATSR_NADIR_ANCILLARY_BAND_NAMES = new String[]{
             "view_elev_nadir", "view_azimuth_nadir", "sun_elev_nadir", "sun_azimuth_nadir",
@@ -135,7 +135,7 @@ public class BbdrConstants {
             "sdr_error_nadir_0550", "sdr_error_nadir_0670", "sdr_error_nadir_0870", "sdr_error_nadir_1600"};
 
     public final static String[] AATSR_TOA_BAND_NAMES_FWARD = new String[]{
-                    "reflec_fward_0550", "reflec_fward_0670", "reflec_fward_0870", "reflec_fward_1600"};
+            "reflec_fward_0550", "reflec_fward_0670", "reflec_fward_0870", "reflec_fward_1600"};
 
     public final static String[] AATSR_SDR_BAND_NAMES_FWARD = new String[]{
             "sdr_fward_0550", "sdr_fward_0670", "sdr_fward_0870", "sdr_fward_1600"};
@@ -144,7 +144,7 @@ public class BbdrConstants {
             "sdr_error_fward_0550", "sdr_error_fward_0670", "sdr_error_fward_0870", "sdr_error_fward_1600"};
 
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
-                    "B0", "B2", "B3", "MIR"};
+            "B0", "B2", "B3", "MIR"};
 
     public final static String[] VGT_ANCILLARY_BAND_NAMES = new String[]{
             "VZA", "VAA", "SZA", "SAA",
@@ -181,9 +181,9 @@ public class BbdrConstants {
 
     public static final float NO_DATA_VALUE = -9999.0f;
 
-//    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
+    //    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
     public static final String COMMON_LAND_EXPR =
-        "(!cloud_classif_flags.F_CLOUD AND !cloud_classif_flags.F_CLOUD_BUFFER) OR cloud_classif_flags.F_CLEAR_SNOW";
+            "(!cloud_classif_flags.F_CLOUD AND !cloud_classif_flags.F_CLOUD_BUFFER) OR cloud_classif_flags.F_CLEAR_SNOW";
     public static final String COMMON_LAND_EXPR_AATSR_FWARD =
             "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
 
@@ -201,5 +201,24 @@ public class BbdrConstants {
 
     public static final String AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME = "AOD550_aer_mo_time";
     public static final float AOT_CONST_VALUE = 0.15f;
+
+    public static final String[] METEOSAT_DISK_000_TILES = {
+            "h09v09", "h10v06", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+            "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09", "h09v09",
+    };
+
 }
 

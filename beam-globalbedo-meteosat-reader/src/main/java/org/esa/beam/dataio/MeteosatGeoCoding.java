@@ -25,10 +25,10 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     private static final int LUT_SIZE = 10;
 
-    private final float[] latData;
-    private final float[] lonData;
-    private final int width;
-    private final int height;
+    private float[] latData;
+    private float[] lonData;
+    private int width;
+    private int height;
     private final PixelBoxLut[][] latSuperLut = new PixelBoxLut[180][360];
     private final PixelBoxLut[][] lonSuperLut = new PixelBoxLut[180][360];
     private boolean initialized;
@@ -37,7 +37,15 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
 
     private MeteosatQuadTreeSearch mqts;
 
+    public MeteosatGeoCoding(Band latitude, Band longitude) throws IOException {
+        initialize(latitude, longitude, "MSG_Euro");
+    }
+
     public MeteosatGeoCoding(Band latitude, Band longitude, String regionID) throws IOException {
+        initialize(latitude, longitude, regionID);
+    }
+
+    private void initialize(Band latitude, Band longitude, String regionID) throws IOException {
         width = latitude.getSceneRasterWidth();
         height = latitude.getSceneRasterHeight();
 
@@ -45,7 +53,6 @@ public class MeteosatGeoCoding extends AbstractGeoCoding {
         lonData = readDataFully(longitude);
 
         this.regionID = regionID;
-
         mqts = new MeteosatQuadTreeSearch(latData, lonData, width, regionID);
     }
 

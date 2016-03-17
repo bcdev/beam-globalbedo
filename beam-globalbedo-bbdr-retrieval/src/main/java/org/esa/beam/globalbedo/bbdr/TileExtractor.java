@@ -32,6 +32,7 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.ImageUtils;
@@ -147,7 +148,7 @@ public class TileExtractor extends Operator implements Output {
 
     private static Product getReprojectedProductWithData(Product src, Geometry sourceGeometry,
                                                          String tileName, boolean sdrOnly) {
-        Product reproject = reproject(src, tileName);
+        Product reproject = reprojectToModisTile(src, tileName);
         Geometry reprojectGeometry = computeProductGeometry(reproject);
 
         if (reprojectGeometry != null && reprojectGeometry.intersects(sourceGeometry)) {
@@ -197,7 +198,7 @@ public class TileExtractor extends Operator implements Output {
         return false;
     }
 
-    public static Product reproject(Product bbdrProduct, String tileName) {
+    public static Product reprojectToModisTile(Product bbdrProduct, String tileName) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tileName);
         if (tileIndex == -1) {
@@ -210,25 +211,7 @@ public class TileExtractor extends Operator implements Output {
         repro.setParameterDefaultValues();
         repro.setParameter("easting", easting);
         repro.setParameter("northing", northing);
-
-        repro.setParameter("crs", "PROJCS[\"MODIS Sinusoidal\"," +
-                "GEOGCS[\"WGS 84\"," +
-                "  DATUM[\"WGS_1984\"," +
-                "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-                "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-                "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-                "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-                "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-                "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-                "PROJECTION[\"Sinusoidal\"]," +
-                "PARAMETER[\"false_easting\",0.0]," +
-                "PARAMETER[\"false_northing\",0.0]," +
-                "PARAMETER[\"central_meridian\",0.0]," +
-                "PARAMETER[\"semi_major\",6371007.181]," +
-                "PARAMETER[\"semi_minor\",6371007.181]," +
-                "UNIT[\"m\",1.0]," +
-                "AUTHORITY[\"SR-ORG\",\"6974\"]]");
-
+        repro.setParameter("crs", AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING);
         repro.setParameter("resampling", "Nearest");
         repro.setParameter("includeTiePointGrids", false);
         repro.setParameter("referencePixelX", 0.0);
