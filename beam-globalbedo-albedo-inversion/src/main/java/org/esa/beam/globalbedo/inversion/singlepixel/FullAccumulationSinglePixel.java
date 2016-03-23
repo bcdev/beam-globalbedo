@@ -57,7 +57,7 @@ public class FullAccumulationSinglePixel {
                 currentDay = iDay - 365;
             }
 
-            BeamLogManager.getSystemLogger().log(Level.INFO, "Full accumulation for year/day:  " +
+            BeamLogManager.getSystemLogger().log(Level.FINE, "Full accumulation for year/day:  " +
                     currentYear + "/" + IOUtils.getDoyString(currentDay) + " ...");
 
             int dayDifference = getDayDifference(currentDay);

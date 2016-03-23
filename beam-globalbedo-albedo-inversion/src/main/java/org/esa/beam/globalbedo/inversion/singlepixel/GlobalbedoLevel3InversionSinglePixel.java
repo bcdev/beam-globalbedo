@@ -87,12 +87,17 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(defaultValue = "", description = "Version of BBDR single pixel input (vyyMMdd)")
     private String versionString;
 
-    @Parameter(defaultValue = "", description = "x pixel index in tile (as string with leding zero)")
+    @Parameter(defaultValue = "", description = "x pixel index in tile (as string with leading zero)")
     private String pixelX;
 
-    @Parameter(defaultValue = "", description = "y pixel index in tile (as string with leding zero)")
+    @Parameter(defaultValue = "", description = "y pixel index in tile (as string with leading zero)")
     private String pixelY;
 
+    @Parameter(defaultValue = "true", description = "If set, product is written to CSV file following conventions")
+    private boolean writeInversionProductToCsv;
+
+    @Parameter(description = "Array of all daily accumulators for the pixel (computed externally) ")
+    private Accumulator[] allDailyAccs;
 
     @SourceProduct(description = "Prior product as single pixel (i.e. CSV)", optional = true)
     private Product priorPixelProduct;
@@ -126,52 +131,54 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
         // maybe in separate module (use BrdfToAlbedoOp):
         // 5. loop 1..46: produce all Albedo products from merged BRDF products for doys of year (write to single-pixel csv files)
 
-        List<Accumulator> allDailyAccsList = new ArrayList<>();
-        for (int iDay = -90; iDay < 455; iDay++) {
-            int currentYear = year;
-            int currentDay = iDay;          // currentDay is in [0,365] !!
-            if (iDay < 0) {
-                currentYear--;
-                currentDay = iDay + 365;
-            } else if (iDay > 365) {
-                currentYear++;
-                currentDay = iDay - 365;
-            }
-
-            Product[] inputProducts;
-            try {
-                // STEP 1: get BBDR input product list...
-                final List<Product> inputProductList =
-                        IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, currentDay,
-                                                                        pixelX, pixelY, versionString);
-                inputProducts = inputProductList.toArray(new Product[inputProductList.size()]);
-            } catch (IOException e) {
-                throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
-            }
-
-            if (inputProducts.length > 0) {
-                // STEP 2: do daily accumulation
-
-                if (Float.isNaN(latitude) || Float.isNaN(longitude)) {
-                    final GeoPos latLon = AlbedoInversionUtils.getLatLonFromProduct(inputProducts[0]);
-                    latitude = latLon.getLat();
-                    longitude = latLon.getLon();
+        if (allDailyAccs == null) {
+            List<Accumulator> allDailyAccsList = new ArrayList<>();
+            for (int iDay = -90; iDay < 455; iDay++) {
+                int currentYear = year;
+                int currentDay = iDay;          // currentDay is in [0,365] !!
+                if (iDay < 0) {
+                    currentYear--;
+                    currentDay = iDay + 365;
+                } else if (iDay > 365) {
+                    currentYear++;
+                    currentDay = iDay - 365;
                 }
 
-                logger.log(Level.ALL, "Daily acc 'single': tile: " +
-                        tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
-                for (Product inputProduct : inputProducts) {
-                    logger.log(Level.ALL, "       - ': " + inputProduct.getName());
+                Product[] inputProducts;
+                try {
+                    // STEP 1: get BBDR input product list...
+                    final List<Product> inputProductList =
+                            IOUtils.getAccumulationSinglePixelInputProducts(bbdrRootDir, tile, currentYear, currentDay,
+                                                                            pixelX, pixelY, versionString);
+                    inputProducts = inputProductList.toArray(new Product[inputProductList.size()]);
+                } catch (IOException e) {
+                    throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
                 }
-                DailyAccumulationSinglePixel dailyAccumulationSinglePixel =
-                        new DailyAccumulationSinglePixel(inputProducts, computeSnow);
-                final Accumulator dailyAcc = dailyAccumulationSinglePixel.accumulate();
-                allDailyAccsList.add(dailyAcc);
-            } else {
-                allDailyAccsList.add(Accumulator.createZeroAccumulator());
+
+                if (inputProducts.length > 0) {
+                    // STEP 2: do daily accumulation
+
+                    if (Float.isNaN(latitude) || Float.isNaN(longitude)) {
+                        final GeoPos latLon = AlbedoInversionUtils.getLatLonFromProduct(inputProducts[0]);
+                        latitude = latLon.getLat();
+                        longitude = latLon.getLon();
+                    }
+
+                    logger.log(Level.ALL, "Daily acc 'single': tile: " +
+                            tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
+                    for (Product inputProduct : inputProducts) {
+                        logger.log(Level.ALL, "       - ': " + inputProduct.getName());
+                    }
+                    DailyAccumulationSinglePixel dailyAccumulationSinglePixel =
+                            new DailyAccumulationSinglePixel(inputProducts, computeSnow);
+                    final Accumulator dailyAcc = dailyAccumulationSinglePixel.accumulate();
+                    allDailyAccsList.add(dailyAcc);
+                } else {
+                    allDailyAccsList.add(Accumulator.createZeroAccumulator());
+                }
             }
+            allDailyAccs = allDailyAccsList.toArray(new Accumulator[allDailyAccsList.size()]);
         }
-        final Accumulator[] allDailyAccs = allDailyAccsList.toArray(new Accumulator[allDailyAccsList.size()]);
 
         // STEP 2: Full accumulation
         FullAccumulationSinglePixel fullAccumulationSinglePixel = new FullAccumulationSinglePixel(year, doy);
@@ -250,7 +257,11 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                     inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
                 }
 
-                writeCsvProduct(inversionProduct, getInversionFilename(doy));
+                if (writeInversionProductToCsv) {
+                    writeCsvProduct(inversionProduct, getInversionFilename(doy));
+                } else {
+                    setTargetProduct(inversionProduct);
+                }
             } else {
                 logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                         IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
@@ -259,7 +270,9 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
             logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
 
-            setTargetProduct(new Product("dummy", "dummy", 1, 1));
+            if (writeInversionProductToCsv) {
+                setTargetProduct(new Product("dummy", "dummy", 1, 1));
+            }
         }
     }
 
