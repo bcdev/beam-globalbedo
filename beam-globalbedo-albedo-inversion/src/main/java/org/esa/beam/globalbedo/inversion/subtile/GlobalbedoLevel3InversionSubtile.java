@@ -53,6 +53,10 @@ public class GlobalbedoLevel3InversionSubtile extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
+    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
+    // e.g., background/processed.p1.0.618034.p2.1.00000
+    private String priorRootDirSuffix;
+
     @Parameter(defaultValue = "", description = "Inversion target directory")
     private String inversionDir;
 
@@ -181,6 +185,7 @@ public class GlobalbedoLevel3InversionSubtile extends Operator {
                 inversionSinglePixel.setParameter("gaRootDir", gaRootDir);
                 inversionSinglePixel.setParameter("bbdrRootDir", bbdrRootDir);
                 inversionSinglePixel.setParameter("priorRootDir", priorRootDir);
+                inversionSinglePixel.setParameter("priorRootDirSuffix", priorRootDirSuffix);
                 inversionSinglePixel.setParameter("allDailyAccs", allDailyAccs[i-startX][j-startY]);
                 inversionSinglePixel.setParameter("writeInversionProductToCsv", false);
 
