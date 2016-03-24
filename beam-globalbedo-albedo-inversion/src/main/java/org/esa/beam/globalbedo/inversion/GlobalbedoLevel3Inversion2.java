@@ -1,6 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -19,13 +19,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * 'Master' operator for the BRDF retrieval part (inversion only)
+ * 'Master' operator for the BRDF retrieval part (full accumulation and inversion)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.inversion")
-public class GlobalbedoLevel3Inversion extends Operator {
+@OperatorMetadata(alias = "ga.l3.inversion2")
+public class GlobalbedoLevel3Inversion2 extends Operator {
 
     @SourceProduct(optional = true)
     private Product seaiceGeocodingProduct;
@@ -128,18 +128,18 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
 
             // STEP 5: do inversion...
-            String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
-            if (computeSnow) {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-            } else if (computeSeaice) {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
-            } else {
-                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
-            }
+//            String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
+//            if (computeSnow) {
+//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+//            } else if (computeSeaice) {
+//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
+//            } else {
+//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+//            }
+//
+//            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
 
-            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
-
-            InversionOp inversionOp = new InversionOp();
+            InversionOp2 inversionOp = new InversionOp2();
             inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
             if (priorProduct != null) {
@@ -154,7 +154,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
-            inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
+            inversionOp.setParameter("gaRootDir", gaRootDir);
             inversionOp.setParameter("year", year);
             inversionOp.setParameter("tile", tile);
             inversionOp.setParameter("doy", doy);
@@ -220,7 +220,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Inversion.class);
+            super(GlobalbedoLevel3Inversion2.class);
         }
     }
 }
