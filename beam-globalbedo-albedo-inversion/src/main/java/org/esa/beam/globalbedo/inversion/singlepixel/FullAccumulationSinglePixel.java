@@ -4,6 +4,7 @@ import Jama.Matrix;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -57,11 +58,11 @@ public class FullAccumulationSinglePixel {
                 currentDay = iDay - 365;
             }
 
-            BeamLogManager.getSystemLogger().log(Level.FINE, "Full accumulation for year/day:  " +
+            BeamLogManager.getSystemLogger().log(Level.FINEST, "Full accumulation for year/day:  " +
                     currentYear + "/" + IOUtils.getDoyString(currentDay) + " ...");
 
             int dayDifference = getDayDifference(currentDay);
-            final float weight = getWeight(dayDifference);
+            final float weight = AlbedoInversionUtils.getWeight(dayDifference);
 
             final Matrix dailyAccM = dailyAccs[iDay+90].getM();
             final Matrix dailyAccV = dailyAccs[iDay+90].getV();
@@ -97,10 +98,6 @@ public class FullAccumulationSinglePixel {
 //        final int difference = 365 * (year - referenceYear) + (doy - dailAccDay);
         final int difference = 365 * (year - referenceYear) + ((doy+8) - dailAccDay); // this is as in old code
         return Math.abs(difference);
-    }
-
-    private float getWeight(int dayDifference) {
-        return (float) Math.exp(-1.0 * Math.abs(dayDifference) / AlbedoInversionConstants.HALFLIFE);
     }
 
 }

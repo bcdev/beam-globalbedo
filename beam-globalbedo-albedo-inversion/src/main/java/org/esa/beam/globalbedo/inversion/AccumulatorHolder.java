@@ -1,12 +1,12 @@
 package org.esa.beam.globalbedo.inversion;
 
 /**
- * Container object holding the lists of input products and wing-dependent productDoys for albedo retrieval
+ * Container object holding the lists of accumulators as input for inversion
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AlbedoInput {
+public class AccumulatorHolder {
 
     private String[] productBinaryFilenames;
     private int referenceYear;

@@ -333,7 +333,7 @@ public class AlbedoInversionUtils {
         for (int i = 0; i < eightDayTimePeriodExtended.length; i++) {
             for (int j = 0; j < deltaTime.length; j++) {
                 deltaTime[j] = daysInYear[j] - eightDayTimePeriodExtended[i];
-                weight[i][j] = (float) Math.exp(-1.0 * Math.abs(deltaTime[j]) / AlbedoInversionConstants.HALFLIFE);
+                weight[i][j] = getWeight(deltaTime[j]);
             }
         }
 
@@ -424,6 +424,10 @@ public class AlbedoInversionUtils {
         } else {
             return (365 - day) + referenceDay;
         }
+    }
+
+    public static float getWeight(int dayDifference) {
+        return (float) Math.exp(-1.0 * Math.abs(dayDifference) / AlbedoInversionConstants.HALFLIFE);
     }
 
     public static  Matrix getMatrix2DTruncated(Matrix m) {
