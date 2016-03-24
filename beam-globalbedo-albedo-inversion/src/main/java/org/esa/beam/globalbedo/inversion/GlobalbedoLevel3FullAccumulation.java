@@ -7,6 +7,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.experimental.Output;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -87,20 +88,20 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         final String bbdrDir = computeSeaice ? "BBDR_PST" : "BBDR";
         final String dailyAccDir = gaRootDir + File.separator + bbdrDir + File.separator + "DailyAcc";
 
-        AlbedoInput[] inputProducts = new AlbedoInput[doys.length];
+        AccumulatorHolder[] dailyAccumulators = new AccumulatorHolder[doys.length];
         for (int i = 0; i < doys.length; i++) {
-            inputProducts[i] = IOUtils.getAlbedoInputProduct(dailyAccDir, true, doys[i], year, tile,
-                                                             wings,
-                                                             computeSnow, computeSeaice);
+            dailyAccumulators[i] = IOUtils.getDailyAccumulator(dailyAccDir, doys[i], year, tile,
+                                                           wings,
+                                                           computeSnow, computeSeaice);
         }
 
         // merge input products to single object...
-        final String[] sourceBinaryFilenames = mergeInputProductsFilenameLists(inputProducts);
+        final String[] dailyAccBinaryFilenames = getDailyAccumulatorFilenameList(dailyAccumulators);
 
         final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
 
-        FullAccumulator[] accsToWrite = getDailyAccFromBinaryFileAndAccumulate(sourceBinaryFilenames,
-                                                                               inputProducts,
+        FullAccumulator[] accsToWrite = getDailyAccFromBinaryFileAndAccumulate(dailyAccBinaryFilenames,
+                                                                               dailyAccumulators,
                                                                                doys,
                                                                                bandNames.length); // accumulates matrices and extracts mask array
 
@@ -132,9 +133,9 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     }
 
 
-    private String[] mergeInputProductsFilenameLists(AlbedoInput[] inputProducts) {
+    private String[] getDailyAccumulatorFilenameList(AccumulatorHolder[] inputProducts) {
         List<String> filenameList = new ArrayList<String>();
-        for (AlbedoInput input : inputProducts) {
+        for (AccumulatorHolder input : inputProducts) {
             if (input != null) {
                 final String[] thisInputFilenames = input.getProductBinaryFilenames();
                 if (input.getProductBinaryFilenames().length == 0) {
@@ -155,7 +156,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     }
 
     private FullAccumulator[] getDailyAccFromBinaryFileAndAccumulate(String[] sourceBinaryFilenames,
-                                                                            AlbedoInput[] inputProducts,
+                                                                            AccumulatorHolder[] inputProducts,
                                                                             int[] doys,
                                                                             int numBands) {
         final int numDoys = doys.length;
@@ -264,7 +265,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return accumulators;
     }
 
-    private static int getDayDifference(String filename, AlbedoInput inputProduct) {
+    private static int getDayDifference(String filename, AccumulatorHolder inputProduct) {
         final int year = inputProduct.getReferenceYear();
         final int fileYear = Integer.parseInt(filename.substring(9, 13));  // 'matrices_yyyydoy.bin'
         final int doy = inputProduct.getReferenceDoy() + 8;
@@ -273,11 +274,10 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         return IOUtils.getDayDifference(fileDoy, fileYear, doy, year);
     }
 
-    private static float getWeight(String filename, AlbedoInput inputProduct) {
+    private static float getWeight(String filename, AccumulatorHolder inputProduct) {
         final int difference = getDayDifference(filename, inputProduct);
-        return (float) Math.exp(-1.0 * Math.abs(difference) / AlbedoInversionConstants.HALFLIFE);
+        return AlbedoInversionUtils.getWeight(difference);
     }
-
 
     private static boolean doAccumulation(String filename, String[] doyFilenames) {
         for (String doyFilename : doyFilenames) {
