@@ -152,6 +152,7 @@ public class MeteosatTileExtractor extends Operator implements Output {
             }
         }
         // copy lat/lon bands
+        // todo: do we need this??
         for (Band band : latlonProduct.getBands()) {
             if (!extendedSourceProduct.containsBand(band.getName())) {
                 ProductUtils.copyBand(band.getName(), latlonProduct, extendedSourceProduct, true);
@@ -226,17 +227,13 @@ public class MeteosatTileExtractor extends Operator implements Output {
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
-    public static class TileProduct {
+    private static class TileProduct {
         private final Product product;
         private final String tileName;
 
-        public TileProduct(Product product, String tileName) {
+        private TileProduct(Product product, String tileName) {
             this.product = product;
             this.tileName = tileName;
-        }
-
-        public Product getProduct() {
-            return product;
         }
     }
 

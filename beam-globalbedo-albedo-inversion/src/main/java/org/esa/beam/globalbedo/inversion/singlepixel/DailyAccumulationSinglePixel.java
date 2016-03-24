@@ -19,6 +19,9 @@ public class DailyAccumulationSinglePixel {
     private Product[] sourceProducts;
 
     private boolean computeSnow;
+    
+    private int pixelX;
+    private int pixelY;
 
     /**
      * DailyAccumulationSinglePixel constructor
@@ -29,6 +32,15 @@ public class DailyAccumulationSinglePixel {
     public DailyAccumulationSinglePixel(Product[] sourceProducts, boolean computeSnow) {
         this.sourceProducts = sourceProducts;
         this.computeSnow = computeSnow;
+        this.pixelX = 0;
+        this.pixelY = 0;
+    }
+
+    public DailyAccumulationSinglePixel(Product[] sourceProducts, boolean computeSnow, int pixelX, int pixelY) {
+        this.sourceProducts = sourceProducts;
+        this.computeSnow = computeSnow;
+        this.pixelX = pixelX;
+        this.pixelY = pixelY;
     }
 
     /**
@@ -127,17 +139,17 @@ public class DailyAccumulationSinglePixel {
 
         final Band bbVisBand = product.getBand(AlbedoInversionConstants.BBDR_BB_VIS_NAME);
         final Raster bbVisData = bbVisBand.getSourceImage().getData();
-        final double bbVis = bbVisData.getSampleDouble(0, 0, 0);
+        final double bbVis = bbVisData.getSampleDouble(pixelX, pixelY, 0);
         bbdr.set(0, 0, bbVis);
 
         final Band bbNirBand = product.getBand(AlbedoInversionConstants.BBDR_BB_NIR_NAME);
         final Raster bbNirData = bbNirBand.getSourceImage().getData();
-        final double bbNir = bbNirData.getSampleDouble(0, 0, 0);
+        final double bbNir = bbNirData.getSampleDouble(pixelX, pixelY, 0);
         bbdr.set(1, 0, bbNir);
 
         final Band bbSwBand = product.getBand(AlbedoInversionConstants.BBDR_BB_SW_NAME);
         final Raster bbSwData = bbSwBand.getSourceImage().getData();
-        final double bbSw = bbSwData.getSampleDouble(0, 0, 0);
+        final double bbSw = bbSwData.getSampleDouble(pixelX, pixelY, 0);
         bbdr.set(2, 0, bbSw);
         return bbdr;
     }
@@ -148,15 +160,15 @@ public class DailyAccumulationSinglePixel {
 
         final Band sigBbVisVisBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME);
         final Raster sigBbVisVisData = sigBbVisVisBand.getSourceImage().getData();
-        SD[0] = sigBbVisVisData.getSampleDouble(0, 0, 0);
+        SD[0] = sigBbVisVisData.getSampleDouble(pixelX, pixelY, 0);
 
         final Band sigBbNirNirBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME);
         final Raster sigBbNirNirData = sigBbNirNirBand.getSourceImage().getData();
-        SD[1] = sigBbNirNirData.getSampleDouble(0, 0, 0);
+        SD[1] = sigBbNirNirData.getSampleDouble(pixelX, pixelY, 0);
 
         final Band sigBbSwSwBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME);
         final Raster sigBbSwSwData = sigBbSwSwBand.getSourceImage().getData();
-        SD[2] = sigBbSwSwData.getSampleDouble(0, 0, 0);
+        SD[2] = sigBbSwSwData.getSampleDouble(pixelX, pixelY, 0);
 
         return SD;
     }
@@ -167,15 +179,15 @@ public class DailyAccumulationSinglePixel {
 
         final Band sigBbVisNirBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME);
         final Raster sigBbVisNirData = sigBbVisNirBand.getSourceImage().getData();
-        correlation[0] = sigBbVisNirData.getSampleDouble(0, 0, 0);
+        correlation[0] = sigBbVisNirData.getSampleDouble(pixelX, pixelY, 0);
 
         final Band sigBbVisSwBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME);
         final Raster sigBbVisSwData = sigBbVisSwBand.getSourceImage().getData();
-        correlation[1] = sigBbVisSwData.getSampleDouble(0, 0, 0);
+        correlation[1] = sigBbVisSwData.getSampleDouble(pixelX, pixelY, 0);
 
         final Band sigBbNirSwBand = product.getBand(AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME);
         final Raster sigBbNirSwData = sigBbNirSwBand.getSourceImage().getData();
-        correlation[2] = sigBbNirSwData.getSampleDouble(0, 0, 0);
+        correlation[2] = sigBbNirSwData.getSampleDouble(pixelX, pixelY, 0);
 
         return correlation;
     }
@@ -191,27 +203,27 @@ public class DailyAccumulationSinglePixel {
 
         final Band kvolBrdfVisBand = product.getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME);
         final Raster kvolBrdfVisData = kvolBrdfVisBand.getSourceImage().getData();
-        kernels.set(0, 1, kvolBrdfVisData.getSampleDouble(0, 0, 0));
+        kernels.set(0, 1, kvolBrdfVisData.getSampleDouble(pixelX, pixelY, 0));
 
         final Band kvolBrdfNirBand = product.getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME);
         final Raster kvolBrdfNirData = kvolBrdfNirBand.getSourceImage().getData();
-        kernels.set(1, 4, kvolBrdfNirData.getSampleDouble(0, 0, 0));
+        kernels.set(1, 4, kvolBrdfNirData.getSampleDouble(pixelX, pixelY, 0));
 
         final Band kvolBrdfSwBand = product.getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME);
         final Raster kvolBrdfSwData = kvolBrdfSwBand.getSourceImage().getData();
-        kernels.set(2, 7, kvolBrdfSwData.getSampleDouble(0, 0, 0));
+        kernels.set(2, 7, kvolBrdfSwData.getSampleDouble(pixelX, pixelY, 0));
 
         final Band kgeoBrdfVisBand = product.getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME);
         final Raster kgeoBrdfVisData = kgeoBrdfVisBand.getSourceImage().getData();
-        kernels.set(0, 2, kgeoBrdfVisData.getSampleDouble(0, 0, 0));
+        kernels.set(0, 2, kgeoBrdfVisData.getSampleDouble(pixelX, pixelY, 0));
 
         final Band kgeoBrdfNirBand = product.getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME);
         final Raster kgeoBrdfNirData = kgeoBrdfNirBand.getSourceImage().getData();
-        kernels.set(1, 5, kgeoBrdfNirData.getSampleDouble(0, 0, 0));
+        kernels.set(1, 5, kgeoBrdfNirData.getSampleDouble(pixelX, pixelY, 0));
 
         final Band kgeoBrdfSwBand = product.getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME);
         final Raster kgeoBrdfSwData = kgeoBrdfSwBand.getSourceImage().getData();
-        kernels.set(2, 8, kgeoBrdfSwData.getSampleDouble(0, 0, 0));
+        kernels.set(2, 8, kgeoBrdfSwData.getSampleDouble(pixelX, pixelY, 0));
 
         return kernels;
     }
@@ -221,12 +233,12 @@ public class DailyAccumulationSinglePixel {
         if (product.getProductType().startsWith("MER") || product.getName().startsWith("MER")) {
             final Band l1FlagBand = product.getBand("l1_flags");
             final Raster l1FlagData = l1FlagBand.getSourceImage().getData();
-            int l1 = (int) l1FlagData.getSampleDouble(0, 0, 0);
+            int l1 = (int) l1FlagData.getSampleDouble(pixelX, pixelY, 0);
             return (l1 & 1 << 4) == 0;   // LAND_OCEAN not set todo: test!
         } else if (product.getProductType().startsWith("VGT") || product.getName().startsWith("VGT")) {
             final Band smFlagBand = product.getBand("SM");
             final Raster smFlagData = smFlagBand.getSourceImage().getData();
-            int sm = (int) smFlagData.getSampleDouble(0, 0, 0);
+            int sm = (int) smFlagData.getSampleDouble(pixelX, pixelY, 0);
             return (sm & 1 << 3) == 0;   // LAND not set todo: test!
         }
 
@@ -237,7 +249,7 @@ public class DailyAccumulationSinglePixel {
         final Product product = sourceProducts[sourceProductIndex];
         final Band snowMaskBand = product.getBand("snow_mask");
         final Raster snowMaskData = snowMaskBand.getSourceImage().getData();
-        int snowValue = (int) snowMaskData.getSampleDouble(0, 0, 0);
+        int snowValue = (int) snowMaskData.getSampleDouble(pixelX, pixelY, 0);
 
         return (!computeSnow && snowValue != 0) || (computeSnow && snowValue == 0);
     }
