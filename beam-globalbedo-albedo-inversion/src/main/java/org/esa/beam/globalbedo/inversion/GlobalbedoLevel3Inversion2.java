@@ -103,6 +103,8 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
             try {
+                // todo: allow continuation without Prior: set usePrior to false
+                // if Prior not available or cannot be read
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +

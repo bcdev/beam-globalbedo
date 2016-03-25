@@ -128,6 +128,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
             if (usePrior) {
                 try {
+                    // todo: allow continuation without Prior: set usePrior to false
+                    // if Prior not available or cannot be read
                     priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot load prior product: " + e.getMessage());

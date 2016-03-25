@@ -70,12 +70,14 @@ public class FullAccumulationPrototype {
                                                                           wings,
                                                                           computeSnow, false);
 
-        final String[] dailyAccBinaryFilenames = getDailyAccumulatorFilenameList(dailyAccumulators);
-        final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
+        if (dailyAccumulators != null) {
+            final String[] dailyAccBinaryFilenames = getDailyAccumulatorFilenameList(dailyAccumulators);
+            final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
 
-        result = accumulateAndWeightDailyAccs(dailyAccBinaryFilenames,
-                                              dailyAccumulators,
-                                              bandNames.length); // accumulates matrices and extracts mask array
+            result = accumulateAndWeightDailyAccs(dailyAccBinaryFilenames,
+                    dailyAccumulators,
+                    bandNames.length); // accumulates matrices and extracts mask array
+        }
     }
 
     private String[] getDailyAccumulatorFilenameList(AccumulatorHolder accumulatorHolder) {
