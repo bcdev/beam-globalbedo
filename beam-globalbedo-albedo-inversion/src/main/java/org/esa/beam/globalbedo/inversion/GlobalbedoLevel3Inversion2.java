@@ -93,9 +93,12 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
         if (usePrior) {
             // STEP 1: get Prior input file...
             String priorDir = priorRootDir + File.separator + tile;
-            if (priorRootDirSuffix != null) {
-                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
+
+            if (priorRootDirSuffix == null) {
+                final int refDoy = 8 * ((doy - 1) / 8) + 1;
+                priorRootDirSuffix = IOUtils.getDoyString(refDoy);
             }
+            priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
 
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
@@ -103,7 +106,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                                                    " - cannot proceed...: " + e.getMessage());
+                        " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -135,10 +138,10 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             } else {
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                                                                                       AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
