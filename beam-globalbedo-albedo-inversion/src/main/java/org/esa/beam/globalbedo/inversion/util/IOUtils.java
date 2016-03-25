@@ -148,7 +148,9 @@ public class IOUtils {
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        String doyString = getDoyString(doy);
+        // allow all days within 8-day prior period:
+        final int refDoy = 8*((doy-1)/8) + 1;
+        String doyString = getDoyString(refDoy);
 
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {

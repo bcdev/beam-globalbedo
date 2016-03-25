@@ -127,18 +127,6 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 }
             }
 
-            // STEP 5: do inversion...
-//            String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
-//            if (computeSnow) {
-//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-//            } else if (computeSeaice) {
-//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
-//            } else {
-//                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
-//            }
-//
-//            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
-
             InversionOp2 inversionOp = new InversionOp2();
             inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
