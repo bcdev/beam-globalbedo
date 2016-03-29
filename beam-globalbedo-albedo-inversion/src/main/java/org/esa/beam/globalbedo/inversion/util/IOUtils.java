@@ -79,12 +79,12 @@ public class IOUtils {
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
         final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day,
-                                                                                pixelX, pixelY, versionString);
+                pixelX, pixelY, versionString);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day,
-                                                                              pixelX, pixelY, versionString);
+                pixelX, pixelY, versionString);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -148,7 +148,9 @@ public class IOUtils {
         final String[] priorFiles = (new File(priorDir)).list();
         final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        String doyString = getDoyString(doy);
+        // allow all days within 8-day prior period:
+        final int refDoy = 8 * ((doy - 1) / 8) + 1;
+        String doyString = getDoyString(refDoy);
 
         for (String priorFileName : snowFilteredPriorList) {
             if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
@@ -281,17 +283,17 @@ public class IOUtils {
                                                         boolean computeSnow,
                                                         boolean computeSeaice) {
 
-        AccumulatorHolder inputProduct = null;
+        AccumulatorHolder accumulatorHolder = null;
 
         final List<String> albedoInputProductBinaryFileList = getDailyAccumulatorBinaryFileNames(accumulatorRootDir,
-                                                                                                 doy, year, tile,
-                                                                                                 wings,
-                                                                                                 computeSnow,
-                                                                                                 computeSeaice);
+                doy, year, tile,
+                wings,
+                computeSnow,
+                computeSeaice);
         if (albedoInputProductBinaryFileList.size() > 0) {
-            inputProduct = new AccumulatorHolder();
-            inputProduct.setReferenceYear(year);
-            inputProduct.setReferenceDoy(doy);
+            accumulatorHolder = new AccumulatorHolder();
+            accumulatorHolder.setReferenceYear(year);
+            accumulatorHolder.setReferenceDoy(doy);
             String[] albedoInputProductBinaryFilenames = new String[albedoInputProductBinaryFileList.size()];
             int binaryProductIndex = 0;
             for (String albedoInputProductBinaryName : albedoInputProductBinaryFileList) {
@@ -313,10 +315,10 @@ public class IOUtils {
                 albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
                 binaryProductIndex++;
             }
-            inputProduct.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
+            accumulatorHolder.setProductBinaryFilenames(albedoInputProductBinaryFilenames);
         }
 
-        return inputProduct;
+        return accumulatorHolder;
     }
 
     static List<String> getDailyAccumulatorBinaryFileNames(String accumulatorRootDir, int doy,
@@ -343,14 +345,14 @@ public class IOUtils {
         final FilenameFilter accumulatorNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005123.bin'...
-//                return (name.length() == 20 && name.startsWith("matrices") && name.endsWith("bin"));
                 return name.matches("matrices_[0-9]{7}.bin");
             }
         };
 
         final String[] accumulatorYears = (new File(accumulatorRootDir)).list(yearFilter);
 
-        doy = doy + 8; // 'MODIS day'
+        doy = doy + 8; // 'MODIS day'    // ??? todo: check!!
+        doy = Math.min(doy + 8, 365); // at least we need to set this limit
 
         // fill the name list year by year...
         for (String accProductYear : accumulatorYears) {
@@ -390,7 +392,7 @@ public class IOUtils {
         // we want to sort from center:
         // e.g. reference date: 2005121
         // -->  matrices_2005121.bin, matrices_2005122.bin, matrices_2005120.bin, matrices_2005123.bin, , matrices_2005119.bin...
-        // and stop if distance weight is lower than some minimum (e.g. 5%) and we have enough accumulators...
+        // and stop if distance weight is lower than some minimum (e.g. 5%) and we have enough (e.g. 60) accumulators...
 
         List<String> accumulatorNameSortedList = new ArrayList<>();
 
@@ -446,7 +448,7 @@ public class IOUtils {
                     }
                     doyMinus--;
 
-                    accName = "matrices_" + Integer.toString(refYear+1) + String.format("%03d", doyPlus2) + ".bin";
+                    accName = "matrices_" + Integer.toString(refYear + 1) + String.format("%03d", doyPlus2) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             (AlbedoInversionUtils.getWeight(doyPlus2 + 365 - refDoy) > 0.05 ||
                                     accumulatorNameSortedList.size() < 60)) {
@@ -495,7 +497,7 @@ public class IOUtils {
             }
         } catch (NumberFormatException e) {
             BeamLogManager.getSystemLogger().log(Level.ALL,
-                                                 "Cannot determine wings for accumulator '" + accName + "' - skipping.");
+                    "Cannot determine wings for accumulator '" + accName + "' - skipping.");
         }
         return isInWingsInterval;
     }
@@ -794,11 +796,11 @@ public class IOUtils {
             if (seaiceLandmaskProduct != null) {
                 final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
                 ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                                      "landmask", targetProduct, true);
+                        "landmask", targetProduct, true);
             }
         } catch (IOException e) {
             System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                                       e.getMessage());
+                    e.getMessage());
         }
     }
 
@@ -841,7 +843,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
                     }
                 }
             }
@@ -897,7 +899,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
                     }
                 }
             }

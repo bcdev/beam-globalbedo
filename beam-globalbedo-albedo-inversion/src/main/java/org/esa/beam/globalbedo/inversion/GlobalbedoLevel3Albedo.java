@@ -52,10 +52,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
-    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix") // e.g., background/processed.p1.0.618034.p2.1.00000
+    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
+    // e.g., background/processed.p1.0.618034.p2.1.00000
     private String priorRootDirSuffix;
 
-    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix") // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
+    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
     @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
@@ -116,13 +118,18 @@ public class GlobalbedoLevel3Albedo extends Operator {
         } else {
             // we need the SNOW Prior file for given DoY...
             String priorDir = priorRootDir + File.separator + tile;
-            if (priorRootDirSuffix != null) {
-                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
+
+            if (priorRootDirSuffix == null) {
+                final int refDoy = 8 * ((doy - 1) / 8) + 1;
+                priorRootDirSuffix = IOUtils.getDoyString(refDoy);
             }
+            priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 
             if (usePrior) {
                 try {
+                    // todo: allow continuation without Prior: set usePrior to false
+                    // if Prior not available or cannot be read
                     priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
                 } catch (IOException e) {
                     throw new OperatorException("Cannot load prior product: " + e.getMessage());
