@@ -148,8 +148,14 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp = new BbdrProbavOp();
                     bbdrOp.setParameterDefaultValues();
                     break;
-                case "AATSR":
+                case "AATSR_NADIR":
                 case "AATSR_FWARD":
+                    computeSdr = false;   // todo: implement this option if AATSR is taken on-board
+                    computeBbdrFromSdr = false;  // todo: implement this option if AATSR is taken on-board
+                    bbdrOp = new BbdrAatsrOp();
+                    bbdrOp.setParameterDefaultValues();
+                    bbdrOp.setParameter("useAotClimatology", useAotClimatology);
+                    break;
                 case "AVHRR":
                     // todo
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later

@@ -53,7 +53,14 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static AotLookupTable getAotLookupTable(Sensor sensor) throws IOException {
-        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        String instrument;
+        if (sensor.getInstrument().equals("PROBAV")) {
+            instrument = "VGT";
+        } else if (sensor.getInstrument().startsWith("AATSR")) {
+            instrument = "AATSR";
+        } else {
+            instrument = sensor.getInstrument();
+        }
         ImageInputStream iis = Luts.getAotLutData(instrument);
         try {
             // read LUT dimensions and values
@@ -128,7 +135,14 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static LookupTable getAotKxLookupTable(Sensor sensor) throws IOException {
-        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        String instrument;
+        if (sensor.getInstrument().equals("PROBAV")) {
+            instrument = "VGT";
+        } else if (sensor.getInstrument().startsWith("AATSR")) {
+            instrument = "AATSR";
+        } else {
+            instrument = sensor.getInstrument();
+        }
         ImageInputStream iis = Luts.getAotKxLutData(instrument);
         try {
             // read LUT dimensions and values
@@ -170,7 +184,14 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static NskyLookupTable getNskyLookupTableDw(Sensor sensor) throws IOException {
-        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        String instrument;
+        if (sensor.getInstrument().equals("PROBAV")) {
+            instrument = "VGT";
+        } else if (sensor.getInstrument().startsWith("AATSR")) {
+            instrument = "AATSR";
+        } else {
+            instrument = sensor.getInstrument();
+        }
         ImageInputStream iis = Luts.getNskyDwLutData(instrument);
         try {
             // read LUT dimensions and values
@@ -219,7 +240,14 @@ public class BbdrUtils {
      * @throws java.io.IOException when failing to real LUT data
      */
     public static NskyLookupTable getNskyLookupTableUp(Sensor sensor) throws IOException {
-        final String instrument = sensor.getInstrument().equals("PROBAV") ? "VGT" : sensor.getInstrument();
+        String instrument;
+        if (sensor.getInstrument().equals("PROBAV")) {
+            instrument = "VGT";
+        } else if (sensor.getInstrument().startsWith("AATSR")) {
+            instrument = "AATSR";
+        } else {
+            instrument = sensor.getInstrument();
+        }
         ImageInputStream iis = Luts.getNskyUpLutData(instrument);
         try {
             // read LUT dimensions and values

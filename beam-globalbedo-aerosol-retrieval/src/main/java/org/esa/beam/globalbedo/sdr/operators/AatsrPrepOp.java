@@ -104,19 +104,16 @@ public class AatsrPrepOp extends Operator {
 
         // create pixel calssification if missing in szaSubProduct
         // and add flag band to targetProduct
-        Product idepixNadirProduct;
-        Product idepixFwardProduct;
+        Product idepixProduct;
         if (needPixelClassif) {
             Map<String, Object> pixelClassParam = new HashMap<String, Object>(4);
             pixelClassParam.put("gaCopyRadiances", false);
             pixelClassParam.put("gaComputeFlagsOnly", true);
-            pixelClassParam.put("gaUseAatsrFwardForClouds", false);
-            pixelClassParam.put("gaCloudBufferWidth", 3);
-            idepixNadirProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyFlagBands(idepixNadirProduct, targetProduct, true);
+//            pixelClassParam.put("gaUseAatsrFwardForClouds", false);
             pixelClassParam.put("gaUseAatsrFwardForClouds", true);
-            idepixFwardProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
-            ProductUtils.copyBand(instrC.getIdepixFlagBandName(), idepixFwardProduct, instrC.getIdepixFwardFlagBandName(), targetProduct, true);
+            pixelClassParam.put("gaCloudBufferWidth", 3);
+            idepixProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(GlobAlbedoOp.class), pixelClassParam, szaSubProduct);
+            ProductUtils.copyFlagBands(idepixProduct, targetProduct, true);
         }
 
         // create elevation product if band is missing in szaSubProduct

@@ -32,8 +32,6 @@ class InstrumentConsts {
      ****************************************/
 
     private final String idepixFlagBandName = "cloud_classif_flags";
-    private final String idepixFwardFlagBandName = "cloud_classif_flags_fward";
-
 
     private final Map<String, String[]> reflecNames;
     private final Map<String, String[]> geomNames;
@@ -145,9 +143,7 @@ class InstrumentConsts {
         validRetrievalExpr.put(supportedInstruments[1], vgtValidRetrievaExpr);
         String aatsrValidRetrievalExpr = "(" + idepixFlagBandName + ".F_LAND "
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER"
-//                + " && !" + idepixFwardFlagBandName + ".F_CLOUD_BUFFER"
                 + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW"
-//                + " && !" + idepixFwardFlagBandName + ".F_CLEAR_SNOW"
                 + " && (90-sun_elev_nadir) < 70"
                 + " && (90-sun_elev_fward) < 70"
                 + " && reflec_nadir_0550 >= 0"
@@ -180,7 +176,6 @@ class InstrumentConsts {
         validAotOutExpr.put(supportedInstruments[1], vgtValAotOutputExpr);
         String aatsrValAotOutputExpr = "(" + idepixFlagBandName + ".F_LAND "
                 + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
-//                + " && (!" + idepixFwardFlagBandName + ".F_CLOUD_BUFFER || " + idepixFwardFlagBandName + ".F_CLEAR_SNOW)"
                 + " && (90-sun_elev_nadir) < 70"
                 + " && (90-sun_elev_fward) < 70"
                 + " && reflec_nadir_0550 >= 0"
@@ -300,10 +295,6 @@ class InstrumentConsts {
 
     public String getIdepixFlagBandName() {
         return idepixFlagBandName;
-    }
-
-    public String getIdepixFwardFlagBandName() {
-        return idepixFwardFlagBandName;
     }
 
     public String getElevationBandName() {

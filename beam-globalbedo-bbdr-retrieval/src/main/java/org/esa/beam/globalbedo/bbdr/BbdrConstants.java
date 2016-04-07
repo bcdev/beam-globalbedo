@@ -185,8 +185,8 @@ public class BbdrConstants {
     //    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
     public static final String COMMON_LAND_EXPR =
             "(!cloud_classif_flags.F_CLOUD AND !cloud_classif_flags.F_CLOUD_BUFFER) OR cloud_classif_flags.F_CLEAR_SNOW";
-    public static final String COMMON_LAND_EXPR_AATSR_FWARD =
-            "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
+//    public static final String COMMON_LAND_EXPR_AATSR =
+//            "cloud_classif_flags_fward.F_CLEAR_LAND OR cloud_classif_flags_fward.F_CLEAR_SNOW";
 
     public static final String LAND_EXPR_MERIS =
             "NOT l1_flags.INVALID AND NOT l1_flags.COSMETIC AND (" + COMMON_LAND_EXPR + ")";
