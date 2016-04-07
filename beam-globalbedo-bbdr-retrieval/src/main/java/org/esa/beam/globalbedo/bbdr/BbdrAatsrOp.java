@@ -128,6 +128,10 @@ public class BbdrAatsrOp extends BbdrMasterOp {
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
+        if (f_int_all == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double[] sab = new double[sensor.getNumBands()];
         double[] rat_tdw = new double[sensor.getNumBands()];
@@ -246,6 +250,10 @@ public class BbdrAatsrOp extends BbdrMasterOp {
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
 
         double[][] f_int_nsky = aux.interpol_lut_Nsky(sza, vza, hsf, aot);
+        if (f_int_nsky == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double phi_r = toRadians(phi);
 

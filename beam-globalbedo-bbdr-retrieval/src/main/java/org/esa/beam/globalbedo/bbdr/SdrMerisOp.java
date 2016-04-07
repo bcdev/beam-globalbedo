@@ -223,6 +223,10 @@ public class SdrMerisOp extends BbdrMasterOp {
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
+        if (f_int_all == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double[] sab = new double[Sensor.MERIS.getNumBands()];
         double[] rfl_pix = new double[Sensor.MERIS.getNumBands()];

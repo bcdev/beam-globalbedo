@@ -123,6 +123,10 @@ public class BbdrMerisOp extends BbdrMasterOp {
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) gas);
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
+        if (f_int_all == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double[] sab = new double[Sensor.MERIS.getNumBands()];
         double[] rat_tdw = new double[Sensor.MERIS.getNumBands()];
@@ -228,6 +232,10 @@ public class BbdrMerisOp extends BbdrMasterOp {
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)
 
         double[][] f_int_nsky = aux.interpol_lut_Nsky(sza, vza, hsf, aot);
+        if (f_int_nsky == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double phi_r = toRadians(phi);
 
