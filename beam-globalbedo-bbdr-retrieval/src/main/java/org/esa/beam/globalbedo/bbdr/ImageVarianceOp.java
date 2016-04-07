@@ -64,14 +64,14 @@ public class ImageVarianceOp extends Operator {
                 if (band.getName().startsWith("reflectance")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
-            } else if (sensor == Sensor.AATSR) {
+            } else if (sensor == Sensor.AATSR_NADIR) {
                 if (band.getName().startsWith("reflec_nadir")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
                 if (band.getName().startsWith("reflec_fward")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
-            } else if (sensor == Sensor.AATSR) {
+            } else if (sensor == Sensor.AATSR_NADIR) {
                 if (band.getName().startsWith("reflec_nadir")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
@@ -98,7 +98,7 @@ public class ImageVarianceOp extends Operator {
         Rectangle rectangle = targetTile.getRectangle();
         rectangle.grow(1, 1);
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));
-        if (sensor == Sensor.AATSR) {
+        if (sensor == Sensor.AATSR_NADIR) {
             double cal2MerisCoeff = getAatsrCal2MerisCoeffByBandName(targetBand.getName());
             TiePointGrid sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_nadir");
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {

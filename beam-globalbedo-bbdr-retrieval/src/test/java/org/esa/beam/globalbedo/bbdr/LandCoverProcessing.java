@@ -22,7 +22,6 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.globalbedo.bbdr.attic.BbdrOldOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.media.jai.JAI;
@@ -90,7 +89,7 @@ public class LandCoverProcessing {
 //        gaMasterOp.setSourceProduct(aProduct);
 //        aProduct = gaMasterOp.getTargetProduct();
 //
-        Operator bbdrOp = new BbdrOldOp();
+        Operator bbdrOp = new BbdrMasterOp();
         bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(aProduct);
         aProduct = bbdrOp.getTargetProduct();

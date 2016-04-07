@@ -4,7 +4,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.globalbedo.bbdr.attic.BbdrOldOp;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 
@@ -26,7 +25,7 @@ public class Main {
         final String sourceProductFileName = args[1];
         final String targetProductFileName = args[2];
         final Product sourceProduct = ProductIO.readProduct(sourceProductFileName);
-        final Operator bbdrOp = new BbdrOldOp();
+        final Operator bbdrOp = new BbdrMasterOp();
         bbdrOp.setParameterDefaultValues();
         bbdrOp.setSourceProduct(sourceProduct);
         bbdrOp.setParameter("sensor", sensorName);
