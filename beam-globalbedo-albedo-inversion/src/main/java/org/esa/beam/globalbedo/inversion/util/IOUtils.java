@@ -34,7 +34,6 @@ public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String tile, int year, int doy) throws
             IOException {
-        // todo: as we will get more and more sensors, make this configurable to use selected sensors only!
         final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
 
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
@@ -67,6 +66,33 @@ public class IOUtils {
         }
 
         return bbdrProducts;
+    }
+
+    public static Product[] getAccumulationInputProducts(String bbdrRootDir, String[] sensors, String tile, int year, int doy) throws
+            IOException {
+        final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
+        List<Product> bbdrProductList = new ArrayList<>();
+        if (StringUtils.isNotNullAndNotEmpty(daystring)) {
+            for (String sensor: sensors) {
+                final String sensorBbdrDirName = bbdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
+                final File sensorBbdrDir = new File(sensorBbdrDirName);
+                if (sensorBbdrDir.exists()) {
+                    final String[] sensorBbdrFiles = sensorBbdrDir.list();
+                    for (String sensorBbdrFile : sensorBbdrFiles) {
+                        if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz")
+                                || sensorBbdrFile.endsWith(".dim")) &&
+                                sensorBbdrFile.contains(daystring)) {
+                            final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
+                            Product product = ProductIO.readProduct(sourceProductFileName);
+                            if (product != null) {
+                                bbdrProductList.add(product);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
     }
 
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
