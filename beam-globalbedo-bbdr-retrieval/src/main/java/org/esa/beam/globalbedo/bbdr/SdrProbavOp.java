@@ -157,6 +157,10 @@ public class SdrProbavOp extends BbdrMasterOp {
         float[][][] kx_tg = aux.getGasLookupTable().getKxTg((float) amf, (float) ozo);
 
         double[][] f_int_all = aux.interpol_lut_MOMO_kx(vza, sza, phi, hsf, aot);
+        if (f_int_all == null) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         double[] sab = new double[Sensor.VGT.getNumBands()];
         double[] rfl_pix = new double[Sensor.VGT.getNumBands()];

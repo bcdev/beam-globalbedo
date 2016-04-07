@@ -64,6 +64,8 @@ public class BbdrAuxdata {
      * 5-D linear interpolation:
      * returns spectral array [rpw, ttot, sab, rat_tdw, rat_tup, Kx_1, Kx_2]
      * as a function of [vza, sza, phi, hsf, aot] from the interpolation of the MOMO absorption-free LUTs
+     *
+     * returns null if any lookup fails for given tuple
      */
     double[][] interpol_lut_MOMO_kx(double vza, double sza, double phi, double hsf, double aot) {
         final LookupTable lut = aotLut.getLut();
@@ -87,11 +89,21 @@ public class BbdrAuxdata {
             LookupTable.computeFracIndex(lut.getDimension(0), wvl[i], fracIndexes[0]);
             for (double param : params) {
                 LookupTable.computeFracIndex(lut.getDimension(6), param, fracIndexes[6]);
-                result[i][index++] = lut.getValue(fracIndexes, v);
+                try {
+                    result[i][index++] = lut.getValue(fracIndexes, v);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
             for (double kxParam : kxParams) {
                 LookupTable.computeFracIndex(lut.getDimension(6), kxParam, fracIndexes[6]);
-                result[i][index++] = kxAotLut.getValue(fracIndexes, v);
+                try {
+                    result[i][index++] = kxAotLut.getValue(fracIndexes, v);
+                } catch (ArrayIndexOutOfBoundsException e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
         }
         return result;
@@ -120,13 +132,23 @@ public class BbdrAuxdata {
             LookupTable.computeFracIndex(lut_dw.getDimension(3), sza, fracIndexes[3]);
             for (double param : dw_params) {
                 LookupTable.computeFracIndex(lut_dw.getDimension(4), param, fracIndexes[4]);
-                result[i][index++] = lut_dw.getValue(fracIndexes, v);
+                try {
+                    result[i][index++] = lut_dw.getValue(fracIndexes, v);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
 
             LookupTable.computeFracIndex(lut_up.getDimension(3), vza, fracIndexes[3]);
             for (double param : up_params) {
                 LookupTable.computeFracIndex(lut_up.getDimension(4), param, fracIndexes[4]);
-                result[i][index++] = lut_up.getValue(fracIndexes, v);
+                try {
+                    result[i][index++] = lut_up.getValue(fracIndexes, v);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    return null;
+                }
             }
         }
         return result;
