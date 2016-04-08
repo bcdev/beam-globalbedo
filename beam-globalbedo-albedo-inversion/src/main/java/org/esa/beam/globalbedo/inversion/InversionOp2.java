@@ -150,6 +150,11 @@ public class InversionOp2 extends PixelOperator {
             bAccDaysClSampl.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvGoodnessFit.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
         }
+
+        for (Band b:getTargetProduct().getBands()) {
+            b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
+            b.setNoDataValueUsed(true);
+        }
     }
 
     @Override
