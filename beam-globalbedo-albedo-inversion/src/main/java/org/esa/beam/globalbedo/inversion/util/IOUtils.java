@@ -74,6 +74,7 @@ public class IOUtils {
         List<Product> bbdrProductList = new ArrayList<>();
         if (StringUtils.isNotNullAndNotEmpty(daystring)) {
             for (String sensor: sensors) {
+                int numProducts = 0;
                 final String sensorBbdrDirName = bbdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
                 final File sensorBbdrDir = new File(sensorBbdrDirName);
                 if (sensorBbdrDir.exists()) {
@@ -86,10 +87,15 @@ public class IOUtils {
                             Product product = ProductIO.readProduct(sourceProductFileName);
                             if (product != null) {
                                 bbdrProductList.add(product);
+                                numProducts++;
                             }
                         }
                     }
                 }
+                BeamLogManager.getSystemLogger().log
+                        (Level.ALL, "Collecting Daily accumulation BBDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
+                BeamLogManager.getSystemLogger().log
+                        (Level.ALL, "      Sensor '" + sensor + "': " + numProducts + " products added.");
             }
         }
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
