@@ -299,80 +299,60 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            Band band = targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-            band.setNoDataValueUsed(true);
+            targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
         if (!computeSeaice) {
             dhrAlphaBandNames = IOUtils.getAlbedoDhrAlphaBandNames();
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                Band band = targetProduct.addBand(dhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-                band.setNoDataValueUsed(true);
+                targetProduct.addBand(dhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
             }
         }
 
         dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            Band band = targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-            band.setNoDataValueUsed(true);
+            targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
         bhrBandNames = IOUtils.getAlbedoBhrBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            Band band = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-            band.setNoDataValueUsed(true);
+            targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
         if (!computeSeaice) {
             bhrAlphaBandNames = IOUtils.getAlbedoBhrAlphaBandNames();
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                Band band = targetProduct.addBand(bhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
-                band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-                band.setNoDataValueUsed(true);
+                targetProduct.addBand(bhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
             }
         }
 
         bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            Band band = targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-            band.setNoDataValueUsed(true);
+            targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
-        Band weightedNumberOfSamplesBand = targetProduct.addBand(weightedNumberOfSamplesBandName,
-                ProductData.TYPE_FLOAT32);
-        weightedNumberOfSamplesBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        weightedNumberOfSamplesBand.setNoDataValueUsed(true);
+        targetProduct.addBand(weightedNumberOfSamplesBandName, ProductData.TYPE_FLOAT32);
 
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
-        Band relEntropyBand = targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
-        relEntropyBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        relEntropyBand.setNoDataValueUsed(true);
+        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
 
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
-        Band goodnessOfFitBand = targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
-        goodnessOfFitBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        goodnessOfFitBand.setNoDataValueUsed(true);
+        targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
         snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        Band snowFractionBand = targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
-        snowFractionBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        snowFractionBand.setNoDataValueUsed(true);
+        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
-        Band dataMaskBand = targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
-        dataMaskBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        dataMaskBand.setNoDataValueUsed(true);
+        targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
 
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
-        Band szaBand = targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
-        szaBand.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
-        szaBand.setNoDataValueUsed(true);
+        targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
+
+        for (Band b:targetProduct.getBands()) {
+            b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
+            b.setNoDataValueUsed(true);
+        }
 
         if (computeSeaice) {
             for (Band b : targetProduct.getBands()) {
