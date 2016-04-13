@@ -93,9 +93,9 @@ public class IOUtils {
                     }
                 }
                 BeamLogManager.getSystemLogger().log
-                        (Level.ALL, "Collecting Daily accumulation BBDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
+                        (Level.INFO, "Collecting Daily accumulation BBDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
                 BeamLogManager.getSystemLogger().log
-                        (Level.ALL, "      Sensor '" + sensor + "': " + numProducts + " products added.");
+                        (Level.INFO, "      Sensor '" + sensor + "': " + numProducts + " products added.");
             }
         }
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
