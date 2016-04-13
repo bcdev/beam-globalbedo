@@ -209,12 +209,9 @@ public class DailyAccumulationOp extends PixelOperator {
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
-        if (x == 1030 && y == 520) {
-            System.out.println("x = " + x);
-        }
-        if (x == 837 && y == 370) {
-            System.out.println("x = " + x);
-        }
+//        if (x == 1030 && y == 520) {
+//            System.out.println("x = " + x);
+//        }
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
             final Accumulator accumulator = getMatricesPerBBDRDataset(sourceSamples, i);
