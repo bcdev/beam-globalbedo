@@ -19,7 +19,7 @@ public class DailyAccumulationSinglePixel {
     private Product[] sourceProducts;
 
     private boolean computeSnow;
-    
+
     private int pixelX;
     private int pixelY;
 
@@ -27,7 +27,7 @@ public class DailyAccumulationSinglePixel {
      * DailyAccumulationSinglePixel constructor
      *
      * @param sourceProducts - the input products to accumulate
-     * @param computeSnow - if true, only snowpixels will be considered
+     * @param computeSnow    - if true, only snowpixels will be considered
      */
     public DailyAccumulationSinglePixel(Product[] sourceProducts, boolean computeSnow) {
         this.sourceProducts = sourceProducts;
@@ -43,6 +43,14 @@ public class DailyAccumulationSinglePixel {
         this.pixelY = pixelY;
     }
 
+    public void setPixelX(int pixelX) {
+        this.pixelX = pixelX;
+    }
+
+    public void setPixelY(int pixelY) {
+        this.pixelY = pixelY;
+    }
+
     /**
      * Performs the daily accumulation
      *
@@ -51,13 +59,14 @@ public class DailyAccumulationSinglePixel {
     public Accumulator accumulate() {
 
         Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
         Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
         // accumulate the matrices from the single products...
         for (int i = 0; i < sourceProducts.length; i++) {
+            final long t1 = System.currentTimeMillis();
             final Accumulator accumulator = getMatricesPerBBDRDataset(i);
             M.plusEquals(accumulator.getM());
             V.plusEquals(accumulator.getV());
@@ -69,8 +78,12 @@ public class DailyAccumulationSinglePixel {
     }
 
     private Accumulator getMatricesPerBBDRDataset(int sourceProductIndex) {
+        final long t1 = System.currentTimeMillis();
         final Matrix bbdr = getBBDR(sourceProductIndex);
         final double[] SD = getSD(sourceProductIndex);
+        final long t2 = System.currentTimeMillis();
+        final long timeGetBBDRandSD = t2 - t1;
+        System.out.println("timeGetBBDRandSD [ms] = " + timeGetBBDRandSD);
 
         if (isLandFilter(sourceProductIndex) || isSnowFilter(sourceProductIndex) ||
                 isBBDRFilter(bbdr) || isSDFilter(SD)) {
@@ -86,7 +99,7 @@ public class DailyAccumulationSinglePixel {
         Matrix C = new Matrix(
                 AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                                  AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
 
         int count = 0;
         int cCount = 0;
@@ -194,7 +207,7 @@ public class DailyAccumulationSinglePixel {
 
     private Matrix getKernels(int sourceProductIndex) {
         Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                                    3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
         final Product product = sourceProducts[sourceProductIndex];
 
         kernels.set(0, 0, 1.0);
@@ -261,7 +274,7 @@ public class DailyAccumulationSinglePixel {
 
         return (bbVis == 0.0 || !AlbedoInversionUtils.isValid(bbVis) || bbVis == 9999.0 ||
                 bbNir == 0.0 || !AlbedoInversionUtils.isValid(bbNir) || bbNir == 9999.0 ||
-                bbSw == 0.0  || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
+                bbSw == 0.0 || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
     }
 
     private boolean isSDFilter(double[] SD) {

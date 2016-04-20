@@ -69,9 +69,10 @@ public class AatsrPrepOp extends Operator {
         //general SzaSubset to less 70 degree
         Product szaSubProduct;
         Rectangle szaRegion = GaHelper.getSzaRegion(sourceProduct.getRasterDataNode("sun_elev_nadir"), true, 69.99);
-        if (szaRegion.x == 0 && szaRegion.y == 0 &&
+        if (szaRegion.height == 1 ||
+                (szaRegion.x == 0 && szaRegion.y == 0 &&
                 szaRegion.width == sourceProduct.getSceneRasterWidth() &&
-                szaRegion.height == sourceProduct.getSceneRasterHeight()) {
+                szaRegion.height == sourceProduct.getSceneRasterHeight())) {
             szaSubProduct = sourceProduct;
         } else {
             Map<String,Object> subsetParam = new HashMap<String, Object>(3);
@@ -86,7 +87,9 @@ public class AatsrPrepOp extends Operator {
         }
 
         // recalibrate AATSR
-        Product recalProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RecalibrateAATSRReflectancesOp.class), GPF.NO_PARAMS, szaSubProduct);
+        Product recalProduct = sourceProduct;
+        // skip for the moment
+        // Product recalProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(RecalibrateAATSRReflectancesOp.class), GPF.NO_PARAMS, szaSubProduct);
 
         // setup target product primarily as copy of source product
         final int rasterWidth = szaSubProduct.getSceneRasterWidth();
@@ -140,7 +143,7 @@ public class AatsrPrepOp extends Operator {
         // copy reflectance bands from recalProduct
         for (Band srcBand : szaSubProduct.getBands()){
             String srcName = srcBand.getName();
-            if (!srcBand.isFlagBand()) {
+            if (!srcBand.isFlagBand() && !targetProduct.containsBand(srcName)) {
                 if (srcName.startsWith("reflec")){
                     ProductUtils.copyBand(srcName, recalProduct, targetProduct, true);
                 } else {
