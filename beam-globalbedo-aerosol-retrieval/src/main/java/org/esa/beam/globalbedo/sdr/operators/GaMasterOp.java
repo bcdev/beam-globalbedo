@@ -123,9 +123,11 @@ public class GaMasterOp extends Operator {
         RenderingHints rhTarget = new RenderingHints(GPF.KEY_TILE_SIZE, targetTS);
         RenderingHints rhAot = new RenderingHints(GPF.KEY_TILE_SIZE, aotTS);
 
-        String productType = sourceProduct.getProductType();
+        final String productType = sourceProduct.getProductType();
+        final String productName = sourceProduct.getName();
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
-        final boolean isAatsrProduct = productType.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+        final boolean isAatsrProduct = productType.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME) ||
+                productName.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
         final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
         final boolean isProbavProduct = productType.startsWith("PROBA-V SYNTHESIS");
 
@@ -221,6 +223,7 @@ public class GaMasterOp extends Operator {
         tarP.setPointingFactory(reflProduct.getPointingFactory());
         ProductUtils.copyMetadata(aotHiresProduct, tarP);
         ProductUtils.copyTiePointGrids(reflProduct, tarP);
+        copyTiePointGridsIfBands(reflProduct, tarP);
         ProductUtils.copyGeoCoding(reflProduct, tarP);
         ProductUtils.copyFlagBands(reflProduct, tarP, true);
         ProductUtils.copyFlagBands(aotHiresProduct, tarP, true);
@@ -242,7 +245,7 @@ public class GaMasterOp extends Operator {
             copyBand = copyBand || (sourceBandName.equals("elevation"));
             copyBand = copyBand || (gaCopyCTP && sourceBandName.equals("cloud_top_press"));
 
-            if (copyBand) {
+            if (copyBand && !tarP.containsBand(sourceBandName) ) {
                 ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
             }
         }
@@ -253,6 +256,17 @@ public class GaMasterOp extends Operator {
             }
         }
         return tarP;
+    }
+
+    private void copyTiePointGridsIfBands(Product reflProduct, Product tarP) {
+        // i.e. if we use netcdf product as L1b input
+        for (Band sourceBand : reflProduct.getBands()) {
+            String sourceBandName = sourceBand.getName();
+            if ((Float.isNaN(sourceBand.getSpectralWavelength()) || sourceBand.getSpectralWavelength() <= 0) &&
+                    !tarP.containsBand(sourceBandName) && !tarP.containsTiePointGrid(sourceBandName)) {
+                ProductUtils.copyBand(sourceBandName, reflProduct, tarP, true);
+            }
+        }
     }
 
     /**
