@@ -127,7 +127,7 @@ public class GaMasterOp extends Operator {
         final String productName = sourceProduct.getName();
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
         final boolean isAatsrProduct = productType.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME) ||
-                productName.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+                productName.contains(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
         final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
         final boolean isProbavProduct = productType.startsWith("PROBA-V SYNTHESIS");
 
