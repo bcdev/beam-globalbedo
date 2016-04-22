@@ -195,7 +195,7 @@ public class GlobalbedoLevel2 extends Operator {
         final Band latBand = sourceProduct.getBand("latitude");
         final Band lonBand = sourceProduct.getBand("longitude");
 //        final int startY = sourceProduct.getSceneRasterHeight()/2;
-        final int startY = 0;
+        final int startY = 2;
         final Rectangle sourceRect = new Rectangle(0, startY, sourceProduct.getSceneRasterWidth()-1, 1);
         final Tile latTile = getSourceTile(latBand, sourceRect);
         final Tile lonTile = getSourceTile(lonBand, sourceRect);
@@ -220,7 +220,7 @@ public class GlobalbedoLevel2 extends Operator {
         subsetOp.setParameterDefaultValues();
         // to be safe, cut two more pixels on each side
         final int subsetX = startX + 2;
-        final int subsetY = startY + 2;
+        final int subsetY = startY;
         final int subsetWidth = endX - startX + 1 - 4;
         final int subsetHeight = sourceProduct.getSceneRasterHeight() - 1 - 4;
         System.out.println("startX = " + startX);
