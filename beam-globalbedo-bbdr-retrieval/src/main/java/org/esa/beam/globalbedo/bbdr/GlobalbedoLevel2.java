@@ -202,7 +202,7 @@ public class GlobalbedoLevel2 extends Operator {
 
         int startX = sourceRect.width - 1;
         for (int x = 0; x <sourceRect.width; x++) {
-            final boolean pixelValid = latTile.getSampleFloat(x, 0) != 0.0 && lonTile.getSampleFloat(x, 0) != 0.0;
+            final boolean pixelValid = latTile.getSampleFloat(x, startY) != 0.0 && lonTile.getSampleFloat(x, startY) != 0.0;
             if (pixelValid) {
                 startX = x;
                 break;
@@ -210,7 +210,7 @@ public class GlobalbedoLevel2 extends Operator {
         }
         int endX = sourceProduct.getSceneRasterWidth()-1;
         for (int x = startX; x <sourceRect.width; x++) {
-            final boolean pixelValid = latTile.getSampleFloat(x, 0) != 0.0 && lonTile.getSampleFloat(x, 0) != 0.0;
+            final boolean pixelValid = latTile.getSampleFloat(x, startY) != 0.0 && lonTile.getSampleFloat(x, startY) != 0.0;
             if (!pixelValid) {
                 endX = x-1;
                 break;
