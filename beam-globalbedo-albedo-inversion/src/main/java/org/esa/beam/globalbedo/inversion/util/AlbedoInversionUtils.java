@@ -59,10 +59,17 @@ public class AlbedoInversionUtils {
                 sourceProduct.getName().startsWith("VGT"))) {
             configurator.defineSample(index, AlbedoInversionConstants.BBDR_VGT_SM_NAME, sourceProduct);
         } else {
-            BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                    (AlbedoInversionConstants.aatsrLandMaskExpression, sourceProduct);
-            Product landMaskProduct = landOp.getTargetProduct();
-            configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+            if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrNadirLandMaskExpression)) {
+                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                        (AlbedoInversionConstants.aatsrNadirLandMaskExpression, sourceProduct);
+                Product landMaskProduct = landOp.getTargetProduct();
+                configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)){
+                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                        (AlbedoInversionConstants.aatsrFwardLandMaskExpression, sourceProduct);
+                Product landMaskProduct = landOp.getTargetProduct();
+                configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
+            }
         }
     }
 

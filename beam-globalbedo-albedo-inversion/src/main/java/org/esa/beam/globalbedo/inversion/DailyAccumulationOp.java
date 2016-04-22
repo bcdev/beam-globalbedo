@@ -385,7 +385,8 @@ public class DailyAccumulationOp extends PixelOperator {
                 sourceProducts[sourceProductIndex].getName().startsWith("MER") ||
                 sourceProducts[sourceProductIndex].getProductType().startsWith("ATS") ||
                 sourceProducts[sourceProductIndex].getName().startsWith("ATS")) {
-            if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
+            if (sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK] != null &&
+                    !sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
                 return true;
             }
         } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("VGT") ||
