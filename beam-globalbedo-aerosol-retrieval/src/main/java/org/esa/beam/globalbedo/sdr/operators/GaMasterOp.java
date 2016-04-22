@@ -127,7 +127,7 @@ public class GaMasterOp extends Operator {
         final String productName = sourceProduct.getName();
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
         final boolean isAatsrProduct = productType.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME) ||
-                productName.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
+                productName.contains(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
         final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
         final boolean isProbavProduct = productType.startsWith("PROBA-V SYNTHESIS");
 
@@ -151,7 +151,14 @@ public class GaMasterOp extends Operator {
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AatsrPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         } else if (isVgtProduct) {
             instrument = "VGT";
-            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+//            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+            VgtPrepOp vgtPrepOp = new VgtPrepOp();
+            vgtPrepOp.setParameterDefaultValues();
+            vgtPrepOp.setSourceProduct(sourceProduct);
+            if (probavUrbanProduct != null) {
+                vgtPrepOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            }
+            reflProduct =  vgtPrepOp.getTargetProduct();
         } else if (isProbavProduct) {
             instrument = "PROBAV";
 //            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ProbavPrepOp.class), GPF.NO_PARAMS, sourceProduct);

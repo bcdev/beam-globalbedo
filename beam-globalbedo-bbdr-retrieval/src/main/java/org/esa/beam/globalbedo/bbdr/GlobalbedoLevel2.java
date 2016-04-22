@@ -18,10 +18,12 @@ package org.esa.beam.globalbedo.bbdr;
 
 
 import com.vividsolutions.jts.geom.Geometry;
+import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
@@ -29,6 +31,7 @@ import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.gpf.operators.standard.SubsetOp;
 import org.esa.beam.util.logging.BeamLogManager;
 
+import java.awt.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -61,6 +64,10 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false", label = " If set, BBDR are computed from previously written SDR")
     private boolean computeBbdrFromSdr;
 
+    @Parameter(defaultValue = "false",
+            label = " If set, AATSR input will be subsetted to valid lat/lon range (recommended for coregistered input)")
+    private boolean subsetAatsr;
+
     @Parameter(defaultValue = "")
     private String tile;
 
@@ -71,6 +78,14 @@ public class GlobalbedoLevel2 extends Operator {
         if (sourceProduct.getPreferredTileSize() == null) {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
+        }
+
+        Product subsettedAatsrProduct = null;
+        if (subsetAatsr && sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+            subsettedAatsrProduct = subsetAatsrToDefinedRegion();
+            // test to check result:
+//            setTargetProduct(subsettedAatsrProduct);
+//            return;
         }
 
         if (sensor == Sensor.PROBAV) {
@@ -90,7 +105,7 @@ public class GlobalbedoLevel2 extends Operator {
             subsetOp.setSourceProduct(sourceProduct);
             productToProcess = subsetOp.getTargetProduct();
         } else {
-            productToProcess = sourceProduct;
+            productToProcess = subsettedAatsrProduct != null ? subsettedAatsrProduct : sourceProduct;
         }
 
         if (computeBbdrFromSdr) {
@@ -174,6 +189,41 @@ public class GlobalbedoLevel2 extends Operator {
             }
             getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
         }
+    }
+
+    private Product subsetAatsrToDefinedRegion() {
+        final Band latBand = sourceProduct.getBand("latitude");
+        final Band lonBand = sourceProduct.getBand("longitude");
+//        final int startY = sourceProduct.getSceneRasterHeight()/2;
+        final int startY = 0;
+        final Rectangle sourceRect = new Rectangle(0, startY, sourceProduct.getSceneRasterWidth()-1, 1);
+        final Tile latTile = getSourceTile(latBand, sourceRect);
+        final Tile lonTile = getSourceTile(lonBand, sourceRect);
+
+        int startX = sourceRect.width - 1;
+        for (int x = 0; x <sourceRect.width; x++) {
+            final boolean pixelValid = latTile.getSampleFloat(x, 0) != 0.0 && lonTile.getSampleFloat(x, 0) != 0.0;
+            if (pixelValid) {
+                startX = x;
+                break;
+            }
+        }
+        int endX = startX;
+        for (int x = startX; x <sourceRect.width; x++) {
+            final boolean pixelValid = latTile.getSampleFloat(x, 0) != 0.0 && lonTile.getSampleFloat(x, 0) != 0.0;
+            if (!pixelValid) {
+                endX = x-1;
+                break;
+            }
+        }
+        SubsetOp subsetOp = new SubsetOp();
+        subsetOp.setParameterDefaultValues();
+        // to be safe, cut two more pixels on each side
+        final Rectangle subsetRect = new Rectangle(startX + 2, startY + 2,
+                                                   endX - startX + 1 - 4, sourceProduct.getSceneRasterHeight() - 1 - 4);
+        subsetOp.setRegion(subsetRect);
+        subsetOp.setSourceProduct(sourceProduct);
+        return subsetOp.getTargetProduct();
     }
 
 

@@ -100,19 +100,39 @@ public class ImageVarianceOp extends Operator {
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));
         if (sensor == Sensor.AATSR_NADIR) {
             double cal2MerisCoeff = getAatsrCal2MerisCoeffByBandName(targetBand.getName());
-            TiePointGrid sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_nadir");
+            RasterDataNode sunElevTpg;
+            if (sourceProduct.getTiePointGrid("sun_elev_nadir") != null) {
+                sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_nadir");
+            } else if (sourceProduct.getBand("sun_elev_nadir") != null) {
+                sunElevTpg = sourceProduct.getBand("sun_elev_nadir");
+            } else {
+                throw new OperatorException("Band or TPG 'sun_elev_nadir' missing");
+            }
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
                 for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    final float sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
-                    final double sza_r = toRadians(sza);
-                    final double mus = cos(sza_r);
-                    final double factor = 0.01 / (cal2MerisCoeff * mus);
-                    targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
+                    final float sza;
+                    try {
+                        sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
+                        final double sza_r = toRadians(sza);
+                        final double mus = cos(sza_r);
+                        final double factor = 0.01 / (cal2MerisCoeff * mus);
+                        targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
+                    } catch (Exception e) {
+                        targetTile.setSample(x, y, variance(sourceTile, x, y, 0.0));
+                    }
+
                 }
             }
         } else if (sensor == Sensor.AATSR_FWARD) {
             double cal2MerisCoeff = getAatsrCal2MerisCoeffByBandName(targetBand.getName());
-            TiePointGrid sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_fward");
+            RasterDataNode sunElevTpg;
+            if (sourceProduct.getTiePointGrid("sun_elev_fward") != null) {
+                sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_fward");
+            } else if (sourceProduct.getBand("sun_elev_fward") != null) {
+                sunElevTpg = sourceProduct.getBand("sun_elev_fward");
+            } else {
+                throw new OperatorException("Band or TPG 'sun_elev_fward' missing");
+            }
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
                 for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
                     final float sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
