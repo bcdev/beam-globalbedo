@@ -219,8 +219,18 @@ public class GlobalbedoLevel2 extends Operator {
         SubsetOp subsetOp = new SubsetOp();
         subsetOp.setParameterDefaultValues();
         // to be safe, cut two more pixels on each side
-        final Rectangle subsetRect = new Rectangle(startX + 2, startY + 2,
-                                                   endX - startX + 1 - 4, sourceProduct.getSceneRasterHeight() - 1 - 4);
+        final int subsetX = startX + 2;
+        final int subsetY = startY + 2;
+        final int subsetWidth = endX - startX + 1 - 4;
+        final int subsetHeight = sourceProduct.getSceneRasterHeight() - 1 - 4;
+        System.out.println("startX = " + startX);
+        System.out.println("endX = " + endX);
+        System.out.println("subsetX = " + subsetX);
+        System.out.println("subsetY = " + subsetY);
+        System.out.println("subsetWidth = " + subsetWidth);
+        System.out.println("subsetHeight = " + subsetHeight);
+
+        final Rectangle subsetRect = new Rectangle(subsetX, subsetY, subsetWidth, subsetHeight);
         subsetOp.setRegion(subsetRect);
         subsetOp.setSourceProduct(sourceProduct);
         return subsetOp.getTargetProduct();
