@@ -110,8 +110,11 @@ public class SdrVgtOp extends BbdrMasterOp {
             // water, do simple atmospheric correction
             targetSamples[TRG_SDR_STATUS].set(status);
             return;
-        } else if (status != StatusPostProcessOp.STATUS_LAND && status != StatusPostProcessOp.STATUS_SNOW) {
-            // not land and not snow
+        } else if (status != StatusPostProcessOp.STATUS_LAND &&
+                   status != StatusPostProcessOp.STATUS_SNOW &&
+                   status != StatusPostProcessOp.STATUS_CLOUD_SHADOW &&  // request JM, 20160314
+                   status != StatusPostProcessOp.STATUS_HAZE) {
+            // not land and not snow and not haze and not cloud shadow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             targetSamples[TRG_SDR_STATUS].set(status);
             return;

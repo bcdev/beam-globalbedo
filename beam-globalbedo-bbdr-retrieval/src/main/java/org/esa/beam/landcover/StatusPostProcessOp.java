@@ -132,6 +132,7 @@ public class StatusPostProcessOp extends MerisBasisOp {
         ctpBand = ctpProduct.getBand("cloud_top_press");
         int extendedWidth;
         int extendedHeight;
+        // TODO verify that this is correct for PROBA as well
         if (l1bProduct.getProductType().startsWith("MER_F")) {
             extendedWidth = 64;
             extendedHeight = 64;

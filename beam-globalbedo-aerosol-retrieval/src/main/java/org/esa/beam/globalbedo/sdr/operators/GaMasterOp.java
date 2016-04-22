@@ -151,7 +151,14 @@ public class GaMasterOp extends Operator {
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AatsrPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         } else if (isVgtProduct) {
             instrument = "VGT";
-            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+//            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);
+            VgtPrepOp vgtPrepOp = new VgtPrepOp();
+            vgtPrepOp.setParameterDefaultValues();
+            vgtPrepOp.setSourceProduct(sourceProduct);
+            if (probavUrbanProduct != null) {
+                vgtPrepOp.setSourceProduct("probavUrbanProduct", probavUrbanProduct);
+            }
+            reflProduct =  vgtPrepOp.getTargetProduct();
         } else if (isProbavProduct) {
             instrument = "PROBAV";
 //            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(ProbavPrepOp.class), GPF.NO_PARAMS, sourceProduct);
