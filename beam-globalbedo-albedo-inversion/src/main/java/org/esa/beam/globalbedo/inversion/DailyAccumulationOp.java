@@ -384,12 +384,8 @@ public class DailyAccumulationOp extends PixelOperator {
     private boolean isLandFilter(Sample[] sourceSamples, int sourceProductIndex) {
 
         if (sourceProducts[sourceProductIndex].getProductType().startsWith("MER") ||
-                sourceProducts[sourceProductIndex].getName().startsWith("MER") ||
-                sourceProducts[sourceProductIndex].getProductType().startsWith("ATS") ||
-                sourceProducts[sourceProductIndex].getName().startsWith("ATS")) {
-            if ( sourceSamples != null &&
-                    sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK] != null &&
-                    !sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
+                sourceProducts[sourceProductIndex].getName().startsWith("MER")) {
+            if (!sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getBoolean()) {
                 return true;
             }
         } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("VGT") ||
@@ -397,6 +393,9 @@ public class DailyAccumulationOp extends PixelOperator {
             if ((sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_LAND_MASK].getInt() & 8) == 0) {
                 return true;
             }
+        } else if (sourceProducts[sourceProductIndex].getProductType().startsWith("ATS") ||
+                sourceProducts[sourceProductIndex].getName().startsWith("ATS")) {
+            return false; // test
         }
         return false;
     }
