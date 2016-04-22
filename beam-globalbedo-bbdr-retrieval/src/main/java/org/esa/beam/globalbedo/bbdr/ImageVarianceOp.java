@@ -135,11 +135,16 @@ public class ImageVarianceOp extends Operator {
             }
             for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
                 for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    final float sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
-                    final double sza_r = toRadians(sza);
-                    final double mus = cos(sza_r);
-                    final double factor = 0.01 / (cal2MerisCoeff * mus);
-                    targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
+                    final float sza;
+                    try {
+                        sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
+                        final double sza_r = toRadians(sza);
+                        final double mus = cos(sza_r);
+                        final double factor = 0.01 / (cal2MerisCoeff * mus);
+                        targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
+                    } catch (Exception e) {
+                        targetTile.setSample(x, y, variance(sourceTile, x, y, 0.0));
+                    }
                 }
             }
         } else {
