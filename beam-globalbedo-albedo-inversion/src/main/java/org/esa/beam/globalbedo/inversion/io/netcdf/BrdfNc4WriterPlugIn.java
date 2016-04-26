@@ -89,7 +89,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             for (String bandName : PARAMETER_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4BrdfMeanVariableAttribute(writeable, b);
+                    addNc4BrdfMeanVariableWithAttributes(writeable, b);
                 }
             }
 
@@ -97,7 +97,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
                     Band b = product.getBand(UNCERTAINTY_BAND_NAMES[i][j]);
                     if (b != null) {
-                        addNc4BrdfVarVariableAttribute(writeable, b);
+                        addNc4BrdfVarVariableWithAttributes(writeable, b);
                     }
                 }
             }
@@ -108,40 +108,40 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
         private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Product p) throws IOException {
             final Band entropyBand = p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
             if (entropyBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, entropyBand,
-                                                     "Entropy", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, entropyBand,
+                                                          "Entropy", NODATA, null);
             }
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, relEntropyBand,
-                                                     "Relative Entropy", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, relEntropyBand,
+                                                          "Relative Entropy", NODATA, null);
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, weightedNumSamplesBand,
-                                                     "Weighted number of BRDF samples", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, weightedNumSamplesBand,
+                                                          "Weighted number of BRDF samples", NODATA, null);
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, goodnessOfFitBand,
-                                                     "Goodness of Fit", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, goodnessOfFitBand,
+                                                          "Goodness of Fit", NODATA, null);
             }
             final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
             if (proportionNSamplesBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, proportionNSamplesBand, "Snow Fraction", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, proportionNSamplesBand, "Snow Fraction", NODATA, null);
             }
             final Band daysClosestSampleBand = p.getBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
             if (daysClosestSampleBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, daysClosestSampleBand,
-                                                     "Number of days to the closest sample", NODATA, "days");
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, daysClosestSampleBand,
+                                                          "Number of days to the closest sample", NODATA, "days");
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
-                addNc4BrdfLatLonVariableAttribute(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
             }
             final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
             if (lonBand != null) {
-                addNc4BrdfLatLonVariableAttribute(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
             }
         }
 
@@ -157,7 +157,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("comment", "none");
         }
 
-        private void addNc4BrdfMeanVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BrdfMeanVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "mean_VIS_f0" --> "Mean of parameter F0 in VIS"
             final String[] bSplit = b.getName().split("_");
@@ -167,7 +167,7 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("coordinates", "lat lon");
         }
 
-        private void addNc4BrdfVarVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BrdfVarVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "VAR_VIS_f0_NIR_f1" --> "Covariance(VIS_F0,NIR_F1)"
             final String[] bSplit = b.getName().split("_");
@@ -178,10 +178,10 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             variable.addAttribute("coordinates", "lat lon");
         }
 
-        private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
-                                                          String longName,
-                                                          float fillValue,
-                                                          String unit) throws IOException {
+        private void addNc4BrdfAncillaryVariableWithAttributes(NFileWriteable writeable, Band b,
+                                                               String longName,
+                                                               float fillValue,
+                                                               String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", fillValue);
@@ -189,10 +189,10 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addUnitAttribute(unit, variable);
         }
 
-        private void addNc4BrdfLatLonVariableAttribute(NFileWriteable writeable, Band b,
-                                                       String longName,
-                                                       String standardName,
-                                                       String unit) throws IOException {
+        private void addNc4BrdfLatLonVariableWithAttributes(NFileWriteable writeable, Band b,
+                                                            String longName,
+                                                            String standardName,
+                                                            String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
             variable.addAttribute("long_name", standardName);
