@@ -65,7 +65,6 @@ public class ReprojectToModisTileOp extends Operator {
         repro.setParameter("northing", northing);
         repro.setParameter("crs", AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING);
         repro.setParameter("resampling", "Nearest");
-        repro.setParameter("includeTiePointGrids", false);
         repro.setParameter("referencePixelX", 0.0);
         repro.setParameter("referencePixelY", 0.0);
         repro.setParameter("orientation", 0.0);

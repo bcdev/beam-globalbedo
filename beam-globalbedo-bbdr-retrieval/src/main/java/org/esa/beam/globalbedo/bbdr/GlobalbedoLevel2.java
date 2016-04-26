@@ -81,7 +81,7 @@ public class GlobalbedoLevel2 extends Operator {
         }
 
         Product subsettedAatsrProduct = null;
-        if (subsetAatsr && sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD) {
+        if (subsetAatsr && (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD)) {
             subsettedAatsrProduct = subsetAatsrToDefinedRegion();
             // test to check result:
 //            setTargetProduct(subsettedAatsrProduct);

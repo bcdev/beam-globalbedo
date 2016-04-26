@@ -53,6 +53,9 @@ public class InversionOp2 extends PixelOperator {
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
     private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_1 = 5;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_2 = 6;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_3 = 7;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
@@ -111,7 +114,7 @@ public class InversionOp2 extends PixelOperator {
     @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorNSamplesBandName;
 
-//    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
+    //    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     @Parameter(defaultValue = "Data_Mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorLandMaskBandName;
 
@@ -143,6 +146,9 @@ public class InversionOp2 extends PixelOperator {
         Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvGoodnessFitTerm1 = productConfigurer.addBand("GoF_TERM_1", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvGoodnessFitTerm2 = productConfigurer.addBand("GoF_TERM_2", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band bInvGoodnessFitTerm3 = productConfigurer.addBand("GoF_TERM_3", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
@@ -151,7 +157,7 @@ public class InversionOp2 extends PixelOperator {
             bInvGoodnessFit.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
         }
 
-        for (Band b:getTargetProduct().getBands()) {
+        for (Band b : getTargetProduct().getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             b.setNoDataValueUsed(true);
         }
@@ -203,7 +209,7 @@ public class InversionOp2 extends PixelOperator {
                     // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
                     // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
                     final String sdMeanBandName = priorSdBandNamePrefix +
-                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j+ "_" +
+                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j + "_" +
                             IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
                     configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
                 }
@@ -236,6 +242,9 @@ public class InversionOp2 extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
+        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
+        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
     }
 
     @Override
@@ -244,10 +253,7 @@ public class InversionOp2 extends PixelOperator {
 //        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-        if (x == 1030 && y == 520) {
-            System.out.println("x = " + x);
-        }
-        if (x == 837 && y == 370) {
+        if (x == 700 && y == 600) {
             System.out.println("x = " + x);
         }
 
@@ -269,6 +275,7 @@ public class InversionOp2 extends PixelOperator {
         }
 
         double goodnessOfFit = 0.0;
+        double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
 //            final Matrix mAcc = accumulator.getM();
@@ -322,6 +329,7 @@ public class InversionOp2 extends PixelOperator {
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+            goodnessOfFitTerms = getGoodnessOfFitTerms(mAcc, vAcc, eAcc, parameters, maskAcc);
 
             // finally we need the 'Days to the closest sample'...
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
@@ -359,7 +367,7 @@ public class InversionOp2 extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, daysToTheClosestSample);
+                          maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -374,9 +382,25 @@ public class InversionOp2 extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
+    private double[] getGoodnessOfFitTerms(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
+        if (maskAcc > 0) {
+            final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
+            final Matrix gofTerm2 = fPars.transpose().times(vAcc);
+            final Matrix m2 = new Matrix(1, 1, 2.0);
+            final Matrix gofTerm3 = m2.times(eAcc);
+            return new double[]{gofTerm1.get(0, 0), gofTerm2.get(0, 0), gofTerm3.get(0, 0)};
+        } else {
+            return new double[]{0.0, 0.0, 0.0};
+        }
+    }
+
+
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample) {
+                                   double weightedNumberOfSamples,
+                                   double goodnessOfFit,
+                                   double[] goodnessOfFitTerms,
+                                   float daysToTheClosestSample) {
 
         // parameters
         int index = 0;
@@ -400,6 +424,9 @@ public class InversionOp2 extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
+        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
+        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
+        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
 
     }
 

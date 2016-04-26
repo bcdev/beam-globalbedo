@@ -85,6 +85,9 @@ public class DailyAccumulationOp extends PixelOperator {
     @Parameter(defaultValue = "true", description = "Write binary accumulator file.")
     private boolean writeBinaryFile;
 
+    @Parameter(defaultValue = "1.0", description = "Weighting of uncertainties (test option, should be 1.0 usually!).")
+    private double uncertaintyWeightingFactor;
+
 
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
