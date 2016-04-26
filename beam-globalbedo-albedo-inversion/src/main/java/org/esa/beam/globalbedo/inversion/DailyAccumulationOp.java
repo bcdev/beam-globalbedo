@@ -333,17 +333,17 @@ public class DailyAccumulationOp extends PixelOperator {
 
     private double[] getSD(Sample[] sourceSamples, int sourceProductIndex) {
         double[] SD = new double[3];
-        SD[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble();
-        SD[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble();
-        SD[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble();
+        SD[0] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_VIS].getDouble();
+        SD[1] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_NIR].getDouble();
+        SD[2] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_SW_SW].getDouble();
         return SD;
     }
 
     private double[] getCorrelation(Sample[] sourceSamples, int sourceProductIndex) {
         double[] correlation = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        correlation[0] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
-        correlation[1] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
-        correlation[2] = sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
+        correlation[0] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_NIR].getDouble();
+        correlation[1] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_VIS_SW].getDouble();
+        correlation[2] = uncertaintyWeightingFactor * sourceSamples[sourceProductIndex * sourceSampleOffset + SRC_SIG_BB_NIR_SW].getDouble();
         return correlation;
     }
 
