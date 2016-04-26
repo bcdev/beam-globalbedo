@@ -48,6 +48,9 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "false", description = "Debug - write more target bands")
     private boolean debug;
 
+    @Parameter(defaultValue = "1.0", description = "Weighting of uncertainties (test option, should be 1.0 usually!).")
+    private double uncertaintyWeightingFactor;
+
     @Override
     public void initialize() throws OperatorException {
 
@@ -85,6 +88,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("computeSeaice", computeSeaice);
             accumulationOp.setParameter("debug", debug);
+            accumulationOp.setParameter("uncertaintyWeightingFactor", uncertaintyWeightingFactor);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();
 

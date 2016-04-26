@@ -40,9 +40,6 @@ public class BbdrAatsrOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (x == 200 && y == 500) {
-            System.out.println("x,y = " + x + "," + y);
-        }
         if (!singlePixelMode) {
             targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
 
