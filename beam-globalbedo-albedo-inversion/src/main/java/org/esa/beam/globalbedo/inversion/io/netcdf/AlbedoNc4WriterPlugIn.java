@@ -91,35 +91,35 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             for (String bandName : BHR_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4BhrVariableAttribute(writeable, b);
+                    addNc4BhrVariableWithAttributes(writeable, b);
                 }
             }
 
             for (String bandName : DHR_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4DhrVariableAttribute(writeable, b);
+                    addNc4DhrVariableWithAttributes(writeable, b);
                 }
             }
 
             for (String bandName : BHR_ALPHA_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4BhrAlphaVariableAttribute(writeable, b);
+                    addNc4BhrAlphaVariableWithAttributes(writeable, b);
                 }
             }
 
             for (String bandName : DHR_ALPHA_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4DhrAlphaVariableAttribute(writeable, b);
+                    addNc4DhrAlphaVariableWithAttributes(writeable, b);
                 }
             }
 
             for (String bandName : BHR_SIGMA_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4BhrSigmaVariableAttribute(writeable, b);
+                    addNc4BhrSigmaVariableWithAttributes(writeable, b);
                 }
 
             }
@@ -127,7 +127,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             for (String bandName : DHR_SIGMA_BAND_NAMES) {
                 Band b = product.getBand(bandName);
                 if (b != null) {
-                    addNc4DhrSigmaVariableAttribute(writeable, b);
+                    addNc4DhrSigmaVariableWithAttributes(writeable, b);
                 }
             }
 
@@ -138,38 +138,38 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
         private void addAcAncillaryVariableAttributes(NFileWriteable writeable, Product p) throws IOException {
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, relEntropyBand,
-                                                     "Relative Entropy", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, relEntropyBand,
+                                                          "Relative Entropy", NODATA, null);
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, weightedNumSamplesBand,
-                                                     "Weighted number of albedo samples", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, weightedNumSamplesBand,
+                                                          "Weighted number of albedo samples", NODATA, null);
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, goodnessOfFitBand,
-                                                     "Goodness of Fit", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, goodnessOfFitBand,
+                                                          "Goodness of Fit", NODATA, null);
             }
             final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
             if (snowFractionBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, snowFractionBand, "Snow Fraction", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, snowFractionBand, "Snow Fraction", NODATA, null);
             }
             final Band dataMaskBand = p.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
             if (dataMaskBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, dataMaskBand, "Data Mask", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, dataMaskBand, "Data Mask", NODATA, null);
             }
             final Band szaBand = p.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
             if (szaBand != null) {
-                addNc4BrdfAncillaryVariableAttribute(writeable, szaBand, "Solar Zenith Angle", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, szaBand, "Solar Zenith Angle", NODATA, null);
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
-                addNc4BrdfLatLonVariableAttribute(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
             }
             final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
             if (lonBand != null) {
-                addNc4BrdfLatLonVariableAttribute(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
             }
         }
 
@@ -185,7 +185,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("comment", "none");
         }
 
-        private void addNc4BhrVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BhrVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "BHR_NIR" --> "Bi-Hemisphere Reflectance albedo - NIR band"
             final String[] bSplit = b.getName().split("_");
@@ -193,7 +193,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addAlbedoVariableAttributes(b, variable, longName);
         }
 
-        private void addNc4DhrVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4DhrVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "DHR_NIR" --> "Directional Hemisphere Reflectance albedo - NIR band"
             final String[] bSplit = b.getName().split("_");
@@ -201,7 +201,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addAlbedoVariableAttributes(b, variable, longName);
         }
 
-        private void addNc4BhrAlphaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BhrAlphaVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "BHR_alpha_NIR_SW" --> "Bi-Hemisphere Reflectance albedo - (NIR,SW) alpha correlation term"
             final String[] bSplit = b.getName().split("_");
@@ -210,7 +210,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addAlbedoVariableAttributes(b, variable, longName);
         }
 
-        private void addNc4DhrAlphaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4DhrAlphaVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "BHR_alpha_NIR_SW" --> "Bi-Hemisphere Reflectance albedo - (NIR,SW) alpha correlation term"
             final String[] bSplit = b.getName().split("_");
@@ -219,7 +219,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addAlbedoVariableAttributes(b, variable, longName);
         }
 
-        private void addNc4BhrSigmaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4BhrSigmaVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "BHR_sigma_NIR" --> "Uncertainty of Bi-Hemisphere Reflectance albedo - NIR band"
             final String[] bSplit = b.getName().split("_");
@@ -228,7 +228,7 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addAlbedoVariableAttributes(b, variable, longName);
         }
 
-        private void addNc4DhrSigmaVariableAttribute(NFileWriteable writeable, Band b) throws IOException {
+        private void addNc4DhrSigmaVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             // e.g. "DHR_sigma_NIR" --> "Uncertainty of Directional Hemisphere Reflectance albedo - NIR band"
             final String[] bSplit = b.getName().split("_");
@@ -244,10 +244,10 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
         }
 
 
-        private void addNc4BrdfAncillaryVariableAttribute(NFileWriteable writeable, Band b,
-                                                          String longName,
-                                                          float fillValue,
-                                                          String unit) throws IOException {
+        private void addNc4BrdfAncillaryVariableWithAttributes(NFileWriteable writeable, Band b,
+                                                               String longName,
+                                                               float fillValue,
+                                                               String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
             variable.addAttribute("fill_value", fillValue);
@@ -255,10 +255,10 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             addUnitAttribute(unit, variable);
         }
 
-        private void addNc4BrdfLatLonVariableAttribute(NFileWriteable writeable, Band b,
-                                                       String longName,
-                                                       String standardName,
-                                                       String unit) throws IOException {
+        private void addNc4BrdfLatLonVariableWithAttributes(NFileWriteable writeable, Band b,
+                                                            String longName,
+                                                            String standardName,
+                                                            String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
             variable.addAttribute("long_name", standardName);
