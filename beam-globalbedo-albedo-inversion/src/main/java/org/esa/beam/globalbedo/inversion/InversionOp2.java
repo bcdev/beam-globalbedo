@@ -370,11 +370,37 @@ public class InversionOp2 extends PixelOperator {
                           maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample);
     }
 
+    // Python breadboard:
+//    def GetGoodnessOfFit(M, V, E, F, Mask, columns, rows):
+//            '''
+//    Compute goodnes of fit of the model to the observation set x^2
+//
+//    x^2 = F^T M F + F^T V - 2E
+//
+//    F and V are stored as a 1X9 vector (transpose), so, actually F^T and V^T are the regular 9X1 vectors
+//
+//    see Eq. 19b in GlobAlbedo -  Albedo ATBD
+//
+//    '''
+//
+//    GoodnessOfFit = numpy.zeros((columns, rows), numpy.float32)
+//
+//            for column in range(0,columns):
+//                for row in range(0,rows):
+//                    if Mask[column,row] > 0:
+//                        GoodnessOfFit[column,row] = ( numpy.matrix(F[:,column,row]) * numpy.matrix(M[:,:,column,row]) *
+//                                                     numpy.matrix(F[:,column,row]).T ) + \
+//                                                    ( numpy.matrix(F[:,column,row]) * numpy.matrix(V[:,column,row]).T ) - \
+//                                                    ( 2 * numpy.matrix(E[column,row]) )
+//
+//            return GoodnessOfFit
+
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
         Matrix goodnessOfFitMatrix = new Matrix(1, 1, 0.0);
         if (maskAcc > 0) {
             final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
-            final Matrix gofTerm2 = fPars.transpose().times(vAcc);
+            final Matrix gofTerm2 = fPars.transpose().times(vAcc);         // fpars = mAcc.solve(vAcc) ?!
+//            final Matrix gofTerm2 = fPars.times(vAcc.transpose());         // like in breadboard but wrong?!
             final Matrix m2 = new Matrix(1, 1, 2.0);
             final Matrix gofTerm3 = m2.times(eAcc);
             goodnessOfFitMatrix = gofTerm1.plus(gofTerm2).minus(gofTerm3);
