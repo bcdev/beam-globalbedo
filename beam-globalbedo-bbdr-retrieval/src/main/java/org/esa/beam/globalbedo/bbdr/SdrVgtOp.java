@@ -87,7 +87,7 @@ public class SdrVgtOp extends BbdrMasterOp {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (x == 100 && y == 500 ) {
+        if (x == 800 && y == 400 ) {
             System.out.println("x = " + x);
         }
         if (writeGeometryAndAOT) {

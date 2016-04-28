@@ -147,9 +147,11 @@ public class BbdrConstants {
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
             "B0", "B2", "B3", "MIR"};
 
+    public final static String VGT_OZO_BAND_NAME = "OG";
+
     public final static String[] VGT_ANCILLARY_BAND_NAMES = new String[]{
             "VZA", "VAA", "SZA", "SAA",
-            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME, "OG", "WVG"
+            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME, VGT_OZO_BAND_NAME, "WVG"
     };
 
     public final static String[] VGT_SDR_BAND_NAMES = new String[]{
