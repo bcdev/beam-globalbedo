@@ -11,6 +11,7 @@ org.esa.beam.globalbedo.bbdr.SdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrProbavOp$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2SinglePixel$Spi
+org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2ExtractL1bSinglePixel$Spi
 org.esa.beam.globalbedo.bbdr.LandcoverLevel2$Spi
 org.esa.beam.globalbedo.bbdr.TileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.ReprojectToModisTileOp$Spi
