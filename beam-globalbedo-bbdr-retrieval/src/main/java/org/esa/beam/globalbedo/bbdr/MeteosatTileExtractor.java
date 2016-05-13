@@ -39,6 +39,8 @@ import java.util.concurrent.*;
 
 /**
  * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles.
+ *
+ * CURRENTLY NOT USED!!
  */
 @OperatorMetadata(alias = "ga.tile.meteosat",
         description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +

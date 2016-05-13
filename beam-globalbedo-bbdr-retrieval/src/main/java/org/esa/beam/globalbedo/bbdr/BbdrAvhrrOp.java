@@ -48,11 +48,27 @@ import static java.lang.StrictMath.toRadians;
                   authors = "Marco Zuehlke, Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
-public class BbdrAvhrrOp extends BbdrMasterOp {
+public class BbdrAvhrrOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         // todo: implement when specific algorithm is available
+        // use Liang coefficients (S.Liang, 2000, eq. (7)):
+        // BB_SW  = -0.337*B1*B1 -0.2707*B2*B2 + 0.7074*B1*B2 + 0.2915*B1 + 0.5256*B2 + 0.0035
+        // BB_VIS = 0.441*B1*B1 0.519*B1 + 0.0074
+        // BB_NIR  = -1.4759*B1*B1 -0.6536*B2*B2 + 1.8591*B1*B2 + 1.063*B2
+
+
+    }
+
+    @Override
+    protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+
+    }
+
+    @Override
+    protected void configureTargetSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+
     }
 
     public static class Spi extends OperatorSpi {

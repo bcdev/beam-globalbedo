@@ -174,6 +174,9 @@ public class GlobalbedoLevel2 extends Operator {
                 case "AVHRR":
                     // todo
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
+                case "METEOSAT":
+                    bbdrOp = new MeteosatBbdrFromBrfOp();
+                    bbdrOp.setParameterDefaultValues();
                 default:
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
             }
