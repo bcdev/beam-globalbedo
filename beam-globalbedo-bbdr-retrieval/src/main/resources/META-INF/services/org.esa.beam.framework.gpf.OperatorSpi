@@ -3,6 +3,7 @@ org.esa.beam.globalbedo.bbdr.BbdrMasterOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrFromSdrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBrfTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.BbdrAvhrrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrProbavOp$Spi
 org.esa.beam.globalbedo.bbdr.Modis09StatusBitMaskOp$Spi
