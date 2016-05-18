@@ -63,24 +63,23 @@ public class BbdrAvhrrOp extends PixelOperator {
     @SourceProduct
     protected Product sourceProduct;
 
-    @Parameter(description = "Sensor")
-    protected Sensor sensor;
-
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        // use Liang coefficients (S.Liang, 2000, eq. (7)):
-        // BB_VIS = 0.441*B1*B1 0.519*B1 + 0.0074
-        // BB_NIR  = -1.4759*B1*B1 -0.6536*B2*B2 + 1.8591*B1*B2 + 1.063*B2
-        // BB_SW  = -0.337*B1*B1 -0.2707*B2*B2 + 0.7074*B1*B2 + 0.2915*B1 + 0.5256*B2 + 0.0035
 
         final double brf1 = sourceSamples[SRC_BRF_1].getDouble();
         final double brf2 = sourceSamples[SRC_BRF_2].getDouble();
-//        final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();
+//        final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();    // todo: how to use these?
 //        final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
         final double sza = sourceSamples[SRC_TS].getDouble();
         final double vza = sourceSamples[SRC_TV].getDouble();
         final double raa = sourceSamples[SRC_PHI].getDouble();
+        final int qa = sourceSamples[SRC_PHI].getInt();
+        // todo: decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513
 
+        // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
+        // BB_VIS = 0.441*B1*B1 0.519*B1 + 0.0074
+        // BB_NIR  = -1.4759*B1*B1 -0.6536*B2*B2 + 1.8591*B1*B2 + 1.063*B2
+        // BB_SW  = -0.337*B1*B1 -0.2707*B2*B2 + 0.7074*B1*B2 + 0.2915*B1 + 0.5256*B2 + 0.0035
         final double bbVis = 0.441*brf1*brf1 + 0.519*brf1 + 0.0074;
         final double bbNir = -1.4759*brf1*brf1 -0.6536*brf2*brf2 + 1.8591*brf1*brf2 + 1.063*brf2;
         final double bbSw  = -0.337*brf1*brf1 - 0.2707*brf2*brf2 + 0.7074*brf1*brf2 + 0.2915*brf1 + 0.5256*brf2 + 0.0035;
