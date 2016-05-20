@@ -137,6 +137,7 @@ public class DailyAccumulationOp extends PixelOperator {
                     AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME, sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_KGEO_BRDF_SW,
                     AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME, sourceProduct);
+            // todo: AOD, NDVI, VZA, SZA, RAA, DEM not used. Maybe can be removed from BBDR product?
             configurator.defineSample((sourceSampleOffset * i) + SRC_AOD550, AlbedoInversionConstants.BBDR_AOD550_NAME,
                     sourceProduct);
             configurator.defineSample((sourceSampleOffset * i) + SRC_NDVI, AlbedoInversionConstants.BBDR_NDVI_NAME,

@@ -22,12 +22,16 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.util.BitSetter;
+import org.esa.beam.util.ProductUtils;
+
+import static java.lang.Math.*;
+import static java.lang.StrictMath.toRadians;
 
 /**
- * Computes BBDRs for AVHRR-LTDR as provided by NG
+ * Generates a GlobAlbedo conform BBDR product from AVHRR-LTDR BRF product provided by JRC (NG)
  *
  * @author Olaf Danne
  */
@@ -59,6 +63,7 @@ public class BbdrAvhrrOp extends PixelOperator {
     protected static final int TRG_VZA = 9;
     protected static final int TRG_SZA = 10;
     protected static final int TRG_RAA = 11;
+    protected static final int TRG_KERN = 12;
 
     @SourceProduct
     protected Product sourceProduct;
@@ -72,9 +77,18 @@ public class BbdrAvhrrOp extends PixelOperator {
 //        final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
         final double sza = sourceSamples[SRC_TS].getDouble();
         final double vza = sourceSamples[SRC_TV].getDouble();
-        final double raa = sourceSamples[SRC_PHI].getDouble();
-        final int qa = sourceSamples[SRC_PHI].getInt();
-        // todo: decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513
+        final double phi = sourceSamples[SRC_PHI].getDouble();
+        final int qa = sourceSamples[SRC_QA].getInt();
+        // todo: decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513:
+
+        final boolean isCloud = BitSetter.isFlagSet(qa, 1);
+        final boolean isCloudShadow = BitSetter.isFlagSet(qa, 2);
+        final boolean isSea = BitSetter.isFlagSet(qa, 3);
+        if (isSea || isCloud || isCloudShadow) {
+            // only compute over clear land
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
         // BB_VIS = 0.441*B1*B1 0.519*B1 + 0.0074
@@ -103,7 +117,42 @@ public class BbdrAvhrrOp extends PixelOperator {
         targetSamples[TRG_sig_BB_SW_SW].set(sigmaBbSwSw);
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
-        targetSamples[TRG_RAA].set(raa);
+        targetSamples[TRG_RAA].set(phi);
+
+        // calculation of kernels (kvol, kgeo)
+
+        final double vzaRad = toRadians(vza);
+        final double szaRad = toRadians(sza);
+        final double muv = cos(vzaRad);
+        final double mus = cos(szaRad);
+        final double phiRad = toRadians(phi);
+
+        final double muPhi = cos(phiRad);
+        final double muPhiAng = mus * muv + sin(vzaRad) * sin(szaRad) * muPhi;
+        final double phAng = acos(muPhiAng);
+
+        final double tanVzaRad = tan(vzaRad);
+        final double tanSzaRad = tan(szaRad);
+        final double secVza = 1. / muv;
+        final double secSza = 1. / mus;
+
+        final double d2 = tanVzaRad * tanVzaRad + tanSzaRad * tanSzaRad - 2 * tanVzaRad * tanSzaRad * muPhi;
+
+        final double hb = 2.0;
+        double cost = hb * (pow((d2 + pow((tanVzaRad * tanSzaRad * sin(phiRad)), 2)), 0.5)) / (secVza + secSza);
+        cost = min(cost, 1.0);
+        final double t = acos(cost);
+
+        final double ocap = (t - sin(t) * cost) * (secVza + secSza) / PI;
+
+        final double kvol = ((PI / 2.0 - phAng) * cos(phAng) + sin(phAng)) / (mus + muv) - PI / 4.0;
+        final double kgeo = 0.5 * (1. + muPhiAng) * secSza * secVza + ocap - secVza - secSza;
+
+        for (int i_bb = 0; i_bb < BbdrConstants.N_SPC; i_bb++) {
+            // for AVHRR, neglect Nsky, coupling terms and weighting (PL, 20160520)
+            targetSamples[TRG_KERN + (i_bb * 2)].set(kvol);
+            targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kgeo);
+        }
     }
 
     @Override
@@ -118,6 +167,9 @@ public class BbdrAvhrrOp extends PixelOperator {
         for (String bbSigmaBandName : BbdrConstants.BB_SIGMA_BAND_NAMES) {
             targetProduct.addBand(bbSigmaBandName, ProductData.TYPE_FLOAT32);
         }
+        for (String bbKernelBandName : BbdrConstants.BB_KERNEL_BAND_NAMES) {
+            targetProduct.addBand(bbKernelBandName, ProductData.TYPE_FLOAT32);
+        }
         targetProduct.addBand("VZA", ProductData.TYPE_FLOAT32);
         targetProduct.addBand("SZA", ProductData.TYPE_FLOAT32);
         targetProduct.addBand("RAA", ProductData.TYPE_FLOAT32);
@@ -126,6 +178,9 @@ public class BbdrAvhrrOp extends PixelOperator {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
+
+        targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
+        ProductUtils.copyBand("QA", sourceProduct, targetProduct, true);
     }
 
     @Override
@@ -156,6 +211,14 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(TRG_VZA, "VZA");
         configurator.defineSample(TRG_SZA, "SZA");
         configurator.defineSample(TRG_RAA, "RAA");
+
+        configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
+        configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
+        configurator.defineSample(TRG_KERN + 2, "Kvol_BRDF_NIR");
+        configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
+        configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
+        configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
+
     }
 
     public static class Spi extends OperatorSpi {

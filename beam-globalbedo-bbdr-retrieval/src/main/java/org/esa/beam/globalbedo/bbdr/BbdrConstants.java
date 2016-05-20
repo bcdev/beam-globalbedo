@@ -180,6 +180,10 @@ public class BbdrConstants {
     public final static String[] BB_SIGMA_BAND_NAMES = new String[]{
             "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW"};
 
+    public final static String[] BB_KERNEL_BAND_NAMES = new String[]{
+            "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
+            "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW"};
+
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
 
