@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.spectral;
 
 import Jama.Matrix;
 import org.esa.beam.globalbedo.inversion.attic.InversionOpOld;
@@ -9,14 +9,13 @@ import org.esa.beam.globalbedo.inversion.attic.InversionOpOld;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class Accumulator {
-
+public class SpectralAccumulator {
     private Matrix M;
     private Matrix V;
     private Matrix E;
     private double mask;
 
-    public Accumulator(Matrix m, Matrix v, Matrix e, double mask) {
+    public SpectralAccumulator(Matrix m, Matrix v, Matrix e, double mask) {
         this.M = m;
         this.V = v;
         this.E = e;
@@ -33,36 +32,35 @@ public class Accumulator {
      *
      * @return Accumulator
      */
-    public static Accumulator createForInversion(float[][][] sumMatrices, int x, int y) {
-
-        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+    public static SpectralAccumulator createForInversion(float[][][] sumMatrices, int x, int y, int numWaveBands) {
+        Matrix M = new Matrix(3 * numWaveBands,
+                              3 * numWaveBands);
+        Matrix V = new Matrix(3 * numWaveBands, 1);
         Matrix E = new Matrix(1, 1);
 
         int index = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+        for (int i = 0; i < 3 * numWaveBands; i++) {
+            for (int j = 0; j < 3 * numWaveBands; j++) {
                 M.set(i, j, sumMatrices[index++][x][y]);
             }
         }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+        for (int i = 0; i < 3 * numWaveBands; i++) {
             V.set(i, 0, sumMatrices[index++][x][y]);
         }
         E.set(0, 0, sumMatrices[index++][x][y]);
 
         final double mask = sumMatrices[index][x][y];
 
-        return new Accumulator(M, V, E, mask);
+        return new SpectralAccumulator(M, V, E, mask);
     }
 
-    public static Accumulator createZeroAccumulator() {
-        final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                        3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+    private static SpectralAccumulator createZeroAccumulator(int numWaveBands) {
+        final Matrix zeroM = new Matrix(3 * numWaveBands,
+                                        3 * numWaveBands);
+        final Matrix zeroV = new Matrix(3 * numWaveBands, 1);
         final Matrix zeroE = new Matrix(1, 1);
 
-        return new Accumulator(zeroM, zeroV, zeroE, 0);
+        return new SpectralAccumulator(zeroM, zeroV, zeroE, 0);
     }
 
     // getters and setters...

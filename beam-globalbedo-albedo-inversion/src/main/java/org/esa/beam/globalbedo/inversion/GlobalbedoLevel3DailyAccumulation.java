@@ -22,6 +22,8 @@ import java.util.logging.Logger;
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.l3.dailyacc")
+//@OperatorMetadata(alias = "ga.l3.dailyacc", autoWriteDisabled = true)
+// NOTE: if autoWriteDisabled = true, computePixel/computeTile will not be entered in operator providing the target product!
 public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
@@ -83,6 +85,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+//            DailyAccumulationPrototype accumulationOp = new DailyAccumulationPrototype();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);

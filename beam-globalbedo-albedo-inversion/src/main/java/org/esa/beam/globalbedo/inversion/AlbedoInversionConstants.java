@@ -38,6 +38,9 @@ public class AlbedoInversionConstants {
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD = "Days_to_the_Closest_Sample";
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME= "Time_to_the_Closest_Sample";    // for CEMS todo: generalize!!
 
+    public final static String MODIS_SPECTRAL_SDR_NAME_PREFIX = "SDR_";  // todo: check with Said's interface
+    public final static String MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX = "SDR_SIGMA_";  // todo: check with Said's interface
+
     public static final String LAT_BAND_NAME= "latitude";
     public static final String LON_BAND_NAME= "longitude";
 

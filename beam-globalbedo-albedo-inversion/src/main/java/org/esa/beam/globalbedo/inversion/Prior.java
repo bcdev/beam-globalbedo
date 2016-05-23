@@ -2,12 +2,8 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.Product;
-import org.esa.beam.framework.gpf.Operator;
-import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.pointop.Sample;
+import org.esa.beam.globalbedo.inversion.attic.InversionOpOld;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
 /**
@@ -31,10 +27,10 @@ public class Prior {
     }
 
     /**
-     * Returns a prior object built from source samples of a prior product to be used for inversion in {@link InversionOp}}.
+     * Returns a prior object built from source samples of a prior product to be used for inversion in {@link InversionOpOld}}.
      * This method basically represents the BB implementation 'GetPrior'
      *
-     * @param sourceSamples    - the source samples as defined in {@link InversionOp}}.
+     * @param sourceSamples    - the source samples as defined in {@link InversionOpOld}}.
      * @param priorScaleFactor - the prior scale factor
      * @return Prior
      */
@@ -47,7 +43,7 @@ public class Prior {
         Matrix inverseC_F = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);  // 9x1
 
         double mask = 0.0;
-        final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;
+        final int priorIndexNsamples = InversionOpOld.SRC_PRIOR_NSAMPLES;
         double nSamplesValue = sourceSamples[priorIndexNsamples].getDouble();
         double nSamples = AlbedoInversionUtils.isValid(nSamplesValue) ? nSamplesValue : 0.0;
 
@@ -59,11 +55,11 @@ public class Prior {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                final int priorIndexMij = InversionOp.SRC_PRIOR_MEAN[i][j];
+                final int priorIndexMij = InversionOpOld.SRC_PRIOR_MEAN[i][j];
                 final double m_ij_value = sourceSamples[priorIndexMij].getDouble();
                 final double m_ij = AlbedoInversionUtils.isValid(m_ij_value) ? m_ij_value : 0.0;
                 priorMean.set(index, 0, m_ij);
-                final int priorIndexSDij = InversionOp.SRC_PRIOR_SD[i][j];
+                final int priorIndexSDij = InversionOpOld.SRC_PRIOR_SD[i][j];
 //                final double sd_ij_value = sourceSamples[priorIndexSDij].getDouble();
 //                final double sd_ij = AlbedoInversionUtils.isValid(sd_ij_value) ? sd_ij_value : 0.0;
                 final double cov_ij_value = sourceSamples[priorIndexSDij].getDouble();
