@@ -17,7 +17,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A new implementation of the full accumulation to be directly called from inversion.
+ * Full accumulation (new implementation in QA4ECV) to be directly called from inversion.
  * The full accumulator is no longer written to binary file.
  *
  * @author Olaf Danne

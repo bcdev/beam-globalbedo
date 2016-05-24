@@ -8,7 +8,7 @@ import org.esa.beam.framework.datamodel.GeoPos;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AlbedoInversionTest extends TestCase {
+public class AlbedoInversionUtilsTest extends TestCase {
 
     public void testGetDateFromDoy() {
         int year = 2005;

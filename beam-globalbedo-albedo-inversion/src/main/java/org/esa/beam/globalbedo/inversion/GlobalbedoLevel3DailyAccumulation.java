@@ -21,9 +21,12 @@ import java.util.logging.Logger;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.dailyacc")
-//@OperatorMetadata(alias = "ga.l3.dailyacc", autoWriteDisabled = true)
-// NOTE: if autoWriteDisabled = true, computePixel/computeTile will not be entered in operator providing the target product!
+@OperatorMetadata(alias = "ga.l3.dailyacc",
+        description = "'Master' operator for the daily accumulation part in Albedo Inversion",
+        autoWriteDisabled = true,    // NOTE: if autoWriteDisabled = true, computePixel/computeTile will not be entered in operator providing the target product!
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011-2016 by Brockmann Consult")
 public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "BBDR root directory")
@@ -61,13 +64,12 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
         try {
-//            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, doy);
             inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
-        if (inputProducts != null && inputProducts.length > 0) {
+        if (inputProducts.length > 0) {
             String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
@@ -85,7 +87,6 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
-//            DailyAccumulationPrototype accumulationOp = new DailyAccumulationPrototype();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);
