@@ -488,7 +488,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         Matrix cDHR = mDHR.times(c.transpose()).times(mDHR.transpose());
 
-        if (isValidCMatrix(c)) {
+        if (AlbedoInversionUtils.isValidCMatrix(c)) {
             alphaDHR[0] = (float) (cDHR.get(0, 1) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(1, 1)));
             alphaDHR[1] = (float) (cDHR.get(0, 2) / Math.sqrt(cDHR.get(0, 0) * cDHR.get(2, 2)));
             alphaDHR[2] = (float) (cDHR.get(1, 2) / Math.sqrt(cDHR.get(1, 1) * cDHR.get(2, 2)));
@@ -514,7 +514,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         Matrix cBHR = mBHR.times(c.transpose()).times(mBHR.transpose());
 
-        if (isValidCMatrix(c)) {
+        if (AlbedoInversionUtils.isValidCMatrix(c)) {
             alphaBHR[0] = (float) (cBHR.get(0, 1) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(1, 1)));
             alphaBHR[1] = (float) (cBHR.get(0, 2) / Math.sqrt(cBHR.get(0, 0) * cBHR.get(2, 2)));
             alphaBHR[2] = (float) (cBHR.get(1, 2) / Math.sqrt(cBHR.get(1, 1) * cBHR.get(2, 2)));
@@ -525,17 +525,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
         }
 
         return alphaBHR;
-    }
-
-    private boolean isValidCMatrix(Matrix c) {
-        for (int i = 0; i <3; i++) {
-            for (int j = 0; j < 3; j++) {
-                if (c.get(i, j) != AlbedoInversionConstants.NO_DATA_VALUE) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 
     private void fillTargetSamples(WritableSample[] targetSamples, AlbedoResult result) {

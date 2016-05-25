@@ -18,6 +18,7 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulation;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class SpectralInversionOp extends PixelOperator {
     private int numTargetParameters;
     private int numTargetUncertainties;
 
-    static final Map<Integer, String> waveBandsOffsetMap = new HashMap<>();
+    static final Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
 
     private FullAccumulator fullAccumulator;
 
@@ -85,10 +86,10 @@ public class SpectralInversionOp extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
 
-        setupWaveBandsOffsetMap(numSdrBands);
+        setupSpectralWaveBandsMap(numSdrBands);
 
-        parameterBandNames = getSpectralInversionParameterBandNames(numSdrBands);
-        uncertaintyBandNames = getInversionUncertaintyBandNames(numSdrBands);
+        parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        uncertaintyBandNames = IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
 
         numTargetParameters = 3 * numSdrBands;
         numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
@@ -230,35 +231,9 @@ public class SpectralInversionOp extends PixelOperator {
         }
     }
 
-    static String[] getSpectralInversionParameterBandNames(int numSdrBands) {
-        String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-        int index = 0;
+    static void setupSpectralWaveBandsMap(int numSdrBands) {
         for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                bandNames[index] = "mean_lambda" + (i + 1) + "_f" + j;
-                index++;
-            }
-        }
-        return bandNames;
-    }
-
-    static String[][] getInversionUncertaintyBandNames(int numSdrBands) {
-        String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
-
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // only UR triangle matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + waveBandsOffsetMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        waveBandsOffsetMap.get(j / 3) + "_f" + (j % 3);
-            }
-        }
-        return bandNames;
-
-    }
-
-    static void setupWaveBandsOffsetMap(int numSdrBands) {
-        for (int i = 0; i < numSdrBands; i++) {
-            waveBandsOffsetMap.put(i, "lambda" + (i + 1));
+            spectralWaveBandsMap.put(i, "lambda" + (i + 1));
         }
     }
 

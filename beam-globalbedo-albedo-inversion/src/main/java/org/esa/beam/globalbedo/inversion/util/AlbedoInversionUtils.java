@@ -485,6 +485,18 @@ public class AlbedoInversionUtils {
         return new Matrix(mArray);
     }
 
+    public static boolean isValidCMatrix(Matrix c) {
+        for (int i = 0; i <3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (c.get(i, j) != AlbedoInversionConstants.NO_DATA_VALUE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
     public static GeoPos getLatLonFromProduct(Product inputProduct) {
         final Band latBand = inputProduct.getBand(AlbedoInversionConstants.LAT_BAND_NAME);
         final Raster latData = latBand.getSourceImage().getData();
