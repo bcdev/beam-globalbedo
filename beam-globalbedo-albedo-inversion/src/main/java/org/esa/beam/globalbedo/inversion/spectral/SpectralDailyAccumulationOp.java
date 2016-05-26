@@ -284,8 +284,7 @@ public class SpectralDailyAccumulationOp extends Operator {
 
 
     private Matrix getKernels(int x, int y) {
-        Matrix kernels = new Matrix(numSdrBands,
-                                    3 * numSdrBands);
+        Matrix kernels = new Matrix(numSdrBands, 3 * numSdrBands);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
