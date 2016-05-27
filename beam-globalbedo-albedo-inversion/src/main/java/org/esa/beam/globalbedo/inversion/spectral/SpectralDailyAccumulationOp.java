@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.spectral;
 
 import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
@@ -9,6 +9,8 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
+import org.esa.beam.globalbedo.inversion.Accumulator;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -18,52 +20,43 @@ import java.io.File;
 import java.util.logging.Level;
 
 /**
- * Daily accumulation part (new implementation in QA4ECV).
- * The daily accumulations are still written to binary files.
- * This prototype only creates a 'dummy' target product which shall not be written to disk.
- * Performance is ~25% better than original version used in GA processing.
+ * Pixel operator implementing the daily accumulation for spectral inversion.
  *
  * @author Olaf Danne
  */
-@OperatorMetadata(alias = "ga.inversion.dailyaccbinary",
-        description = "Provides daily accumulation of single BBDR observations (new improved prototype)",
+@SuppressWarnings({"MismatchedReadAndWriteOfArray", "StatementWithEmptyBody"})
+@OperatorMetadata(alias = "ga.inversion.dailyaccbinary.spectral",
+        description = "Provides spectral daily accumulation of single SDR observations",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2016 by Brockmann Consult")
-public class DailyAccumulationOp extends Operator {
+public class SpectralDailyAccumulationOp extends Operator {
 
-    @SourceProducts(description = "BBDR source product")
+
+    @SourceProducts(description = "SDR source products")
     private Product[] sourceProducts;
+
+
+    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    private int numSdrBands;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
-    private boolean computeSeaice;
-
     @Parameter(defaultValue = "false", description = "Debug - run additional parts of code if needed.")
     private boolean debug;
-
-    @Parameter(defaultValue = "true", description = "Write binary accumulator file.")
-    private boolean writeBinaryFile;
-
-    @Parameter(defaultValue = "1.0", description = "Weighting of uncertainties (test option, should be 1.0 usually!).")
-    private double uncertaintyWeightingFactor;
 
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
 
+    private static final int sourceSampleOffset = 100;  // this value must be >= number of bands in a source product
+
     private float[][][] resultArray;
 
-    private Tile[] bbVisTile;
-    private Tile[] bbNirTile;
-    private Tile[] bbSwTile;
-    private Tile[] sigBbVisVisTile;
-    private Tile[] sigBbVisNirTile;
-    private Tile[] sigBbVisSwTile;
-    private Tile[] sigBbNirNirTile;
-    private Tile[] sigBbNirSwTile;
-    private Tile[] sigBbSwSwTile;
+
+    private Tile[][] sdrTiles;
+    private Tile[][] sigmaSdrTiles;
+
     private Tile[] kvolVisTile;
     private Tile[] kvolNirTile;
     private Tile[] kvolSwTile;
@@ -73,6 +66,12 @@ public class DailyAccumulationOp extends Operator {
     private Tile[] snowMaskTile;
 
     private int currentSourceProductIndex;
+    private int numSigmaSdrBands;
+
+    private String[] sdrBandNames;
+    private String[] sigmaSdrBandNames;
+    private int[] sigmaSdrDiagonalIndices;
+    private int[] sigmaSdrURIndices;
 
 
     @Override
@@ -82,15 +81,16 @@ public class DailyAccumulationOp extends Operator {
                                                    AlbedoInversionConstants.MODIS_TILE_WIDTH,
                                                    AlbedoInversionConstants.MODIS_TILE_HEIGHT);
 
-        bbVisTile = new Tile[sourceProducts.length];
-        bbNirTile = new Tile[sourceProducts.length];
-        bbSwTile = new Tile[sourceProducts.length];
-        sigBbVisVisTile = new Tile[sourceProducts.length];
-        sigBbVisNirTile = new Tile[sourceProducts.length];
-        sigBbVisSwTile = new Tile[sourceProducts.length];
-        sigBbNirNirTile = new Tile[sourceProducts.length];
-        sigBbNirSwTile = new Tile[sourceProducts.length];
-        sigBbSwSwTile = new Tile[sourceProducts.length];
+        sdrTiles = new Tile[sourceProducts.length][numSdrBands];
+        // (7*7 - 7)/2  + 7 = 28 sigma bands default (UR matrix)
+        numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands)/2 + numSdrBands;
+        sigmaSdrTiles = new Tile[sourceProducts.length][numSigmaSdrBands];
+
+        sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
+        sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
+        sigmaSdrDiagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numSdrBands);
+        sigmaSdrURIndices = SpectralInversionUtils.getSigmaSdrURIndices(numSdrBands, numSigmaSdrBands);
+
         kvolVisTile = new Tile[sourceProducts.length];
         kvolNirTile = new Tile[sourceProducts.length];
         kvolSwTile = new Tile[sourceProducts.length];
@@ -103,18 +103,17 @@ public class DailyAccumulationOp extends Operator {
                 [AlbedoInversionConstants.MODIS_TILE_WIDTH]
                 [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
 
+
+
         for (int k = 0; k < sourceProducts.length; k++) {
-            bbVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_VIS_NAME), sourceRect);
-            bbNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_NIR_NAME), sourceRect);
-            bbSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_SW_NAME), sourceRect);
-
-            sigBbVisVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_VIS_NAME), sourceRect);
-            sigBbVisNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_NIR_NAME), sourceRect);
-            sigBbVisSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_VIS_SW_NAME), sourceRect);
-            sigBbNirNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_NIR_NIR_NAME), sourceRect);
-            sigBbNirSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_NIR_SW_NAME), sourceRect);
-            sigBbSwSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SIG_BB_SW_SW_NAME), sourceRect);
-
+            int sdrIndex = 0;
+            for (int j = 0; j < numSdrBands; j++) {
+                sdrTiles[k][j] = getSourceTile(sourceProducts[k].getBand(sdrBandNames[sdrIndex++]), sourceRect);
+            }
+            int sigmaSdrIndex = 0;
+            for (int j = 0; j < numSigmaSdrBands; j++) {
+                sigmaSdrTiles[k][j] = getSourceTile(sourceProducts[k].getBand(sigmaSdrBandNames[sigmaSdrIndex++]), sourceRect);
+            }
             kvolVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME), sourceRect);
             kvolNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME), sourceRect);
             kvolSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME), sourceRect);
@@ -143,9 +142,9 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private void accumulate(int x, int y) {
-        Matrix M = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                              3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        Matrix V = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        Matrix M = new Matrix(3 * numSdrBands,
+                              3 * numSdrBands);
+        Matrix V = new Matrix(3 * numSdrBands, 1);
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
@@ -177,14 +176,14 @@ public class DailyAccumulationOp extends Operator {
         final double[] correlation = getCorrelation(x, y);
         final double[] SD = getSD(x, y);
         Matrix C = new Matrix(
-                AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                  AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+                numSdrBands * numSdrBands, 1);
+        Matrix thisC = new Matrix(numSdrBands,
+                                  numSdrBands);
 
         int count = 0;
         int cCount = 0;
-        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-            for (int k = j + 1; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
+        for (int j = 0; j < numSdrBands; j++) {
+            for (int k = j + 1; k < numSdrBands; k++) {
                 if (k == j + 1) {
                     cCount++;
                 }
@@ -195,14 +194,14 @@ public class DailyAccumulationOp extends Operator {
         }
 
         cCount = 0;
-        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+        for (int j = 0; j < numSdrBands; j++) {
             C.set(cCount, 0, SD[j] * SD[j]);
-            cCount = cCount + AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS - j;
+            cCount = cCount + numSdrBands - j;
         }
 
         count = 0;
-        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-            for (int k = j; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
+        for (int j = 0; j < numSdrBands; j++) {
+            for (int k = j; k < numSdrBands; k++) {
                 thisC.set(j, k, C.get(count, 0));
                 thisC.set(k, j, thisC.get(j, k));
                 count++;
@@ -223,46 +222,60 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private Accumulator getZeroAccumulator() {
-        final Matrix zeroM = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                        3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
-        final Matrix zeroV = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
+        final Matrix zeroM = new Matrix(3 * numSdrBands,
+                                        3 * numSdrBands);
+        final Matrix zeroV = new Matrix(3 * numSdrBands, 1);
         final Matrix zeroE = new Matrix(1, 1);
 
         return new Accumulator(zeroM, zeroV, zeroE, 0);
     }
 
     private Matrix getBBDR(int x, int y) {
-        Matrix bbdr = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
-        bbdr.set(0, 0, bbVisTile[currentSourceProductIndex].getSampleDouble(x, y));
-        bbdr.set(1, 0, bbNirTile[currentSourceProductIndex].getSampleDouble(x, y));
-        bbdr.set(2, 0, bbSwTile[currentSourceProductIndex].getSampleDouble(x, y));
+        Matrix bbdr = new Matrix(numSdrBands, 1);
+        for (int j = 0; j < numSdrBands; j++) {
+            bbdr.set(0, 0, sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y));
+        }
         return bbdr;
     }
 
     private double[] getSD(int x, int y) {
-        double[] SD = new double[3];
-        SD[0] = sigBbVisVisTile[currentSourceProductIndex].getSampleDouble(x, y);
-        SD[1] = sigBbNirNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        SD[2] = sigBbSwSwTile[currentSourceProductIndex].getSampleDouble(x, y);
+        double[] SD = new double[numSdrBands];
+        // sigma_00 xx xx xx xx xx xx
+        // sigma_   01 xx xx xx xx xx
+        // sigma_      02 xx xx xx xx
+        // sigma_         03 xx xx xx
+        // sigma_            04 xx xx
+        // sigma_               05 xx
+        // sigma_                  06
+        for (int j = 0; j < numSdrBands; j++) {
+            SD[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
+        }
         return SD;
     }
 
     private double[] getCorrelation(int x, int y) {
-        double[] correlation = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        correlation[0] = sigBbVisNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        correlation[1] = sigBbVisSwTile[currentSourceProductIndex].getSampleDouble(x, y);
-        correlation[2] = sigBbNirSwTile[currentSourceProductIndex].getSampleDouble(x, y);
+        double[] correlation = new double[numSigmaSdrBands - numSdrBands];
+        // sigma_xx 01 02 03 04 05 06
+        // sigma_   xx 02 03 04 05 06
+        // sigma_      xx 03 04 05 06
+        // sigma_         xx 04 05 06
+        // sigma_            xx 05 06
+        // sigma_               xx 06
+        // sigma_                  xx
+        for (int j = 0; j < sigmaSdrURIndices.length; j++) {
+            correlation[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrURIndices[j]].getSampleDouble(x, y);
+        }
         return correlation;
     }
 
     private void fillBinaryResultArray(Accumulator accumulator, int x, int y) {
         int offset = 0;
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+        for (int i = 0; i < 3 * numSdrBands; i++) {
+            for (int j = 0; j < 3 * numSdrBands; j++) {
                 resultArray[offset++][x][y] = (float) accumulator.getM().get(i, j);
             }
         }
-        for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+        for (int i = 0; i < 3 * numSdrBands; i++) {
             resultArray[offset++][x][y] = (float) accumulator.getV().get(i, 0);
         }
         resultArray[offset++][x][y] = (float) accumulator.getE().get(0, 0);
@@ -271,8 +284,7 @@ public class DailyAccumulationOp extends Operator {
 
 
     private Matrix getKernels(int x, int y) {
-        Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                                    3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
+        Matrix kernels = new Matrix(numSdrBands, 3 * numSdrBands);
 
         kernels.set(0, 0, 1.0);
         kernels.set(1, 3, 1.0);
@@ -293,27 +305,31 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private boolean isBBDRFilter(int x, int y) {
-        final double bbVis = bbVisTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double bbNir = bbNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double bbSw = bbSwTile[currentSourceProductIndex].getSampleDouble(x, y);
-
-        return (bbVis == 0.0 || !AlbedoInversionUtils.isValid(bbVis) || bbVis == 9999.0 ||
-                bbNir == 0.0 || !AlbedoInversionUtils.isValid(bbNir) || bbNir == 9999.0 ||
-                bbSw == 0.0 || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
+        for (int j = 0; j < numSdrBands; j++) {
+            final double sdr = sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y);
+            if (sdr == 0.0 || !AlbedoInversionUtils.isValid(sdr) || sdr == 9999.0) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean isSDFilter(int x, int y) {
-        final double sigBbVisVis = sigBbVisVisTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double sigBbNirNir = sigBbNirNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double sigBbSwSw = sigBbSwSwTile[currentSourceProductIndex].getSampleDouble(x, y);
-        return (sigBbVisVis == 0.0 && sigBbNirNir == 0.0 && sigBbSwSw == 0.0);
+        for (int j = 0; j < numSdrBands; j++) {
+            final double sigmaSdr = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
+            if (sigmaSdr == 0.0 || !AlbedoInversionUtils.isValid(sigmaSdr) || sigmaSdr == 9999.0) {
+                return true;
+            }
+        }
+        return false;
     }
 
 
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(DailyAccumulationOp.class);
+            super(SpectralDailyAccumulationOp.class);
         }
     }
+
 }

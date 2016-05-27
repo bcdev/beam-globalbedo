@@ -64,7 +64,7 @@ public class AlbedoInversionUtils {
                         (AlbedoInversionConstants.aatsrNadirLandMaskExpression, sourceProduct);
                 Product landMaskProduct = landOp.getTargetProduct();
                 configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
-            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)){
+            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)) {
                 BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
                         (AlbedoInversionConstants.aatsrFwardLandMaskExpression, sourceProduct);
                 Product landMaskProduct = landOp.getTargetProduct();
@@ -72,6 +72,30 @@ public class AlbedoInversionUtils {
             }
         }
     }
+
+    public static Product computeLandMaskProduct(Product sourceProduct) {
+        Product landMaskProduct = null;
+        if ((sourceProduct.getProductType().startsWith("MER") ||
+                sourceProduct.getName().startsWith("MER"))) {
+            BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                    (AlbedoInversionConstants.merisLandMaskExpression, sourceProduct);
+            landMaskProduct = landOp.getTargetProduct();
+        } else if ((sourceProduct.getProductType().startsWith("VGT") ||
+                sourceProduct.getName().startsWith("VGT"))) {
+        } else {
+            if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrNadirLandMaskExpression)) {
+                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                        (AlbedoInversionConstants.aatsrNadirLandMaskExpression, sourceProduct);
+                landMaskProduct = landOp.getTargetProduct();
+            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)) {
+                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
+                        (AlbedoInversionConstants.aatsrFwardLandMaskExpression, sourceProduct);
+                landMaskProduct = landOp.getTargetProduct();
+            }
+        }
+        return landMaskProduct;
+    }
+
 
     /**
      * Adds a land mask sample definition to a configurator used in a point operator
@@ -223,15 +247,14 @@ public class AlbedoInversionUtils {
     /**
      * gets the corresponding MODIS tile for a given lat/lon pair
      *
-     * @param latitude - the latitude
+     * @param latitude  - the latitude
      * @param longitude - the longitude
-     *
      * @return String
      */
     public static String getModisTileFromLatLon(float latitude, float longitude) {
-        int latTileIndex = (90 - (int)latitude)/10;   // e.g. latTileIndex = 3 for 55.49N
+        int latTileIndex = (90 - (int) latitude) / 10;   // e.g. latTileIndex = 3 for 55.49N
         final int yIndexInTile =
-                (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT * (90.0 - latTileIndex*10.0 - latitude) / 10.0);
+                (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT * (90.0 - latTileIndex * 10.0 - latitude) / 10.0);
 
         // check tiles on that latitude
         // e.g. h06v03, h07v03,..., h29v03:
@@ -249,7 +272,7 @@ public class AlbedoInversionUtils {
                         return tileToCheck;
                     }
                     // we haven't found the tile yet, but are at the off-planet eastern edge now. So this must be the one.
-                    if (!rightGeoPos.isValid())                                                                    {
+                    if (!rightGeoPos.isValid()) {
                         return tileToCheck;
                     }
                 }
@@ -267,7 +290,7 @@ public class AlbedoInversionUtils {
                         return tileToCheck;
                     }
                     // we haven't found the tile yet, but are at the off-planet western edge now. So this must be the one.
-                    if (!leftGeoPos.isValid())                                                                    {
+                    if (!leftGeoPos.isValid()) {
                         return tileToCheck;
                     }
                 }
@@ -276,7 +299,6 @@ public class AlbedoInversionUtils {
 
         return null;
     }
-
 
 
     /**
@@ -437,11 +459,11 @@ public class AlbedoInversionUtils {
         return (float) Math.exp(-1.0 * Math.abs(dayDifference) / AlbedoInversionConstants.HALFLIFE);
     }
 
-    public static  Matrix getMatrix2DTruncated(Matrix m) {
+    public static Matrix getMatrix2DTruncated(Matrix m) {
         // this is just because we want to have float precision as in standard algo, where we go down to floats
         // when writing/reading the binary accumulators.
         final double[][] mArray = m.getArray();
-        for (int i=0; i<mArray.length; i++) {
+        for (int i = 0; i < mArray.length; i++) {
             for (int j = 0; j < mArray[0].length; j++) {
                 final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
                 mArray[i][j] = dElem;
@@ -450,11 +472,11 @@ public class AlbedoInversionUtils {
         return new Matrix(mArray);
     }
 
-    public static  Matrix getMatrix1DTruncated(Matrix m) {
+    public static Matrix getMatrix1DTruncated(Matrix m) {
         // this is just because we want to have float precision as in standard algo, where we go down to floats
         // when writing/reading the binary accumulators.
         final double[][] mArray = m.getArray();
-        for (int i=0; i<mArray.length; i++) {
+        for (int i = 0; i < mArray.length; i++) {
             for (int j = 0; j < mArray[0].length; j++) {
                 final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
                 mArray[i][j] = dElem;
@@ -462,6 +484,18 @@ public class AlbedoInversionUtils {
         }
         return new Matrix(mArray);
     }
+
+    public static boolean isValidCMatrix(Matrix c) {
+        for (int i = 0; i <3; i++) {
+            for (int j = 0; j < 3; j++) {
+                if (c.get(i, j) != AlbedoInversionConstants.NO_DATA_VALUE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
 
     public static GeoPos getLatLonFromProduct(Product inputProduct) {
         final Band latBand = inputProduct.getBand(AlbedoInversionConstants.LAT_BAND_NAME);

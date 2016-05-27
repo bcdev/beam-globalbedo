@@ -61,6 +61,10 @@ public class BbdrConstants {
 //            1.0f, 1.0f
 //    };
 
+    public final static float[] MODIS_WAVELENGHTS = {
+            645.0f, 865.0f, 470.0f, 555.0f, 1240.0f, 1640.0f, 2130.0f
+    };
+
 
     // MERIS has ozone, but no water vapour image
     // AATSR has neither ozone nor water vapour image
@@ -147,9 +151,11 @@ public class BbdrConstants {
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
             "B0", "B2", "B3", "MIR"};
 
+    public final static String VGT_OZO_BAND_NAME = "OG";
+
     public final static String[] VGT_ANCILLARY_BAND_NAMES = new String[]{
             "VZA", "VAA", "SZA", "SAA",
-            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME, "OG", "WVG"
+            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME, VGT_OZO_BAND_NAME, "WVG"
     };
 
     public final static String[] VGT_SDR_BAND_NAMES = new String[]{
@@ -171,6 +177,16 @@ public class BbdrConstants {
 
     public final static String[] PROBAV_SDR_ERROR_BAND_NAMES = new String[]{
             "sdr_error_BLUE", "sdr_error_RED", "sdr_error_NIR", "sdr_error_SWIR"};
+
+    public final static String[] BB_BAND_NAMES = new String[]{
+            "BB_VIS", "BB_NIR", "BB_SW"};
+
+    public final static String[] BB_SIGMA_BAND_NAMES = new String[]{
+            "sig_BB_VIS_VIS", "sig_BB_VIS_NIR", "sig_BB_VIS_SW", "sig_BB_NIR_NIR", "sig_BB_NIR_SW", "sig_BB_SW_SW"};
+
+    public final static String[] BB_KERNEL_BAND_NAMES = new String[]{
+            "Kvol_BRDF_VIS", "Kvol_BRDF_NIR", "Kvol_BRDF_SW",
+            "Kgeo_BRDF_VIS", "Kgeo_BRDF_NIR", "Kgeo_BRDF_SW"};
 
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;

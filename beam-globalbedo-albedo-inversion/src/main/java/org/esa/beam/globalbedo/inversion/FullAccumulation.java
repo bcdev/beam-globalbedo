@@ -17,12 +17,12 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * A preliminary implementation to test full accumulation to directly call from inversion
- * and not to write to binary file
+ * Full accumulation (new implementation in QA4ECV) to be directly called from inversion.
+ * The full accumulator is no longer written to binary file.
  *
  * @author Olaf Danne
  */
-public class FullAccumulationPrototype {
+public class FullAccumulation {
 
     private int rasterWidth;
     private int rasterHeight;
@@ -39,10 +39,10 @@ public class FullAccumulationPrototype {
 
     FullAccumulator result;
 
-    public FullAccumulationPrototype(int rasterWidth, int rasterHeight,
-                                     String gaRootDir, String tile,
-                                     int year, int doy,
-                                     int wings, boolean computeSnow) {
+    public FullAccumulation(int rasterWidth, int rasterHeight,
+                            String gaRootDir, String tile,
+                            int year, int doy,
+                            int wings, boolean computeSnow) {
         this.rasterWidth = rasterWidth;
         this.rasterHeight = rasterHeight;
         this.gaRootDir = gaRootDir;

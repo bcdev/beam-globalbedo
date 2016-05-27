@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-auxdata</symbolicName>
-    <version>0.1</version>
+    <version>2.0.3-SNAPSHOT</version>
     <name>Globalbedo Auxdata</name>
     <description>
         Globalbedo Auxdata module.

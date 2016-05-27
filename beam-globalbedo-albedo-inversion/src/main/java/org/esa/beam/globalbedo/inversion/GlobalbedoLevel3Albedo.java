@@ -38,12 +38,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * 'Master' operator for the final albedo retrieval part
+ * Computes albedo from BRDF products.
  *
  * @author Olaf Danne
- * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.albedo")
+@OperatorMetadata(alias = "ga.l3.albedo",
+        description = "Computes albedo from BRDF products.",
+        authors = "Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
+
 public class GlobalbedoLevel3Albedo extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo

@@ -1,4 +1,4 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.attic;
 
 
 import Jama.LUDecomposition;
@@ -13,6 +13,10 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.globalbedo.inversion.Accumulator;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.FullAccumulator;
+import org.esa.beam.globalbedo.inversion.Prior;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
@@ -26,13 +30,13 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.inversion",
+@OperatorMetadata(alias = "ga.inversion.inversion.old",
         description = "Performs final inversion from fully accumulated optimal estimation matrices",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")
 
-public class InversionOp2 extends PixelOperator {
+public class InversionOpOld extends PixelOperator {
 
     public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
 
@@ -53,9 +57,6 @@ public class InversionOp2 extends PixelOperator {
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
     private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_1 = 5;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_2 = 6;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_3 = 7;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
@@ -81,11 +82,8 @@ public class InversionOp2 extends PixelOperator {
     @Parameter(description = "Day of year")
     private int doy;
 
-    @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
-    private int wings;
-
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    @Parameter(description = "Full accumulator filename (full path)")
+    private String fullAccumulatorFilePath;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -114,7 +112,7 @@ public class InversionOp2 extends PixelOperator {
     @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorNSamplesBandName;
 
-    //    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     @Parameter(defaultValue = "Data_Mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorLandMaskBandName;
 
@@ -146,9 +144,6 @@ public class InversionOp2 extends PixelOperator {
         Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm1 = productConfigurer.addBand("GoF_TERM_1", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm2 = productConfigurer.addBand("GoF_TERM_2", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm3 = productConfigurer.addBand("GoF_TERM_3", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
@@ -157,7 +152,7 @@ public class InversionOp2 extends PixelOperator {
             bInvGoodnessFit.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
         }
 
-        for (Band b : getTargetProduct().getBands()) {
+        for (Band b:getTargetProduct().getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             b.setNoDataValueUsed(true);
         }
@@ -176,10 +171,13 @@ public class InversionOp2 extends PixelOperator {
             rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         }
 
-        FullAccumulationPrototype fullAccumulation = new FullAccumulationPrototype(rasterWidth, rasterHeight,
-                                                                                   gaRootDir, tile, year, doy,
-                                                                                   wings, computeSnow);
-        fullAccumulator = fullAccumulation.getResult();
+        System.out.println("Reading full accumulator file...");
+        fullAccumulator = IOUtils.getAccumulatorFromBinaryFile
+                (year, doy, fullAccumulatorFilePath,
+                 IOUtils.getDailyAccumulatorBandNames().length + 1,
+                 rasterWidth, rasterHeight, true);
+
+        System.out.println("Done reading full accumulator file.");
 
         // prior product:
         // we have:
@@ -192,7 +190,7 @@ public class InversionOp2 extends PixelOperator {
                     // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
 //                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
                     // Oct. 2015 version, e.g. Mean_VIS_f0
-                    final String meanBandName = priorMeanBandNamePrefix + IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
+                    final String meanBandName = priorMeanBandNamePrefix + IOUtils.bbdrWaveBandsMap.get(i / 3) + "_f" + j;
                     configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
 
 //                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
@@ -209,8 +207,8 @@ public class InversionOp2 extends PixelOperator {
                     // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
                     // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
                     final String sdMeanBandName = priorSdBandNamePrefix +
-                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j + "_" +
-                            IOUtils.waveBandsOffsetMap.get(i / 3) + "_f" + j;
+                            IOUtils.bbdrWaveBandsMap.get(i / 3) + "_f" + j+ "_" +
+                            IOUtils.bbdrWaveBandsMap.get(i / 3) + "_f" + j;
                     configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
                 }
             }
@@ -242,9 +240,6 @@ public class InversionOp2 extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
     }
 
     @Override
@@ -253,7 +248,10 @@ public class InversionOp2 extends PixelOperator {
 //        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-        if (x == 700 && y == 600) {
+        if (x == 1030 && y == 520) {
+            System.out.println("x = " + x);
+        }
+        if (x == 837 && y == 370) {
             System.out.println("x = " + x);
         }
 
@@ -275,7 +273,6 @@ public class InversionOp2 extends PixelOperator {
         }
 
         double goodnessOfFit = 0.0;
-        double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
 //            final Matrix mAcc = accumulator.getM();
@@ -329,7 +326,6 @@ public class InversionOp2 extends PixelOperator {
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
-            goodnessOfFitTerms = getGoodnessOfFitTerms(mAcc, vAcc, eAcc, parameters, maskAcc);
 
             // finally we need the 'Days to the closest sample'...
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
@@ -367,7 +363,7 @@ public class InversionOp2 extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample);
+                          maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
@@ -382,25 +378,9 @@ public class InversionOp2 extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
-    private double[] getGoodnessOfFitTerms(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
-        if (maskAcc > 0) {
-            final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
-            final Matrix gofTerm2 = fPars.transpose().times(vAcc);
-            final Matrix m2 = new Matrix(1, 1, 2.0);
-            final Matrix gofTerm3 = m2.times(eAcc);
-            return new double[]{gofTerm1.get(0, 0), gofTerm2.get(0, 0), gofTerm3.get(0, 0)};
-        } else {
-            return new double[]{0.0, 0.0, 0.0};
-        }
-    }
-
-
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
-                                   double weightedNumberOfSamples,
-                                   double goodnessOfFit,
-                                   double[] goodnessOfFitTerms,
-                                   float daysToTheClosestSample) {
+                                   double weightedNumberOfSamples, double goodnessOfFit, float daysToTheClosestSample) {
 
         // parameters
         int index = 0;
@@ -424,9 +404,6 @@ public class InversionOp2 extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
 
     }
 
@@ -449,7 +426,7 @@ public class InversionOp2 extends PixelOperator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(InversionOp2.class);
+            super(InversionOpOld.class);
         }
     }
 }

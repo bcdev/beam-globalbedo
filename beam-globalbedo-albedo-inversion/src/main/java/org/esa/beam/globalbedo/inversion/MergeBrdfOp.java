@@ -23,7 +23,7 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALB
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.albedo.mergebrdf",
-        description = "Provides daily accumulation of single BBDR observations",
+        description = "Merges BRDF Snow/NoSnow products.",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011 by Brockmann Consult")

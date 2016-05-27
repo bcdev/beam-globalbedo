@@ -160,8 +160,16 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
                 case "PROBAV":
-                    bbdrOp = new BbdrProbavOp();
+                    if (computeSdr) {
+                        bbdrOp = new SdrProbavOp();
+                    } else {
+                        bbdrOp = new BbdrProbavOp();
+                    }
                     bbdrOp.setParameterDefaultValues();
+                    if (computeSdr) {
+                        bbdrOp.setParameter("sdrOnly", true);
+                        bbdrOp.setParameter("writeGeometryAndAOT", true);
+                    }
                     break;
                 case "AATSR_NADIR":
                 case "AATSR_FWARD":
@@ -171,9 +179,14 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameterDefaultValues();
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
-                case "AVHRR":
-                    // todo
-                    throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
+//                case "AVHRR":
+//                    bbdrOp = new BbdrAvhrrOp();
+//                    bbdrOp.setParameterDefaultValues();
+//                    break;
+                case "METEOSAT":
+                    bbdrOp = new MeteosatBbdrFromBrfOp();
+                    bbdrOp.setParameterDefaultValues();
+                    break;
                 default:
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
             }

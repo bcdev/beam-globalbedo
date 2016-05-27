@@ -204,9 +204,22 @@ public class BbdrProbavOp extends BbdrMasterOp {
 
         int[] relevantErrIndices = {0, 1, 2, 4, 7, 8};
         double[] columnPackedCopy = err_sum.getColumnPackedCopy();
+        int errFinalIsNanCount = 0;
         for (int i = 0; i < relevantErrIndices.length; i++) {
-            final double err_final = sqrt(columnPackedCopy[relevantErrIndices[i]]);
-            targetSamples[TRG_ERRORS + i].set(err_final);
+            int relevantErrIndice = relevantErrIndices[i];
+            final double errFinal = sqrt(columnPackedCopy[relevantErrIndice]);
+            if (Double.isNaN(errFinal)) {
+                errFinalIsNanCount++;
+            }
+        }
+
+        if (errFinalIsNanCount == relevantErrIndices.length) {
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+        } else {
+            for (int i = 0; i < relevantErrIndices.length; i++) {
+                final double errFinal = sqrt(columnPackedCopy[relevantErrIndices[i]]);
+                targetSamples[TRG_ERRORS + i].set(Double.isNaN(errFinal) ? 0.0 : errFinal);
+            }
         }
 
         // calculation of kernels (kvol, kgeo) & weighting with (1-Dup)(1-Ddw)

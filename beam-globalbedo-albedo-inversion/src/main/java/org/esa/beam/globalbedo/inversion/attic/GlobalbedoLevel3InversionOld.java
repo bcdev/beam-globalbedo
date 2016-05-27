@@ -1,12 +1,13 @@
-package org.esa.beam.globalbedo.inversion;
+package org.esa.beam.globalbedo.inversion.attic;
 
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
@@ -19,13 +20,13 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * 'Master' operator for the BRDF retrieval part (full accumulation and inversion)
+ * 'Master' operator for the BRDF retrieval part (inversion only)
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.l3.inversion2")
-public class GlobalbedoLevel3Inversion2 extends Operator {
+@OperatorMetadata(alias = "ga.l3.inversion.old")
+public class GlobalbedoLevel3InversionOld extends Operator {
 
     @SourceProduct(optional = true)
     private Product seaiceGeocodingProduct;
@@ -93,22 +94,17 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
         if (usePrior) {
             // STEP 1: get Prior input file...
             String priorDir = priorRootDir + File.separator + tile;
-
-            if (priorRootDirSuffix == null) {
-                final int refDoy = 8 * ((doy - 1) / 8) + 1;
-                priorRootDirSuffix = IOUtils.getDoyString(refDoy);
+            if (priorRootDirSuffix != null) {
+                priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
-            priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
 
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
             try {
-                // todo: allow continuation without Prior: set usePrior to false
-                // if Prior not available or cannot be read
                 priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
-                        " - cannot proceed...: " + e.getMessage());
+                                                    " - cannot proceed...: " + e.getMessage());
             }
         }
 
@@ -132,7 +128,19 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
                 }
             }
 
-            InversionOp2 inversionOp = new InversionOp2();
+            // STEP 5: do inversion...
+            String fullAccumulatorBinaryFilename = "matrices_full_" + year + IOUtils.getDoyString(doy) + ".bin";
+            if (computeSnow) {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+            } else if (computeSeaice) {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator);
+            } else {
+                fullAccumulatorDir = fullAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            }
+
+            String fullAccumulatorFilePath = fullAccumulatorDir + fullAccumulatorBinaryFilename;
+
+            InversionOpOld inversionOp = new InversionOpOld();
             inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
             if (priorProduct != null) {
@@ -140,14 +148,14 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
             } else {
                 if (computeSeaice) {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
                 } else {
                     dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                                                                                       AlbedoInversionConstants.MODIS_TILE_HEIGHT);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
-            inversionOp.setParameter("gaRootDir", gaRootDir);
+            inversionOp.setParameter("fullAccumulatorFilePath", fullAccumulatorFilePath);
             inversionOp.setParameter("year", year);
             inversionOp.setParameter("tile", tile);
             inversionOp.setParameter("doy", doy);
@@ -213,7 +221,7 @@ public class GlobalbedoLevel3Inversion2 extends Operator {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3Inversion2.class);
+            super(GlobalbedoLevel3InversionOld.class);
         }
     }
 }

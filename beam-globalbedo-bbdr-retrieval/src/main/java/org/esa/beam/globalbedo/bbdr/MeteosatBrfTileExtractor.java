@@ -23,7 +23,7 @@ import java.io.IOException;
  *
  * @author olafd
  */
-@OperatorMetadata(alias = "ga.bbdr.meteosat",
+@OperatorMetadata(alias = "ga.brf.meteosat",
         description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
                 "attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile. " +
                 "Suitable lat/lon bands must be passed as parameters.",
@@ -31,7 +31,7 @@ import java.io.IOException;
         internal = true,
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
-public class BbdrMeteosatOp extends Operator {
+public class MeteosatBrfTileExtractor extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
@@ -156,7 +156,7 @@ public class BbdrMeteosatOp extends Operator {
     @SuppressWarnings({"UnusedDeclaration"})
     public static class Spi extends OperatorSpi {
         public Spi() {
-            super(BbdrMeteosatOp.class);
+            super(MeteosatBrfTileExtractor.class);
         }
     }
 }

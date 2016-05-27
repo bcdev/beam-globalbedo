@@ -3,15 +3,12 @@ package org.esa.beam.globalbedo.inversion.util;
 import Jama.Matrix;
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.GeoPos;
-import org.junit.Test;
-
-import java.text.DecimalFormat;
 
 /**
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-public class AlbedoInversionTest extends TestCase {
+public class AlbedoInversionUtilsTest extends TestCase {
 
     public void testGetDateFromDoy() {
         int year = 2005;
@@ -165,7 +162,6 @@ public class AlbedoInversionTest extends TestCase {
         assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
     }
 
-    @Test
     public void testGetModisTileFromLatLon() {
         // Texas
         float lat = 34.2f;
@@ -202,6 +198,16 @@ public class AlbedoInversionTest extends TestCase {
         lat = -28.0f;
         lon = 46.1f;
         assertEquals("h22v11", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // Railroad Valley (USA)
+        lat = 38.497f;
+        lon = -115.69f;
+        assertEquals("h08v05", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
+
+        // Hainich (Germany)
+        lat = 51.0792f;
+        lon = 10.453f;
+        assertEquals("h18v03", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
     }
 
     public void testGetSunZenith() {
