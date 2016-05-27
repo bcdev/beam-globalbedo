@@ -27,6 +27,9 @@ import java.awt.image.renderable.ParameterBlock;
 import java.io.IOException;
 import java.util.Calendar;
 
+import static java.lang.Math.*;
+import static java.lang.Math.PI;
+
 /**
  * Utility class for BBDR retrieval
  *
@@ -371,6 +374,34 @@ public class BbdrUtils {
             }
         }
         return demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
+    }
+
+    public static double[] computeConstantKernels(double vzaRad, double szaRad, double phiRad) {
+        final double muv = cos(vzaRad);
+        final double mus = cos(szaRad);
+
+        final double muPhi = cos(phiRad);
+        final double muPhiAng = mus * muv + sin(vzaRad) * sin(szaRad) * muPhi;
+        final double phAng = acos(muPhiAng);
+
+        final double tanVzaRad = tan(vzaRad);
+        final double tanSzaRad = tan(szaRad);
+        final double secVza = 1. / muv;
+        final double secSza = 1. / mus;
+
+        final double d2 = tanVzaRad * tanVzaRad + tanSzaRad * tanSzaRad - 2 * tanVzaRad * tanSzaRad * muPhi;
+
+        final double hb = 2.0;
+        double cost = hb * (pow((d2 + pow((tanVzaRad * tanSzaRad * sin(phiRad)), 2)), 0.5)) / (secVza + secSza);
+        cost = min(cost, 1.0);
+        final double t = acos(cost);
+
+        final double ocap = (t - sin(t) * cost) * (secVza + secSza) / PI;
+
+        final double kvol = ((PI / 2.0 - phAng) * cos(phAng) + sin(phAng)) / (mus + muv) - PI / 4.0;
+        final double kgeo = 0.5 * (1. + muPhiAng) * secSza * secVza + ocap - secVza - secSza;
+
+        return new double[]{kvol, kgeo};
     }
 
 }
