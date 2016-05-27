@@ -123,30 +123,11 @@ public class BbdrAvhrrOp extends PixelOperator {
 
         final double vzaRad = toRadians(vza);
         final double szaRad = toRadians(sza);
-        final double muv = cos(vzaRad);
-        final double mus = cos(szaRad);
         final double phiRad = toRadians(phi);
 
-        final double muPhi = cos(phiRad);
-        final double muPhiAng = mus * muv + sin(vzaRad) * sin(szaRad) * muPhi;
-        final double phAng = acos(muPhiAng);
-
-        final double tanVzaRad = tan(vzaRad);
-        final double tanSzaRad = tan(szaRad);
-        final double secVza = 1. / muv;
-        final double secSza = 1. / mus;
-
-        final double d2 = tanVzaRad * tanVzaRad + tanSzaRad * tanSzaRad - 2 * tanVzaRad * tanSzaRad * muPhi;
-
-        final double hb = 2.0;
-        double cost = hb * (pow((d2 + pow((tanVzaRad * tanSzaRad * sin(phiRad)), 2)), 0.5)) / (secVza + secSza);
-        cost = min(cost, 1.0);
-        final double t = acos(cost);
-
-        final double ocap = (t - sin(t) * cost) * (secVza + secSza) / PI;
-
-        final double kvol = ((PI / 2.0 - phAng) * cos(phAng) + sin(phAng)) / (mus + muv) - PI / 4.0;
-        final double kgeo = 0.5 * (1. + muPhiAng) * secSza * secVza + ocap - secVza - secSza;
+        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+        final double kvol = kernels[0];
+        final double kgeo = kernels[1];
 
         for (int i_bb = 0; i_bb < BbdrConstants.N_SPC; i_bb++) {
             // for AVHRR, neglect Nsky, coupling terms and weighting (PL, 20160520)
