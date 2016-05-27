@@ -20,7 +20,6 @@ import Jama.Matrix;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
-import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.Sample;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
@@ -46,9 +45,6 @@ public class SdrProbavOp extends BbdrMasterOp {
     @SourceProduct(description = "ERA Interim product with OZO and CWV", optional = true)
     private Product eraInterimProduct;
 
-    @Parameter(defaultValue = "false")
-    private boolean writeGeometryAndAOT;
-
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) {
         super.configureSourceSamples(configurator);
@@ -58,22 +54,6 @@ public class SdrProbavOp extends BbdrMasterOp {
             configurator.defineSample(SRC_ERA_INTERIM_WVP_TIME, "tcwv", eraInterimProduct);
         }
     }
-
-    @Override
-    protected void configureTargetSamples(SampleConfigurer configurator) {
-        super.configureTargetSamples(configurator);
-
-        if (writeGeometryAndAOT) {
-            configurator.defineSample(TRG_VZA, "VZA");
-            configurator.defineSample(TRG_SZA, "SZA");
-            configurator.defineSample(TRG_VAA, "VAA");
-            configurator.defineSample(TRG_SAA, "SAA");
-            configurator.defineSample(TRG_DEM, "DEM");
-            configurator.defineSample(TRG_AOD, "AOD550");
-            configurator.defineSample(TRG_AODERR, "sig_AOD550");
-        }
-    }
-
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {

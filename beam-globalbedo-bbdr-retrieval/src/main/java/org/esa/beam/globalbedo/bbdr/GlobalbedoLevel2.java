@@ -160,16 +160,8 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
                 case "PROBAV":
-                    if (computeSdr) {
-                        bbdrOp = new SdrProbavOp();
-                    } else {
-                        bbdrOp = new BbdrProbavOp();
-                    }
+                    bbdrOp = new BbdrProbavOp();
                     bbdrOp.setParameterDefaultValues();
-                    if (computeSdr) {
-                        bbdrOp.setParameter("sdrOnly", true);
-                        bbdrOp.setParameter("writeGeometryAndAOT", true);
-                    }
                     break;
                 case "AATSR_NADIR":
                 case "AATSR_FWARD":

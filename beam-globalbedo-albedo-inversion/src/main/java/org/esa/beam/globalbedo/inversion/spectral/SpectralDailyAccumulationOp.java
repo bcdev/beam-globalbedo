@@ -57,19 +57,13 @@ public class SpectralDailyAccumulationOp extends Operator {
     private Tile[][] sdrTiles;
     private Tile[][] sigmaSdrTiles;
 
-    private Tile[] kvolVisTile;
-    private Tile[] kvolNirTile;
-    private Tile[] kvolSwTile;
-    private Tile[] kgeoVisTile;
-    private Tile[] kgeoNirTile;
-    private Tile[] kgeoSwTile;
+    private Tile[] kvolTile;
+    private Tile[] kgeoTile;
     private Tile[] snowMaskTile;
 
     private int currentSourceProductIndex;
     private int numSigmaSdrBands;
 
-    private String[] sdrBandNames;
-    private String[] sigmaSdrBandNames;
     private int[] sigmaSdrDiagonalIndices;
     private int[] sigmaSdrURIndices;
 
@@ -86,17 +80,13 @@ public class SpectralDailyAccumulationOp extends Operator {
         numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands)/2 + numSdrBands;
         sigmaSdrTiles = new Tile[sourceProducts.length][numSigmaSdrBands];
 
-        sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
-        sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
+        final String[] sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
+        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
         sigmaSdrDiagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numSdrBands);
         sigmaSdrURIndices = SpectralInversionUtils.getSigmaSdrURIndices(numSdrBands, numSigmaSdrBands);
 
-        kvolVisTile = new Tile[sourceProducts.length];
-        kvolNirTile = new Tile[sourceProducts.length];
-        kvolSwTile = new Tile[sourceProducts.length];
-        kgeoVisTile = new Tile[sourceProducts.length];
-        kgeoNirTile = new Tile[sourceProducts.length];
-        kgeoSwTile = new Tile[sourceProducts.length];
+        kvolTile = new Tile[sourceProducts.length];
+        kgeoTile = new Tile[sourceProducts.length];
         snowMaskTile = new Tile[sourceProducts.length];
 
         resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
@@ -114,12 +104,8 @@ public class SpectralDailyAccumulationOp extends Operator {
             for (int j = 0; j < numSigmaSdrBands; j++) {
                 sigmaSdrTiles[k][j] = getSourceTile(sourceProducts[k].getBand(sigmaSdrBandNames[sigmaSdrIndex++]), sourceRect);
             }
-            kvolVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_VIS_NAME), sourceRect);
-            kvolNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_NIR_NAME), sourceRect);
-            kvolSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KVOL_BRDF_SW_NAME), sourceRect);
-            kgeoVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME), sourceRect);
-            kgeoNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME), sourceRect);
-            kgeoSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME), sourceRect);
+            kvolTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES[0]), sourceRect);
+            kgeoTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES[1]), sourceRect);
             snowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
         }
 
@@ -286,15 +272,25 @@ public class SpectralDailyAccumulationOp extends Operator {
     private Matrix getKernels(int x, int y) {
         Matrix kernels = new Matrix(numSdrBands, 3 * numSdrBands);
 
-        kernels.set(0, 0, 1.0);
-        kernels.set(1, 3, 1.0);
-        kernels.set(2, 6, 1.0);
-        kernels.set(0, 1, kvolVisTile[currentSourceProductIndex].getSampleDouble(x, y));
-        kernels.set(1, 4, kvolNirTile[currentSourceProductIndex].getSampleDouble(x, y));
-        kernels.set(2, 7, kvolSwTile[currentSourceProductIndex].getSampleDouble(x, y));
-        kernels.set(0, 2, kgeoVisTile[currentSourceProductIndex].getSampleDouble(x, y));
-        kernels.set(1, 5, kgeoNirTile[currentSourceProductIndex].getSampleDouble(x, y));
-        kernels.set(2, 8, kgeoSwTile[currentSourceProductIndex].getSampleDouble(x, y));
+        // SK, 20160527: set constant kernels like:
+        // Matrix kernels = new matrix(n,m)
+        //  with n=number of bands (=7 in the case of modis) and m=3*n
+
+        //  kernels(i,j,1) if j%3==0 && j/3==i
+        //  kernels(i,j,kvol_i) if (j-1)%3==0 && (j-1)/3==i
+        //  kernels(i,j,kgeo_i) if (j-2)%3==0 && (j-2)/3==i
+
+        for (int i = 0; i < numSdrBands; i++) {
+            for (int j = 0; j < 3 * numSdrBands; j++) {
+                if (j % 3 == 0 && j/3 == i) {
+                    kernels.set(i, j, 1.0);
+                } else if ((j-1) % 3==0 && (j-1)/3 == i) {
+                    kernels.set(i, j, kvolTile[currentSourceProductIndex].getSampleDouble(x, y));
+                } else if ((j-2) % 3 == 0 && (j-2)/3 == i) {
+                    kernels.set(i, j, kgeoTile[currentSourceProductIndex].getSampleDouble(x, y));
+                }
+            }
+        }
 
         return kernels;
     }
