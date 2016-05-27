@@ -36,16 +36,16 @@ public class AlbedoInversionConstants {
     public final static String ACC_E_NAME = "E";
     public final static String ACC_MASK_NAME = "mask";
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD = "Days_to_the_Closest_Sample";
-    public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME= "Time_to_the_Closest_Sample";    // for CEMS todo: generalize!!
+    public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME = "Time_to_the_Closest_Sample";    // for CEMS todo: generalize!!
 
     public final static String MODIS_SPECTRAL_SDR_NAME_PREFIX = "SDR_";  // todo: check with Said's interface
     public final static String MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX = "SDR_SIGMA_";  // todo: check with Said's interface
 
-    public static final String LAT_BAND_NAME= "latitude";
-    public static final String LON_BAND_NAME= "longitude";
+    public static final String LAT_BAND_NAME = "latitude";
+    public static final String LON_BAND_NAME = "longitude";
 
-    public static final String PRIOR_NSAMPLES_NAME =  "N samples";
-    public static final String PRIOR_MASK_NAME =  "Mask";
+    public static final String PRIOR_NSAMPLES_NAME = "N samples";
+    public static final String PRIOR_MASK_NAME = "Mask";
 
     public static final String INV_ENTROPY_BAND_NAME = "Entropy";
     public static final String INV_REL_ENTROPY_BAND_NAME = "Relative_Entropy";
@@ -63,6 +63,10 @@ public class AlbedoInversionConstants {
     public static final String seaiceMaskExpression = "cloud_classif_flags.F_SEAICE";
 
     public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
+
+    public static final String[] CONSTANT_KERNEL_BAND_NAMES = new String[]{
+            "Kvol", "Kgeo"
+    };
 
     public static final int NUM_BBDR_WAVE_BANDS = 3;
     public static final int NUM_ALBEDO_PARAMETERS = 3;  // f0, f1, f2
@@ -86,22 +90,22 @@ public class AlbedoInversionConstants {
 
     public static final String MODIS_SIN_PROJECTION_CRS_STRING =
             "PROJCS[\"MODIS Sinusoidal\"," +
-            "GEOGCS[\"WGS 84\"," +
-            "  DATUM[\"WGS_1984\"," +
-            "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
-            "      AUTHORITY[\"EPSG\",\"7030\"]]," +
-            "    AUTHORITY[\"EPSG\",\"6326\"]]," +
-            "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
-            "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
-            "   AUTHORITY[\"EPSG\",\"4326\"]]," +
-            "PROJECTION[\"Sinusoidal\"]," +
-            "PARAMETER[\"false_easting\",0.0]," +
-            "PARAMETER[\"false_northing\",0.0]," +
-            "PARAMETER[\"central_meridian\",0.0]," +
-            "PARAMETER[\"semi_major\",6371007.181]," +
-            "PARAMETER[\"semi_minor\",6371007.181]," +
-            "UNIT[\"m\",1.0]," +
-            "AUTHORITY[\"SR-ORG\",\"6974\"]]";
+                    "GEOGCS[\"WGS 84\"," +
+                    "  DATUM[\"WGS_1984\"," +
+                    "    SPHEROID[\"WGS 84\",6378137,298.257223563," +
+                    "      AUTHORITY[\"EPSG\",\"7030\"]]," +
+                    "    AUTHORITY[\"EPSG\",\"6326\"]]," +
+                    "  PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]]," +
+                    "  UNIT[\"degree\",0.01745329251994328,AUTHORITY[\"EPSG\",\"9122\"]]," +
+                    "   AUTHORITY[\"EPSG\",\"4326\"]]," +
+                    "PROJECTION[\"Sinusoidal\"]," +
+                    "PARAMETER[\"false_easting\",0.0]," +
+                    "PARAMETER[\"false_northing\",0.0]," +
+                    "PARAMETER[\"central_meridian\",0.0]," +
+                    "PARAMETER[\"semi_major\",6371007.181]," +
+                    "PARAMETER[\"semi_minor\",6371007.181]," +
+                    "UNIT[\"m\",1.0]," +
+                    "AUTHORITY[\"SR-ORG\",\"6974\"]]";
 
     // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
     public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
@@ -110,39 +114,39 @@ public class AlbedoInversionConstants {
 
     public static final String POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING =
             "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
-            "GEOGCS[\"World Geodetic System 1984\"," +
-            " DATUM[\"World Geodetic System 1984\"," +
-            "  SPHEROID[\"WGS 84\",6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]," +
-            "   AUTHORITY[\"EPSG\",\"6326\"]]," +
-            "  PRIMEM[\"Greenwich\",0.0, AUTHORITY[\"EPSG\",\"8901\"]]," +
-            "  UNIT[\"degree\",0.01745329251994328]," +
-            "   AXIS[\"Geodetic longitude\", EAST]," +
-            "   AXIS[\"Geodetic latitude\", NORTH]]," +
-            "PROJECTION[\"Polar_Stereographic\"]," +
-            "PARAMETER[\"semi_minor\",6378137.0]," +
-            "PARAMETER[\"central_meridian\",0.0]," +
-            "PARAMETER[\"latitude_of_origin\",90.0]," +
-            "PARAMETER[\"scale_factor\",1.0]," +
-            "PARAMETER[\"false_easting\",0.0]," +
-            "PARAMETER[\"false_northing\",0.0]," +
-            "UNIT[\"m\",1.0]," +
-            "AXIS[\"Easting\", EAST]," +
-            "AXIS[\"Northing\", NORTH]]";
+                    "GEOGCS[\"World Geodetic System 1984\"," +
+                    " DATUM[\"World Geodetic System 1984\"," +
+                    "  SPHEROID[\"WGS 84\",6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]," +
+                    "   AUTHORITY[\"EPSG\",\"6326\"]]," +
+                    "  PRIMEM[\"Greenwich\",0.0, AUTHORITY[\"EPSG\",\"8901\"]]," +
+                    "  UNIT[\"degree\",0.01745329251994328]," +
+                    "   AXIS[\"Geodetic longitude\", EAST]," +
+                    "   AXIS[\"Geodetic latitude\", NORTH]]," +
+                    "PROJECTION[\"Polar_Stereographic\"]," +
+                    "PARAMETER[\"semi_minor\",6378137.0]," +
+                    "PARAMETER[\"central_meridian\",0.0]," +
+                    "PARAMETER[\"latitude_of_origin\",90.0]," +
+                    "PARAMETER[\"scale_factor\",1.0]," +
+                    "PARAMETER[\"false_easting\",0.0]," +
+                    "PARAMETER[\"false_northing\",0.0]," +
+                    "UNIT[\"m\",1.0]," +
+                    "AXIS[\"Easting\", EAST]," +
+                    "AXIS[\"Northing\", NORTH]]";
 
     public static final String[][] doysOfMonth = {
-                {"001","009","017","025"},    // Jan
-                {"033","041","049","057"},    // Feb
-                {"065","073","081","089"},    // Mar
-                {"097","105","113"},          // Apr
-                {"121","129","137","145"},    // May
-                {"153","161","169","177"},    // Jun
-                {"185","193","201","209"},    // Jul
-                {"217","225","233","241"},    // Aug
-                {"249","257","265","273"},    // Sep
-                {"281","289","297"},          // Oct
-                {"305","313","321","329"},    // Nov
-                {"337","345","353","361"}     // Dec
-        };
+            {"001", "009", "017", "025"},    // Jan
+            {"033", "041", "049", "057"},    // Feb
+            {"065", "073", "081", "089"},    // Mar
+            {"097", "105", "113"},          // Apr
+            {"121", "129", "137", "145"},    // May
+            {"153", "161", "169", "177"},    // Jun
+            {"185", "193", "201", "209"},    // Jul
+            {"217", "225", "233", "241"},    // Aug
+            {"249", "257", "265", "273"},    // Sep
+            {"281", "289", "297"},          // Oct
+            {"305", "313", "321", "329"},    // Nov
+            {"337", "345", "353", "361"}     // Dec
+    };
 
     public static final float NO_DATA_VALUE = -9999.0f;
 }

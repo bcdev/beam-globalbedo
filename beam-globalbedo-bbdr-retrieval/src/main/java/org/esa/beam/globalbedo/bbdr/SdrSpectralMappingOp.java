@@ -15,7 +15,6 @@ import org.esa.beam.globalbedo.inversion.spectral.SpectralInversionUtils;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.util.ProductUtils;
 
-import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
@@ -32,11 +31,7 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     private static final int SRC_SZA = 51;
     private static final int SRC_VAA = 52;
     private static final int SRC_SAA = 53;
-    private static final int SRC_DEM = 54;
-    private static final int SRC_AOD = 55;
-    private static final int SRC_AOD_ERR = 56;
 
-    private static final int SRC_LAND_MASK = 60;
     private static final int SRC_SNOW_MASK = 61;
 
     private static final int SRC_STATUS = 70;
@@ -61,7 +56,6 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     protected int numMappedSdrBands;
 
     private String[] sdrMappedBandNames;
-    private int numSigmaSdrBands;
     private String[] sigmaSdrMappedBandNames;
     private String[] kernelBandNames;
 
@@ -69,11 +63,9 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
         sdrMappedBandNames = SpectralInversionUtils.getSdrBandNames(numMappedSdrBands);
-        numSigmaSdrBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+        int numSigmaSdrBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
         sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numMappedSdrBands, numSigmaSdrBands);
-        kernelBandNames = new String[]{
-                "Kvol", "Kgeo"  // only constant values needed, as we will neglect Nsky and coupling terms
-        };
+        kernelBandNames = AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES;
     }
 
     @Override
@@ -124,14 +116,14 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) throws OperatorException {
         int index = 0;
-        for (int i = 0; i < sdrMappedBandNames.length; i++) {
-            configurator.defineSample(index++, sdrMappedBandNames[i]);
+        for (String sdrMappedBandName : sdrMappedBandNames) {
+            configurator.defineSample(index++, sdrMappedBandName);
         }
-        for (int i = 0; i < sigmaSdrMappedBandNames.length; i++) {
-            configurator.defineSample(index++, sigmaSdrMappedBandNames[i]);
+        for (String sigmaSdrMappedBandName : sigmaSdrMappedBandNames) {
+            configurator.defineSample(index++, sigmaSdrMappedBandName);
         }
-        for (int i = 0; i < kernelBandNames.length; i++) {
-            configurator.defineSample(index++, kernelBandNames[i]);
+        for (String kernelBandName : kernelBandNames) {
+            configurator.defineSample(index++, kernelBandName);
         }
 
         configurator.defineSample(index, AlbedoInversionConstants.BBDR_SNOW_MASK_NAME);
@@ -221,6 +213,23 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
         targetSamples[index].set(kgeo);
     }
 
+    static double[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, double[] sdr, int year, int doy,
+                                         int[] sinCoordinates, boolean snow) {
+        double[] sdrMapped = new double[numMappedSdrBands];   // the 7 MODIS channels
+
+        // TODO: 26.05.2016 : include implementation from SK
+        return sdrMapped;
+    }
+
+    static double[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, double[] sdrErrors, int year, int doy,
+                                              int[] sinCoordinates, boolean snow) {
+        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+        double[] sdrSigmaMapped = new double[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
+
+        // TODO: 26.05.2016 : include implementation from SK
+        return sdrSigmaMapped;
+    }
+
     private void addMappedSdrBands(Product targetProduct) {
         for (int i = 0; i < sdrMappedBandNames.length; i++) {
             Band band = targetProduct.addBand(sdrMappedBandNames[i], ProductData.TYPE_FLOAT32);
@@ -237,23 +246,6 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-    }
-
-    static double[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, double[] sdr, int year, int doy,
-                                         int[] sinCoordinates, boolean snow) {
-        double[] sdrMapped = new double[numMappedSdrBands];   // the 7 MODIS channels
-
-        // TODO: 26.05.2016 : include implementation from SK
-        return sdrMapped;
-    }
-
-    static double[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, double[] sdrErrors, int year, int doy,
-                                              int[] sinCoordinates, boolean snow) {
-        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
-        double[] sdrSigmaMapped = new double[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
-
-        // TODO: 26.05.2016 : include implementation from SK
-        return sdrSigmaMapped;
     }
 
 
