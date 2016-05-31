@@ -1,10 +1,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.dataio.MeteosatGeoCoding;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -86,6 +83,11 @@ public class MeteosatBrfTileExtractor extends Operator {
                 ProductUtils.copyRasterDataNodeProperties(band, targetProductOrigProj.getBand(band.getName()));
             }
         }
+
+        // todo: add angles
+        Band szaBand = targetProductOrigProj.addBand("SZA", ProductData.TYPE_FLOAT32);
+        Band vzaBand = targetProductOrigProj.addBand("VZA", ProductData.TYPE_FLOAT32);
+        Band relaziBand = targetProductOrigProj.addBand("RAA", ProductData.TYPE_FLOAT32);
 
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
 
