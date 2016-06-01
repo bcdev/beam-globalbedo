@@ -107,6 +107,10 @@ public class MeteosatBrfTileExtractor extends Operator {
 
             // now reproject onto given MODIS SIN tile...
             if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding)) {
+                final Product reprojectedProduct =  TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
+
+
+
                 return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
             } else {
                 throw new OperatorException

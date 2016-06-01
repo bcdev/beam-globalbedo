@@ -37,6 +37,10 @@ public class MeteosatBbdrFromBrfOp extends BbdrMasterOp {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         // todo: clarify if and what to implement
+
+        // 1. add angles: implement Eumetsat C code
+        // 2. provide BRF: broadband BRF is directly 'BB VIS'. No BB NIR, SW.
+        // 3. provide kernels: same as for AVHRR, neglect Nsky and coupling
     }
 
     public static class Spi extends OperatorSpi {
