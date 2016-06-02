@@ -114,9 +114,6 @@ public class BbdrFromSdrOp extends BbdrMasterOp {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (x == 146 && y == 1961) {
-            System.out.println("x = " + x);
-        }
 
         final int status = sourceSamples[SRC_STATUS].getInt();
         if (!singlePixelMode) {

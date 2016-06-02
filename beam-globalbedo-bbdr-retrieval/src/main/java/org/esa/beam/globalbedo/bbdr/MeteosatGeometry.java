@@ -6,10 +6,8 @@ import org.esa.beam.util.math.MathUtils;
 import java.util.Calendar;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 01.06.2016
- * Time: 10:17
+ * Calculates the azimuth and zenith angles to the sun and the satellite, from the centre of the current segment,
+ * given the time of day, the day of the year, and the segment position.
  *
  * @author olafd
  */
@@ -33,16 +31,24 @@ public class MeteosatGeometry {
 
     private static final double TIME_ZONE = 0.0;
 
-    // use these for MVIRI, neglect small difference for SEVIRI for the moment
-//    dbEarth_Polar_radius_meter =  6356.755 * 1000.;
-//    dbEarth_radius_meter       =  6378.140* 1000.;
-//    dbSat_Eight_meter          =  42164.0 * 1000.;
-    private static final double EARTH_POLAR_RADIUS_METER = 6356775.0;
-    private static final double EARTH_RADIUS_METER = 6378140.0;
+    // MVIRI:
+    //    dbEarth_Polar_radius_meter =  6356.755 * 1000.;
+    //    dbEarth_radius_meter       =  6378.140* 1000.;
+    //    dbSat_Eight_meter          =  42164.0 * 1000.;
+    // SEVIRI:
+    //    dbEarth_Polar_radius_meter =  6356.5838 * 1000.;
+    //    dbEarth_radius_meter       =  6378.1690 * 1000.;
+    //    dbSat_Eight_meter          =  42164.0  * 1000.;
+    private static final double EARTH_POLAR_RADIUS_METER_MVIRI = 6356775.0;
+    private static final double EARTH_POLAR_RADIUS_METER_SEVIRI = 6356583.8;
+    private static final double EARTH_RADIUS_METER_MVIRI = 6378140.0;
+    private static final double EARTH_RADIUS_METER_SEVIRI = 6378169.0;
     private static final double SAT_EIGHT_METER = 42164000.0;
 
     /**
-     * Computes sun zenith and azimuth as originally implemented in C in Eumetsat processing.
+     * Calculates the azimuth and zenith angles to the sun, from the centre of the current segment,
+     * given the year, time of day, the day of the year, pixel and satellite positions as input.
+     * Follows original C implementation in Eumetsat processing, provided by A.Lattanzio.
      *
      * @param flDegLat         - pixel latitude in deg
      * @param flDegLon         - pixel longitude in deg
@@ -50,14 +56,14 @@ public class MeteosatGeometry {
      * @param iJulianDayInYear - Julian day in year (doy)
      * @param iYear            - year
      * @param flScanningTime   - scanning time (decimal hour, usually 12.0)
-     * @return
+     * @return MeteosatAngles (SZA, SAA)
      */
     public static MeteosatAngles computeSunAngles(double flDegLat,
                                                   double flDegLon,
                                                   double dbSSP,    // 0, 57 or 63 - take from filename
                                                   int iJulianDayInYear,    // doy
                                                   int iYear,
-                                                  float flScanningTime) {
+                                                  double flScanningTime) {
 
         /* Chack input parameters */
         if (Math.abs(flDegLat) > GEO_MAXANGLEIN) {
@@ -74,9 +80,14 @@ public class MeteosatGeometry {
             }
         }
 
-        //  /* Evaluate the input lat and lon in radians */
+        /* Evaluate the input lat and lon in radians */
         final double latRad = MathUtils.DTOR * flDegLat;
-        final double lonRad = MathUtils.DTOR * flDegLon;
+
+        /* According to the MPEF convention Eastward is positive  */
+        /* Westward is negative while the following routine to calculate */
+        /* the Sun Angles follows the opposite convention */
+        flDegLon = -flDegLon;
+//        final double lonRad = MathUtils.DTOR * flDegLon;     // from original code, but not used there
 
         /* Evaluate the fractional year in radians */
         // todo: do this outside this method to stay in line with C function signature for test purposes!
@@ -103,7 +114,7 @@ public class MeteosatGeometry {
 
         /* True solar time in minutes */
         final double dbTrueSolarTime = (flScanningTime * 60.) + dbTimeOffset;
-        final double dbHourFlag = dbTrueSolarTime / 60.;
+//        final double dbHourFlag = dbTrueSolarTime / 60.;   // from original code, but not used there
 
         /* solar hour angle in degrees and in radians */
         final double dbHa = (dbTrueSolarTime / 4.) - 180.;
@@ -140,84 +151,54 @@ public class MeteosatGeometry {
         return new MeteosatAngles(dbTmpZen, dbTmpAzi);
     }
 
-
+    /**
+     * Calculates the azimuth and zenith angles to the satellite, from the centre of the current segment,
+     * given the satellite and pixel positions as input.
+     * Follows original C implementation in Eumetsat processing, provided by A.Lattanzio.
+     *
+     * @param flSatLatitude  - satellite latitude in deg
+     * @param flSatLongitude - satellite longitude in deg
+     * @param flPixelLat     - pixel latitude in deg
+     * @param flPixelLon     - pixel longitude in deg
+     * @return MeteosatAngles (VZA, VAA)
+     */
     public static MeteosatAngles computeViewAngles(double flSatLatitude,    // should be always 0 ?!
                                                    double flSatLongitude,    // 0, 57 or 63 - take from filename
                                                    double flPixelLat,
-                                                   double flPixelLon) {
+                                                   double flPixelLon,
+                                                   MeteosatSensor sensor) {
 
-        // todo implement
-
-
-        /* ------------------------------------------------------------------------------------------- */
-
-//        GEO_STATUS GEO_View_Angles  (int curr_instr,
-//        float flSatLatitude ,
-//        float flSatLongitude,
-//        float flPixelLat,
-//        float flPixelLon,
-//        float *flZenith,
-//        float *flAzimuth)
-//        {
-//            int    iStatus;
-//            int    iLabSat,iFac,iError,iRes;
-//
-//            double dbSatLatRad,dbGeoDLat,dbPixRadius,dbPixHeight;
-//            double dbGeoDSatLat,dbGeoDSatLatRad,dbGeoSatLonRad,dbGeoDLatRad;
-//            double dbPixLonRad,dbPixLatRad;
-//            double dbXSat,dbYSat,dbZSat,dbXPix,dbYPix,dbZPix;
-//            double dbDro,dbXGeo,dbYGeo,dbZGeo,dbTGeo,dbTSat,dbTSatGeo;
-//            double dbGeoSatDAngle;
-//            double dbArg2;
-//            double dbTmpVal,dbTmpValAzi;
-//            double dbV90X,dbV90Y,dbV90Z,dbV90,dbY0X,dbY0Y,dbY0Z,dbY0,dbSSX,dbSSY,dbSSZ,dbSS;
-//            double dbTmpAr[3];
-//            double dbProdX,dbProdY,dbProdZ,dbProd,dbC1Sat,dbC2Sat,dbSaph1,dbSaph2;
-//            double dbEarth_Polar_radius_meter,dbEarth_radius_meter,dbSat_Eight_meter;
-//
-//            printf("GEO_View_Angles: SSP Lat = %f SSP Lon = %f\n",flSatLatitude,flSatLongitude);
-//
-//            if (curr_instr == 0){
-//                printf("...Processing MVIRI\n");
-//                dbEarth_Polar_radius_meter =  6356.755 * 1000.;
-//                dbEarth_radius_meter       =  6378.140* 1000.;
-//                dbSat_Eight_meter          =  42164.0 * 1000.;
-//            }
-//
-//            if (curr_instr == 1){
-//                printf("...Processing SEVIRI\n");
-//                dbEarth_Polar_radius_meter =  6356.5838 * 1000.;
-//                dbEarth_radius_meter       =  6378.1690 * 1000.;
-//                dbSat_Eight_meter          =  42164.0  * 1000.;
-//            }
-//            if(curr_instr != 0 && curr_instr != 1){
-//                return(-1);
-//            }
-//
-//            dbSatLatRad = GEO_DEG2RAD(flPixelLat);
-//            dbPixLonRad = GEO_DEG2RAD(flPixelLon);
-//            dbGeoSatLonRad = GEO_DEG2RAD(flSatLongitude);
-//            dbPixLatRad = GEO_DEG2RAD(flPixelLat);
+        double earthPolarRadiusMeter;
+        double earthRadiusMeter;
+        if (sensor == MeteosatSensor.MVIRI) {
+            earthPolarRadiusMeter = EARTH_POLAR_RADIUS_METER_MVIRI;
+            earthRadiusMeter = EARTH_RADIUS_METER_MVIRI;
+        } else if (sensor == MeteosatSensor.SEVIRI) {
+            earthPolarRadiusMeter = EARTH_POLAR_RADIUS_METER_SEVIRI;
+            earthRadiusMeter = EARTH_RADIUS_METER_SEVIRI;
+        } else {
+            throw new OperatorException("Sensor '" + sensor.getName() + "' not supported.");
+        }
 
         final double dbPixLonRad = MathUtils.DTOR * flPixelLon;
         final double dbPixLatRad = MathUtils.DTOR * flPixelLat;
-        final double dbSatLatRad = MathUtils.DTOR * flPixelLat;   // todo: is this ok??
+//        final double dbSatLatRad = MathUtils.DTOR * flPixelLat;   // from original code, but not used there
         final double dbGeoSatLonRad = MathUtils.DTOR * flSatLongitude;
 
-        double dbTmpVal = 0.0;
+        double dbTmpVal;
         double dbTmpValAzi = 0.0;
-        double dbSaph1 = 0.0;
-        double dbSaph2 = 0.0;
+        double dbSaph1;
+        double dbSaph2;
 
      /* Calculate geocentric latitude of observation point */
-        final double dbGeoDLat = geoEvalGeoDlat(flPixelLat);
+        final double dbGeoDLat = geoEvalGeoDlat(flPixelLat, earthPolarRadiusMeter, earthRadiusMeter);
         final double dbGeoDLatRad = MathUtils.DTOR * dbGeoDLat;
 
      /* Earth radius (in meters) at geographical latitude of observation point */
-        final double dbPixHeight = geoPixRadius(flPixelLat);
+        final double dbPixHeight = geoPixRadius(flPixelLat, earthPolarRadiusMeter, earthRadiusMeter);
 
      /* Transform satellite latitude from geographical to geocentric */
-        final double dbGeoDSatLatRad = MathUtils.DTOR * geoEvalGeoDlat(dbSatLatRad);
+        final double dbGeoDSatLatRad = MathUtils.DTOR * geoEvalGeoDlat(flSatLatitude, earthPolarRadiusMeter, earthRadiusMeter);
 
      /* Terrestrial coordinates (meters) of satellite */
         final double dbXSat = SAT_EIGHT_METER * Math.cos(dbGeoDSatLatRad) * Math.cos(dbGeoSatLonRad);
@@ -248,7 +229,8 @@ public class MeteosatGeometry {
         final double dbZGeo = dbZPix;
 
      /* Vector norms */
-        final double dbTGeo = Math.sqrt((dbXGeo * dbXGeo) + (dbYGeo * dbYGeo) + (dbZGeo * dbZGeo));
+        // from original code, but not used there:
+//        final double dbTGeo = Math.sqrt((dbXGeo * dbXGeo) + (dbYGeo * dbYGeo) + (dbZGeo * dbZGeo));
         final double dbTSat = Math.sqrt((dbXSat * dbXSat) + (dbYSat * dbYSat) + (dbZSat * dbZSat));
         final double dbTSatGeo = Math.sqrt((dbXSat - dbXPix) * (dbXSat - dbXPix) +
                                                    (dbYSat - dbYPix) * (dbYSat - dbYPix) +
@@ -256,8 +238,7 @@ public class MeteosatGeometry {
 
      /* Geocentric angle between directions of satellite and observation point */
         double dbGeoSatDAngle = (dbXSat * dbXPix + dbYSat * dbYPix + dbZSat * dbZPix) / (dbTSat * dbPixHeight);
-        checkEpsilon(dbGeoSatDAngle);
-        dbGeoSatDAngle = MathUtils.RTOD * Math.acos(dbGeoSatDAngle);
+        dbGeoSatDAngle = MathUtils.RTOD * Math.acos(checkEpsilon(dbGeoSatDAngle));
 
      /* Check if geocentric directions of satellite and observer are coincident */
         double iLabSat = 0.0;
@@ -268,9 +249,7 @@ public class MeteosatGeometry {
      /* Satellite zenith angle */
         double dbArg2 = (dbXPix * (dbXSat - dbXPix) + dbYPix * (dbYSat - dbYPix) +
                 dbZPix * (dbZSat - dbZPix)) / (dbPixHeight * dbTSatGeo);
-        checkEpsilon(dbArg2);
-
-        dbTmpVal = MathUtils.RTOD * Math.acos(dbArg2);
+        dbTmpVal = MathUtils.RTOD * Math.acos(checkEpsilon(dbArg2));
 
         // FIRST RESULT:
         final double flZenith = (float) dbTmpVal;
@@ -310,160 +289,89 @@ public class MeteosatGeometry {
         final double dbSSX = dbXSat - dbXPix;
         final double dbSSY = dbYSat - dbYPix;
         final double dbSSZ = dbZSat - dbZPix;
-        final double dbSS = Math.sqrt((dbSSX * dbSSX) + (dbSSY * dbSSY) + (dbSSZ * dbSSZ));
+        // from original code, but not used there:
+//        final double dbSS = Math.sqrt((dbSSX * dbSSX) + (dbSSY * dbSSY) + (dbSSZ * dbSSZ));
 
-//   /* Calculate vector on the plane tangent to the observation point
-//     and pointing to the satellite = flGeo x dbSS x flGeo */
-//            if (iLabSat == 0)
-//            {
-//                dbTmpAr[0] = dbYGeo*dbSSZ - dbZGeo*dbSSY;
-//                dbTmpAr[1] = dbZGeo*dbSSX - dbXGeo*dbSSZ;
-//                dbTmpAr[2] = dbXGeo*dbSSY - dbYGeo*dbSSX;
-//
-//                dbProdX = dbTmpAr[1]*dbZGeo - dbTmpAr[2]*dbYGeo;
-//                dbProdY = dbTmpAr[2]*dbXGeo - dbTmpAr[0]*dbZGeo;
-//                dbProdZ = dbTmpAr[0]*dbYGeo - dbTmpAr[1]*dbXGeo;
-//                dbProd = sqrt((dbProdX*dbProdX) + (dbProdY*dbProdY) + (dbProdZ*dbProdZ));
-//                if (dbProd > 0.)
-//                {
-//        /* Calculate angles wrt vectors dbY0 and dbV90 */
-//        /* If angle wrt to y0 exceeds 90 deg => satellite azimuth > 180 deg */
-//                    dbC1Sat = (dbV90X*dbProdX + dbV90Y*dbProdY + dbV90Z*dbProdZ)/(dbV90*dbProd);
-//                    dbC2Sat = (dbY0X*dbProdX + dbY0Y*dbProdY + dbY0Z*dbProdZ)/(dbY0*dbProd);
-//
-//                    if (GEO_DABS(1. - GEO_DABS(dbC1Sat)) < GEO_DOUBLE_EPSILON)
-//                    {
-//                        if (dbC1Sat > 0.) dbC1Sat = 1.;
-//                        if (dbC1Sat < 0.) dbC1Sat = -1.;
-//                    }
-//                    if (GEO_DABS(1. - GEO_DABS(dbC2Sat)) < GEO_DOUBLE_EPSILON)
-//                    {
-//                        if (dbC2Sat > 0.) dbC2Sat = 1.;
-//                        if (dbC2Sat < 0.) dbC2Sat = -1.;
-//                    }
-//                } /* end if  dbProd */
-//                else /* else dbProd */
-//                {
-//         /* Special case of exterior product = 0 <> dbSS and flGeo have same
-//            direction It occurs if the satellite is at the zenith (or nadir).
-//            Its azimuth is undetermined. For geosynchronous satellites we adopt the same solution as for Sun
-//            Minor modifications will be needed for non-geosynchronous platforms */
-//                    if (dbZPix >= dbZSat)
-//                    {
-//                        if (*flZenith <= 90.)
-//                        {
-//                            dbC1Sat = -1.;
-//                            dbC2Sat = 0.;
-//                        }
-//                        else
-//                        {
-//                            dbC1Sat = +1.;
-//                            dbC2Sat = 0.;
-//                        }
-//                    }
-//                    if (dbZPix < dbZSat)
-//                    {
-//                        if (*flZenith <= 90.)
-//                        {
-//                            dbC1Sat = +1.;
-//                            dbC2Sat = 0.;
-//                        }
-//                        else
-//                        {
-//                            dbC1Sat = -1.;
-//                            dbC2Sat = 0.;
-//                        }
-//                    }
-//
-//                } /* endelse dbProd */
-//                dbSaph1 = GEO_RAD2DEG((float)acos(dbC1Sat));
-//                dbSaph2 = GEO_RAD2DEG((float)acos(dbC2Sat));
-//
-//                if (dbSaph2 <= (double)90.) dbTmpValAzi = dbSaph1;
-//                if (dbSaph2 > (double)90.)  dbTmpValAzi = (double)360. - dbSaph1;
-//
-//                *flAzimuth = (float)dbTmpValAzi;
-//            } /* end if iLabSat */
-//            else
-//            {
-//      /* Observation point and satellite directions are coincident
-//       These are special cases of the satellite azimuth
-//       The solutions used here are applicable to geosynchronous satellites only
-//       ... Minor modifications will be needed for non-geosynchronous platforms */
-//                if (dbZPix >= dbZSat && dbGeoSatDAngle < 90.) dbTmpValAzi = 180.;
-//                if (dbZPix >= dbZSat && dbGeoSatDAngle > 90.) dbTmpValAzi = 0.;
-//                if (dbZPix <  dbZSat && dbGeoSatDAngle < 90.) dbTmpValAzi = 0.;
-//                if (dbZPix <  dbZSat && dbGeoSatDAngle > 90.) dbTmpValAzi = 180.;
-//                *flAzimuth = (float)dbTmpValAzi;
-//            }
-//            return(GEO_NOERROR);
-//
-//        } /* end of GEO_EvalViewAngle */
-//
-        final double flAzimuth = 0.0;
+     /* Calculate vector on the plane tangent to the observation point
+       and pointing to the satellite = flGeo x dbSS x flGeo */
+        double[] dbTmpAr = new double[3];
+        double dbProdX;
+        double dbProdY;
+        double dbProdZ;
+        double dbProd;
+        double dbC1Sat = 0.0;
+        double dbC2Sat = 0.0;
 
+        double flAzimuth = 0.0;
+
+        if (iLabSat == 0) {
+            dbTmpAr[0] = dbYGeo * dbSSZ - dbZGeo * dbSSY;
+            dbTmpAr[1] = dbZGeo * dbSSX - dbXGeo * dbSSZ;
+            dbTmpAr[2] = dbXGeo * dbSSY - dbYGeo * dbSSX;
+
+            dbProdX = dbTmpAr[1] * dbZGeo - dbTmpAr[2] * dbYGeo;
+            dbProdY = dbTmpAr[2] * dbXGeo - dbTmpAr[0] * dbZGeo;
+            dbProdZ = dbTmpAr[0] * dbYGeo - dbTmpAr[1] * dbXGeo;
+            dbProd = Math.sqrt((dbProdX * dbProdX) + (dbProdY * dbProdY) + (dbProdZ * dbProdZ));
+            if (dbProd > 0.) {
+                /* Calculate angles wrt vectors dbY0 and dbV90 */
+                /* If angle wrt to y0 exceeds 90 deg => satellite azimuth > 180 deg */
+                dbC1Sat = (dbV90X * dbProdX + dbV90Y * dbProdY + dbV90Z * dbProdZ) / (dbV90 * dbProd);
+                dbC1Sat = checkEpsilon(dbC1Sat);
+                dbC2Sat = (dbY0X * dbProdX + dbY0Y * dbProdY + dbY0Z * dbProdZ) / (dbY0 * dbProd);
+                dbC2Sat = checkEpsilon(dbC2Sat);
+            } else {
+                /* Special case of exterior product = 0 <> dbSS and flGeo have same
+                direction It occurs if the satellite is at the zenith (or nadir).
+                Its azimuth is undetermined. For geosynchronous satellites we adopt the same solution as for Sun
+                Minor modifications will be needed for non-geosynchronous platforms */
+                if (dbZPix >= dbZSat) {
+                    if (flZenith <= 90.) {
+                        dbC1Sat = -1.;
+                        dbC2Sat = 0.;
+                    } else {
+                        dbC1Sat = +1.;
+                        dbC2Sat = 0.;
+                    }
+                }
+                if (dbZPix < dbZSat) {
+                    if (flZenith <= 90.) {
+                        dbC1Sat = +1.;
+                        dbC2Sat = 0.;
+                    } else {
+                        dbC1Sat = -1.;
+                        dbC2Sat = 0.;
+                    }
+                }
+            } /* endelse dbProd */
+            dbSaph1 = MathUtils.RTOD * Math.acos(dbC1Sat);
+            dbSaph2 = MathUtils.RTOD * Math.acos(dbC2Sat);
+
+            if (dbSaph2 <= 90.) {
+                dbTmpValAzi = dbSaph1;
+            }
+            if (dbSaph2 > 90.) {
+                dbTmpValAzi = 360. - dbSaph1;
+            }
+
+            flAzimuth = (float) dbTmpValAzi;
+        } else {
+      /* Observation point and satellite directions are coincident
+       These are special cases of the satellite azimuth
+       The solutions used here are applicable to geosynchronous satellites only
+       ... Minor modifications will be needed for non-geosynchronous platforms */
+            if (dbZPix >= dbZSat && dbGeoSatDAngle < 90.) {
+                dbTmpValAzi = 180.;
+                if (dbZPix >= dbZSat && dbGeoSatDAngle > 90.) dbTmpValAzi = 0.;
+                if (dbZPix < dbZSat && dbGeoSatDAngle < 90.) dbTmpValAzi = 0.;
+                if (dbZPix < dbZSat && dbGeoSatDAngle > 90.) dbTmpValAzi = 180.;
+                flAzimuth = (float) dbTmpValAzi;
+            }
+        }
         return new MeteosatAngles(flZenith, flAzimuth);
     }
 
-    private static void checkEpsilon(double dbArg2) {
-        if (Math.abs(1.0 - Math.abs(dbArg2)) < GEO_DOUBLE_EPSILON) {
-            if (dbArg2 > 0.) {
-                dbArg2 = 1.;
-            }
-            if (dbArg2 < 0.) {
-                dbArg2 = -1.;
-            }
-        }
-    }
-
-    private static boolean geoDeqOne(double v1) {
-        return Math.abs(v1 - 1.0) < 1.0E-6;
-    }
-
-    private static boolean geoDeqMOne(double v1) {
-        return Math.abs(v1 + 1.0) < 1.0E-6;
-    }
-
-    private static double geoChecklonWest(double ssp, double lon) {
-        return Math.min(Math.abs(lon - ssp), 360. - (lon - ssp));
-    }
-
-    private static double geoChecklonEast(double ssp, double lon) {
-        return Math.min(Math.abs(lon - ssp), (lon - ssp) + 360.);
-    }
-
-    private static double geoEvalGeoDlat(double lat) {
-        double dbRadEq = (EARTH_RADIUS_METER - EARTH_POLAR_RADIUS_METER) / EARTH_RADIUS_METER;
-        final double latRad = MathUtils.DTOR * lat;
-        final double diff = Math.abs(0.5 * Math.PI - Math.abs(latRad));
-
-        if (diff < GEO_DOUBLE_EPSILON) {
-            return latRad;
-        } else {
-            dbRadEq = (1. - dbRadEq) * (1. - dbRadEq);
-            return MathUtils.RTOD * Math.atan(Math.tan(latRad) * dbRadEq);
-        }
-    }
-
-    private static double geoPixRadius(double lat) {
-        final double dbExc = Math.sqrt((EARTH_RADIUS_METER * EARTH_RADIUS_METER) -
-                                               (EARTH_POLAR_RADIUS_METER * EARTH_POLAR_RADIUS_METER)) / (EARTH_RADIUS_METER);
-        final double dbExc2 = dbExc * dbExc;
-        final double dbExc4 = dbExc2 * dbExc2;
-
-        final double dbLatRad = MathUtils.DTOR * lat;
-        final double dbSp1 = Math.sin(dbLatRad);
-        final double dbSp12 = dbSp1 * dbSp1;
-        final double dbSp14 = dbSp12 * dbSp12;
-
-        return EARTH_RADIUS_METER * (1. - (dbExc2 * dbSp12) / 2. + (dbExc4 * dbSp12) / 2. - (5. * dbSp14 * dbExc4) / 8.);
-    }
-
-    private static boolean isLeapYear(int year) {
-        return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
-    }
-
-    public static int getDoyFromYearMonthDay(int year, int month, int day) {
+    static int getDoyFromYearMonthDay(int year, int month, int day) {
         Calendar cal = Calendar.getInstance();
         int doy = -1;
         try {
@@ -475,12 +383,74 @@ public class MeteosatGeometry {
         return doy;
     }
 
+    // only needed for sat positions < 0 deg longitude
+//    private static double geoChecklonWest(double ssp, double lon) {
+//        return Math.min(Math.abs(lon - ssp), 360. - (lon - ssp));
 
-    private static class MeteosatAngles {
+    private static double checkEpsilon(double dbArg2) {
+        double result = dbArg2;
+        if (Math.abs(1.0 - Math.abs(dbArg2)) < GEO_DOUBLE_EPSILON) {
+            if (dbArg2 > 0.) {
+                result = 1.;
+            }
+            if (dbArg2 < 0.) {
+                result = -1.;
+            }
+        }
+        return result;
+    }
+
+    private static boolean geoDeqOne(double v1) {
+        return Math.abs(v1 - 1.0) < 1.0E-6;
+    }
+
+    private static boolean geoDeqMOne(double v1) {
+        return Math.abs(v1 + 1.0) < 1.0E-6;
+    }
+
+//    }
+
+    private static double geoChecklonEast(double ssp, double lon) {
+        return Math.min(Math.abs(lon - ssp), (lon - ssp) + 360.);
+    }
+
+    private static double geoEvalGeoDlat(double lat, double earthPolarRadiusMeter, double earthPolarMeter) {
+        double dbRadEq = (earthPolarMeter - earthPolarRadiusMeter) / earthPolarMeter;
+        final double latRad = MathUtils.DTOR * lat;
+        final double diff = Math.abs(0.5 * Math.PI - Math.abs(latRad));
+
+        if (diff < GEO_DOUBLE_EPSILON) {
+            return latRad;
+        } else {
+            dbRadEq = (1. - dbRadEq) * (1. - dbRadEq);
+            return MathUtils.RTOD * Math.atan(Math.tan(latRad) * dbRadEq);
+        }
+    }
+
+    private static double geoPixRadius(double lat, double earthPolarRadiusMeter, double earthPolarMeter) {
+        final double dbExc = Math.sqrt((earthPolarMeter * earthPolarMeter) -
+                                               (earthPolarRadiusMeter * earthPolarRadiusMeter)) / (earthPolarMeter);
+        final double dbExc2 = dbExc * dbExc;
+        final double dbExc4 = dbExc2 * dbExc2;
+
+        final double dbLatRad = MathUtils.DTOR * lat;
+        final double dbSp1 = Math.sin(dbLatRad);
+        final double dbSp12 = dbSp1 * dbSp1;
+        final double dbSp14 = dbSp12 * dbSp12;
+
+        return EARTH_RADIUS_METER_MVIRI * (1. - (dbExc2 * dbSp12) / 2. + (dbExc4 * dbSp12) / 2. - (5. * dbSp14 * dbExc4) / 8.);
+    }
+
+    private static boolean isLeapYear(int year) {
+        return ((year % 400) == 0) || (((year % 4) == 0) && ((year % 100) != 0));
+    }
+
+
+    static class MeteosatAngles {
         double zenith;
         double azimuth;
 
-        public MeteosatAngles(double azimuth, double zenith) {
+        public MeteosatAngles(double zenith, double azimuth) {
             this.azimuth = azimuth;
             this.zenith = zenith;
         }

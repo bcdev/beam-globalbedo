@@ -103,11 +103,11 @@ public class MeteosatTileExtractor extends Operator implements Output {
         // MET_000_VIS01_LatLon.nc (000 products from 1982-2006)
         // MET_057_VIS01_LatLon.nc (057 products from 2006-2010)
         // MET_063_VIS01_LatLon.nc (063 products from 1998-2007)
-        final boolean matches000Disk = sourceProduct.getName().contains("MVIRI_C_BRF") &&
+        final boolean matches000Disk = sourceProduct.getName().contains("VIRI_C_BRF") &&
                 latlonProduct.getName().equals("MET_000_VIS01_LatLon");
-        final boolean matches057Disk = sourceProduct.getName().contains("MVIRI_057_C_BRF") &&
+        final boolean matches057Disk = sourceProduct.getName().contains("VIRI_057_C_BRF") &&
                 latlonProduct.getName().equals("MET_057_VIS01_LatLon");
-        final boolean matches063Disk = sourceProduct.getName().contains("MVIRI_063_C_BRF") &&
+        final boolean matches063Disk = sourceProduct.getName().contains("VIRI_063_C_BRF") &&
                 latlonProduct.getName().equals("MET_063_VIS01_LatLon");
 
         return matches000Disk || matches057Disk || matches063Disk;
