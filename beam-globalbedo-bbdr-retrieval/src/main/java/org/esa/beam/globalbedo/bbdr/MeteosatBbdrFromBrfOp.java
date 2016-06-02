@@ -120,8 +120,9 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         // for conversion to broadband: BRF is taken as BB_SW, BB_NIR and BB_VIS are sen to NaN
         // todo: check how BBDR --> BRDF processor will handle this!
 
-        targetSamples[TRG_BB_VIS].set(Double.NaN);
-        targetSamples[TRG_BB_NIR].set(Double.NaN);
+        // todo: clarify if it is correct to just set all VIS and NIR to 0.0
+        targetSamples[TRG_BB_VIS].set(0.0);
+        targetSamples[TRG_BB_NIR].set(0.0);
         targetSamples[TRG_BB_SW].set(broadbandBrf);
         targetSamples[TRG_sig_BB_VIS_VIS].set(0.0);
         targetSamples[TRG_sig_BB_VIS_NIR].set(0.0);

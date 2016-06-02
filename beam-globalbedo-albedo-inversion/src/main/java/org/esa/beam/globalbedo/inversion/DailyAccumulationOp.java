@@ -149,6 +149,10 @@ public class DailyAccumulationOp extends Operator {
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
+        if (x == 0 && y == 70) {
+            System.out.println("x = " + x);
+        }
+
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
             final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
@@ -297,9 +301,9 @@ public class DailyAccumulationOp extends Operator {
         final double bbNir = bbNirTile[currentSourceProductIndex].getSampleDouble(x, y);
         final double bbSw = bbSwTile[currentSourceProductIndex].getSampleDouble(x, y);
 
-        return (bbVis == 0.0 || !AlbedoInversionUtils.isValid(bbVis) || bbVis == 9999.0 ||
-                bbNir == 0.0 || !AlbedoInversionUtils.isValid(bbNir) || bbNir == 9999.0 ||
-                bbSw == 0.0 || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
+        return (bbVis < 0.0 || !AlbedoInversionUtils.isValid(bbVis) || bbVis == 9999.0 ||
+                bbNir < 0.0 || !AlbedoInversionUtils.isValid(bbNir) || bbNir == 9999.0 ||
+                bbSw < 0.0 || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
     }
 
     private boolean isSDFilter(int x, int y) {
