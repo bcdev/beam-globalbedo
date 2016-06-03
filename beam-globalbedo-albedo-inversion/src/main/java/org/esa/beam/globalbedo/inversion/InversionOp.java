@@ -93,6 +93,9 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "false", description = "Write only SW related outputs (usually in case of MVIRI/SEVIRI)")
+    private boolean writeSwOnly;
+
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
 
@@ -125,18 +128,25 @@ public class InversionOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
 
         for (String parameterBandName : PARAMETER_BAND_NAMES) {
-            Band b = productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-            if (computeSeaice) {
-                b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            boolean addBand = !writeSwOnly || (writeSwOnly && parameterBandName.contains("SW"));
+            if (addBand) {
+                Band b = productConfigurer.addBand(parameterBandName, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+                if (computeSeaice) {
+                    b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+                }
             }
         }
 
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-                if (computeSeaice) {
-                    b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+                boolean addBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW") &&
+                !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
+                if (addBand) {
+                    Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+                    if (computeSeaice) {
+                        b.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+                    }
                 }
             }
         }
@@ -146,9 +156,9 @@ public class InversionOp extends PixelOperator {
         Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm1 = productConfigurer.addBand("GoF_TERM_1", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm2 = productConfigurer.addBand("GoF_TERM_2", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-        Band bInvGoodnessFitTerm3 = productConfigurer.addBand("GoF_TERM_3", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+//        Band bInvGoodnessFitTerm1 = productConfigurer.addBand("GoF_TERM_1", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+//        Band bInvGoodnessFitTerm2 = productConfigurer.addBand("GoF_TERM_2", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+//        Band bInvGoodnessFitTerm3 = productConfigurer.addBand("GoF_TERM_3", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
@@ -224,15 +234,23 @@ public class InversionOp extends PixelOperator {
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) {
 
-        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
-            configurator.defineSample(i, PARAMETER_BAND_NAMES[i]);
-        }
-
         int index = 0;
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+            boolean addedBand = !writeSwOnly || (writeSwOnly && PARAMETER_BAND_NAMES[i].contains("SW"));
+            if (addedBand) {
+                configurator.defineSample(index++, PARAMETER_BAND_NAMES[i]);
+            }
+        }
+
+        index = 0;
+        for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * NUM_ALBEDO_PARAMETERS; j++) {
-                configurator.defineSample(NUM_TRG_PARAMETERS + index, UNCERTAINTY_BAND_NAMES[i][j]);
-                index++;
+                boolean addedBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW")  &&
+                        !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
+                if (addedBand) {
+                    configurator.defineSample(NUM_TRG_PARAMETERS + index, UNCERTAINTY_BAND_NAMES[i][j]);
+                    index++;
+                }
             }
         }
 
@@ -242,9 +260,9 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
+//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
+//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
+//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
     }
 
     @Override
@@ -430,17 +448,30 @@ public class InversionOp extends PixelOperator {
 
         // parameters
         int index = 0;
+        int bandIndex = 0;
         for (int i = 0; i < NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < NUM_BBDR_WAVE_BANDS; j++) {
-                targetSamples[index].set(parameters.get(index, 0));
-                index++;
+                boolean addedBand = !writeSwOnly || (writeSwOnly && PARAMETER_BAND_NAMES[bandIndex].contains("SW"));
+                if (addedBand) {
+//                    targetSamples[index].set(parameters.get(index, 0));
+//                    System.out.println("i, j, index, bandIndex = " + i + "," + j + "," + index + "," + bandIndex);
+                    targetSamples[index].set(parameters.get(bandIndex, 0));
+                    index++;
+                }
+                bandIndex++;
             }
         }
 
+        index = 0;
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                targetSamples[index].set(uncertainties.get(i, j));
-                index++;
+                boolean addBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW")  &&
+                        !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
+                if (addBand) {
+//                    targetSamples[index].set(uncertainties.get(i, j));
+                    targetSamples[NUM_TRG_PARAMETERS + index].set(uncertainties.get(i, j));
+                    index++;
+                }
             }
         }
 
@@ -450,9 +481,9 @@ public class InversionOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
 
     }
 

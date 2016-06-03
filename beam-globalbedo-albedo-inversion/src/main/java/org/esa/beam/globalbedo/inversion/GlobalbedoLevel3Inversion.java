@@ -81,6 +81,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
     private boolean accumulationOnly;
 
+    @Parameter(defaultValue = "false", description = "Write only SW related outputs (usually in case of MVIRI/SEVIRI)")
+    private boolean writeSwOnly;
+
     @SuppressWarnings("FieldCanBeLocal")
     @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
@@ -153,6 +156,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("doy", doy);
             inversionOp.setParameter("computeSnow", computeSnow);
             inversionOp.setParameter("computeSeaice", computeSeaice);
+            inversionOp.setParameter("writeSwOnly", writeSwOnly);
             inversionOp.setParameter("usePrior", usePrior);
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             inversionOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
