@@ -71,7 +71,7 @@ public class IOUtils {
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String[] sensors, String tile, int year, int doy) throws
             IOException {
         final String daystring_yyyymmdd = AlbedoInversionUtils.getDateFromDoy(year, doy);
-        final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd");  // for AVHRR products
+        final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd");  // for AVHRR products
         List<Product> bbdrProductList = new ArrayList<>();
         if (StringUtils.isNotNullAndNotEmpty(daystring_yyyymmdd)) {
             for (String sensor : sensors) {
