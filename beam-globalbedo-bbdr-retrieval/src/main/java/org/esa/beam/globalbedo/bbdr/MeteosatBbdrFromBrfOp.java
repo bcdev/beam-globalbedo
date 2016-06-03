@@ -105,8 +105,10 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
             return;
         }
 
-        final double broadbandBrf = sourceSamples[SRC_BROADBAND_BRF].getDouble();
-        final double sigmaBroadbandBrf = sourceSamples[SRC_SIGMA_BROADBAND_BRF].getDouble();
+        double broadbandBrf = sourceSamples[SRC_BROADBAND_BRF].getDouble();
+        double sigmaBroadbandBrf = sourceSamples[SRC_SIGMA_BROADBAND_BRF].getDouble();
+        if (broadbandBrf == 1.0) broadbandBrf += 0.1*(Math.random()-0.5);
+        if (sigmaBroadbandBrf == 1.0) sigmaBroadbandBrf += 0.1*(Math.random()-0.5);
 
         final double degLat = sourceSamples[SRC_LAT].getDouble();
         final double degLon = sourceSamples[SRC_LON].getDouble();
@@ -116,9 +118,6 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         final double saa = MeteosatGeometry.computeSunAngles(degLat, degLon, satDegLon, doy, year, scanTime).getAzimuth();
         final double vaa = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, satDegLon, degLat, degLon, sensor).getAzimuth();
         final double phi = Math.abs(saa - vaa);
-
-        // for conversion to broadband: BRF is taken as BB_SW, BB_NIR and BB_VIS are sen to NaN
-        // todo: check how BBDR --> BRDF processor will handle this!
 
         // todo: clarify if it is correct to just set all VIS and NIR to 0.0
         targetSamples[TRG_BB_VIS].set(0.0);
@@ -133,6 +132,15 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_RAA].set(phi);
+
+        // set VIS and NIR to the same as SW (preliminary suggestion by SK, 20160603):
+        targetSamples[TRG_BB_VIS].set(broadbandBrf);
+        targetSamples[TRG_BB_NIR].set(broadbandBrf);
+        targetSamples[TRG_sig_BB_VIS_VIS].set(sigmaBroadbandBrf);
+        targetSamples[TRG_sig_BB_VIS_NIR].set(sigmaBroadbandBrf*sigmaBroadbandBrf);
+        targetSamples[TRG_sig_BB_VIS_SW].set(sigmaBroadbandBrf*sigmaBroadbandBrf);
+        targetSamples[TRG_sig_BB_NIR_NIR].set(sigmaBroadbandBrf);
+        targetSamples[TRG_sig_BB_NIR_SW].set(sigmaBroadbandBrf*sigmaBroadbandBrf);
 
         // calculation of kernels (kvol, kgeo)
 

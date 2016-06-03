@@ -70,19 +70,19 @@ public class IOUtils {
 
     public static Product[] getAccumulationInputProducts(String bbdrRootDir, String[] sensors, String tile, int year, int doy) throws
             IOException {
-        final String daystring = AlbedoInversionUtils.getDateFromDoy(year, doy);
+        final String daystring_yyyymmdd = AlbedoInversionUtils.getDateFromDoy(year, doy);
+        final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd");  // for AVHRR products
         List<Product> bbdrProductList = new ArrayList<>();
-        if (StringUtils.isNotNullAndNotEmpty(daystring)) {
-            for (String sensor: sensors) {
+        if (StringUtils.isNotNullAndNotEmpty(daystring_yyyymmdd)) {
+            for (String sensor : sensors) {
                 int numProducts = 0;
                 final String sensorBbdrDirName = bbdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
                 final File sensorBbdrDir = new File(sensorBbdrDirName);
                 if (sensorBbdrDir.exists()) {
                     final String[] sensorBbdrFiles = sensorBbdrDir.list();
                     for (String sensorBbdrFile : sensorBbdrFiles) {
-                        if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz")
-                                || sensorBbdrFile.endsWith(".dim")) &&
-                                sensorBbdrFile.contains(daystring)) {
+                        if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz") || sensorBbdrFile.endsWith(".dim")) &&
+                                (sensorBbdrFile.contains(daystring_yyyymmdd) || sensorBbdrFile.contains(daystring_yyyy_mm_dd))) {
                             final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
                             Product product = ProductIO.readProduct(sourceProductFileName);
                             if (product != null) {
@@ -111,12 +111,12 @@ public class IOUtils {
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
         final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day,
-                pixelX, pixelY, versionString);
+                                                                                pixelX, pixelY, versionString);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day,
-                pixelX, pixelY, versionString);
+                                                                              pixelX, pixelY, versionString);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -318,10 +318,10 @@ public class IOUtils {
         AccumulatorHolder accumulatorHolder = null;
 
         final List<String> albedoInputProductBinaryFileList = getDailyAccumulatorBinaryFileNames(accumulatorRootDir,
-                doy, year, tile,
-                wings,
-                computeSnow,
-                computeSeaice);
+                                                                                                 doy, year, tile,
+                                                                                                 wings,
+                                                                                                 computeSnow,
+                                                                                                 computeSeaice);
         if (albedoInputProductBinaryFileList.size() > 0) {
             accumulatorHolder = new AccumulatorHolder();
             accumulatorHolder.setReferenceYear(year);
@@ -529,7 +529,7 @@ public class IOUtils {
             }
         } catch (NumberFormatException e) {
             BeamLogManager.getSystemLogger().log(Level.ALL,
-                    "Cannot determine wings for accumulator '" + accName + "' - skipping.");
+                                                 "Cannot determine wings for accumulator '" + accName + "' - skipping.");
         }
         return isInWingsInterval;
     }
@@ -856,11 +856,11 @@ public class IOUtils {
             if (seaiceLandmaskProduct != null) {
                 final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
                 ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                        "landmask", targetProduct, true);
+                                      "landmask", targetProduct, true);
             }
         } catch (IOException e) {
             System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                    e.getMessage());
+                                       e.getMessage());
         }
     }
 
@@ -903,7 +903,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
@@ -959,7 +959,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                + e.getMessage());
+                                                            + e.getMessage());
                     }
                 }
             }
