@@ -27,7 +27,6 @@ import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 
-import static java.lang.Math.*;
 import static java.lang.StrictMath.toRadians;
 
 /**
@@ -36,10 +35,10 @@ import static java.lang.StrictMath.toRadians;
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.bbdr.avhrr",
-                  description = "Computes BBDRs and kernel parameters for AVHRR",
-                  authors = "Marco Zuehlke, Olaf Danne",
-                  version = "1.0",
-                  copyright = "(C) 2011 by Brockmann Consult")
+        description = "Computes BBDRs and kernel parameters for AVHRR",
+        authors = "Marco Zuehlke, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2011 by Brockmann Consult")
 public class BbdrAvhrrOp extends PixelOperator {
 
     protected static final int SRC_BRF_1 = 0;
@@ -73,14 +72,14 @@ public class BbdrAvhrrOp extends PixelOperator {
 
         final double brf1 = sourceSamples[SRC_BRF_1].getDouble();
         final double brf2 = sourceSamples[SRC_BRF_2].getDouble();
-//        final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();    // todo: how to use these?
-//        final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
+        final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();
+        final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
         final double sza = sourceSamples[SRC_TS].getDouble();
         final double vza = sourceSamples[SRC_TV].getDouble();
         final double phi = sourceSamples[SRC_PHI].getDouble();
         final int qa = sourceSamples[SRC_QA].getInt();
-        // todo: decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513:
 
+        // decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513:
         final boolean isCloud = BitSetter.isFlagSet(qa, 1);
         final boolean isCloudShadow = BitSetter.isFlagSet(qa, 2);
         final boolean isSea = BitSetter.isFlagSet(qa, 3);
@@ -91,24 +90,30 @@ public class BbdrAvhrrOp extends PixelOperator {
         }
 
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
-        // BB_VIS = 0.441*B1*B1 0.519*B1 + 0.0074
-        // BB_NIR  = -1.4759*B1*B1 -0.6536*B2*B2 + 1.8591*B1*B2 + 1.063*B2
-        // BB_SW  = -0.337*B1*B1 -0.2707*B2*B2 + 0.7074*B1*B2 + 0.2915*B1 + 0.5256*B2 + 0.0035
-        final double bbVis = 0.441*brf1*brf1 + 0.519*brf1 + 0.0074;
-        final double bbNir = -1.4759*brf1*brf1 -0.6536*brf2*brf2 + 1.8591*brf1*brf2 + 1.063*brf2;
-        final double bbSw  = -0.337*brf1*brf1 - 0.2707*brf2*brf2 + 0.7074*brf1*brf2 + 0.2915*brf1 + 0.5256*brf2 + 0.0035;
+        double[] bb = new double[BbdrConstants.N_SPC];
+        double[] sigmaBb = new double[BbdrConstants.N_SPC];
+        for (int i = 0; i < sigmaBb.length; i++) {
+            final double a = BbdrConstants.AVHRR_LIANG_COEFFS[i][0];
+            final double b = BbdrConstants.AVHRR_LIANG_COEFFS[i][1];
+            final double c = BbdrConstants.AVHRR_LIANG_COEFFS[i][2];
+            final double d = BbdrConstants.AVHRR_LIANG_COEFFS[i][3];
+            final double e = BbdrConstants.AVHRR_LIANG_COEFFS[i][4];
+            final double f = BbdrConstants.AVHRR_LIANG_COEFFS[i][5];
+            bb[i] = a * brf1 * brf1 + b * brf2 * brf2 + c * brf1 * brf2 + d * brf1 + e * brf2 + f;
+            sigmaBb[i] = Math.abs(2.0 * a * brf1 + c * brf2 + d) * Math.abs(sigmaBrf1) +
+                    Math.abs(2.0 * b * brf2 + c * brf1 + e) * Math.abs(sigmaBrf2);
+        }
 
-        // todo: NG to provide algo for sigmas
-        final double sigmaBbVisVis = 0.0;
-        final double sigmaBbVisNir = 0.0;
-        final double sigmaBbVisSw = 0.0;
-        final double sigmaBbNirNir = 0.0;
-        final double sigmaBbNirSw = 0.0;
-        final double sigmaBbSwSw = 0.0;
+        final double sigmaBbVisVis = sigmaBb[0];
+        final double sigmaBbVisNir = Math.sqrt(sigmaBb[0]*sigmaBb[1]);
+        final double sigmaBbVisSw = Math.sqrt(sigmaBb[0]*sigmaBb[2]);
+        final double sigmaBbNirNir = sigmaBb[1];
+        final double sigmaBbNirSw = Math.sqrt(sigmaBb[1]*sigmaBb[2]);
+        final double sigmaBbSwSw = sigmaBb[2];
 
-        targetSamples[TRG_BB_VIS].set(bbVis);
-        targetSamples[TRG_BB_NIR].set(bbNir);
-        targetSamples[TRG_BB_SW].set(bbSw);
+        targetSamples[TRG_BB_VIS].set(bb[0]);
+        targetSamples[TRG_BB_NIR].set(bb[1]);
+        targetSamples[TRG_BB_SW].set(bb[2]);
         targetSamples[TRG_sig_BB_VIS_VIS].set(sigmaBbVisVis);
         targetSamples[TRG_sig_BB_VIS_NIR].set(sigmaBbVisNir);
         targetSamples[TRG_sig_BB_VIS_SW].set(sigmaBbVisSw);
@@ -169,7 +174,7 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(SRC_BRF_1, "BRF_BAND_1", sourceProduct);
         configurator.defineSample(SRC_BRF_2, "BRF_BAND_2", sourceProduct);
         configurator.defineSample(SRC_SIGMA_BRF_1, "SIGMA_BRF_BAND_1", sourceProduct);
-        configurator.defineSample(SRC_SIGMA_BRF_2, "SIGMA_BRF_BAND_1", sourceProduct);
+        configurator.defineSample(SRC_SIGMA_BRF_2, "SIGMA_BRF_BAND_2", sourceProduct);
         configurator.defineSample(SRC_TS, "TS", sourceProduct);
         configurator.defineSample(SRC_TV, "TV", sourceProduct);
         configurator.defineSample(SRC_PHI, "PHI", sourceProduct);

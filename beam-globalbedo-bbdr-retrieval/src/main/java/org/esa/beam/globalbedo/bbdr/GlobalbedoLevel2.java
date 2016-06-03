@@ -171,14 +171,6 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameterDefaultValues();
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
                     break;
-//                case "AVHRR":
-//                    bbdrOp = new BbdrAvhrrOp();
-//                    bbdrOp.setParameterDefaultValues();
-//                    break;
-                case "METEOSAT":
-                    bbdrOp = new MeteosatBbdrFromBrfOp();
-                    bbdrOp.setParameterDefaultValues();
-                    break;
                 default:
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
             }

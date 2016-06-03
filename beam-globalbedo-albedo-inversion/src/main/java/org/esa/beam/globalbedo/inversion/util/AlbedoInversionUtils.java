@@ -31,8 +31,19 @@ public class AlbedoInversionUtils {
      * @return String - the datestring
      */
     public static String getDateFromDoy(int year, int doy) {
-        final String DATE_FORMAT = "yyyyMMdd";
-        final SimpleDateFormat sdf = new SimpleDateFormat(DATE_FORMAT);
+        return getDateFromDoy(year, doy, "yyyyMMdd");
+    }
+
+    /**
+     * Converts a day of year to a datestring
+     *
+     * @param year - the year
+     * @param doy  - the day of year
+     * @param dateFormat  - the date format (such as yyyyMMdd or yyyy-MM-dd)
+     * @return String - the datestring
+     */
+    public static String getDateFromDoy(int year, int doy, String dateFormat) {
+        final SimpleDateFormat sdf = new SimpleDateFormat(dateFormat);
 
         Calendar calendar = Calendar.getInstance();
         calendar.set(Calendar.DAY_OF_YEAR, doy);

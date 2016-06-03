@@ -1,10 +1,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.dataio.MeteosatGeoCoding;
-import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
-import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -87,6 +84,11 @@ public class MeteosatBrfTileExtractor extends Operator {
             }
         }
 
+        // todo: add angles
+        Band szaBand = targetProductOrigProj.addBand("SZA", ProductData.TYPE_FLOAT32);
+        Band vzaBand = targetProductOrigProj.addBand("VZA", ProductData.TYPE_FLOAT32);
+        Band relaziBand = targetProductOrigProj.addBand("RAA", ProductData.TYPE_FLOAT32);
+
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
 
 
@@ -105,6 +107,10 @@ public class MeteosatBrfTileExtractor extends Operator {
 
             // now reproject onto given MODIS SIN tile...
             if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding)) {
+                final Product reprojectedProduct =  TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
+
+
+
                 return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
             } else {
                 throw new OperatorException

@@ -14,16 +14,21 @@ public class AlbedoInversionUtilsTest extends TestCase {
         int year = 2005;
         int doy = 129;
         assertEquals("20050509", AlbedoInversionUtils.getDateFromDoy(year, doy));
+        assertEquals("2005_05_09", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd"));
         doy = 1;
         assertEquals("20050101", AlbedoInversionUtils.getDateFromDoy(year, doy));
+        assertEquals("2005-01-01", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd"));
         doy = 365;
         assertEquals("20051231", AlbedoInversionUtils.getDateFromDoy(year, doy));
+        assertEquals("2005_12_31", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd"));
 
         year = 2004;
         doy = 129;
         assertEquals("20040508", AlbedoInversionUtils.getDateFromDoy(year, doy));
+        assertEquals("2004-05-08", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd"));
         doy = 366;
         assertEquals("20041231", AlbedoInversionUtils.getDateFromDoy(year, doy));
+        assertEquals("2004-12-31", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd"));
     }
 
     public void testGetDiagonalMatrix() {
