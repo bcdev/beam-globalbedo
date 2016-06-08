@@ -74,8 +74,12 @@ public class BbdrAvhrrOp extends PixelOperator {
         final double brf2 = sourceSamples[SRC_BRF_2].getDouble();
         final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();
         final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
-        final double sza = sourceSamples[SRC_TS].getDouble();
-        final double vza = sourceSamples[SRC_TV].getDouble();
+//        final double sza = sourceSamples[SRC_TS].getDouble();
+//        final double vza = sourceSamples[SRC_TV].getDouble();
+        // JRC swapped the angles in input products, so correct here. todo: remove this when JRC delivered correct data
+        final double vza = sourceSamples[SRC_TS].getDouble();
+        final double sza = sourceSamples[SRC_TV].getDouble();
+
         final double phi = sourceSamples[SRC_PHI].getDouble();
         final int qa = sourceSamples[SRC_QA].getInt();
 
