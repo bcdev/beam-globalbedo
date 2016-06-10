@@ -4,6 +4,8 @@ org.esa.beam.globalbedo.bbdr.BbdrFromSdrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.AvhrrTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBrfTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.MeteosatMsaAlbedoTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.MeteosatTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBbdrFromBrfOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrAvhrrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrVgtOp$Spi
