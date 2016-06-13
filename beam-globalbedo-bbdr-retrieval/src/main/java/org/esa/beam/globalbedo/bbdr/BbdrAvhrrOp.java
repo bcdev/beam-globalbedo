@@ -38,7 +38,7 @@ import static java.lang.StrictMath.toRadians;
         description = "Computes BBDRs and kernel parameters for AVHRR",
         authors = "Marco Zuehlke, Olaf Danne",
         version = "1.0",
-        copyright = "(C) 2011 by Brockmann Consult")
+        copyright = "(C) 2016 by Brockmann Consult")
 public class BbdrAvhrrOp extends PixelOperator {
 
     protected static final int SRC_BRF_1 = 0;
