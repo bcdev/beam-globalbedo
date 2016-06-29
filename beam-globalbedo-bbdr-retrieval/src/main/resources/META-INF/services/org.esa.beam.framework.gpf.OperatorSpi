@@ -4,6 +4,8 @@ org.esa.beam.globalbedo.bbdr.BbdrFromSdrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.AvhrrTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBrfTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.MeteosatMsaAlbedoTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.MeteosatTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBbdrFromBrfOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrAvhrrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrVgtOp$Spi
@@ -12,6 +14,7 @@ org.esa.beam.globalbedo.bbdr.Modis09StatusBitMaskOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrProbavOp$Spi
+org.esa.beam.globalbedo.bbdr.SdrSpectralMappingToModisOp$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2SinglePixel$Spi
 org.esa.beam.globalbedo.bbdr.GlobalbedoLevel2ExtractL1bSinglePixel$Spi

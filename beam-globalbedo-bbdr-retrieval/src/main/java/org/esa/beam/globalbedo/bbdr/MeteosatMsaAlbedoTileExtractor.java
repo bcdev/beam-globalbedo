@@ -1,7 +1,10 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.dataio.MeteosatGeoCoding;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -13,22 +16,25 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.ProductUtils;
 
+import javax.media.jai.RenderedOp;
+import javax.media.jai.operator.TransposeDescriptor;
 import java.io.IOException;
 
 /**
- * Reads a Meteosat MVIRI BRF disk product, attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile.
+ * Reads a Meteosat MSA Albedo disk product, attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile.
+ * TODO: lot of duplications from MeteosatBrfTileExtractor. Merge and cleanup!
  *
  * @author olafd
  */
-@OperatorMetadata(alias = "ga.brf.meteosat",
-        description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
+@OperatorMetadata(alias = "ga.msaalbedo.meteosat",
+        description = "Reads a Meteosat MVIRI MSA albedo disk product with standard Beam Netcdf reader, " +
                 "attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile. " +
                 "Suitable lat/lon bands must be passed as parameters.",
         authors = "Olaf Danne",
         internal = true,
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
-public class MeteosatBrfTileExtractor extends Operator {
+public class MeteosatMsaAlbedoTileExtractor extends Operator {
     @SourceProduct
     private Product sourceProduct;
 
@@ -73,29 +79,34 @@ public class MeteosatBrfTileExtractor extends Operator {
         for (Band band : sourceProduct.getBands()) {
             if (!targetProductOrigProj.containsBand(band.getName())) {
                 ProductUtils.copyBand(band.getName(), sourceProduct, targetProductOrigProj, true);
-                ProductUtils.copyRasterDataNodeProperties(band, targetProductOrigProj.getBand(band.getName()));
+                final Band targetBand = targetProductOrigProj.getBand(band.getName());
+                ProductUtils.copyRasterDataNodeProperties(band, targetBand);
+                RenderedOp flippedImage = flipImage(band);
+                targetBand.setSourceImage(flippedImage);
             }
         }
         // copy lat/lon bands
         for (Band band : latlonProduct.getBands()) {
             if (!targetProductOrigProj.containsBand(band.getName())) {
                 ProductUtils.copyBand(band.getName(), latlonProduct, targetProductOrigProj, true);
-                ProductUtils.copyRasterDataNodeProperties(band, targetProductOrigProj.getBand(band.getName()));
+                final Band targetBand = targetProductOrigProj.getBand(band.getName());
+                ProductUtils.copyRasterDataNodeProperties(band, targetBand);
+                RenderedOp flippedImage = flipImage(band);
+                targetBand.setSourceImage(flippedImage);
             }
         }
 
-        // todo: add angles
-//        Band szaBand = targetProductOrigProj.addBand("SZA", ProductData.TYPE_FLOAT32);
-//        Band vzaBand = targetProductOrigProj.addBand("VZA", ProductData.TYPE_FLOAT32);
-//        Band relaziBand = targetProductOrigProj.addBand("RAA", ProductData.TYPE_FLOAT32);
-
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
 
-
         final Band latBand = latlonProduct.getBand(latBandName);
-        latBand.setValidPixelExpression("lat != 90 && lon != 90");
+        latBand.setValidPixelExpression(latBandName + " != -9999.0 && " + lonBandName + " != -9999.0");
+        RenderedOp flippedImage = flipImage(latBand);
+        latBand.setSourceImage(flippedImage);
         final Band lonBand = latlonProduct.getBand(lonBandName);
-        lonBand.setValidPixelExpression("lat != 90 && lon != 90");
+        lonBand.setValidPixelExpression(latBandName + " != -9999.0 && " + lonBandName + " != -9999.0");
+        flippedImage = flipImage(lonBand);
+        lonBand.setSourceImage(flippedImage);
+        lonBand.setScalingFactor(1.0);   // current static data file contains a weird scaling factor for longitude band
         try {
             final MeteosatGeoCoding meteosatGeoCoding = new MeteosatGeoCoding(latBand, lonBand, regionID);
             targetProductOrigProj.setGeoCoding(meteosatGeoCoding);
@@ -107,7 +118,7 @@ public class MeteosatBrfTileExtractor extends Operator {
 
             // now reproject onto given MODIS SIN tile...
             if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding)) {
-                return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile);
+                return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile, "Bilinear");
             } else {
                 throw new OperatorException
                         ("Tile '" + tile + "' has no ontersection with Meteosat disk.");
@@ -117,6 +128,11 @@ public class MeteosatBrfTileExtractor extends Operator {
                     ("Cannot attach Meteosat geocoding to target product: " + e.getMessage());
         }
 
+    }
+
+    private RenderedOp flipImage(Band sourceBand) {
+        final RenderedOp verticalFlippedImage = TransposeDescriptor.create(sourceBand.getSourceImage(), TransposeDescriptor.FLIP_VERTICAL, null);
+        return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
 
     static boolean checkIfModisTileIntersectsMeteosatDisk(String tile, MeteosatGeoCoding meteosatGeoCoding) {
@@ -158,7 +174,7 @@ public class MeteosatBrfTileExtractor extends Operator {
     @SuppressWarnings({"UnusedDeclaration"})
     public static class Spi extends OperatorSpi {
         public Spi() {
-            super(MeteosatBrfTileExtractor.class);
+            super(MeteosatMsaAlbedoTileExtractor.class);
         }
     }
 }

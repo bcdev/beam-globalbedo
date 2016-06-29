@@ -5,6 +5,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.pointop.ProductConfigurer;
 import org.esa.beam.framework.gpf.pointop.Sample;
@@ -18,14 +19,16 @@ import org.esa.beam.util.ProductUtils;
 import static java.lang.StrictMath.toRadians;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 26.05.2016
- * Time: 10:01
+ * Performs spectral mapping of MERIS SDR to MODIS BRF following UCL approach.
  *
- * @author olafd
+ * @author Olaf Danne
  */
-public class SdrSpectralMappingOp extends BbdrMasterOp {
+@OperatorMetadata(alias = "ga.bbdr.modis.spectral",
+        description = "Performs spectral mapping of MERIS SDR to MODIS BRF following UCL approach",
+        authors = "Said Kharbouche, Olaf Danne",
+        version = "1.0",
+        copyright = "(C) 2016 by UCL/MSSL, Brockmann Consult")
+public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     private static final int SRC_VZA = 50;
     private static final int SRC_SZA = 51;
@@ -58,14 +61,18 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     private String[] sdrMappedBandNames;
     private String[] sigmaSdrMappedBandNames;
     private String[] kernelBandNames;
+    private MsslModisSpectralMapper sm;
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        super.prepareInputs();
         sdrMappedBandNames = SpectralInversionUtils.getSdrBandNames(numMappedSdrBands);
         int numSigmaSdrBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
         sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numMappedSdrBands, numSigmaSdrBands);
         kernelBandNames = AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES;
+
+        sm = new MsslModisSpectralMapper();
+        // read coefficients from a text file
+        sm.readCoeff();
     }
 
     @Override
@@ -131,8 +138,6 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
-        super.configureTargetProduct(productConfigurer);
-
         final Product targetProduct = productConfigurer.getTargetProduct();
 
         targetProduct.setAutoGrouping("sdr_sigma:sdr");
@@ -149,21 +154,24 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
         // copy flag coding and flag images
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
 
-        if (writeGeometryAndAOT) {
-            ProductUtils.copyBand("VZA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("SZA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("VAA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("SAA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("DEM", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("AOD550", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("sig_AOD550", sourceProduct, targetProduct, true);
-        }
+//        if (writeGeometryAndAOT) {
+//            ProductUtils.copyBand("VZA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("SZA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("VAA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("SAA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("DEM", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("AOD550", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("sig_AOD550", sourceProduct, targetProduct, true);
+//        }
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         final int status = sourceSamples[SRC_STATUS].getInt();
-        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
+        if (x == 400 && y == 1600) {
+            System.out.println("x = " + x);
+        }
 
         if (status != 1 && status != 3) {
             // only compute over clear land or snow
@@ -172,19 +180,19 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
         }
 
         // prepare SDR spectral mapping...
-        double[] sdr = new double[sensor.getNumBands()];
+        float[] sdr = new float[sensor.getNumBands()];
         for (int i = 0; i < sensor.getNumBands(); i++) {
-            sdr[i] = sourceSamples[i].getDouble();
+            sdr[i] = sourceSamples[i].getFloat();
         }
-        double[] sigmaSdr = new double[sensor.getNumBands()];
+        float[] sigmaSdr = new float[sensor.getNumBands()];
         for (int i = 0; i < sensor.getNumBands(); i++) {
-            sigmaSdr[i] = sourceSamples[sensor.getNumBands() + i].getDouble();
+            sigmaSdr[i] = sourceSamples[sensor.getNumBands() + i].getFloat();
         }
 
         int[] sinCoordinates = null;  // todo: clarify what means sinCoordinates
-        final double[] sdrMapped =
+        final float[] sdrMapped =
                 getSpectralMappedSdr(numMappedSdrBands, sensor.name(), sdr, year, doy, sinCoordinates, computeSnow);
-        final double[] sdrSigmaMapped =
+        final float[] sdrSigmaMapped =
                 getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, year, doy, sinCoordinates, computeSnow);
 
         // calculation of kernels (kvol, kgeo)
@@ -210,24 +218,28 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
             targetSamples[index++].set(sdrSigmaMapped[i]);
         }
         targetSamples[index++].set(kvol);
-        targetSamples[index].set(kgeo);
+        targetSamples[index++].set(kgeo);
+
+        targetSamples[index].set(sourceSamples[SRC_SNOW_MASK].getInt());
     }
 
-    static double[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, double[] sdr, int year, int doy,
+    float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr, int year, int doy,
                                          int[] sinCoordinates, boolean snow) {
-        double[] sdrMapped = new double[numMappedSdrBands];   // the 7 MODIS channels
-
-        // TODO: 26.05.2016 : include implementation from SK
-        return sdrMapped;
+//        float[] sdrMapped = new float[numMappedSdrBands];   // the 7 MODIS channels
+//        return sdrMapped;
+        // todo: this is preliminary. SK to explain how to address the other parameters?!
+        return sm.getSpectralMappedSdr(sdr);
     }
 
-    static double[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, double[] sdrErrors, int year, int doy,
+    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors, int year, int doy,
                                               int[] sinCoordinates, boolean snow) {
-        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
-        double[] sdrSigmaMapped = new double[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
-
-        // TODO: 26.05.2016 : include implementation from SK
-        return sdrSigmaMapped;
+//        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+//        float[] sdrSigmaMapped = new float[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
+//
+//
+//        return sdrSigmaMapped;
+        // todo: this is preliminary. SK to explain how to address the other parameters?!
+        return sm.getSpectralMappedSigmaSdr(sdrErrors);
     }
 
     private void addMappedSdrBands(Product targetProduct) {
@@ -252,7 +264,7 @@ public class SdrSpectralMappingOp extends BbdrMasterOp {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(SdrSpectralMappingOp.class);
+            super(SdrSpectralMappingToModisOp.class);
         }
     }
 }
