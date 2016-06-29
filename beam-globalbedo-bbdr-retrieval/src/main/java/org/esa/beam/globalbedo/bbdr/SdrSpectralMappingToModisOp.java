@@ -138,8 +138,6 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
-        super.configureTargetProduct(productConfigurer);
-
         final Product targetProduct = productConfigurer.getTargetProduct();
 
         targetProduct.setAutoGrouping("sdr_sigma:sdr");
@@ -151,26 +149,29 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-//        targetProduct.addBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, ProductData.TYPE_INT8);
+        targetProduct.addBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, ProductData.TYPE_INT8);
 
         // copy flag coding and flag images
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
 
-        if (writeGeometryAndAOT) {
-            ProductUtils.copyBand("VZA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("SZA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("VAA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("SAA", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("DEM", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("AOD550", sourceProduct, targetProduct, true);
-            ProductUtils.copyBand("sig_AOD550", sourceProduct, targetProduct, true);
-        }
+//        if (writeGeometryAndAOT) {
+//            ProductUtils.copyBand("VZA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("SZA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("VAA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("SAA", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("DEM", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("AOD550", sourceProduct, targetProduct, true);
+//            ProductUtils.copyBand("sig_AOD550", sourceProduct, targetProduct, true);
+//        }
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         final int status = sourceSamples[SRC_STATUS].getInt();
-//        targetSamples[TRG_SNOW].set(sourceSamples[SRC_SNOW_MASK].getInt());
+
+        if (x == 400 && y == 1600) {
+            System.out.println("x = " + x);
+        }
 
         if (status != 1 && status != 3) {
             // only compute over clear land or snow
@@ -217,7 +218,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
             targetSamples[index++].set(sdrSigmaMapped[i]);
         }
         targetSamples[index++].set(kvol);
-        targetSamples[index].set(kgeo);
+        targetSamples[index++].set(kgeo);
+
+        targetSamples[index].set(sourceSamples[SRC_SNOW_MASK].getInt());
     }
 
     float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr, int year, int doy,

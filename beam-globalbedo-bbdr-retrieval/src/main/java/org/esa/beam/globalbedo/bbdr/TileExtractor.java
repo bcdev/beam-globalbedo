@@ -199,7 +199,7 @@ public class TileExtractor extends Operator implements Output {
     }
 
     public static Product reprojectToModisTile(Product bbdrProduct, String tileName) {
-        return reprojectToModisTile(bbdrProduct, tileName, "nearest");
+        return reprojectToModisTile(bbdrProduct, tileName, "Nearest");
     }
 
     public static Product reprojectToModisTile(Product bbdrProduct, String tileName, String resampling) {

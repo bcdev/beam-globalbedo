@@ -229,11 +229,11 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     private void extractInputParmsFromFilename() {
         // filenames are like: W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04
         final String sourceProductName = sourceProduct.getName();
-        if (sourceProductName.contains("MVIRI_C_BRF")) {
+        if (sourceProductName.contains("VIRI_C_BRF") || sourceProductName.contains("VIRI_HRVIS_000_C_BRF")) {
             satDegLon = 0.0;
-        } else if (sourceProductName.contains("VIRI_057_C_BRF")) {
+        } else if (sourceProductName.contains("VIRI_057_C_BRF") || sourceProductName.contains("VIRI_HRVIS_057_C_BRF")) {
             satDegLon = 57.0;
-        } else if (sourceProductName.contains("VIRI_063_C_BRF")) {
+        } else if (sourceProductName.contains("VIRI_063_C_BRF") || sourceProductName.contains("VIRI_HRVIS_063_C_BRF")) {
             satDegLon = 63.0;
         } else {
             throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
