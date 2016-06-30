@@ -16,12 +16,12 @@ import org.esa.beam.util.ProductUtils;
 import java.io.IOException;
 
 /**
- * Reads a Meteosat MVIRI BRF disk product, attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile.
+ * Reads a Meteosat MVIRI/SEVIRI BRF disk product, attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile.
  *
  * @author olafd
  */
 @OperatorMetadata(alias = "ga.brf.meteosat",
-        description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
+        description = "Reads a Meteosat MVIRI/SEVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
                 "attaches a Meteosat Geocoding, and reprojects to specified MODIS SIN tile. " +
                 "Suitable lat/lon bands must be passed as parameters.",
         authors = "Olaf Danne",
