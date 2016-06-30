@@ -88,6 +88,12 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size." +
+                    "Should usually be set to 6.0 for AVHRR/GEO (tiles of 200x200).")
+    protected double modisTileScaleFactor;
+
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
@@ -142,11 +148,13 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 inversionOp.setSourceProduct("priorProduct", priorProduct);
             } else {
                 if (computeSeaice) {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                    final int width = (int) (AlbedoInversionConstants.SEAICE_TILE_WIDTH / modisTileScaleFactor);
+                    final int height = (int) (AlbedoInversionConstants.SEAICE_TILE_HEIGHT / modisTileScaleFactor);
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(width,height);
                 } else {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                    final int width = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH / modisTileScaleFactor);
+                    final int height = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT / modisTileScaleFactor);
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(width,height);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
@@ -176,7 +184,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 }
             } else if (priorProduct == null) {
                 // same in the standard mode without using priors...
-                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor));
             }
 
             // todo: adapt and activate if needed

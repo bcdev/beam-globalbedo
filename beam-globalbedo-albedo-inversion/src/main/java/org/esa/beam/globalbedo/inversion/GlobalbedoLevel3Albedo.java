@@ -91,6 +91,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size." +
+                    "Should usually be set to 6.0 for AVHRR/GEO (tiles of 200x200).")
+    protected double modisTileScaleFactor;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -183,7 +189,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         if (brdfMergedProduct != null) {
             if (brdfMergedProduct.getGeoCoding() == null) {
-                final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(tile);
+                final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor);
                 brdfMergedProduct.setGeoCoding(sinusoidalTileGeocoding);
             }
 

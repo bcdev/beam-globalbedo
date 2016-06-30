@@ -206,6 +206,10 @@ public class IOUtils {
     }
 
     public static ModisTileGeoCoding getSinusoidalTileGeocoding(String tile) {
+        return getSinusoidalTileGeocoding(tile, 1.0);
+    }
+
+    public static ModisTileGeoCoding getSinusoidalTileGeocoding(String tile, double scaleFactor) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);
         if (tileIndex == -1) {
@@ -214,8 +218,8 @@ public class IOUtils {
         final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
         final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
         final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
-        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
+        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaleFactor;
+        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaleFactor;
         ModisTileGeoCoding geoCoding;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
@@ -225,6 +229,7 @@ public class IOUtils {
         }
         return geoCoding;
     }
+
 
 //    public static CrsGeoCoding getSinusoidalGlobalGeocoding(int downscalingFactor) {
 //        final double easting = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;

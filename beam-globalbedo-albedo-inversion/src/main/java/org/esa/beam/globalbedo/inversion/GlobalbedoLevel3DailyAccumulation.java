@@ -56,6 +56,11 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "1.0", description = "Weighting of uncertainties (test option, should be 1.0 usually!).")
     private double uncertaintyWeightingFactor;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
+
     @Override
     public void initialize() throws OperatorException {
 
@@ -94,6 +99,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             accumulationOp.setParameter("debug", debug);
             accumulationOp.setParameter("uncertaintyWeightingFactor", uncertaintyWeightingFactor);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
+            accumulationOp.setParameter("modisTileScaleFactor", modisTileScaleFactor);
             accumulationProduct = accumulationOp.getTargetProduct();
 
             setTargetProduct(accumulationProduct);

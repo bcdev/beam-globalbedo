@@ -63,6 +63,11 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     @Parameter(defaultValue = "false", description = "Debug - write more target bands")
     private boolean debug;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
+
 
     private Logger logger;
 
@@ -80,8 +85,8 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             rasterWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
             rasterHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
         } else {
-            rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-            rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+            rasterWidth = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH / modisTileScaleFactor);
+            rasterHeight = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT / modisTileScaleFactor);
         }
 
         // STEP 1: get Daily Accumulator input files...
