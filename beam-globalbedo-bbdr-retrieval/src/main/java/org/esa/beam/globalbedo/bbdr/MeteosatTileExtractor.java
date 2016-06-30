@@ -40,7 +40,7 @@ import java.util.concurrent.*;
 /**
  * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles.
  *
- * CURRENTLY NOT USED!!
+ *
  */
 @OperatorMetadata(alias = "ga.tile.meteosat",
         description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
@@ -67,6 +67,12 @@ public class MeteosatTileExtractor extends Operator implements Output {
 
     @Parameter(defaultValue = "35")   // to define a subset of 'vertical stripes' of tiles
     protected int horizontalTileEndIndex;
+
+    @Parameter(defaultValue = "6.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
+
 
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
@@ -178,16 +184,16 @@ public class MeteosatTileExtractor extends Operator implements Output {
 
     private void doExtract_executor() {
         ExecutorService executorService = Executors.newFixedThreadPool(parallelism);
-        ExecutorCompletionService<TileProduct> ecs = new ExecutorCompletionService<>(executorService);
+        ExecutorCompletionService<TileExtractor.TileProduct> ecs = new ExecutorCompletionService<>(executorService);
 
         for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
             final String tileName = tileCoordinates.getTileName(index);
-            Callable<TileProduct> callable = new Callable<TileProduct>() {
+            Callable<TileExtractor.TileProduct> callable = new Callable<TileExtractor.TileProduct>() {
                 @Override
-                public TileProduct call() throws Exception {
+                public TileExtractor.TileProduct call() throws Exception {
                     if (isTileToProcess(tileName)) {
-                        Product reprojected = TileExtractor.reprojectToModisTile(extendedSourceProduct, tileName);
-                        return new TileProduct(reprojected, tileName);
+                        Product reprojected = TileExtractor.reprojectToModisTile(extendedSourceProduct, tileName, modisTileScaleFactor);
+                        return new TileExtractor.TileProduct(reprojected, tileName);
                     } else {
                         return null;
                     }
@@ -197,10 +203,10 @@ public class MeteosatTileExtractor extends Operator implements Output {
         }
         for (int i = 0; i < tileCoordinates.getTileCount(); i++) {
             try {
-                Future<TileProduct> future = ecs.take();
-                TileProduct tileProduct = future.get();
-                if (tileProduct != null && tileProduct.product != null && isTileToProcess(tileProduct.tileName)) {
-                    writeTileProduct(tileProduct.product, tileProduct.tileName);
+                Future<TileExtractor.TileProduct> future = ecs.take();
+                TileExtractor.TileProduct tileProduct = future.get();
+                if (tileProduct != null && tileProduct.getProduct() != null && isTileToProcess(tileProduct.getTileName())) {
+                    writeTileProduct(tileProduct.getProduct(), tileProduct.getTileName());
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);
@@ -229,15 +235,15 @@ public class MeteosatTileExtractor extends Operator implements Output {
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
-    private static class TileProduct {
-        private final Product product;
-        private final String tileName;
-
-        private TileProduct(Product product, String tileName) {
-            this.product = product;
-            this.tileName = tileName;
-        }
-    }
+//    private static class TileProduct {
+//        private final Product product;
+//        private final String tileName;
+//
+//        private TileProduct(Product product, String tileName) {
+//            this.product = product;
+//            this.tileName = tileName;
+//        }
+//    }
 
     public static class Spi extends OperatorSpi {
 

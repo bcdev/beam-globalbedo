@@ -32,7 +32,7 @@ import java.util.HashMap;
 import static java.lang.StrictMath.toRadians;
 
 /**
- * Computes BBDRs for METEOSAT MVIRI(/SEVIRI) as agreed with PL, JPM, AL:
+ * Computes BBDRs for METEOSAT MVIRI/SEVIRI as agreed with PL, JPM, AL:
  *  - uses geometry computation taken from Eumetsat C code
  *  - broadband BRF is directly 'BB SW'. No BB VIS NIR.
  *  - kernels: same as for AVHRR, neglect Nsky and coupling

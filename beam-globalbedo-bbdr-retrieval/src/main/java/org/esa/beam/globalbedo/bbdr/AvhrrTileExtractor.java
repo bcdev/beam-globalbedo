@@ -56,6 +56,12 @@ public class AvhrrTileExtractor extends Operator implements Output {
     @Parameter(defaultValue = "35")   // to define a subset of 'vertical stripes' of tiles
     protected int horizontalTileEndIndex;
 
+    @Parameter(defaultValue = "6.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
+
+
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
 
@@ -82,7 +88,7 @@ public class AvhrrTileExtractor extends Operator implements Output {
                 @Override
                 public TileProduct call() throws Exception {
                     if (isTileToProcess(tileName)) {
-                        Product reprojected = TileExtractor.reprojectToModisTile(sourceProduct, tileName);
+                        Product reprojected = TileExtractor.reprojectToModisTile(sourceProduct, tileName, modisTileScaleFactor);
                         return new TileProduct(reprojected, tileName);
                     } else {
                         return null;
