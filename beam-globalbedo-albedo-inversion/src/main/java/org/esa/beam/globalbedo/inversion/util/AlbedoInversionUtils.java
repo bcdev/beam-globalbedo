@@ -4,10 +4,12 @@ import Jama.Matrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
+import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.image.Raster;
@@ -519,6 +521,44 @@ public class AlbedoInversionUtils {
 
         return new GeoPos(latitude, longitude);
     }
+
+    public static Product reprojectToModisTile(Product bbdrProduct, String tileName, String resampling, double scaleFactor) {
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+        int tileIndex = modisTileCoordinates.findTileIndex(tileName);
+        if (tileIndex == -1) {
+            throw new OperatorException("Found no tileIndex for tileName=''" + tileName + "");
+        }
+        double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
+        double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
+
+        ReprojectionOp repro = new ReprojectionOp();
+        repro.setParameterDefaultValues();
+        repro.setParameter("easting", easting);
+        repro.setParameter("northing", northing);
+        repro.setParameter("crs", AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING);
+        repro.setParameter("resampling", resampling);
+        repro.setParameter("includeTiePointGrids", false);
+        repro.setParameter("referencePixelX", 0.0);
+        repro.setParameter("referencePixelY", 0.0);
+        repro.setParameter("orientation", 0.0);
+
+        // scale factor > 1 increases pixel size and decreases number of pixels;
+        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaleFactor;
+        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaleFactor;
+        final int width = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH/scaleFactor);
+        final int height = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT/scaleFactor);
+
+        repro.setParameter("pixelSizeX", pixelSizeX);
+        repro.setParameter("pixelSizeY", pixelSizeY);
+        repro.setParameter("width", width);
+        repro.setParameter("height", height);
+
+        repro.setParameter("orthorectify", true);
+        repro.setParameter("noDataValue", 0.0);
+        repro.setSourceProduct(bbdrProduct);
+        return repro.getTargetProduct();
+    }
+
 
 
     public static double truncate(double d) {

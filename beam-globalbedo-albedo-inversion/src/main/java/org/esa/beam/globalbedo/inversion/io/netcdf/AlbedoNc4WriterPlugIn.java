@@ -139,37 +139,37 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, relEntropyBand,
-                                                          "Relative Entropy", NODATA, null);
+                                                          "Relative Entropy", NODATA, "1");
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, weightedNumSamplesBand,
-                                                          "Weighted number of albedo samples", NODATA, null);
+                                                          "Weighted number of albedo samples", NODATA, "1");
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, goodnessOfFitBand,
-                                                          "Goodness of Fit", NODATA, null);
+                                                          "Goodness of Fit", NODATA, "1");
             }
             final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
             if (snowFractionBand != null) {
-                addNc4BrdfAncillaryVariableWithAttributes(writeable, snowFractionBand, "Snow Fraction", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, snowFractionBand, "Snow Fraction", NODATA, "1");
             }
             final Band dataMaskBand = p.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
             if (dataMaskBand != null) {
-                addNc4BrdfAncillaryVariableWithAttributes(writeable, dataMaskBand, "Data Mask", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, dataMaskBand, "Data Mask", NODATA, "1");
             }
             final Band szaBand = p.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
             if (szaBand != null) {
-                addNc4BrdfAncillaryVariableWithAttributes(writeable, szaBand, "Solar Zenith Angle", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, szaBand, "Solar Zenith Angle", NODATA, "degrees");
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees");
             }
             final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
             if (lonBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees");
             }
         }
 
@@ -239,7 +239,9 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
         private void addAlbedoVariableAttributes(Band b, NVariable variable, String longName) throws IOException {
             variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", b.getNoDataValue());
+            final Float _fillValue = (float) b.getNoDataValue();
+            variable.addAttribute("_FillValue", _fillValue);
+            variable.addAttribute("units", "1");
             variable.addAttribute("coordinates", "lat lon");
         }
 
@@ -250,7 +252,8 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                                                                String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", fillValue);
+            final Float _fillValue = fillValue;
+            variable.addAttribute("_FillValue", _fillValue);
             variable.addAttribute("coordinates", "lat lon");
             addUnitAttribute(unit, variable);
         }

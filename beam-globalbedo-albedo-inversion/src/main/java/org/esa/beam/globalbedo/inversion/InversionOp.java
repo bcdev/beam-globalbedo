@@ -84,8 +84,8 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
 
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo
+    private String bbdrRootDir;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -120,6 +120,12 @@ public class InversionOp extends PixelOperator {
     //    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     @Parameter(defaultValue = "Data_Mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorLandMaskBandName;
+
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size." +
+                    "Should usually be set to 6.0 for AVHRR/GEO (tiles of 200x200).")
+    protected double modisTileScaleFactor;
 
     private FullAccumulator fullAccumulator;
 
@@ -182,12 +188,12 @@ public class InversionOp extends PixelOperator {
             rasterWidth = AlbedoInversionConstants.SEAICE_TILE_WIDTH;
             rasterHeight = AlbedoInversionConstants.SEAICE_TILE_HEIGHT;
         } else {
-            rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-            rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+            rasterWidth = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH / modisTileScaleFactor);
+            rasterHeight = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT / modisTileScaleFactor);
         }
 
         FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
-                                                                 gaRootDir, tile, year, doy,
+                                                                 bbdrRootDir, tile, year, doy,
                                                                  wings, computeSnow);
         fullAccumulator = fullAccumulation.getResult();
 
@@ -271,7 +277,7 @@ public class InversionOp extends PixelOperator {
 //        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-        if (x == 200 && y == 200) {
+        if (x == 50 && y == 50) {
             System.out.println("x = " + x);
         }
 
