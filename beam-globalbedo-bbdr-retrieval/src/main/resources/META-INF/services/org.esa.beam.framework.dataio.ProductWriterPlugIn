@@ -1,1 +1,2 @@
 org.esa.beam.landcover.ScripGeocodingWriterPlugIn
+org.esa.beam.globalbedo.bbdr.netcdf.BbdrNc4WriterPlugIn

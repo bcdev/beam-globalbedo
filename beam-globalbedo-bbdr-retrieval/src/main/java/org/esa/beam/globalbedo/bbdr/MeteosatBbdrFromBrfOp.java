@@ -228,6 +228,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     private void extractInputParmsFromFilename() {
         // filenames are like: W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04
+        // or W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000_h18v06
         final String sourceProductName = sourceProduct.getName();
         if (sourceProductName.contains("VIRI_C_BRF") || sourceProductName.contains("VIRI_HRVIS_000_C_BRF")) {
             satDegLon = 0.0;
