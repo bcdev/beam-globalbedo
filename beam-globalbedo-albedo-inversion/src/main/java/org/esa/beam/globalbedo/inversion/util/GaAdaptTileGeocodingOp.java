@@ -87,8 +87,6 @@ public class GaAdaptTileGeocodingOp extends Operator {
         final double referencePixelX =  0.0;
         final double referencePixelY =  0.0;
         final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
         ModisTileGeoCoding geoCoding;

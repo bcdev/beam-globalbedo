@@ -24,6 +24,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
@@ -51,7 +52,7 @@ import java.util.logging.Logger;
 public class GlobalbedoLevel3Albedo extends Operator {
 
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    private String inversionRootDir;
 
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
@@ -91,6 +92,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size." +
+                    "Should usually be set to 6.0 for AVHRR/GEO (tiles of 200x200).")
+    protected double modisTileScaleFactor;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -98,13 +105,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //        JAI.getDefaultInstance().getTileScheduler().setParallelism(1); // for debugging purpose
 
         // get BRDF Snow/NoSnow input files...
-//        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator + year +
-//                File.separator + tile + File.separator;
-//        final String brdfSnowDir = brdfDir + "snow";
-//        final String brdfNoSnowDir = brdfDir + "nosnow";
-        final String brdfDir = gaRootDir + File.separator + "Inversion" + File.separator;
-        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile;
-        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile;
+        final String brdfSnowDir = inversionRootDir + File.separator + "Snow" + File.separator + year + File.separator + tile;
+        final String brdfNoSnowDir = inversionRootDir + File.separator + "NoSnow" + File.separator + year + File.separator + tile;
 
         logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
         logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
@@ -114,7 +116,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
         if (computeSeaice) {
             Product brdfSeaiceProduct;
             try {
-                brdfSeaiceProduct = IOUtils.getBrdfSeaiceProduct(brdfDir, year, doy);
+                brdfSeaiceProduct = IOUtils.getBrdfSeaiceProduct(inversionRootDir, year, doy);
             } catch (IOException e) {
                 throw new OperatorException("Cannot load BRDF Seaice product: " + e.getMessage());
             }
@@ -134,7 +136,14 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 try {
                     // todo: allow continuation without Prior: set usePrior to false
                     // if Prior not available or cannot be read
-                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
+//                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
+                    final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
+                    tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                    if (modisTileScaleFactor != 1.0) {
+                        priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                    } else {
+                        priorProduct = tmpPriorProduct;
+                    }
                 } catch (IOException e) {
                     throw new OperatorException("Cannot load prior product: " + e.getMessage());
                 }
@@ -183,7 +192,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
         if (brdfMergedProduct != null) {
             if (brdfMergedProduct.getGeoCoding() == null) {
-                final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(tile);
+                final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor);
                 brdfMergedProduct.setGeoCoding(sinusoidalTileGeocoding);
             }
 
@@ -196,7 +205,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
                 albedoOp.setParameter("doy", doy);
                 albedoOp.setParameter("computeSeaice", computeSeaice);
-                setTargetProduct(albedoOp.getTargetProduct());
+                final Product targetProduct = albedoOp.getTargetProduct();
+                setTargetProduct(targetProduct);
             }
 
             if (includesSouthPole(tile)) {
@@ -209,7 +219,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
 
             if (computeSeaice) {
                 // copy landmask into target product
-                IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
+                // todo: improve if still needed
+                // IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
             }
 
             logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +

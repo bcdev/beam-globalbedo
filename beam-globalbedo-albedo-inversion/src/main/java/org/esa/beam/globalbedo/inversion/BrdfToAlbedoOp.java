@@ -351,6 +351,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         for (Band b:targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
+//            b.setNoDataValue(Float.NaN);
             b.setNoDataValueUsed(true);
         }
 

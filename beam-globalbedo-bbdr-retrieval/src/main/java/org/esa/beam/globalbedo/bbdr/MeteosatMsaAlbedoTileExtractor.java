@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.ProductUtils;
@@ -55,6 +56,11 @@ public class MeteosatMsaAlbedoTileExtractor extends Operator {
 
     @Parameter(description = "MODIS tile")
     private String tile;
+
+    @Parameter(defaultValue = "6.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
 
     @Override
     public void initialize() throws OperatorException {
@@ -113,12 +119,12 @@ public class MeteosatMsaAlbedoTileExtractor extends Operator {
 
             for (int i=0; i<modisTileCoordinates.getTileCount(); i++) {
                 final String tileName = modisTileCoordinates.getTileName(i);
-                checkIfModisTileIntersectsMeteosatDisk(tileName, meteosatGeoCoding);
+                checkIfModisTileIntersectsMeteosatDisk(tileName, meteosatGeoCoding, modisTileScaleFactor);
             }
 
             // now reproject onto given MODIS SIN tile...
-            if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding)) {
-                return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile, "Bilinear");
+            if (checkIfModisTileIntersectsMeteosatDisk(tile, meteosatGeoCoding, modisTileScaleFactor)) {
+                return TileExtractor.reprojectToModisTile(targetProductOrigProj, tile, "Bilinear", modisTileScaleFactor);
             } else {
                 throw new OperatorException
                         ("Tile '" + tile + "' has no ontersection with Meteosat disk.");
@@ -135,13 +141,17 @@ public class MeteosatMsaAlbedoTileExtractor extends Operator {
         return TransposeDescriptor.create(verticalFlippedImage, TransposeDescriptor.FLIP_HORIZONTAL, null);
     }
 
-    static boolean checkIfModisTileIntersectsMeteosatDisk(String tile, MeteosatGeoCoding meteosatGeoCoding) {
-        final ModisTileGeoCoding tileGeoCoding = IOUtils.getSinusoidalTileGeocoding(tile);
+    static boolean checkIfModisTileIntersectsMeteosatDisk(String tile, MeteosatGeoCoding meteosatGeoCoding, double scaleFactor) {
+        final ModisTileGeoCoding tileGeoCoding = IOUtils.getSinusoidalTileGeocoding(tile, scaleFactor);
 
-        final PixelPos ulPixelPos = new PixelPos(0.5f, 0.5f);
-        final PixelPos urPixelPos = new PixelPos(1200.5f, 0.5f);
-        final PixelPos llPixelPos = new PixelPos(0.5f, 1200.5f);
-        final PixelPos lrPixelPos = new PixelPos(1200.5f, 1200.5f);
+        final float startPixelX = 0.5f;
+        final float startPixelY = 0.5f;
+        final float endPixelX = (float) (0.5 + AlbedoInversionConstants.MODIS_TILE_WIDTH / scaleFactor);
+        final float endPixelY = (float) (0.5 + AlbedoInversionConstants.MODIS_TILE_HEIGHT / scaleFactor);
+        final PixelPos ulPixelPos = new PixelPos(startPixelX, startPixelY);
+        final PixelPos urPixelPos = new PixelPos(endPixelX, startPixelY);
+        final PixelPos llPixelPos = new PixelPos(startPixelX, endPixelY);
+        final PixelPos lrPixelPos = new PixelPos(endPixelX, endPixelY);
 
         final GeoPos ulGeoPos = tileGeoCoding.getGeoPos(ulPixelPos, null);
         PixelPos meteosatPixelPos = meteosatGeoCoding.getPixelPos(ulGeoPos, null);

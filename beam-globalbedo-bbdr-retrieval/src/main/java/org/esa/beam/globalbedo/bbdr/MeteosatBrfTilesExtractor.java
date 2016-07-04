@@ -48,7 +48,7 @@ import java.util.concurrent.*;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
-public class MeteosatTileExtractor extends Operator implements Output {
+public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
     private static final String METEOSAT_LAT_BAND_NAME = "lat";
     private static final String METEOSAT_LON_BAND_NAME = "lon";
@@ -248,7 +248,7 @@ public class MeteosatTileExtractor extends Operator implements Output {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(MeteosatTileExtractor.class);
+            super(MeteosatBrfTilesExtractor.class);
         }
     }
 }

@@ -109,26 +109,26 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final Band entropyBand = p.getBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
             if (entropyBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, entropyBand,
-                                                          "Entropy", NODATA, null);
+                                                          "Entropy", NODATA, "1");
             }
             final Band relEntropyBand = p.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
             if (relEntropyBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, relEntropyBand,
-                                                          "Relative Entropy", NODATA, null);
+                                                          "Relative Entropy", NODATA, "1");
             }
             final Band weightedNumSamplesBand = p.getBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
             if (weightedNumSamplesBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, weightedNumSamplesBand,
-                                                          "Weighted number of BRDF samples", NODATA, null);
+                                                          "Weighted number of BRDF samples", NODATA, "1");
             }
             final Band goodnessOfFitBand = p.getBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
             if (goodnessOfFitBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, goodnessOfFitBand,
-                                                          "Goodness of Fit", NODATA, null);
+                                                          "Goodness of Fit", NODATA, "1");
             }
             final Band proportionNSamplesBand = p.getBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME);
             if (proportionNSamplesBand != null) {
-                addNc4BrdfAncillaryVariableWithAttributes(writeable, proportionNSamplesBand, "Snow Fraction", NODATA, null);
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, proportionNSamplesBand, "Snow Fraction", NODATA, "1");
             }
             final Band daysClosestSampleBand = p.getBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
             if (daysClosestSampleBand != null) {
@@ -137,11 +137,11 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             }
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees_north");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees");
             }
             final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
             if (lonBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees_east");
+                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees");
             }
         }
 
@@ -163,8 +163,10 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final String[] bSplit = b.getName().split("_");
             final String longName = "Mean of parameter " + bSplit[2].toUpperCase() + " in " + bSplit[1];
             variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", b.getNoDataValue());
+            final Float _fillValue = (float) b.getNoDataValue();
+            variable.addAttribute("_FillValue", _fillValue);
             variable.addAttribute("coordinates", "lat lon");
+            variable.addAttribute("units", "1");
         }
 
         private void addNc4BrdfVarVariableWithAttributes(NFileWriteable writeable, Band b) throws IOException {
@@ -174,8 +176,10 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             final String longName = "Covariance(" + bSplit[1] + "_" + bSplit[2].toUpperCase() + "," +
                     bSplit[3] + "_" + bSplit[4].toUpperCase() + ")";
             variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", b.getNoDataValue());
+            final Float _fillValue = (float) b.getNoDataValue();
+            variable.addAttribute("_FillValue", _fillValue);
             variable.addAttribute("coordinates", "lat lon");
+            variable.addAttribute("units", "1");
         }
 
         private void addNc4BrdfAncillaryVariableWithAttributes(NFileWriteable writeable, Band b,
@@ -184,7 +188,8 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                                                                String unit) throws IOException {
             NVariable variable = addNc4Variable(writeable, b);
             variable.addAttribute("long_name", longName);
-            variable.addAttribute("fill_value", fillValue);
+            final Float _fillValue = fillValue;
+            variable.addAttribute("_FillValue", _fillValue);
             variable.addAttribute("coordinates", "lat lon");
             addUnitAttribute(unit, variable);
         }

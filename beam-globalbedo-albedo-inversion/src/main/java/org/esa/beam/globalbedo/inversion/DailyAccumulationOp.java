@@ -53,6 +53,11 @@ public class DailyAccumulationOp extends Operator {
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
+    protected double modisTileScaleFactor;
+
     private float[][][] resultArray;
 
     private Tile[] bbVisTile;
@@ -78,9 +83,9 @@ public class DailyAccumulationOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        final Rectangle sourceRect = new Rectangle(0, 0,
-                                                   AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                   AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+        final int sourceProductWidth = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH / modisTileScaleFactor);
+        final int sourceProductHeight = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT / modisTileScaleFactor);
+        final Rectangle sourceRect = new Rectangle(0, 0, sourceProductWidth, sourceProductHeight);
 
         bbVisTile = new Tile[sourceProducts.length];
         bbNirTile = new Tile[sourceProducts.length];
@@ -100,8 +105,8 @@ public class DailyAccumulationOp extends Operator {
         snowMaskTile = new Tile[sourceProducts.length];
 
         resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
-                [AlbedoInversionConstants.MODIS_TILE_WIDTH]
-                [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
+                [sourceProductWidth]
+                [sourceProductHeight];
 
         for (int k = 0; k < sourceProducts.length; k++) {
             bbVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_VIS_NAME), sourceRect);
@@ -127,8 +132,8 @@ public class DailyAccumulationOp extends Operator {
         // per pixel, accumulate the matrices from the single products...
         // Since we loop over all source products, we need a sequential and thread-safe approach, so we do not
         // implement computeTile.
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+        for (int x = 0; x < sourceProductWidth; x++) {
+            for (int y = 0; y < sourceProductHeight; y++) {
                 accumulate(x, y);
             }
         }

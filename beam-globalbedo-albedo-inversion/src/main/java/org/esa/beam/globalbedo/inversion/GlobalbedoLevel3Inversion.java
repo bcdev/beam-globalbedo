@@ -30,8 +30,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @SourceProduct(optional = true)
     private Product seaiceGeocodingProduct;
 
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo/BBDR
+    private String bbdrRootDir;
 
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
@@ -72,6 +72,10 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
+    @Parameter(defaultValue = "false",
+            description = "Computation for AVHRR and/or Meteosat (tiles usually have coarser resolution)")
+    private boolean computeAvhrrGeo;
+
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
@@ -88,9 +92,18 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
 
+    @Parameter(defaultValue = "1.0",
+            valueSet = {"0.5", "1.0", "2.0", "4.0", "6.0", "10.0", "12.0", "20.0", "60.0"},
+            description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size." +
+                    "Should usually be set to 6.0 for AVHRR/GEO (tiles of 200x200).")
+    protected double modisTileScaleFactor;
+
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
+
+        final String fullAccumulatorDir = bbdrRootDir + File.separator + "FullAcc"
+                + File.separator + year + File.separator + tile;
 
         Product priorProduct = null;
         if (usePrior) {
@@ -106,9 +119,13 @@ public class GlobalbedoLevel3Inversion extends Operator {
             logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
 
             try {
-                // todo: allow continuation without Prior: set usePrior to false
-                // if Prior not available or cannot be read
-                priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
+                final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
+                tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                if (modisTileScaleFactor != 1.0) {
+                    priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                } else {
+                    priorProduct = tmpPriorProduct;
+                }
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
                         " - cannot proceed...: " + e.getMessage());
@@ -116,24 +133,18 @@ public class GlobalbedoLevel3Inversion extends Operator {
         }
 
         if (computeSeaice || !usePrior || (usePrior && priorProduct != null)) {
-            // STEP 2: set paths...
-            final String bbdrString = computeSeaice ? "BBDR_PST" : "BBDR";
-            final String bbdrRootDir = gaRootDir + File.separator + bbdrString;
-            String fullAccumulatorDir = bbdrRootDir + File.separator + "FullAcc"
-                    + File.separator + year + File.separator + tile;
-
             // STEP 3: we need to attach a geocoding to the Prior product...
-            if (usePrior) {
-                try {
-                    Product tileInfoProduct = null;
-                    if (tileInfoFilename != null) {
-                        tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
-                    }
-                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, tileInfoProduct);
-                } catch (IOException e) {
-                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
-                }
-            }
+//            if (usePrior) {
+//                try {
+//                    Product tileInfoProduct = null;
+//                    if (tileInfoFilename != null) {
+//                        tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
+//                    }
+//                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, tileInfoProduct);
+//                } catch (IOException e) {
+//                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
+//                }
+//            }
 
             InversionOp inversionOp = new InversionOp();
             inversionOp.setParameterDefaultValues();
@@ -142,15 +153,17 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 inversionOp.setSourceProduct("priorProduct", priorProduct);
             } else {
                 if (computeSeaice) {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.SEAICE_TILE_WIDTH,
-                            AlbedoInversionConstants.SEAICE_TILE_HEIGHT);
+                    final int width = (int) (AlbedoInversionConstants.SEAICE_TILE_WIDTH / modisTileScaleFactor);
+                    final int height = (int) (AlbedoInversionConstants.SEAICE_TILE_HEIGHT / modisTileScaleFactor);
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(width,height);
                 } else {
-                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                            AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                    final int width = (int) (AlbedoInversionConstants.MODIS_TILE_WIDTH / modisTileScaleFactor);
+                    final int height = (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT / modisTileScaleFactor);
+                    dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(width,height);
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
-            inversionOp.setParameter("gaRootDir", gaRootDir);
+            inversionOp.setParameter("bbdrRootDir", bbdrRootDir);
             inversionOp.setParameter("year", year);
             inversionOp.setParameter("tile", tile);
             inversionOp.setParameter("doy", doy);
@@ -161,6 +174,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             inversionOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
             inversionOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
+            inversionOp.setParameter("modisTileScaleFactor", modisTileScaleFactor);
             Product inversionProduct = inversionOp.getTargetProduct();
 
             if (computeSeaice) {
@@ -176,7 +190,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 }
             } else if (priorProduct == null) {
                 // same in the standard mode without using priors...
-                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor));
             }
 
             // todo: adapt and activate if needed
@@ -198,7 +212,8 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
             if (computeSeaice) {
                 // copy landmask into target product
-                IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
+                // todo: improve if still needed
+                // IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
             }
 
         } else {
