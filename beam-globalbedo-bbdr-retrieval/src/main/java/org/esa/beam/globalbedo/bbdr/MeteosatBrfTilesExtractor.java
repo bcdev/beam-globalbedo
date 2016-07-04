@@ -39,8 +39,6 @@ import java.util.concurrent.*;
 
 /**
  * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles.
- *
- *
  */
 @OperatorMetadata(alias = "ga.tile.meteosat",
         description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
@@ -59,6 +57,9 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
     @SourceProduct
     private Product latlonProduct;    // make sure externally that the correct matching latlon product is submitted
 
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI"}, defaultValue = "MVIRI")
+    protected MeteosatSensor sensor;
+
     @Parameter
     private String bbdrDir;
 
@@ -73,6 +74,9 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
             description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
     protected double modisTileScaleFactor;
 
+    @Parameter(defaultValue = "true")   // apply conversion to BBDR here
+    private boolean convertToBbdr;
+
 
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
@@ -80,7 +84,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
     @Override
     public void initialize() throws OperatorException {
-        if (!isLatlonProductMatching()) {
+        if (!isMeteosatLatLonProductMatching()) {
             throw new OperatorException("MeteosatTileExtractor: latlonProduct '" +
                                                 latlonProduct.getName() +
                                                 "' does not contain correct disk identifier of source product '" +
@@ -98,7 +102,12 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         setTargetProduct(new Product("n", "d", 1, 1));
     }
 
-    private boolean isLatlonProductMatching() {
+    private boolean isMeteosatLatLonProductMatching() {
+        return sensor == MeteosatSensor.MVIRI && isMviriLatlonProductMatching() ||
+                sensor == MeteosatSensor.SEVIRI && isSeviriLatlonProductMatching();
+    }
+
+    private boolean isMviriLatlonProductMatching() {
         // checks if given source product and latlon product are on the same disk (000, 057 or 063)
 
         // we have product filenames:
@@ -109,21 +118,43 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         // MET_000_VIS01_LatLon.nc (000 products from 1982-2006)
         // MET_057_VIS01_LatLon.nc (057 products from 2006-2010)
         // MET_063_VIS01_LatLon.nc (063 products from 1998-2007)
-        final boolean matches000Disk = sourceProduct.getName().contains("VIRI_C_BRF") &&
+        final boolean matchesMviri000Disk = sourceProduct.getName().contains("VIRI_C_BRF") &&
                 latlonProduct.getName().equals("MET_000_VIS01_LatLon");
-        final boolean matches057Disk = sourceProduct.getName().contains("VIRI_057_C_BRF") &&
+        final boolean matchesMviri057Disk = sourceProduct.getName().contains("VIRI_057_C_BRF") &&
                 latlonProduct.getName().equals("MET_057_VIS01_LatLon");
-        final boolean matches063Disk = sourceProduct.getName().contains("VIRI_063_C_BRF") &&
+        final boolean matchesMviri063Disk = sourceProduct.getName().contains("VIRI_063_C_BRF") &&
                 latlonProduct.getName().equals("MET_063_VIS01_LatLon");
 
-        return matches000Disk || matches057Disk || matches063Disk;
+        return matchesMviri000Disk || matchesMviri057Disk || matchesMviri063Disk;
+    }
+
+    private boolean isSeviriLatlonProductMatching() {
+        // checks if given source product and latlon product are on the same disk (000, 057 or 063)
+
+        // we have product filenames:
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000.nc
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_057_C_BRF_EUMP_20060701000000.nc
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_063_C_BRF_EUMP_20060701000000.nc
+
+        // and the latlon products:
+        // MSG_000_RES01_LatLon.nc
+        // MSG_057_RES01_LatLon.nc
+        // MSG_063_RES01_LatLon.nc
+        final boolean matchesSeviri000Disk = sourceProduct.getName().contains("SEVIRI_HRVIS_000_C_BRF") &&
+                latlonProduct.getName().equals("MSG_000_RES01_LatLon");
+        final boolean matchesSeviri057Disk = sourceProduct.getName().contains("SEVIRI_HRVIS_057_C_BRF") &&
+                latlonProduct.getName().equals("MSG_057_RES01_LatLon");
+        final boolean matchesSeviri063Disk = sourceProduct.getName().contains("SEVIRI_HRVIS_063_C_BRF") &&
+                latlonProduct.getName().equals("MSG_063_RES01_LatLon");
+
+        return matchesSeviri000Disk || matchesSeviri057Disk || matchesSeviri063Disk;
     }
 
     private String getDiskId() {
         // MET_000_VIS01_LatLon.nc
         // MET_057_VIS01_LatLon.nc
         // MET_063_VIS01_LatLon.nc
-        return latlonProduct.getName().substring(4,7);
+        return latlonProduct.getName().substring(4, 7);
     }
 
     private boolean checkIfModisTileIntersectsMeteosatDisk(String tile) {
@@ -206,7 +237,18 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                 Future<TileExtractor.TileProduct> future = ecs.take();
                 TileExtractor.TileProduct tileProduct = future.get();
                 if (tileProduct != null && tileProduct.getProduct() != null && isTileToProcess(tileProduct.getTileName())) {
-                    writeTileProduct(tileProduct.getProduct(), tileProduct.getTileName());
+                    Product productToWrite;
+                    if (convertToBbdr) {
+                        // will save computation time and disk space in case of mass production...
+                        MeteosatBbdrFromBrfOp toBbdrOp = new MeteosatBbdrFromBrfOp();
+                        toBbdrOp.setParameterDefaultValues();
+                        toBbdrOp.setParameter("sensor", sensor);
+                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
+                        productToWrite = toBbdrOp.getTargetProduct();
+                    } else {
+                        productToWrite = tileProduct.getProduct();
+                    }
+                    writeTileProduct(productToWrite, tileProduct.getTileName());
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);
@@ -230,8 +272,14 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
     private void writeTileProduct(Product product, String tileName) {
         File dir = new File(bbdrDir, tileName);
         dir.mkdirs();
-        File file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
-        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-BEAM");
+        File file;
+        if (convertToBbdr) {
+            file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
+        } else {
+            file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
+        }
+//        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-BEAM");
+        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-GA-BBDR");
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
