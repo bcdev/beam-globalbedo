@@ -184,9 +184,13 @@ public class IOUtils {
         final int refDoy = 8 * ((doy - 1) / 8) + 1;
         String doyString = getDoyString(refDoy);
 
+        BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
+        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
         for (String priorFileName : snowFilteredPriorList) {
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
             if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
                 String sourceProductFileName = priorDir + File.separator + priorFileName;
+                BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
                 return ProductIO.readProduct(sourceProductFileName);
             }
         }

@@ -108,8 +108,8 @@ public class GlobalbedoLevel3Albedo extends Operator {
         final String brdfSnowDir = inversionRootDir + File.separator + "Snow" + File.separator + year + File.separator + tile;
         final String brdfNoSnowDir = inversionRootDir + File.separator + "NoSnow" + File.separator + year + File.separator + tile;
 
-        logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
-        logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
+        logger.log(Level.INFO, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
+        logger.log(Level.INFO, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
 
         Product priorProduct = null;
         Product brdfMergedProduct = null;
