@@ -33,7 +33,7 @@ import java.io.File;
 import java.util.concurrent.*;
 
 /**
- * Reads and reprojects an AVHRR-LTDR BRF global product onto MODIS SIN tiles.
+ * Reads and reprojects an AVHRR-LTDR BRF global product onto MODIS SIN tiles and optionally converts to BBDRs.
  *
  * @author olafd
  */
@@ -61,6 +61,8 @@ public class AvhrrTileExtractor extends Operator implements Output {
             description = "Scale factor with regard to MODIS default 1200x1200. Values > 1.0 reduce product size.")
     protected double modisTileScaleFactor;
 
+    @Parameter(defaultValue = "true")   // apply conversion to BBDR here
+    private boolean convertToBbdr;
 
     private int parallelism;
     private ModisTileCoordinates tileCoordinates;
@@ -80,16 +82,16 @@ public class AvhrrTileExtractor extends Operator implements Output {
 
     private void doExtract_executor() {
         ExecutorService executorService = Executors.newFixedThreadPool(parallelism);
-        ExecutorCompletionService<TileProduct> ecs = new ExecutorCompletionService<>(executorService);
+        ExecutorCompletionService<TileExtractor.TileProduct> ecs = new ExecutorCompletionService<>(executorService);
 
         for (int index = 0; index < tileCoordinates.getTileCount(); index++) {
             final String tileName = tileCoordinates.getTileName(index);
-            Callable<TileProduct> callable = new Callable<TileProduct>() {
+            Callable<TileExtractor.TileProduct> callable = new Callable<TileExtractor.TileProduct>() {
                 @Override
-                public TileProduct call() throws Exception {
+                public TileExtractor.TileProduct call() throws Exception {
                     if (isTileToProcess(tileName)) {
                         Product reprojected = TileExtractor.reprojectToModisTile(sourceProduct, tileName, modisTileScaleFactor);
-                        return new TileProduct(reprojected, tileName);
+                        return new TileExtractor.TileProduct(reprojected, tileName);
                     } else {
                         return null;
                     }
@@ -99,10 +101,20 @@ public class AvhrrTileExtractor extends Operator implements Output {
         }
         for (int i = 0; i < tileCoordinates.getTileCount(); i++) {
             try {
-                Future<TileProduct> future = ecs.take();
-                TileProduct tileProduct = future.get();
-                if (tileProduct != null && tileProduct.product != null && isTileToProcess(tileProduct.tileName)) {
-                    writeTileProduct(tileProduct.product, tileProduct.tileName);
+                Future<TileExtractor.TileProduct> future = ecs.take();
+                TileExtractor.TileProduct tileProduct = future.get();
+                if (tileProduct != null && tileProduct.getProduct() != null && isTileToProcess(tileProduct.getTileName())) {
+                    Product productToWrite;
+                    if (convertToBbdr) {
+                        // will save computation time and disk space in case of mass production...
+                        BbdrAvhrrOp toBbdrOp = new BbdrAvhrrOp();
+                        toBbdrOp.setParameterDefaultValues();
+                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
+                        productToWrite = toBbdrOp.getTargetProduct();
+                    } else {
+                        productToWrite = tileProduct.getProduct();
+                    }
+                    writeTileProduct(productToWrite, tileProduct.getTileName());
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);
@@ -119,19 +131,17 @@ public class AvhrrTileExtractor extends Operator implements Output {
     private void writeTileProduct(Product product, String tileName) {
         File dir = new File(bbdrDir, tileName);
         dir.mkdirs();
-        File file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
-        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-BEAM");
-        writeOp.writeProduct(ProgressMonitor.NULL);
-    }
-
-    private static class TileProduct {
-        private final Product product;
-        private final String tileName;
-
-        private TileProduct(Product product, String tileName) {
-            this.product = product;
-            this.tileName = tileName;
+        File file;
+        String writeFormat;
+        if (convertToBbdr) {
+            file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
+            writeFormat = "NetCDF4-BEAM";
+        } else {
+            file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
+            writeFormat = "NetCDF4-GA-BBDR";
         }
+        WriteOp writeOp = new WriteOp(product, file, writeFormat);
+        writeOp.writeProduct(ProgressMonitor.NULL);
     }
 
     public static class Spi extends OperatorSpi {

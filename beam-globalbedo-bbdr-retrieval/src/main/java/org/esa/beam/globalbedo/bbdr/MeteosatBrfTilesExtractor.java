@@ -38,11 +38,12 @@ import java.io.IOException;
 import java.util.concurrent.*;
 
 /**
- * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles.
+ * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles and optionally converts to BBDRs.
  */
 @OperatorMetadata(alias = "ga.tile.meteosat",
-        description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard Beam Netcdf reader, " +
-                "attaches a Meteosat Geocoding, and reprojects to intersecting MODIS SIN tiles. ",
+        description = "Reads a Meteosat MVIRI BRF (spectral and broadband) disk product with standard " +
+                "Beam Netcdf reader, attaches a Meteosat Geocoding, reprojects to intersecting MODIS SIN tiles, " +
+                "and optionally converts to BBDRs. ",
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
@@ -273,25 +274,17 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         File dir = new File(bbdrDir, tileName);
         dir.mkdirs();
         File file;
+        String writeFormat;
         if (convertToBbdr) {
             file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
+            writeFormat = "NetCDF4-BEAM";
         } else {
             file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
+            writeFormat = "NetCDF4-GA-BBDR";
         }
-//        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-BEAM");
-        WriteOp writeOp = new WriteOp(product, file, "NetCDF4-GA-BBDR");
+        WriteOp writeOp = new WriteOp(product, file, writeFormat);
         writeOp.writeProduct(ProgressMonitor.NULL);
     }
-
-//    private static class TileProduct {
-//        private final Product product;
-//        private final String tileName;
-//
-//        private TileProduct(Product product, String tileName) {
-//            this.product = product;
-//            this.tileName = tileName;
-//        }
-//    }
 
     public static class Spi extends OperatorSpi {
 
