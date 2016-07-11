@@ -93,6 +93,14 @@ public class SpectralInversionOp extends PixelOperator {
 
         numTargetParameters = 3 * numSdrBands;
         numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
+
+        int rasterWidth = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH;
+        int rasterHeight = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT;
+
+        FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
+                                                                 gaRootDir, tile, year, doy,
+                                                                 wings, computeSnow);
+        fullAccumulator = fullAccumulation.getResult();
     }
 
     @Override
@@ -165,13 +173,13 @@ public class SpectralInversionOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-
-        FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
-                                                                 gaRootDir, tile, year, doy,
-                                                                 wings, computeSnow);
-        fullAccumulator = fullAccumulation.getResult();
+//        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+//        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
+//
+//        FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
+//                                                                 gaRootDir, tile, year, doy,
+//                                                                 wings, computeSnow);
+//        fullAccumulator = fullAccumulation.getResult();
     }
 
     @Override

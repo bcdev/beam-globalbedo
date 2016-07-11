@@ -75,6 +75,8 @@ public class AlbedoInversionConstants {
 
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
+    public static final int MODIS_SPECTRAL_TILE_WIDTH = 300;
+    public static final int MODIS_SPECTRAL_TILE_HEIGHT = 300;
 
     public static final int SEAICE_TILE_WIDTH = 2250;
     public static final int SEAICE_TILE_HEIGHT = 2250;

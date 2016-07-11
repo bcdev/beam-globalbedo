@@ -72,8 +72,8 @@ public class SpectralDailyAccumulationOp extends Operator {
     public void initialize() throws OperatorException {
 
         final Rectangle sourceRect = new Rectangle(0, 0,
-                                                   AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                   AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH,
+                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT);
 
         sdrTiles = new Tile[sourceProducts.length][numSdrBands];
         // (7*7 - 7)/2  + 7 = 28 sigma bands default (UR matrix)
@@ -89,11 +89,12 @@ public class SpectralDailyAccumulationOp extends Operator {
         kgeoTile = new Tile[sourceProducts.length];
         snowMaskTile = new Tile[sourceProducts.length];
 
-        resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
-                [AlbedoInversionConstants.MODIS_TILE_WIDTH]
-                [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
-
-
+        // we have:
+        // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
+        final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
+        resultArray = new float[resultArrayElements]
+                [AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH]
+                [AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT];
 
         for (int k = 0; k < sourceProducts.length; k++) {
             int sdrIndex = 0;

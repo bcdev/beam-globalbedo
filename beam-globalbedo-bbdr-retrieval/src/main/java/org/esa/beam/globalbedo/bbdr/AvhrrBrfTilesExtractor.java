@@ -42,7 +42,7 @@ import java.util.concurrent.*;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
-public class AvhrrTileExtractor extends Operator implements Output {
+public class AvhrrBrfTilesExtractor extends Operator implements Output {
 
     @SourceProduct
     private Product sourceProduct;
@@ -147,7 +147,7 @@ public class AvhrrTileExtractor extends Operator implements Output {
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(AvhrrTileExtractor.class);
+            super(AvhrrBrfTilesExtractor.class);
         }
     }
 }

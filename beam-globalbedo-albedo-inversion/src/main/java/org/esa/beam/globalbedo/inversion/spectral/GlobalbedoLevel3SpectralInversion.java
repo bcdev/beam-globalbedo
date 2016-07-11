@@ -53,8 +53,8 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
 
         SpectralInversionOp inversionOp = new SpectralInversionOp();
         inversionOp.setParameterDefaultValues();
-        Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
-                                                                                   AlbedoInversionConstants.MODIS_TILE_HEIGHT);
+        Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH,
+                                                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT);
         inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
         inversionOp.setParameter("gaRootDir", gaRootDir);
         inversionOp.setParameter("year", year);

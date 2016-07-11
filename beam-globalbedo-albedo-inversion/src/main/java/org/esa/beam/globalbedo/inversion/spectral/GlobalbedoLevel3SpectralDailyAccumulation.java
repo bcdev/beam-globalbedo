@@ -76,7 +76,7 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator{
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-            DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+            SpectralDailyAccumulationOp accumulationOp = new SpectralDailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
             accumulationOp.setParameter("computeSnow", computeSnow);

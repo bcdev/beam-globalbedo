@@ -2,7 +2,7 @@ org.esa.beam.globalbedo.bbdr.ImageVarianceOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMasterOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrFromSdrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrMerisOp$Spi
-org.esa.beam.globalbedo.bbdr.AvhrrTileExtractor$Spi
+org.esa.beam.globalbedo.bbdr.AvhrrBrfTilesExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBrfSingleTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatMsaAlbedoTileExtractor$Spi
 org.esa.beam.globalbedo.bbdr.MeteosatBrfTilesExtractor$Spi
