@@ -73,7 +73,7 @@ public class SpectralInversionTest extends TestCase {
 
     public void testGetSpectralInversionParameterBandNames() {
         int numSdrBands = 3;
-        String[] parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        String[] parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         assertNotNull(parameterBandNames);
         assertEquals(9, parameterBandNames.length);
         assertEquals("mean_lambda1_f0", parameterBandNames[0]);
@@ -87,7 +87,7 @@ public class SpectralInversionTest extends TestCase {
         assertEquals("mean_lambda3_f2", parameterBandNames[8]);
 
         numSdrBands = 7;
-        parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         assertNotNull(parameterBandNames);
         assertEquals(21, parameterBandNames.length);
         assertEquals("mean_lambda1_f0", parameterBandNames[0]);
@@ -102,7 +102,7 @@ public class SpectralInversionTest extends TestCase {
         int numSdrBands = 3;
         SpectralInversionOp.setupSpectralWaveBandsMap(numSdrBands);
         String[][] uncertaintyBandNames =
-                IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
+                SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
         assertNotNull(uncertaintyBandNames);
         assertEquals(9, uncertaintyBandNames.length);
         for (int i = 0; i < 9; i++) {
@@ -121,7 +121,7 @@ public class SpectralInversionTest extends TestCase {
         numSdrBands = 7;
         SpectralInversionOp.setupSpectralWaveBandsMap(numSdrBands);
         uncertaintyBandNames =
-                IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
+                SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
         assertNotNull(uncertaintyBandNames);
         assertEquals(21, uncertaintyBandNames.length);
         for (int i = 0; i < 21; i++) {

@@ -4,14 +4,13 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
+import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.InversionOp;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
-import java.io.File;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -23,16 +22,14 @@ import java.util.logging.Logger;
  *
  * @author olafd
  */
+@OperatorMetadata(alias = "ga.l3.inversion.spectral")
 public class GlobalbedoLevel3SpectralInversion extends Operator {
 
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo SDR root directory")
+    private String sdrRootDir;
 
     @Parameter(description = "MODIS tile")
     private String tile;
-
-    @Parameter(description = "Name of tile info filename providing the geocoding")
-    private String tileInfoFilename;
 
     @Parameter(description = "Year")
     private int year;
@@ -43,24 +40,39 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Do accumulation only (no inversion)")
-    private boolean accumulationOnly;
+    // for the moment we only accept division into 4x4 subtiles
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
+            defaultValue = "4", valueSet = {"4"})
+    private int subtileFactor;
 
+    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
+    private int subStartX;
+
+    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
+    private int subStartY;
+
+    int subtileWidth;
+    int subtileHeight;
 
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 
+        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor;
+        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor;
+
         SpectralInversionOp inversionOp = new SpectralInversionOp();
         inversionOp.setParameterDefaultValues();
-        Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH,
-                                                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT);
+        Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(subtileWidth, subtileHeight);
         inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
-        inversionOp.setParameter("gaRootDir", gaRootDir);
+        inversionOp.setParameter("sdrRootDir", sdrRootDir);
         inversionOp.setParameter("year", year);
         inversionOp.setParameter("tile", tile);
         inversionOp.setParameter("doy", doy);
         inversionOp.setParameter("computeSnow", computeSnow);
+        inversionOp.setParameter("subStartX", subStartX);
+        inversionOp.setParameter("subStartY", subStartY);
+        inversionOp.setParameter("subtileFactor", subtileFactor);
         Product inversionProduct = inversionOp.getTargetProduct();
 
         inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));

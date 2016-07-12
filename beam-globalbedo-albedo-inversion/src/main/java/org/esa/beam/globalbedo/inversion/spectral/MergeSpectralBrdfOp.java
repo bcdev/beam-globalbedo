@@ -319,12 +319,12 @@ public class MergeSpectralBrdfOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         for (String parameterBandName : parameterBandNames) {
             targetProduct.addBand(parameterBandName, ProductData.TYPE_FLOAT32);
         }
 
-        uncertaintyBandNames = IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < 3 * numSdrBands; i++) {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * numSdrBands; j++) {

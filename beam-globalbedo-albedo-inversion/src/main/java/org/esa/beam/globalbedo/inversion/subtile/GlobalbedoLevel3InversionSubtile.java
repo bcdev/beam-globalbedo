@@ -35,6 +35,8 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 /**
  * 'Master' operator for the whole BRDF computation (daily acc, full acc, inversion) on a sub-tile of given size
  *
+ * CURRENTLY NOT USED!
+ *
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.l3.inversion.subtile",

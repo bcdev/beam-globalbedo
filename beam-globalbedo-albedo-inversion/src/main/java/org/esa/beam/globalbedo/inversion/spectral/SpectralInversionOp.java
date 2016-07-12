@@ -15,10 +15,8 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.FullAccumulation;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
-import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +37,8 @@ import static java.lang.Math.*;
 
 public class SpectralInversionOp extends PixelOperator {
 
-    @SourceProduct(description = "Prior product", optional = true)
-    private Product priorProduct;
+    @SourceProduct(description = "Source product", optional = true)
+    private Product sourceProduct;
 
     @Parameter(description = "Year")
     private int year;
@@ -54,8 +52,8 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
 
-    @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
-    private String gaRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo SDR root directory")
+    private String sdrRootDir;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -63,6 +61,14 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
+    private int subtileFactor;
+
+    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
+    private int subStartX;
+
+    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
+    private int subStartY;
 
     private static final int TRG_REL_ENTROPY = 1;
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
@@ -88,18 +94,19 @@ public class SpectralInversionOp extends PixelOperator {
 
         setupSpectralWaveBandsMap(numSdrBands);
 
-        parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
-        uncertaintyBandNames = IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
 
         numTargetParameters = 3 * numSdrBands;
         numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
 
-        int rasterWidth = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH;
-        int rasterHeight = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT;
+        int subtileWidth = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH / subtileFactor;
+        int subtileHeight = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT / subtileFactor;
 
-        FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
-                                                                 gaRootDir, tile, year, doy,
-                                                                 wings, computeSnow);
+        SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(subtileWidth, subtileHeight,
+                                                                                 subStartX, subStartY,
+                                                                                 sdrRootDir, tile, year, doy,
+                                                                                 wings, computeSnow);
         fullAccumulator = fullAccumulation.getResult();
     }
 
@@ -113,9 +120,9 @@ public class SpectralInversionOp extends PixelOperator {
         double relEntropy = 0.0;
 
         double maskAcc = 0.0;
-        Accumulator accumulator = null;
+        SpectralAccumulator accumulator = null;
         if (fullAccumulator != null) {
-            accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
+            accumulator = SpectralAccumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y, 7);
             maskAcc = accumulator.getMask();
         }
 
@@ -202,9 +209,6 @@ public class SpectralInversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
-        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
     }
 
     @Override
@@ -278,18 +282,37 @@ public class SpectralInversionOp extends PixelOperator {
                                    double[] goodnessOfFitTerms,
                                    float daysToTheClosestSample) {
 
+
+//        for (int i = 0; i < 3 * numSdrBands; i++) {
+//            configurator.defineSample(i, parameterBandNames[i]);
+//        }
+//
+//        int index = 0;
+//        for (int i = 0; i < 3 * numSdrBands; i++) {
+//            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+//                configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][j]);
+//                index++;
+//            }
+//        }
+//
+//        int offset = numTargetParameters + numTargetUncertainties;
+//        configurator.defineSample(offset, AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
+//        configurator.defineSample(offset + TRG_REL_ENTROPY, AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
+//        configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
+//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
+//        configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+
         // parameters
         int index = 0;
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < numSdrBands; j++) {
-                targetSamples[index].set(parameters.get(index, 0));
-                index++;
-            }
+        for (int i = 0; i < 3 * numSdrBands; i++) {
+            targetSamples[index].set(parameters.get(index, 0));
+            index++;
         }
 
+        index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                targetSamples[index].set(uncertainties.get(i, j));
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                targetSamples[numTargetParameters + index].set(uncertainties.get(i, j));
                 index++;
             }
         }
@@ -300,9 +323,9 @@ public class SpectralInversionOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
-        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
+//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
 
     }
 

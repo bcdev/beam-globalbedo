@@ -138,6 +138,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
+        super.configureTargetProduct(productConfigurer);
         final Product targetProduct = productConfigurer.getTargetProduct();
 
         targetProduct.setAutoGrouping("sdr_sigma:sdr");
@@ -149,7 +150,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
         }
-        targetProduct.addBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, ProductData.TYPE_INT8);
+//        targetProduct.addBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME, ProductData.TYPE_INT8);
 
         // copy flag coding and flag images
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);

@@ -506,7 +506,7 @@ public class IOUtils {
         return accumulatorNameSortedList;
     }
 
-    static boolean isInWingsInterval(int wings, int processYear, int processDoy, String tile, String accName) {
+    public static boolean isInWingsInterval(int wings, int processYear, int processDoy, String tile, String accName) {
         // check the 'wings' condition...
         boolean isInWingsInterval = false;
         try {
@@ -545,7 +545,7 @@ public class IOUtils {
         return isInWingsInterval;
     }
 
-    private static boolean isPolarTile(String tile) {
+    public static boolean isPolarTile(String tile) {
         return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
     }
 
@@ -605,34 +605,6 @@ public class IOUtils {
         return bandNames;
 
     }
-
-    public static String[] getSpectralInversionParameterBandNames(int numSdrBands) {
-        String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-        int index = 0;
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                bandNames[index] = "mean_lambda" + (i + 1) + "_f" + j;
-                index++;
-            }
-        }
-        return bandNames;
-    }
-
-    public static String[][] getSpectralInversionUncertaintyBandNames(int numSdrBands,
-                                                                      Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
-
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // only UR triangle matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
-            }
-        }
-        return bandNames;
-
-    }
-
 
 //    public static String[][] getNewPriorCovarianceBandNames() {
 //        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]

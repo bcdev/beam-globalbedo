@@ -113,8 +113,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         dhrSigmaBandNames = new String[numSdrBands];
         bhrSigmaBandNames = new String[numSdrBands];
 
-        parameterBandNames = IOUtils.getSpectralInversionParameterBandNames(numSdrBands);
-        uncertaintyBandNames = IOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
     }
 
     @Override

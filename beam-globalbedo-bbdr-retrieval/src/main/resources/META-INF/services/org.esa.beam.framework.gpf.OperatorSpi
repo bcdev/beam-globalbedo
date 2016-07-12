@@ -10,6 +10,7 @@ org.esa.beam.globalbedo.bbdr.MeteosatBbdrFromBrfOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrAvhrrOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrVgtOp$Spi
 org.esa.beam.globalbedo.bbdr.BbdrProbavOp$Spi
+org.esa.beam.globalbedo.bbdr.BbdrSubtileOp$Spi
 org.esa.beam.globalbedo.bbdr.Modis09StatusBitMaskOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrMerisOp$Spi
 org.esa.beam.globalbedo.bbdr.SdrVgtOp$Spi

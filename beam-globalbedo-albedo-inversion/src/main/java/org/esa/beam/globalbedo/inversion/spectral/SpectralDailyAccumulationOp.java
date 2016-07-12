@@ -36,6 +36,8 @@ public class SpectralDailyAccumulationOp extends Operator {
     @SourceProducts(description = "SDR source products")
     private Product[] sourceProducts;
 
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
+    private int subtileFactor;
 
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
@@ -67,13 +69,16 @@ public class SpectralDailyAccumulationOp extends Operator {
     private int[] sigmaSdrDiagonalIndices;
     private int[] sigmaSdrURIndices;
 
+    int subtileWidth;
+    int subtileHeight;
 
     @Override
     public void initialize() throws OperatorException {
 
-        final Rectangle sourceRect = new Rectangle(0, 0,
-                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH,
-                                                   AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT);
+        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor;
+        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor;
+
+        final Rectangle sourceRect = new Rectangle(0, 0, subtileWidth, subtileHeight);
 
         sdrTiles = new Tile[sourceProducts.length][numSdrBands];
         // (7*7 - 7)/2  + 7 = 28 sigma bands default (UR matrix)
@@ -92,9 +97,7 @@ public class SpectralDailyAccumulationOp extends Operator {
         // we have:
         // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
         final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
-        resultArray = new float[resultArrayElements]
-                [AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH]
-                [AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT];
+        resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
 
         for (int k = 0; k < sourceProducts.length; k++) {
             int sdrIndex = 0;
@@ -113,8 +116,8 @@ public class SpectralDailyAccumulationOp extends Operator {
         // per pixel, accumulate the matrices from the single products...
         // Since we loop over all source products, we need a sequential and thread-safe approach, so we do not
         // implement computeTile.
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
+        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor; x++) {
+            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor; y++) {
                 accumulate(x, y);
             }
         }
