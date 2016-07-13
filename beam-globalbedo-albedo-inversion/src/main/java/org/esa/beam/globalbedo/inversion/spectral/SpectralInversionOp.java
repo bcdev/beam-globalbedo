@@ -13,7 +13,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
-import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
@@ -100,10 +99,11 @@ public class SpectralInversionOp extends PixelOperator {
         numTargetParameters = 3 * numSdrBands;
         numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
 
-        int subtileWidth = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_WIDTH / subtileFactor;
-        int subtileHeight = AlbedoInversionConstants.MODIS_SPECTRAL_TILE_HEIGHT / subtileFactor;
+        int subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor;
+        int subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor;
 
-        SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(subtileWidth, subtileHeight,
+        SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(numSdrBands,
+                                                                                 subtileWidth, subtileHeight,
                                                                                  subStartX, subStartY,
                                                                                  sdrRootDir, tile, year, doy,
                                                                                  wings, computeSnow);
@@ -127,7 +127,6 @@ public class SpectralInversionOp extends PixelOperator {
         }
 
         double goodnessOfFit = 0.0;
-        double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0) {
             final Matrix mAcc = accumulator.getM();
@@ -161,7 +160,7 @@ public class SpectralInversionOp extends PixelOperator {
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
-            goodnessOfFitTerms = getGoodnessOfFitTerms(mAcc, vAcc, eAcc, parameters, maskAcc);
+            relEntropy = AlbedoInversionConstants.NO_DATA_VALUE; // without MODIS priors we have no relative entropy
 
             // finally we need the 'Days to the closest sample'...
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
@@ -175,18 +174,11 @@ public class SpectralInversionOp extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample);
+                          maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
-//        int rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
-//        int rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
-//
-//        FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
-//                                                                 gaRootDir, tile, year, doy,
-//                                                                 wings, computeSnow);
-//        fullAccumulator = fullAccumulation.getResult();
     }
 
     @Override
@@ -245,7 +237,7 @@ public class SpectralInversionOp extends PixelOperator {
 
     static void setupSpectralWaveBandsMap(int numSdrBands) {
         for (int i = 0; i < numSdrBands; i++) {
-            spectralWaveBandsMap.put(i, "lambda" + (i + 1));
+            spectralWaveBandsMap.put(i, "b" + (i + 1));
         }
     }
 
@@ -279,28 +271,7 @@ public class SpectralInversionOp extends PixelOperator {
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
                                    double weightedNumberOfSamples,
                                    double goodnessOfFit,
-                                   double[] goodnessOfFitTerms,
                                    float daysToTheClosestSample) {
-
-
-//        for (int i = 0; i < 3 * numSdrBands; i++) {
-//            configurator.defineSample(i, parameterBandNames[i]);
-//        }
-//
-//        int index = 0;
-//        for (int i = 0; i < 3 * numSdrBands; i++) {
-//            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-//                configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][j]);
-//                index++;
-//            }
-//        }
-//
-//        int offset = numTargetParameters + numTargetUncertainties;
-//        configurator.defineSample(offset, AlbedoInversionConstants.INV_ENTROPY_BAND_NAME);
-//        configurator.defineSample(offset + TRG_REL_ENTROPY, AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
-//        configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
-//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME);
-//        configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
 
         // parameters
         int index = 0;

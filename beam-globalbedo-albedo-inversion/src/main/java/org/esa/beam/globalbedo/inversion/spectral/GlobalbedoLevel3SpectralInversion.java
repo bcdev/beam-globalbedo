@@ -75,7 +75,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
         inversionOp.setParameter("subtileFactor", subtileFactor);
         Product inversionProduct = inversionOp.getTargetProduct();
 
-        inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+        inversionProduct.setGeoCoding(SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY));
 
         setTargetProduct(inversionProduct);
 

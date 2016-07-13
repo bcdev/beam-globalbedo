@@ -453,7 +453,7 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
     private void setupSpectralWaveBandsMap(int numSdrBands) {
         for (int i = 0; i < numSdrBands; i++) {
-            spectralWaveBandsMap.put(i, "lambda" + (i + 1));
+            spectralWaveBandsMap.put(i, "b" + (i + 1));
         }
     }
 

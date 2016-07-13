@@ -236,25 +236,6 @@ public class IOUtils {
         return geoCoding;
     }
 
-
-//    public static CrsGeoCoding getSinusoidalGlobalGeocoding(int downscalingFactor) {
-//        final double easting = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
-//        final double northing = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
-//        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-//        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH * 36 / downscalingFactor;
-//        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
-//        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
-//        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
-//        try {
-//            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-//            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-//        } catch (Exception e) {
-//            BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
-//            return null;
-//        }
-//    }
-
-
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();
         final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);

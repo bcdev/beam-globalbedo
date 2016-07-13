@@ -305,32 +305,32 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        dhrBandNames = IOUtils.getAlbedoDhrBandNames();
+        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        dhrAlphaBandNames = IOUtils.getAlbedoDhrAlphaBandNames();
+        dhrAlphaBandNames = SpectralIOUtils.getSpectralAlbedoDhrAlphaBandNames();
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(dhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        bhrBandNames = IOUtils.getAlbedoBhrBandNames();
+        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        bhrAlphaBandNames = IOUtils.getAlbedoBhrAlphaBandNames();
+        bhrAlphaBandNames = SpectralIOUtils.getSpectralAlbedoBhrAlphaBandNames();
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(bhrAlphaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
@@ -367,14 +367,14 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) throws OperatorException {
         // (merged?) BRDF product...
-        parameterBandNames = IOUtils.getInversionParameterBandNames();
+        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         for (int i = 0; i < 3 * numSdrBands; i++) {
             srcParameters[i] = i;
             configurator.defineSample(srcParameters[i], parameterBandNames[i], spectralBrdfProduct);
         }
 
         int index = 0;
-        uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
+        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
         for (int i = 0; i < 3 * numSdrBands; i++) {
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 srcUncertainties[index] = index;
@@ -455,7 +455,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 
     private void setupSpectralWaveBandsMap(int numSdrBands) {
         for (int i = 0; i < numSdrBands; i++) {
-            spectralWaveBandsMap.put(i, "lambda" + (i + 1));
+            spectralWaveBandsMap.put(i, "b" + (i + 1));
         }
     }
 

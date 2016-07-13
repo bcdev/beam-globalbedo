@@ -2,12 +2,17 @@ package org.esa.beam.globalbedo.inversion.spectral;
 
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.AccumulatorHolder;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.geotools.referencing.CRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -33,7 +38,7 @@ public class SpectralIOUtils {
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                bandNames[index] = "mean_lambda" + (i + 1) + "_f" + j;
+                bandNames[index] = "mean_b" + (i + 1) + "_f" + j;
                 index++;
             }
         }
@@ -110,6 +115,9 @@ public class SpectralIOUtils {
                                                                                                  wings,
                                                                                                  computeSnow,
                                                                                                  computeSeaice);
+
+        final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
+
         if (albedoInputProductBinaryFileList.size() > 0) {
             accumulatorHolder = new AccumulatorHolder();
             accumulatorHolder.setReferenceYear(year);
@@ -130,6 +138,7 @@ public class SpectralIOUtils {
                     productYearRootDir = accumulatorRootDir.concat(
                             File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
                 }
+                productYearRootDir = productYearRootDir.concat(File.separator + subTileDir);
 
                 String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
                 albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
@@ -303,5 +312,108 @@ public class SpectralIOUtils {
 
         return filenameList.toArray(new String[filenameList.size()]);
     }
+
+    public static String[] getSpectralDailyAccumulatorBandNames(int numSdrBands) {
+
+        // from daily accumulation:
+        // we have:
+        // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
+        // final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
+        // resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
+
+        String[] bandNames = new String[3 * numSdrBands * 3 * numSdrBands +
+                3 * numSdrBands + 1 + 1];
+
+        int index = 0;
+        for (int i = 0; i < 3 * numSdrBands; i++) {
+            for (int j = 0; j < 3 * numSdrBands; j++) {
+                bandNames[index++] = "M_" + i + "" + j;
+            }
+        }
+
+        for (int i = 0; i < 3 * numSdrBands; i++) {
+            bandNames[index++] = "V_" + i;
+        }
+
+        bandNames[index++] = AlbedoInversionConstants.ACC_E_NAME;
+        bandNames[index] = AlbedoInversionConstants.ACC_MASK_NAME;
+
+        return bandNames;
+    }
+
+    public static String[] getSpectralAlbedoDhrBandNames(int numSdrBands,
+                                                         Map<Integer, String> spectralWaveBandsMap) {
+        String bandNames[] = new String[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            bandNames[i] = "DHR_" + spectralWaveBandsMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralAlbedoBhrBandNames(int numSdrBands,
+                                                         Map<Integer, String> spectralWaveBandsMap) {
+        String bandNames[] = new String[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            bandNames[i] = "BHR_" + spectralWaveBandsMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralAlbedoDhrAlphaBandNames() {
+        // todo
+//        return new String[]{
+//                "DHR_alpha_VIS_NIR", "DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW"
+//        };
+        return new String[0];
+    }
+
+    public static String[] getSpectralAlbedoBhrAlphaBandNames() {
+        // todo
+//        return new String[]{
+//                "BHR_alpha_VIS_NIR", "BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"
+//        };
+        return new String[0];
+    }
+
+    public static String[] getSpectralAlbedoDhrSigmaBandNames(int numSdrBands,
+                                                      Map<Integer, String> spectralWaveBandsMap) {
+        String bandNames[] = new String[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            bandNames[i] = "DHR_sigma_" + spectralWaveBandsMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralAlbedoBhrSigmaBandNames(int numSdrBands,
+                                                      Map<Integer, String> spectralWaveBandsMap) {
+        String bandNames[] = new String[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            bandNames[i] = "BHR_sigma_" + spectralWaveBandsMap.get(i);
+        }
+        return bandNames;
+    }
+
+    public static ModisTileGeoCoding getSinusoidalSubtileGeocoding(String tile, int startX, int startY) {
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+        int tileIndex = modisTileCoordinates.findTileIndex(tile);
+        if (tileIndex == -1) {
+            throw new OperatorException("Found no tileIndex for tileName=''" + tile + "");
+        }
+
+        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
+        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
+        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex) + startX*pixelSizeX;
+        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex) - startY*pixelSizeY;
+        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
+        ModisTileGeoCoding geoCoding;
+        try {
+            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
+            geoCoding = new ModisTileGeoCoding(crs, easting, northing, pixelSizeX, pixelSizeY);
+        } catch (Exception e) {
+            throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
+        }
+        return geoCoding;
+    }
+
 
 }

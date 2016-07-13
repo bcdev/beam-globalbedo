@@ -76,25 +76,25 @@ public class SpectralInversionTest extends TestCase {
         String[] parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         assertNotNull(parameterBandNames);
         assertEquals(9, parameterBandNames.length);
-        assertEquals("mean_lambda1_f0", parameterBandNames[0]);
-        assertEquals("mean_lambda1_f1", parameterBandNames[1]);
-        assertEquals("mean_lambda1_f2", parameterBandNames[2]);
-        assertEquals("mean_lambda2_f0", parameterBandNames[3]);
-        assertEquals("mean_lambda2_f1", parameterBandNames[4]);
-        assertEquals("mean_lambda2_f2", parameterBandNames[5]);
-        assertEquals("mean_lambda3_f0", parameterBandNames[6]);
-        assertEquals("mean_lambda3_f1", parameterBandNames[7]);
-        assertEquals("mean_lambda3_f2", parameterBandNames[8]);
+        assertEquals("mean_b1_f0", parameterBandNames[0]);
+        assertEquals("mean_b1_f1", parameterBandNames[1]);
+        assertEquals("mean_b1_f2", parameterBandNames[2]);
+        assertEquals("mean_b2_f0", parameterBandNames[3]);
+        assertEquals("mean_b2_f1", parameterBandNames[4]);
+        assertEquals("mean_b2_f2", parameterBandNames[5]);
+        assertEquals("mean_b3_f0", parameterBandNames[6]);
+        assertEquals("mean_b3_f1", parameterBandNames[7]);
+        assertEquals("mean_b3_f2", parameterBandNames[8]);
 
         numSdrBands = 7;
         parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
         assertNotNull(parameterBandNames);
         assertEquals(21, parameterBandNames.length);
-        assertEquals("mean_lambda1_f0", parameterBandNames[0]);
-        assertEquals("mean_lambda1_f1", parameterBandNames[1]);
-        assertEquals("mean_lambda3_f2", parameterBandNames[8]);
-        assertEquals("mean_lambda6_f2", parameterBandNames[17]);
-        assertEquals("mean_lambda7_f2", parameterBandNames[20]);
+        assertEquals("mean_b1_f0", parameterBandNames[0]);
+        assertEquals("mean_b1_f1", parameterBandNames[1]);
+        assertEquals("mean_b3_f2", parameterBandNames[8]);
+        assertEquals("mean_b6_f2", parameterBandNames[17]);
+        assertEquals("mean_b7_f2", parameterBandNames[20]);
 
     }
 
@@ -108,15 +108,15 @@ public class SpectralInversionTest extends TestCase {
         for (int i = 0; i < 9; i++) {
             assertEquals(9, uncertaintyBandNames[i].length);
         }
-        assertEquals("VAR_lambda1_f0_lambda1_f0", uncertaintyBandNames[0][0]);
-        assertEquals("VAR_lambda1_f1_lambda3_f1", uncertaintyBandNames[1][7]);
-        assertEquals("VAR_lambda2_f0_lambda3_f0", uncertaintyBandNames[3][6]);
-        assertEquals("VAR_lambda2_f1_lambda2_f1", uncertaintyBandNames[4][4]);
-        assertEquals("VAR_lambda2_f2_lambda2_f2", uncertaintyBandNames[5][5]);
-        assertEquals("VAR_lambda2_f2_lambda3_f0", uncertaintyBandNames[5][6]);
-        assertEquals("VAR_lambda3_f0_lambda3_f1", uncertaintyBandNames[6][7]);
-        assertEquals("VAR_lambda3_f1_lambda3_f2", uncertaintyBandNames[7][8]);
-        assertEquals("VAR_lambda3_f2_lambda3_f2", uncertaintyBandNames[8][8]);
+        assertEquals("VAR_b1_f0_b1_f0", uncertaintyBandNames[0][0]);
+        assertEquals("VAR_b1_f1_b3_f1", uncertaintyBandNames[1][7]);
+        assertEquals("VAR_b2_f0_b3_f0", uncertaintyBandNames[3][6]);
+        assertEquals("VAR_b2_f1_b2_f1", uncertaintyBandNames[4][4]);
+        assertEquals("VAR_b2_f2_b2_f2", uncertaintyBandNames[5][5]);
+        assertEquals("VAR_b2_f2_b3_f0", uncertaintyBandNames[5][6]);
+        assertEquals("VAR_b3_f0_b3_f1", uncertaintyBandNames[6][7]);
+        assertEquals("VAR_b3_f1_b3_f2", uncertaintyBandNames[7][8]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[8][8]);
 
         numSdrBands = 7;
         SpectralInversionOp.setupSpectralWaveBandsMap(numSdrBands);
@@ -127,31 +127,31 @@ public class SpectralInversionTest extends TestCase {
         for (int i = 0; i < 21; i++) {
             assertEquals(21, uncertaintyBandNames[i].length);
         }
-        assertEquals("VAR_lambda1_f0_lambda1_f0", uncertaintyBandNames[0][0]);
-        assertEquals("VAR_lambda1_f1_lambda3_f1", uncertaintyBandNames[1][7]);
-        assertEquals("VAR_lambda2_f0_lambda3_f0", uncertaintyBandNames[3][6]);
-        assertEquals("VAR_lambda2_f1_lambda2_f1", uncertaintyBandNames[4][4]);
-        assertEquals("VAR_lambda2_f2_lambda2_f2", uncertaintyBandNames[5][5]);
-        assertEquals("VAR_lambda2_f2_lambda3_f0", uncertaintyBandNames[5][6]);
-        assertEquals("VAR_lambda3_f0_lambda3_f1", uncertaintyBandNames[6][7]);
-        assertEquals("VAR_lambda3_f1_lambda3_f2", uncertaintyBandNames[7][8]);
-        assertEquals("VAR_lambda3_f2_lambda3_f2", uncertaintyBandNames[8][8]);
-        assertEquals("VAR_lambda4_f1_lambda4_f2", uncertaintyBandNames[10][11]);
-        assertEquals("VAR_lambda5_f0_lambda5_f1", uncertaintyBandNames[12][13]);
-        assertEquals("VAR_lambda5_f1_lambda5_f1", uncertaintyBandNames[13][13]);
-        assertEquals("VAR_lambda6_f0_lambda6_f1", uncertaintyBandNames[15][16]);
-        assertEquals("VAR_lambda6_f1_lambda7_f0", uncertaintyBandNames[16][18]);
-        assertEquals("VAR_lambda7_f0_lambda7_f1", uncertaintyBandNames[18][19]);
-        assertEquals("VAR_lambda7_f1_lambda7_f1", uncertaintyBandNames[19][19]);
-        assertEquals("VAR_lambda7_f1_lambda7_f2", uncertaintyBandNames[19][20]);
-        assertEquals("VAR_lambda7_f2_lambda7_f2", uncertaintyBandNames[20][20]);
+        assertEquals("VAR_b1_f0_b1_f0", uncertaintyBandNames[0][0]);
+        assertEquals("VAR_b1_f1_b3_f1", uncertaintyBandNames[1][7]);
+        assertEquals("VAR_b2_f0_b3_f0", uncertaintyBandNames[3][6]);
+        assertEquals("VAR_b2_f1_b2_f1", uncertaintyBandNames[4][4]);
+        assertEquals("VAR_b2_f2_b2_f2", uncertaintyBandNames[5][5]);
+        assertEquals("VAR_b2_f2_b3_f0", uncertaintyBandNames[5][6]);
+        assertEquals("VAR_b3_f0_b3_f1", uncertaintyBandNames[6][7]);
+        assertEquals("VAR_b3_f1_b3_f2", uncertaintyBandNames[7][8]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[8][8]);
+        assertEquals("VAR_b4_f1_b4_f2", uncertaintyBandNames[10][11]);
+        assertEquals("VAR_b5_f0_b5_f1", uncertaintyBandNames[12][13]);
+        assertEquals("VAR_b5_f1_b5_f1", uncertaintyBandNames[13][13]);
+        assertEquals("VAR_b6_f0_b6_f1", uncertaintyBandNames[15][16]);
+        assertEquals("VAR_b6_f1_b7_f0", uncertaintyBandNames[16][18]);
+        assertEquals("VAR_b7_f0_b7_f1", uncertaintyBandNames[18][19]);
+        assertEquals("VAR_b7_f1_b7_f1", uncertaintyBandNames[19][19]);
+        assertEquals("VAR_b7_f1_b7_f2", uncertaintyBandNames[19][20]);
+        assertEquals("VAR_b7_f2_b7_f2", uncertaintyBandNames[20][20]);
 
     }
 
     private static Map<Integer, String> getSpectralWaveBandsMap(int numSdrBands) {
         Map<Integer, String> map = new HashMap<>();
         for (int i = 0; i < numSdrBands; i++) {
-            map.put(i, "lambda" + (i + 1));
+            map.put(i, "b" + (i + 1));
         }
         return map;
     }

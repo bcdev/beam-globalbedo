@@ -26,6 +26,8 @@ import java.util.logging.Logger;
  */
 public class SpectralFullAccumulation {
 
+    private final int numSdrBands;
+
     private int rasterWidth;
     private int rasterHeight;
 
@@ -44,11 +46,12 @@ public class SpectralFullAccumulation {
 
     FullAccumulator result;
 
-    public SpectralFullAccumulation(int rasterWidth, int rasterHeight,
+    public SpectralFullAccumulation(int numSdrBands, int rasterWidth, int rasterHeight,
                                     int subStartX, int subStartY,
                                     String sdrRootDir, String tile,
                                     int year, int doy,
                                     int wings, boolean computeSnow) {
+        this.numSdrBands = numSdrBands;
         this.rasterWidth = rasterWidth;
         this.rasterHeight = rasterHeight;
         this.subStartX = subStartX;
@@ -79,8 +82,8 @@ public class SpectralFullAccumulation {
                                                                           computeSnow, false);
 
         if (dailyAccumulators != null) {
-            final String[] dailyAccBinaryFilenames = SpectralIOUtils.getDailyAccumulatorFilenameList(dailyAccumulators);
-            final String[] bandNames = IOUtils.getDailyAccumulatorBandNames();
+            final String[] dailyAccBinaryFilenames = dailyAccumulators.getProductBinaryFilenames();
+            final String[] bandNames = SpectralIOUtils.getSpectralDailyAccumulatorBandNames(numSdrBands);
 
             result = accumulateAndWeightDailyAccs(dailyAccBinaryFilenames,
                     dailyAccumulators,

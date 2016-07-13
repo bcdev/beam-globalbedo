@@ -140,7 +140,7 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
-            final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
+            final Accumulator accumulator = getMatricesPerSDRDataset(x, y);
             M.plusEquals(accumulator.getM());
             V.plusEquals(accumulator.getV());
             E.plusEquals(accumulator.getE());
@@ -152,10 +152,10 @@ public class SpectralDailyAccumulationOp extends Operator {
         fillBinaryResultArray(finalAccumulator, x, y);
     }
 
-    private Accumulator getMatricesPerBBDRDataset(int x, int y) {
-        if (isSnowFilter(x, y) || isBBDRFilter(x, y) || isSDFilter(x, y)) {
-            // do not consider non-land pixels (BBDR = NaN), non-snowfilter pixels,
-            // pixels with BBDR == 0.0 or -9999.0, SD == 0.0
+    private Accumulator getMatricesPerSDRDataset(int x, int y) {
+        if (isSnowFilter(x, y) || isSDRFilter(x, y) || isSDFilter(x, y)) {
+            // do not consider non-land pixels (SDR = NaN), non-snowfilter pixels,
+            // pixels with SDR == 0.0 or -9999.0, SD == 0.0
             return getZeroAccumulator();
         }
 
@@ -199,13 +199,13 @@ public class SpectralDailyAccumulationOp extends Operator {
         }
 
         // compute M, V, E matrices...
-        final Matrix bbdr = getBBDR(x, y);
+        final Matrix sdr = getSDR(x, y);
         final Matrix inverseC = thisC.inverse();
         final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
         final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
         final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
-        final Matrix V = kernelTimesInvCDiag.times(bbdr);
-        final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
+        final Matrix V = kernelTimesInvCDiag.times(sdr);
+        final Matrix E = (sdr.transpose().times(inverseC)).times(sdr);
 
         // return result
         return new Accumulator(M, V, E, 1);
@@ -220,12 +220,12 @@ public class SpectralDailyAccumulationOp extends Operator {
         return new Accumulator(zeroM, zeroV, zeroE, 0);
     }
 
-    private Matrix getBBDR(int x, int y) {
-        Matrix bbdr = new Matrix(numSdrBands, 1);
+    private Matrix getSDR(int x, int y) {
+        Matrix sdr = new Matrix(numSdrBands, 1);
         for (int j = 0; j < numSdrBands; j++) {
-            bbdr.set(0, 0, sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y));
+            sdr.set(j, 0, sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y));
         }
-        return bbdr;
+        return sdr;
     }
 
     private double[] getSD(int x, int y) {
@@ -304,7 +304,7 @@ public class SpectralDailyAccumulationOp extends Operator {
                 (!computeSnow && (snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
 
-    private boolean isBBDRFilter(int x, int y) {
+    private boolean isSDRFilter(int x, int y) {
         for (int j = 0; j < numSdrBands; j++) {
             final double sdr = sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y);
             if (sdr == 0.0 || !AlbedoInversionUtils.isValid(sdr) || sdr == 9999.0) {
