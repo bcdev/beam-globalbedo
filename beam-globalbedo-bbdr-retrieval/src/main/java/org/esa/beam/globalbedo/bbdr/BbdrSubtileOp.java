@@ -133,7 +133,6 @@ public class BbdrSubtileOp extends Operator implements Output {
 
         File file = new File(targetDir, sourceProduct.getName() + "_" + subDir + ".nc");
         String writeFormat;
-//        String writeFormat = "NetCDF4-GA-BBDR";
         if (product.getName().toUpperCase().contains("BBDR")) {
             writeFormat = "NetCDF4-GA-BBDR";
         } else {

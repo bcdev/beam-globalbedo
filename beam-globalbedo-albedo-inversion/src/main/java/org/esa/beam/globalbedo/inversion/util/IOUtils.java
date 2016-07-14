@@ -165,7 +165,7 @@ public class IOUtils {
         if (bbdrFilenames != null && bbdrFilenames.length > 0)
             for (String s : bbdrFilenames)
                 if (s.contains(dateString) && s.contains(pixelX + "_" + pixelY)) {
-                    if (versionString == null || (versionString != null && s.contains(versionString)))
+                    if (versionString == null || s.contains(versionString))
                         if ((s.endsWith(".csv") || s.endsWith(".nc"))) {
                             dailyBBDRFilenames.add(s);
                         }
@@ -577,7 +577,7 @@ public class IOUtils {
         String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
                 [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            // only UR triangle matrix
+            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 bandNames[i][j] = "VAR_" + bbdrWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
                         bbdrWaveBandsMap.get(j / 3) + "_f" + (j % 3);

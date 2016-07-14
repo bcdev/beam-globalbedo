@@ -57,7 +57,8 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    @Parameter(defaultValue = "7", valueSet = {"7"},
+            description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
     @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
@@ -73,9 +74,6 @@ public class SpectralInversionOp extends PixelOperator {
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
     private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_1 = 5;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_2 = 6;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_3 = 7;
 
     private String[] parameterBandNames;
     private String[][] uncertaintyBandNames;
@@ -114,10 +112,10 @@ public class SpectralInversionOp extends PixelOperator {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         Matrix parameters = new Matrix(numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
                                        AlbedoInversionConstants.NO_DATA_VALUE);
-        Matrix uncertainties = new Matrix(3 * numSdrBands, 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
+        Matrix uncertainties;
 
         double entropy = 0.0; // == det in BB
-        double relEntropy = 0.0;
+        double relEntropy;
 
         double maskAcc = 0.0;
         SpectralAccumulator accumulator = null;
@@ -138,18 +136,15 @@ public class SpectralInversionOp extends PixelOperator {
                 Matrix tmpM = mAcc.inverse();
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) ||
                         AlbedoInversionUtils.matrixHasZerosInDiagonale(tmpM)) {
-                    tmpM = new Matrix(3 * numSdrBands,
-                                      3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
+                    tmpM = new Matrix(3 * numSdrBands, 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
                                       AlbedoInversionConstants.NO_DATA_VALUE);
                 }
                 uncertainties = tmpM;
             } else {
-                parameters = new Matrix(numSdrBands *
-                                                AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
-                                        AlbedoInversionConstants.NO_DATA_VALUE
-                );
+                parameters = new Matrix(numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
+                                        AlbedoInversionConstants.NO_DATA_VALUE);
                 uncertainties = new Matrix(3 * numSdrBands,
-                                           3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
+                                           3 * numSdrBands,
                                            AlbedoInversionConstants.NO_DATA_VALUE);
                 maskAcc = 0.0;
             }
@@ -165,7 +160,7 @@ public class SpectralInversionOp extends PixelOperator {
             // finally we need the 'Days to the closest sample'...
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
         } else {
-            uncertainties = new Matrix(3 * numSdrBands, 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
+            uncertainties = new Matrix(3 * numSdrBands, 3 * numSdrBands,
                                        AlbedoInversionConstants.NO_DATA_VALUE);
             entropy = AlbedoInversionConstants.NO_DATA_VALUE;
             relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
@@ -189,7 +184,7 @@ public class SpectralInversionOp extends PixelOperator {
 
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            for (int j = i; j < 3 * numSdrBands; j++) {
                 configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][j]);
                 index++;
             }
@@ -254,19 +249,6 @@ public class SpectralInversionOp extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
-    private double[] getGoodnessOfFitTerms(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
-        if (maskAcc > 0) {
-            final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
-            final Matrix gofTerm2 = fPars.transpose().times(vAcc);
-            final Matrix m2 = new Matrix(1, 1, 2.0);
-            final Matrix gofTerm3 = m2.times(eAcc);
-            return new double[]{gofTerm1.get(0, 0), gofTerm2.get(0, 0), gofTerm3.get(0, 0)};
-        } else {
-            return new double[]{0.0, 0.0, 0.0};
-        }
-    }
-
-
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix parameters, Matrix uncertainties, double entropy, double relEntropy,
                                    double weightedNumberOfSamples,
@@ -282,7 +264,7 @@ public class SpectralInversionOp extends PixelOperator {
 
         index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            for (int j = i; j < 3 * numSdrBands; j++) {
                 targetSamples[numTargetParameters + index].set(uncertainties.get(i, j));
                 index++;
             }
@@ -294,9 +276,6 @@ public class SpectralInversionOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
 
     }
 

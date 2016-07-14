@@ -11,7 +11,6 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
-import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,7 +41,7 @@ public class MergeSpectralBrdfOp extends PixelOperator {
     private static final int SRC_SNOW_GOODNESS_OF_FIT = 4;
     private static final int SRC_NOSNOW_GOODNESS_OF_FIT = 4;
 
-    private static final int sourceSampleOffset = 100;
+    private static final int sourceSampleOffset = 300;
 
     private static final int TRG_ENTROPY = 0;
     private static final int TRG_REL_ENTROPY = 1;
@@ -87,8 +86,8 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
         setupSpectralWaveBandsMap(numSdrBands);
 
-        srcSnowParams = new int[numSdrBands];
-        srcNoSnowParams = new int[numSdrBands];
+        srcSnowParams = new int[3 * numSdrBands];
+        srcNoSnowParams = new int[3 * numSdrBands];
 
         final int urMatrixOffset = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
         srcSnowUncertainties = new int[urMatrixOffset];
@@ -180,25 +179,23 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
         // parameters
         int index = 0;
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < numSdrBands; j++) {
-                final double sampleParameterSnowDataValue = sourceSamples[index].getDouble();
-                final double sampleParameterSnow =
-                        AlbedoInversionUtils.isValid(sampleParameterSnowDataValue) ? sampleParameterSnowDataValue : 0.0;
-                final double sampleParameterNoSnowDataValue = sourceSamples[sourceSampleOffset + index].getDouble();
-                final double sampleParameterNoSnow =
-                        AlbedoInversionUtils.isValid(sampleParameterNoSnowDataValue) ?
-                                sampleParameterNoSnowDataValue : 0.0;
-                final double resultParameters = sampleParameterSnow * proportionNsamplesSnow +
-                        sampleParameterNoSnow * proportionNsamplesNoSnow;
+        for (int i = 0; i < 3 * numSdrBands; i++) {
+            final double sampleParameterSnowDataValue = sourceSamples[index].getDouble();
+            final double sampleParameterSnow =
+                    AlbedoInversionUtils.isValid(sampleParameterSnowDataValue) ? sampleParameterSnowDataValue : 0.0;
+            final double sampleParameterNoSnowDataValue = sourceSamples[sourceSampleOffset + index].getDouble();
+            final double sampleParameterNoSnow =
+                    AlbedoInversionUtils.isValid(sampleParameterNoSnowDataValue) ?
+                            sampleParameterNoSnowDataValue : 0.0;
+            final double resultParameters = sampleParameterSnow * proportionNsamplesSnow +
+                    sampleParameterNoSnow * proportionNsamplesNoSnow;
 
-                if (sampleParameterNoSnow == 0.0 && sampleParameterSnow == 0.0) {
-                    targetSamples[trgParameters[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-                } else {
-                    targetSamples[trgParameters[index]].set(resultParameters);
-                }
-                index++;
+            if (sampleParameterNoSnow == 0.0 && sampleParameterSnow == 0.0) {
+                targetSamples[trgParameters[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            } else {
+                targetSamples[trgParameters[index]].set(resultParameters);
             }
+            index++;
         }
 
         // uncertainties
@@ -368,7 +365,7 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            for (int j = i; j < 3 * numSdrBands; j++) {
                 srcSnowUncertainties[index] = index;
                 configurator.defineSample(srcSnowParams.length + srcSnowUncertainties[index],
                                           uncertaintyBandNames[i][j], snowProduct);
@@ -397,7 +394,7 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
         index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            for (int j = i; j < 3 * numSdrBands; j++) {
                 srcNoSnowUncertainties[index] = sourceSampleOffset + index;
                 configurator.defineSample(srcNoSnowParams.length + srcNoSnowUncertainties[index],
                                           uncertaintyBandNames[i][j], noSnowProduct);
@@ -431,7 +428,7 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            for (int j = i; j < 3 * numSdrBands; j++) {
                 trgUncertainties[index] = index;
                 configurator.defineSample(trgParameters.length + trgUncertainties[index], uncertaintyBandNames[i][j]);
                 index++;

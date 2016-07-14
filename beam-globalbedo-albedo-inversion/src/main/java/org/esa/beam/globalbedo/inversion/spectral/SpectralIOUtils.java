@@ -50,14 +50,14 @@ public class SpectralIOUtils {
         String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
 
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            // only UR triangle matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
+            // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
+            for (int j = i; j < 3 *  numSdrBands; j++) {
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i/3) + "_f" + (i % 3) + "_" +
+                        spectralWaveBandsMap.get(j/3) + "_f" + (j % 3);
             }
         }
-        return bandNames;
 
+        return bandNames;
     }
 
 
@@ -113,8 +113,7 @@ public class SpectralIOUtils {
                                                                                                  doy, year, tile,
                                                                                                  subStartX, subStartY,
                                                                                                  wings,
-                                                                                                 computeSnow,
-                                                                                                 computeSeaice);
+                                                                                                 computeSnow);
 
         final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
 
@@ -154,7 +153,7 @@ public class SpectralIOUtils {
                                                            final int year, String tile,
                                                            final int subStartX, final int subStartY,
                                                            int wings,
-                                                           boolean computeSnow, boolean computeSeaice) {
+                                                           boolean computeSnow) {
         List<String> accumulatorNameList = new ArrayList<>();
 
         final FilenameFilter yearFilter = new FilenameFilter() {
@@ -293,33 +292,11 @@ public class SpectralIOUtils {
         return accumulatorNameSortedList;
     }
 
-    public static String[] getDailyAccumulatorFilenameList(AccumulatorHolder accumulatorHolder) {
-        List<String> filenameList = new ArrayList<>();
-        if (accumulatorHolder != null) {
-            final String[] thisInputFilenames = accumulatorHolder.getProductBinaryFilenames();
-            if (accumulatorHolder.getProductBinaryFilenames().length == 0) {
-                BeamLogManager.getSystemLogger().log(Level.ALL, "No daily accumulators found for DoY " +
-                        IOUtils.getDoyString(accumulatorHolder.getReferenceDoy()) + " ...");
-            }
-            int index = 0;
-            while (index < thisInputFilenames.length) {
-                if (!filenameList.contains(thisInputFilenames[index])) {
-                    filenameList.add(thisInputFilenames[index]);
-                }
-                index++;
-            }
-        }
-
-        return filenameList.toArray(new String[filenameList.size()]);
-    }
-
     public static String[] getSpectralDailyAccumulatorBandNames(int numSdrBands) {
 
         // from daily accumulation:
         // we have:
         // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
-        // final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
-        // resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
 
         String[] bandNames = new String[3 * numSdrBands * 3 * numSdrBands +
                 3 * numSdrBands + 1 + 1];
@@ -376,7 +353,7 @@ public class SpectralIOUtils {
     }
 
     public static String[] getSpectralAlbedoDhrSigmaBandNames(int numSdrBands,
-                                                      Map<Integer, String> spectralWaveBandsMap) {
+                                                              Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[] = new String[numSdrBands];
         for (int i = 0; i < numSdrBands; i++) {
             bandNames[i] = "DHR_sigma_" + spectralWaveBandsMap.get(i);
@@ -385,7 +362,7 @@ public class SpectralIOUtils {
     }
 
     public static String[] getSpectralAlbedoBhrSigmaBandNames(int numSdrBands,
-                                                      Map<Integer, String> spectralWaveBandsMap) {
+                                                              Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[] = new String[numSdrBands];
         for (int i = 0; i < numSdrBands; i++) {
             bandNames[i] = "BHR_sigma_" + spectralWaveBandsMap.get(i);
@@ -402,8 +379,8 @@ public class SpectralIOUtils {
 
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex) + startX*pixelSizeX;
-        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex) - startY*pixelSizeY;
+        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex) + startX * pixelSizeX;
+        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex) - startY * pixelSizeY;
         final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
         ModisTileGeoCoding geoCoding;
         try {
@@ -413,6 +390,36 @@ public class SpectralIOUtils {
             throw new OperatorException("Cannot attach geocoding for tileName= ''" + tile + " : ", e);
         }
         return geoCoding;
+    }
+
+    public static Product getSpectralBrdfProduct(String brdfDir, int year, int doy, boolean isSnow,
+                                                 int subStartX, int subStartY) throws IOException {
+        final String[] brdfFiles = (new File(brdfDir)).list();
+        final String subTileString = Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
+        final List<String> brdfFileList = getSpectralBrdfProductNames(brdfFiles, isSnow, subTileString);
+
+        final String doyString = IOUtils.getDoyString(doy);
+
+        for (String brdfFileName : brdfFileList) {
+            if (brdfFileName.startsWith("GlobAlbedo.brdf.spectral." + Integer.toString(year) + doyString)) {
+                String sourceProductFileName = brdfDir + File.separator + brdfFileName;
+                return ProductIO.readProduct(sourceProductFileName);
+            }
+        }
+
+        return null;
+    }
+
+    private static List<String> getSpectralBrdfProductNames(String[] brdfFiles, boolean snow, String subTileString) {
+        List<String> brdfFileList = new ArrayList<>();
+        for (String s : brdfFiles) {
+            if ((!snow && s.contains(".NoSnow") && s.contains(subTileString) && s.endsWith(".nc")) ||
+                    (snow && s.contains(".Snow") && s.contains(subTileString) && s.endsWith(".nc"))) {
+                brdfFileList.add(s);
+            }
+        }
+        Collections.sort(brdfFileList);
+        return brdfFileList;
     }
 
 
