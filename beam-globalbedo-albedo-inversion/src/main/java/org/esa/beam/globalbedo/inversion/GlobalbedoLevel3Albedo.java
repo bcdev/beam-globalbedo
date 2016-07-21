@@ -138,11 +138,16 @@ public class GlobalbedoLevel3Albedo extends Operator {
                     // if Prior not available or cannot be read
 //                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
                     final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
-                    tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-                    if (modisTileScaleFactor != 1.0) {
-                        priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                    if (tmpPriorProduct != null) {
+                        tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                        if (modisTileScaleFactor != 1.0) {
+                            priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                        } else {
+                            priorProduct = tmpPriorProduct;
+                        }
                     } else {
-                        priorProduct = tmpPriorProduct;
+                        // if not available, continue without MODIS prior
+                        usePrior = false;
                     }
                 } catch (IOException e) {
                     throw new OperatorException("Cannot load prior product: " + e.getMessage());
