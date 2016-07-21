@@ -123,7 +123,7 @@ public class GlobalbedoLevel2 extends Operator {
 
         if (aotProduct.equals(GaMasterOp.EMPTY_PRODUCT)) {
             // todo: this happens when source product is too small (width or height < 9). Improve handling of this!
-            logger.log(Level.ALL, "No AOT product generated for source product: " + sourceProduct.getName() +
+            logger.log(Level.WARNING, "No AOT product generated for source product: " + sourceProduct.getName() +
                     " --> cannot create BBDR product.");
         } else {
             BbdrMasterOp bbdrOp;

@@ -79,7 +79,7 @@ public class GlobalbedoLevel3AlbedoSinglePixel extends Operator {
 
             setTargetProduct(albedoProduct);
 
-            logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.INFO, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
         } else {
             logger.log(Level.WARNING, "No single-pixel albedos computed for tile: " + tile + ", year: " + year +

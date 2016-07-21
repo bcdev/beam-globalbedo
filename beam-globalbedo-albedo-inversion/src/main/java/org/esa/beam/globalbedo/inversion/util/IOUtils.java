@@ -62,7 +62,7 @@ public class IOUtils {
         }
 
         if (productIndex == 0) {
-            BeamLogManager.getSystemLogger().log(Level.ALL, "No BBDR source products found for DoY " + IOUtils.getDoyString(doy) + " ...");
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "No BBDR source products found for DoY " + IOUtils.getDoyString(doy) + " ...");
         }
 
         return bbdrProducts;
@@ -131,7 +131,7 @@ public class IOUtils {
         }
 
         if (accInputProductList.size() == 0) {
-            BeamLogManager.getSystemLogger().log(Level.ALL, "No BBDR source products found for year/day " +
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "No BBDR source products found for year/day " +
                     year + "/" + IOUtils.getDoyString(day) + " ...");
         }
 
@@ -199,7 +199,7 @@ public class IOUtils {
                 }
             }
         }
-        BeamLogManager.getSystemLogger().log(Level.ALL,
+        BeamLogManager.getSystemLogger().log(Level.WARNING,
                                              "Warning: No prior file found. Searched in priorDir: '" + priorDir + "'.");
 
         return null;
@@ -358,10 +358,9 @@ public class IOUtils {
 
         final FilenameFilter yearFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only years between 1995 and 2010 (GA period), but allow 2011 wings!
-                // we assume that wings is max. 540, so they may lap just into previous or next year
-                int startYear = 1995;
-                for (int i = 0; i <= 16; i++) {
+                // for QA4ECV, accept years between 1982 and 2016 (more than GA period!)
+                int startYear = 1982;
+                for (int i = 0; i <= 35; i++) {
                     String thisYear = (new Integer(startYear + i)).toString();
                     if (name.equals(thisYear) && Math.abs((startYear + i) - year) <= 1) {
                         return true;
@@ -525,7 +524,7 @@ public class IOUtils {
                 }
             }
         } catch (NumberFormatException e) {
-            BeamLogManager.getSystemLogger().log(Level.ALL,
+            BeamLogManager.getSystemLogger().log(Level.WARNING,
                                                  "Cannot determine wings for accumulator '" + accName + "' - skipping.");
         }
         return isInWingsInterval;
@@ -670,7 +669,7 @@ public class IOUtils {
         try {
             f = new FileInputStream(accumulatorBinaryFile);
         } catch (FileNotFoundException e) {
-            BeamLogManager.getSystemLogger().log(Level.ALL, "No accumulator file found for year: " + year + ", DoY: " +
+            BeamLogManager.getSystemLogger().log(Level.WARNING, "No accumulator file found for year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " - will use data from MODIS priors...");
             return null;
         }

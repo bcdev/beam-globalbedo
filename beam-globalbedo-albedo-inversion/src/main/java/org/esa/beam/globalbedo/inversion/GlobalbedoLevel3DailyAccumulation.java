@@ -104,7 +104,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
             setTargetProduct(accumulationProduct);
         } else {
-            logger.log(Level.ALL, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.WARNING, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
             //  no BBDR input - just set a dummy target product
             Product dummyProduct = new Product("dummy", "dummy", 1, 1);
@@ -113,7 +113,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
         getTargetProduct().setName("SUCCESS_dailyacc_" + year + "_" + doy);
 
-        logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
+        logger.log(Level.INFO, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 

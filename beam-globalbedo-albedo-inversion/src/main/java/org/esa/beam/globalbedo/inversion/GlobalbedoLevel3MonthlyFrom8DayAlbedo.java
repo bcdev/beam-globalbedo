@@ -77,7 +77,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
                 setTargetProduct(monthlyAlbedoOp.getTargetProduct());
             }
 
-            logger.log(Level.ALL, "Finished monthly albedo computation process for tile: " + tile + ", year: " + year +
+            logger.log(Level.INFO, "Finished monthly albedo computation process for tile: " + tile + ", year: " + year +
                     ", month: " + monthIndex);
         } else {
             logger.log(Level.WARNING, "\nNo input products found --> no monthly albedos computed for tile: " + tile + ", year: " + year +

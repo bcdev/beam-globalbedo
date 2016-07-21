@@ -130,7 +130,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 priorRootDirSuffix = IOUtils.getDoyString(refDoy);
             }
             priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
-            logger.log(Level.ALL, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
+            logger.log(Level.INFO, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
 
             if (usePrior) {
                 try {
@@ -148,7 +148,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                     throw new OperatorException("Cannot load prior product: " + e.getMessage());
                 }
                 if (priorProduct == null) {
-                    logger.log(Level.ALL, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
+                    logger.log(Level.WARNING, "No 'snow' prior file available for DoY " + IOUtils.getDoyString(doy) + " - will compute albedos from 'NoSnow' BRDF product...");
                 }
             }
 
@@ -223,7 +223,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                 // IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
             }
 
-            logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.INFO, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
         } else {
             logger.log(Level.WARNING, "No albedos computed for tile: " + tile + ", year: " + year +

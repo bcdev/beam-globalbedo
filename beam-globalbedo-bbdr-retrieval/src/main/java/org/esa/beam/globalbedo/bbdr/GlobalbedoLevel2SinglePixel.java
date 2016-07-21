@@ -256,7 +256,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
             final PixelPos pixelPos = geoCoding.getPixelPos(new GeoPos(latitude, longitude), null);
             return aotTile.getSampleFloat((int) pixelPos.x, (int) pixelPos.y);
         } else {
-            getLogger().log(Level.ALL, "Will use constant AOT value of 0.15.");
+            getLogger().log(Level.INFO, "No AOT product available - will use constant AOT value of 0.15.");
             return BbdrConstants.AOT_CONST_VALUE;
         }
     }

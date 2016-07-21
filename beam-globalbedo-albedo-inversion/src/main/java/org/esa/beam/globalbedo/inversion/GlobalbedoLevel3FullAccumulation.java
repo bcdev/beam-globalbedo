@@ -133,7 +133,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
         Product successProduct = new Product(productName, "SUCCESS", 1, 1);
         setTargetProduct(successProduct);
 
-        logger.log(Level.ALL, "Finished full accumulation process for tile: " + tile + ", year: " + year + ", DoYs: " +
+        logger.log(Level.INFO, "Finished full accumulation process for tile: " + tile + ", year: " + year + ", DoYs: " +
                 IOUtils.getDoyString(startDoy) + "-" + IOUtils.getDoyString(endDoy) + " , Snow = " + computeSnow);
     }
 
@@ -144,7 +144,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
             if (input != null) {
                 final String[] thisInputFilenames = input.getProductBinaryFilenames();
                 if (input.getProductBinaryFilenames().length == 0) {
-                    logger.log(Level.ALL, "No daily accumulators found for DoY " +
+                    logger.log(Level.WARNING, "No daily accumulators found for DoY " +
                             IOUtils.getDoyString(input.getReferenceDoy()) + " ...");
                 }
                 int index = 0;

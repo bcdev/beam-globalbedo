@@ -193,7 +193,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                 priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             }
 
-            logger.log(Level.ALL, "No single pixel Prior set - searching for prior file in directory: '" +
+            logger.log(Level.INFO, "No single pixel Prior set - searching for prior file in directory: '" +
                     priorDir + "'...");
 
             try {
@@ -263,11 +263,11 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                     setTargetProduct(inversionProduct);
                 }
             } else {
-                logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
+                logger.log(Level.WARNING, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                         IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
             }
 
-            logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.INFO, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
 
             if (writeInversionProductToCsv) {
