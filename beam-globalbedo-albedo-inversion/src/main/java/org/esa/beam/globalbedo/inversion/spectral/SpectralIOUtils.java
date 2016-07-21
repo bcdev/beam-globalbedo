@@ -158,10 +158,9 @@ public class SpectralIOUtils {
 
         final FilenameFilter yearFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // accept only years between 1995 and 2010 (GA period), but allow 2011 wings!
-                // we assume that wings is max. 540, so they may lap just into previous or next year
-                int startYear = 1995;
-                for (int i = 0; i <= 16; i++) {
+                // for QA4ECV, accept years between 1982 and 2016 (more than GA period!)
+                int startYear = 1982;
+                for (int i = 0; i <= 35; i++) {
                     String thisYear = (new Integer(startYear + i)).toString();
                     if (name.equals(thisYear) && Math.abs((startYear + i) - year) <= 1) {
                         return true;

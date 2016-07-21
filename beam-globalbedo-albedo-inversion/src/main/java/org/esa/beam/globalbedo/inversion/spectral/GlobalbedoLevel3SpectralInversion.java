@@ -79,7 +79,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
 
         setTargetProduct(inversionProduct);
 
-        logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+        logger.log(Level.INFO, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 

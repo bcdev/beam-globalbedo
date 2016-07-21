@@ -109,14 +109,14 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
 
             setTargetProduct(accumulationProduct);
         } else {
-            logger.log(Level.ALL, "No SDR input products found for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.WARNING, "No SDR input products found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
             //  no SDR input - just set a dummy target product
             Product dummyProduct = new Product("dummy", "dummy", 1, 1);
             setTargetProduct(dummyProduct);
         }
 
-        logger.log(Level.ALL, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
+        logger.log(Level.INFO, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 

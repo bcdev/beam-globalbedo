@@ -83,8 +83,12 @@ public class FullAccumulation {
         List<String> filenameList = new ArrayList<>();
         if (accumulatorHolder != null) {
             final String[] thisInputFilenames = accumulatorHolder.getProductBinaryFilenames();
-            if (accumulatorHolder.getProductBinaryFilenames().length == 0) {
-                logger.log(Level.ALL, "No daily accumulators found for DoY " +
+            final int numDailyAccBinFiles = accumulatorHolder.getProductBinaryFilenames().length;
+            if (numDailyAccBinFiles == 0) {
+                logger.log(Level.WARNING, "No daily accumulators found for DoY " +
+                        IOUtils.getDoyString(accumulatorHolder.getReferenceDoy()) + " ...");
+            } else {
+                logger.log(Level.INFO, "Found " + numDailyAccBinFiles + " daily accumulators for DoY " +
                         IOUtils.getDoyString(accumulatorHolder.getReferenceDoy()) + " ...");
             }
             int index = 0;

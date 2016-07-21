@@ -66,8 +66,8 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
         final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile;
         final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile;
 
-        logger.log(Level.ALL, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
-        logger.log(Level.ALL, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
+        logger.log(Level.INFO, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
+        logger.log(Level.INFO, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
 
         Product brdfMergedProduct = null;
         Product brdfSnowProduct;
@@ -119,7 +119,7 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
                 setTargetProduct(albedoOp.getTargetProduct());
             }
 
-            logger.log(Level.ALL, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.INFO, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
         } else {
             logger.log(Level.WARNING, "No albedos computed for tile: " + tile + ", year: " + year +

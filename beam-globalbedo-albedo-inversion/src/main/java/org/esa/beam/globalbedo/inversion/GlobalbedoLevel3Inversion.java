@@ -116,7 +116,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
             priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
 
-            logger.log(Level.ALL, "Searching for prior file in directory: '" + priorDir + "'...");
+            logger.log(Level.INFO, "Searching for prior file in directory: '" + priorDir + "'...");
 
             try {
                 final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
@@ -205,11 +205,11 @@ public class GlobalbedoLevel3Inversion extends Operator {
             }
 
         } else {
-            logger.log(Level.ALL, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
+            logger.log(Level.WARNING, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
         }
 
-        logger.log(Level.ALL, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
+        logger.log(Level.INFO, "Finished inversion process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
     }
 

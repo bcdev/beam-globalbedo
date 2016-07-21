@@ -42,10 +42,10 @@ public class AerosolClimatology {
 
         aotProduct = null;
         try {
-            Logger.getGlobal().log(Level.ALL, "Reading AOT climatology file '" + aotFilePath + "'...");
+            Logger.getGlobal().log(Level.INFO, "Reading AOT climatology file '" + aotFilePath + "'...");
             aotProduct = ProductIO.readProduct(new File(aotFilePath));
         } catch (IOException e) {
-            Logger.getGlobal().log(Level.ALL, "Warning: cannot open or read AOT climatology file.");
+            Logger.getGlobal().log(Level.WARNING, "Warning: cannot open or read AOT climatology file.");
         }
     }
 }
