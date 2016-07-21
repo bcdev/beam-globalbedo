@@ -336,20 +336,24 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
-    public static String[] getSpectralAlbedoDhrAlphaBandNames() {
-        // todo
-//        return new String[]{
-//                "DHR_alpha_VIS_NIR", "DHR_alpha_VIS_SW", "DHR_alpha_NIR_SW"
-//        };
-        return new String[0];
-    }
+    public static String[][] getSpectralAlbedoAlphaBandNames(String type, int numSdrBands,
+                                                             Map<Integer, String> spectralWaveBandsMap) {
+        // we need:
+        // b1_b2  b1_b3  b1_b4  b1_b5  b1_b6  b1_b7
+        //        b2_b3  b1_b4  b1_b5  b1_b6  b1_b7
+        //               b3_b4  b1_b5  b1_b6  b1_b7
+        //                      b4_b5  b1_b6  b1_b7
+        //                             b5_b6  b1_b7
+        //                                    b6_b7
 
-    public static String[] getSpectralAlbedoBhrAlphaBandNames() {
-        // todo
-//        return new String[]{
-//                "BHR_alpha_VIS_NIR", "BHR_alpha_VIS_SW", "BHR_alpha_NIR_SW"
-//        };
-        return new String[0];
+        String bandNames[][] = new String[numSdrBands-1][numSdrBands-1];
+        for (int i = 0; i < numSdrBands-1; i++) {
+            for (int j = i; j < numSdrBands-1; j++) {
+                bandNames[i][j] = type + "_alpha_" + spectralWaveBandsMap.get(i) + "_" + spectralWaveBandsMap.get(j);
+            }
+        }
+
+        return bandNames;
     }
 
     public static String[] getSpectralAlbedoDhrSigmaBandNames(int numSdrBands,

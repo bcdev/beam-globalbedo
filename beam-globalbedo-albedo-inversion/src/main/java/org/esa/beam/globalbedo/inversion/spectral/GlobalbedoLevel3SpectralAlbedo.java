@@ -112,9 +112,9 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
                 setTargetProduct(brdfMergedProduct);
             } else {
                 // STEP 2: compute albedo from merged BRDF product...
-                BrdfToAlbedoOp albedoOp = new BrdfToAlbedoOp();
+                SpectralBrdfToAlbedoOp albedoOp = new SpectralBrdfToAlbedoOp();
                 albedoOp.setParameterDefaultValues();
-                albedoOp.setSourceProduct("brdfMergedProduct", brdfMergedProduct);
+                albedoOp.setSourceProduct("spectralBrdfProduct", brdfMergedProduct);
                 albedoOp.setParameter("doy", doy);
                 setTargetProduct(albedoOp.getTargetProduct());
             }

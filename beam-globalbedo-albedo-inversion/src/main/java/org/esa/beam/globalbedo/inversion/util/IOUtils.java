@@ -177,25 +177,30 @@ public class IOUtils {
 
     public static Product getPriorProduct(String priorDir, String priorFileNamePrefix, int doy, boolean computeSnow) throws IOException {
 
-        final String[] priorFiles = (new File(priorDir)).list();
-        final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
+        final File priorPath = new File(priorDir);
+        if (priorPath.exists()) {
+            final String[] priorFiles = priorPath.list();
+            final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        // allow all days within 8-day prior period:
-        final int refDoy = 8 * ((doy - 1) / 8) + 1;
-        String doyString = getDoyString(refDoy);
+            // allow all days within 8-day prior period:
+            final int refDoy = 8 * ((doy - 1) / 8) + 1;
+            String doyString = getDoyString(refDoy);
 
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
-        for (String priorFileName : snowFilteredPriorList) {
-            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
-            if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
-                String sourceProductFileName = priorDir + File.separator + priorFileName;
-                BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
-                return ProductIO.readProduct(sourceProductFileName);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
+            for (String priorFileName : snowFilteredPriorList) {
+                BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
+                if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
+                    String sourceProductFileName = priorDir + File.separator + priorFileName;
+                    BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
+                    return ProductIO.readProduct(sourceProductFileName);
+                }
             }
         }
+        BeamLogManager.getSystemLogger().log(Level.ALL,
+                                             "Warning: No prior file found. Searched in priorDir: '" + priorDir + "'.");
 
         return null;
     }
