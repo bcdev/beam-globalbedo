@@ -236,7 +236,7 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
                     f.close();
 
                     long t2 = System.currentTimeMillis();
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "daily acc read in: " + (t2 - t1) + " ms");
+                    BeamLogManager.getSystemLogger().log(Level.ALL, "daily acc read in: " + (t2 - t1) + " ms");
 
                     // now update doy of closest sample...
                     for (int doyIndex = 0; doyIndex < doys.length; doyIndex++) {

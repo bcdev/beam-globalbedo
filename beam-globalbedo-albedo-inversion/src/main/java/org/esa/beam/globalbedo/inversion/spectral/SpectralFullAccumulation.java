@@ -159,7 +159,7 @@ public class SpectralFullAccumulation {
                     f.close();
 
                     long t2 = System.currentTimeMillis();
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "daily acc read in: " + (t2 - t1) + " ms");
+                    BeamLogManager.getSystemLogger().log(Level.ALL, "daily acc read in: " + (t2 - t1) + " ms");
 
                     // now update doy of closest sample...
                     if (accumulate[fileIndex]) {
