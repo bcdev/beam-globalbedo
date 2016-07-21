@@ -120,11 +120,16 @@ public class GlobalbedoLevel3Inversion extends Operator {
 
             try {
                 final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
-                tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-                if (modisTileScaleFactor != 1.0) {
-                    priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                if (tmpPriorProduct != null) {
+                    tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                    if (modisTileScaleFactor != 1.0) {
+                        priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                    } else {
+                        priorProduct = tmpPriorProduct;
+                    }
                 } else {
-                    priorProduct = tmpPriorProduct;
+                    // if not available, continue without MODIS prior
+                    usePrior = false;
                 }
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
@@ -133,19 +138,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
         }
 
         if (computeSeaice || !usePrior || (usePrior && priorProduct != null)) {
-            // STEP 3: we need to attach a geocoding to the Prior product...
-//            if (usePrior) {
-//                try {
-//                    Product tileInfoProduct = null;
-//                    if (tileInfoFilename != null) {
-//                        tileInfoProduct = IOUtils.getTileInfoProduct(fullAccumulatorDir, tileInfoFilename);
-//                    }
-//                    IOUtils.attachGeoCodingToPriorProduct(priorProduct, tile, tileInfoProduct);
-//                } catch (IOException e) {
-//                    throw new OperatorException("Cannot reproject prior products - cannot proceed: " + e.getMessage());
-//                }
-//            }
-
             InversionOp inversionOp = new InversionOp();
             inversionOp.setParameterDefaultValues();
             Product dummySourceProduct;
@@ -192,10 +184,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 // same in the standard mode without using priors...
                 inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor));
             }
-
-            // todo: adapt and activate if needed
-            // MetadataUtils.addBrdfMetadata(inversionProduct);
-
 
             setTargetProduct(inversionProduct);
 

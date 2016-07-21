@@ -138,6 +138,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
+        productConfigurer.copyTimeCoding();
+        productConfigurer.copyGeoCoding();
+
         final Product targetProduct = productConfigurer.getTargetProduct();
 
         targetProduct.setAutoGrouping("sdr_sigma:sdr");
@@ -153,25 +156,11 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
         // copy flag coding and flag images
         ProductUtils.copyFlagBands(sourceProduct, targetProduct, true);
-
-//        if (writeGeometryAndAOT) {
-//            ProductUtils.copyBand("VZA", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("SZA", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("VAA", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("SAA", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("DEM", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("AOD550", sourceProduct, targetProduct, true);
-//            ProductUtils.copyBand("sig_AOD550", sourceProduct, targetProduct, true);
-//        }
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         final int status = sourceSamples[SRC_STATUS].getInt();
-
-        if (x == 400 && y == 1600) {
-            System.out.println("x = " + x);
-        }
 
         if (status != 1 && status != 3) {
             // only compute over clear land or snow
@@ -224,7 +213,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     }
 
     float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr, int year, int doy,
-                                         int[] sinCoordinates, boolean snow) {
+                                 int[] sinCoordinates, boolean snow) {
 //        float[] sdrMapped = new float[numMappedSdrBands];   // the 7 MODIS channels
 //        return sdrMapped;
         // todo: this is preliminary. SK to explain how to address the other parameters?!
@@ -232,14 +221,30 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     }
 
     float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors, int year, int doy,
-                                              int[] sinCoordinates, boolean snow) {
-//        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
-//        float[] sdrSigmaMapped = new float[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
-//
-//
-//        return sdrSigmaMapped;
-        // todo: this is preliminary. SK to explain how to address the other parameters?!
-        return sm.getSpectralMappedSigmaSdr(sdrErrors);
+                                      int[] sinCoordinates, boolean snow) {
+
+        // todo: SK to explain how to address the other parameters?!
+        // todo: SK to provide 7+6+5+4+3+2+1 sigma UR matrix elements. Currently we only get diagonal elements sigma_ii!
+//        return sm.getSpectralMappedSigmaSdr(sdrErrors);
+
+        // todo: this is preliminary until issues above are addressed.
+        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+        float[] sdrSigmaMapped = new float[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
+        final int[] diagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numMappedSdrBands);
+
+        final float[] spectralMappedSigmaSdrDiagonal = sm.getSpectralMappedSigmaSdr(sdrErrors);
+        for (int i = 0; i < numSigmaSdrMappedBands; i++) {
+            // use random number in [0.0, 0.05]
+            sdrSigmaMapped[i] = (float) Math.abs((0.1 * (Math.random() - 0.5)));
+            for (int j = 0; j < diagonalIndices.length; j++) {
+                if (i == diagonalIndices[j]) {
+                    // use SK results for diagonal elements
+                    sdrSigmaMapped[i] = spectralMappedSigmaSdrDiagonal[j];
+                    break;
+                }
+            }
+        }
+        return sdrSigmaMapped;
     }
 
     private void addMappedSdrBands(Product targetProduct) {

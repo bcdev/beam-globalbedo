@@ -6,7 +6,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.globalbedo.inversion.DailyAccumulationOp;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -28,7 +27,7 @@ import java.util.logging.Logger;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2011-2016 by Brockmann Consult")
-public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator{
+public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
 
     @Parameter(defaultValue = "", description = "SDR root directory")
     private String sdrRootDir;
@@ -45,6 +44,18 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator{
     @Parameter(description = "Day of Year", interval = "[1,366]")
     private int doy;
 
+    // for the moment we only accept division into 4x4 subtiles
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
+            defaultValue = "4", valueSet = {"4"})
+    private int subtileFactor;
+
+    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
+    private int subStartX;
+
+    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
+    private int subStartY;
+
+
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
@@ -53,10 +64,14 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator{
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 
+        final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
+
         // STEP 1: get SDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = IOUtils.getAccumulationInputProducts(sdrRootDir, sensors, tile, year, doy);
+            inputProducts = SpectralIOUtils.getSpectralAccumulationInputProducts(sdrRootDir, sensors,
+                                                                                 subStartX, subStartY,
+                                                                                 tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of SDR input products: " + e.getMessage());
         }
@@ -66,19 +81,28 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator{
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
-            }  else {
+            } else {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+            }
+            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + subTileDir + File.separator);
+            if (!new File(dailyAccumulatorDir).exists()) {
+                final boolean madeDir = new File(dailyAccumulatorDir).mkdirs();
+                if (!madeDir) {
+                    throw new OperatorException("Could not create sub tile dir '" + dailyAccumulatorDir + "'.");
+                }
             }
 
             // STEP 2: do accumulation, write to binary file
             Product accumulationProduct;
             // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-            String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
+            String dailyAccumulatorBinaryFilename =
+                    "matrices_" + year + IOUtils.getDoyString(doy) + "_" + subTileDir + ".bin";
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
-            DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
+            SpectralDailyAccumulationOp accumulationOp = new SpectralDailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
+            accumulationOp.setParameter("subtileFactor", subtileFactor);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationProduct = accumulationOp.getTargetProduct();

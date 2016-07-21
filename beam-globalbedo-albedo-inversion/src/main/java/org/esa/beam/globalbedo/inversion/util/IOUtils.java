@@ -93,7 +93,7 @@ public class IOUtils {
                     }
                 }
                 BeamLogManager.getSystemLogger().log
-                        (Level.INFO, "Collecting Daily accumulation BBDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
+                        (Level.INFO, "Collecting Daily accumulation BBDR/SDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
                 BeamLogManager.getSystemLogger().log
                         (Level.INFO, "      Sensor '" + sensor + "': " + numProducts + " products added.");
             }
@@ -165,7 +165,7 @@ public class IOUtils {
         if (bbdrFilenames != null && bbdrFilenames.length > 0)
             for (String s : bbdrFilenames)
                 if (s.contains(dateString) && s.contains(pixelX + "_" + pixelY)) {
-                    if (versionString == null || (versionString != null && s.contains(versionString)))
+                    if (versionString == null || s.contains(versionString))
                         if ((s.endsWith(".csv") || s.endsWith(".nc"))) {
                             dailyBBDRFilenames.add(s);
                         }
@@ -177,25 +177,30 @@ public class IOUtils {
 
     public static Product getPriorProduct(String priorDir, String priorFileNamePrefix, int doy, boolean computeSnow) throws IOException {
 
-        final String[] priorFiles = (new File(priorDir)).list();
-        final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
+        final File priorPath = new File(priorDir);
+        if (priorPath.exists()) {
+            final String[] priorFiles = priorPath.list();
+            final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
 
-        // allow all days within 8-day prior period:
-        final int refDoy = 8 * ((doy - 1) / 8) + 1;
-        String doyString = getDoyString(refDoy);
+            // allow all days within 8-day prior period:
+            final int refDoy = 8 * ((doy - 1) / 8) + 1;
+            String doyString = getDoyString(refDoy);
 
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
-        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
-        for (String priorFileName : snowFilteredPriorList) {
-            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
-            if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
-                String sourceProductFileName = priorDir + File.separator + priorFileName;
-                BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
-                return ProductIO.readProduct(sourceProductFileName);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
+            for (String priorFileName : snowFilteredPriorList) {
+                BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
+                if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
+                    String sourceProductFileName = priorDir + File.separator + priorFileName;
+                    BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
+                    return ProductIO.readProduct(sourceProductFileName);
+                }
             }
         }
+        BeamLogManager.getSystemLogger().log(Level.ALL,
+                                             "Warning: No prior file found. Searched in priorDir: '" + priorDir + "'.");
 
         return null;
     }
@@ -235,25 +240,6 @@ public class IOUtils {
         }
         return geoCoding;
     }
-
-
-//    public static CrsGeoCoding getSinusoidalGlobalGeocoding(int downscalingFactor) {
-//        final double easting = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
-//        final double northing = AlbedoInversionConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y;
-//        final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
-//        final int imageWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH * 36 / downscalingFactor;
-//        final int imageHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT * 18 / downscalingFactor;
-//        final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
-//        final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
-//        try {
-//            final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
-//            return new CrsGeoCoding(crs, imageWidth, imageHeight, easting, northing, pixelSizeX, pixelSizeY);
-//        } catch (Exception e) {
-//            BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot attach mosaic geocoding : ", e);
-//            return null;
-//        }
-//    }
-
 
     public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();
@@ -506,7 +492,7 @@ public class IOUtils {
         return accumulatorNameSortedList;
     }
 
-    static boolean isInWingsInterval(int wings, int processYear, int processDoy, String tile, String accName) {
+    public static boolean isInWingsInterval(int wings, int processYear, int processDoy, String tile, String accName) {
         // check the 'wings' condition...
         boolean isInWingsInterval = false;
         try {
@@ -545,7 +531,7 @@ public class IOUtils {
         return isInWingsInterval;
     }
 
-    private static boolean isPolarTile(String tile) {
+    public static boolean isPolarTile(String tile) {
         return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
     }
 
@@ -596,7 +582,7 @@ public class IOUtils {
         String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
                 [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            // only UR triangle matrix
+            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
                 bandNames[i][j] = "VAR_" + bbdrWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
                         bbdrWaveBandsMap.get(j / 3) + "_f" + (j % 3);
@@ -605,34 +591,6 @@ public class IOUtils {
         return bandNames;
 
     }
-
-    public static String[] getSpectralInversionParameterBandNames(int numSdrBands) {
-        String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
-        int index = 0;
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                bandNames[index] = "mean_lambda" + (i + 1) + "_f" + j;
-                index++;
-            }
-        }
-        return bandNames;
-    }
-
-    public static String[][] getSpectralInversionUncertaintyBandNames(int numSdrBands,
-                                                                      Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
-
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // only UR triangle matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
-            }
-        }
-        return bandNames;
-
-    }
-
 
 //    public static String[][] getNewPriorCovarianceBandNames() {
 //        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]

@@ -67,6 +67,12 @@ public class LandcoverLevel2 extends Operator {
     @Parameter(defaultValue = "false")
     private boolean attachFileTileCache;
 
+    @Parameter(defaultValue = "false")
+    private boolean aotOnly;
+
+    @Parameter(defaultValue = "false")
+    private boolean noAotUpscaling;
+
     @Override
     public void initialize() throws OperatorException {
         if (sensor == Sensor.PROBAV) {
@@ -82,7 +88,11 @@ public class LandcoverLevel2 extends Operator {
         if (attachFileTileCache) {
             attachFileTileCache(aotProduct);
         }
-        setTargetProduct(processSdr(aotProduct));
+        if (aotOnly) {
+            setTargetProduct(aotProduct);
+        } else {
+            setTargetProduct(processSdr(aotProduct));
+        }
     }
 
     private Product processAot(Product product) {
@@ -93,6 +103,7 @@ public class LandcoverLevel2 extends Operator {
         gaMasterOp.setParameter("gaCopyCTP", true);
         gaMasterOp.setParameter("gaUseL1bLandWaterFlag", false);
         gaMasterOp.setParameter("doEqualization", false);
+        gaMasterOp.setParameter("noUpscaling", noAotUpscaling);
         gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", false);
         gaMasterOp.setParameter("gaLcCloudBuffer", false);
         gaMasterOp.setParameter("gaComputeCloudShadow", false);

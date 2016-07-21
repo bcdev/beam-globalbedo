@@ -2,7 +2,7 @@
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-aerosol</symbolicName>
     <name>BEAM GlobAlbedo Aerosol</name>
-    <version>2.0.3-SNAPSHOT</version>
+    <version>2.0.4-SNAPSHOT</version>
 
     <!-- TODO - As needed, adapt metadata elements here -->
     <description>BEAM GlobAlbedo Aerosol</description>
