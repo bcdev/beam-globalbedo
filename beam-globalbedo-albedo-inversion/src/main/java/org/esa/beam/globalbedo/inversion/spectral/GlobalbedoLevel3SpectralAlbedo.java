@@ -58,7 +58,6 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
     private int subStartY;
 
 
-
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
@@ -116,7 +115,12 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
                 albedoOp.setParameterDefaultValues();
                 albedoOp.setSourceProduct("spectralBrdfProduct", brdfMergedProduct);
                 albedoOp.setParameter("doy", doy);
-                setTargetProduct(albedoOp.getTargetProduct());
+                final Product albedoProduct = albedoOp.getTargetProduct();
+//                final ModisTileGeoCoding sinusoidalSubtileGeocoding =
+//                        SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY);
+//                albedoProduct.setGeoCoding(sinusoidalSubtileGeocoding);
+                ProductUtils.copyGeoCoding(brdfMergedProduct, albedoProduct);
+                setTargetProduct(albedoProduct);
             }
 
             logger.log(Level.INFO, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
@@ -140,7 +144,7 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
                                                      null).getAsBufferedImage();
         propNSamplesBand.setSourceImage(bi);
 
-        ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
+//        ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
         ProductUtils.copyMetadata(sourceProduct, targetProduct);
         return targetProduct;
     }
