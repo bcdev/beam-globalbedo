@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-misr-reader</symbolicName>
-    <version>2.0.4-SNAPSHOT</version>
+    <version>2.0.5-SNAPSHOT</version>
     <name>GlobAlbedo MISR Reader</name>
 
     <description> </description>

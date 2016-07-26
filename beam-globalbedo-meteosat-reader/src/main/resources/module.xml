@@ -1,7 +1,7 @@
 <module>
     <manifestVersion>1.0.0</manifestVersion>
     <symbolicName>beam-globalbedo-meteosat-reader</symbolicName>
-    <version>2.0.4-SNAPSHOT</version>
+    <version>2.0.5-SNAPSHOT</version>
     <name>GlobAlbedo Meteosat Surface Albedo Reader</name>
 
     <description>Reader and Tools for certain Meteosat MFG and MSG products.</description>

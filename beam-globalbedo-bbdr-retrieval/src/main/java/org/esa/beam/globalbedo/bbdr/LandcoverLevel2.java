@@ -30,6 +30,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.internal.OperatorImage;
 import org.esa.beam.globalbedo.sdr.operators.GaMasterOp;
 import org.esa.beam.landcover.StatusPostProcessOp;
+import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.OpImage;
 import javax.media.jai.TileCache;
@@ -92,6 +93,11 @@ public class LandcoverLevel2 extends Operator {
             setTargetProduct(aotProduct);
         } else {
             setTargetProduct(processSdr(aotProduct));
+        }
+
+        if (sensor == Sensor.PROBAV) {
+            // request GK, 20160726
+            ProductUtils.copyBand("aot", aotProduct, getTargetProduct(), true);
         }
     }
 
