@@ -7,7 +7,7 @@
     <parent>
         <artifactId>beam-globalbedo</artifactId>
         <groupId>org.esa.beam.globalbedo</groupId>
-        <version>2.0.4-SNAPSHOT</version>
+        <version>2.0.5-SNAPSHOT</version>
     </parent>
 
     <packaging>jar</packaging>
@@ -39,37 +39,37 @@
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-aerosol-retrieval</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-auxdata</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-albedo-inversion</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-gmted2010</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-modis29-reader</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-meteosat-reader</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.esa.beam.globalbedo</groupId>
             <artifactId>beam-globalbedo-avhrr-ltdr-reader</artifactId>
-            <version>2.0.4-SNAPSHOT</version>
+            <version>2.0.5-SNAPSHOT</version>
         </dependency>
 
         <!-- GlobAlbedo external modules -->
