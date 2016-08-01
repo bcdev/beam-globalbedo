@@ -93,7 +93,8 @@ public class IOUtils {
                     }
                 }
                 BeamLogManager.getSystemLogger().log
-                        (Level.INFO, "Collecting Daily accumulation BBDR/SDR products for tile/year/doy: " + tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": ");
+                        (Level.INFO, "Collecting Daily accumulation BBDR/SDR products for tile - year/doy: " +
+                                tile + " - " + year + "/" + IOUtils.getDoyString(doy) + " (" + daystring_yyyymmdd + ") " + ": ");
                 BeamLogManager.getSystemLogger().log
                         (Level.INFO, "      Sensor '" + sensor + "': " + numProducts + " products added.");
             }

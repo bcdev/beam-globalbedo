@@ -109,10 +109,6 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         Uncertainties = U^T C^-1 U , U is stored as a 1X9 vector (transpose), so, actually U^T is the regulat 9x1 vector
         */
 
-//        System.out.println("x,y = " + x + "," + y);
-        if (x == 24 && y == 0) {
-            System.out.println("x = " + x);
-        }
         final PixelPos pixelPos = new PixelPos(x, y);
         final GeoPos latLon = spectralBrdfProduct.getGeoCoding().getGeoPos(pixelPos, null);
         final double SZAdeg = AlbedoInversionUtils.computeSza(latLon, doy);

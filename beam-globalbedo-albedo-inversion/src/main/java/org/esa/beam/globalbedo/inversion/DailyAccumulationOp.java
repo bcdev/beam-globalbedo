@@ -154,11 +154,6 @@ public class DailyAccumulationOp extends Operator {
         Matrix E = new Matrix(1, 1);
         double mask = 0.0;
 
-//        System.out.println("x,y = " + x + "," + y);
-        if (x == 62 && y == 163) {
-            System.out.println("x,y = " + x + "," + y);
-        }
-
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
             final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);

@@ -96,9 +96,6 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
 
         double sumWeights = 0.0;
 
-        if (x == 1200 && y == 750) {
-            System.out.println("x,y = " + x + "," + y);
-        }
         for (int j = 0; j < albedo8DayProduct.length; j++) {
             final double dataMask = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK].getDouble();
             final double relEntropy = sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY].getDouble();

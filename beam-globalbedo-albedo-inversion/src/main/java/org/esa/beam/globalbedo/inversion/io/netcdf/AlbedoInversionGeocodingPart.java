@@ -4,10 +4,8 @@ import org.esa.beam.dataio.netcdf.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
-import org.esa.beam.dataio.netcdf.util.Constants;
 import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
-import org.esa.beam.jai.ImageManager;
 import org.esa.beam.util.StringUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 import org.geotools.referencing.CRS;
@@ -33,28 +31,6 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
     @Override
     public void preEncode(ProfileWriteContext ctx, Product p) throws IOException {
         super.preEncode(ctx, p);
-
-//        final GeoCoding geoCoding = p.getGeoCoding();
-//        if (geoCoding == null) {
-//            return;
-//        }
-//        geographicCRS = isGeographicCRS(geoCoding);
-//        final NFileWriteable ncFile = ctx.getNetcdfFileWriteable();
-//        final boolean latLonPresent = isLatLonPresent(ncFile);
-//        if (!latLonPresent) {
-//            if (geographicCRS) {
-//                final GeoPos ul = geoCoding.getGeoPos(new PixelPos(0.5f, 0.5f), null);
-//                final int w = p.getSceneRasterWidth();
-//                final int h = p.getSceneRasterHeight();
-//                final GeoPos br = geoCoding.getGeoPos(new PixelPos(w - 0.5f, h - 0.5f), null);
-//                addGeographicCoordinateVariables(ncFile, ul, br);
-//            } else {
-//                addLatLonBands(ncFile, ImageManager.getPreferredTileSize(p));
-//            }
-//            latLonVarsAddedByGeocoding = true;
-//        }
-//        ctx.setProperty(Constants.Y_FLIPPED_PROPERTY_NAME, false);
-
         final GeoCoding geoCoding = p.getGeoCoding();
         if (geoCoding instanceof TiePointGeoCoding) {
             final TiePointGeoCoding tpGC = (TiePointGeoCoding) geoCoding;
