@@ -8,6 +8,8 @@ package org.esa.beam.globalbedo.inversion;
  */
 public class AlbedoInversionConstants {
 
+    public final static String[] BBDR_WAVE_BANDS = {"VIS", "NIR", "SW"};
+
     public final static String BBDR_BB_VIS_NAME = "BB_VIS";
     public final static String BBDR_BB_NIR_NAME = "BB_NIR";
     public final static String BBDR_BB_SW_NAME = "BB_SW";
