@@ -535,14 +535,6 @@ public class IOUtils {
         return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
     }
 
-    public static final Map<Integer, String> bbdrWaveBandsMap = new HashMap<>();
-
-    static {
-        bbdrWaveBandsMap.put(0, "VIS");
-        bbdrWaveBandsMap.put(1, "NIR");
-        bbdrWaveBandsMap.put(2, "SW");
-    }
-
     public static String[] getDailyAccumulatorBandNames() {
         String[] bandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
                 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS +
@@ -571,7 +563,7 @@ public class IOUtils {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                bandNames[index] = "mean_" + bbdrWaveBandsMap.get(i) + "_f" + j;
+                bandNames[index] = "mean_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
                 index++;
             }
         }
@@ -584,8 +576,8 @@ public class IOUtils {
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                bandNames[i][j] = "VAR_" + bbdrWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        bbdrWaveBandsMap.get(j / 3) + "_f" + (j % 3);
+                bandNames[i][j] = "VAR_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i/3] + "_f" + (i % 3) + "_" +
+                        AlbedoInversionConstants.BBDR_WAVE_BANDS[j/3] + "_f" + (j % 3);
             }
         }
         return bandNames;
@@ -609,7 +601,7 @@ public class IOUtils {
     public static String[] getAlbedoDhrBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "DHR_" + bbdrWaveBandsMap.get(i);
+            bandNames[i] = "DHR_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i];
         }
         return bandNames;
     }
@@ -617,7 +609,7 @@ public class IOUtils {
     public static String[] getAlbedoBhrBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "BHR_" + bbdrWaveBandsMap.get(i);
+            bandNames[i] = "BHR_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i];
         }
         return bandNames;
     }
@@ -637,7 +629,7 @@ public class IOUtils {
     public static String[] getAlbedoDhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "DHR_sigma_" + bbdrWaveBandsMap.get(i);
+            bandNames[i] = "DHR_sigma_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i];
         }
         return bandNames;
     }
@@ -645,7 +637,7 @@ public class IOUtils {
     public static String[] getAlbedoBhrSigmaBandNames() {
         String bandNames[] = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            bandNames[i] = "BHR_sigma_" + bbdrWaveBandsMap.get(i);
+            bandNames[i] = "BHR_sigma_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i];
         }
         return bandNames;
     }
