@@ -215,16 +215,20 @@ public class DailyAccumulationOp extends Operator {
         }
 
         // compute M, V, E matrices...
-        final Matrix bbdr = getBBDR(x, y);
-        final Matrix inverseC = thisC.inverse();
-        final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
-        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
-        final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
-        final Matrix V = kernelTimesInvCDiag.times(bbdr);
-        final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
+        if (thisC.lu().isNonsingular()) {
+            final Matrix bbdr = getBBDR(x, y);
+            final Matrix inverseC = thisC.inverse();
+            final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
+            final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
+            final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
+            final Matrix V = kernelTimesInvCDiag.times(bbdr);
+            final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
-        // return result
-        return new Accumulator(M, V, E, 1);
+            // return result
+            return new Accumulator(M, V, E, 1);
+        } else {
+            return getZeroAccumulator();
+        }
     }
 
     private Accumulator getZeroAccumulator() {
