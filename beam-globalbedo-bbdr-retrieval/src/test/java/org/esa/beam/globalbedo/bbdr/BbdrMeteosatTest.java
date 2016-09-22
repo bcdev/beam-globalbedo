@@ -1,6 +1,5 @@
 package org.esa.beam.globalbedo.bbdr;
 
-import org.esa.beam.util.math.MathUtils;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
