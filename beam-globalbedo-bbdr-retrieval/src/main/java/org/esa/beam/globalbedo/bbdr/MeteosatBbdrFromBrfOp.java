@@ -86,7 +86,11 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        extractInputParmsFromFilename();
+        final double[] inputParmsFromFilename = extractInputParmsFromFilename(sourceProduct.getName());
+        satDegLon = inputParmsFromFilename[0];
+        doy = (int) inputParmsFromFilename[1];
+        year = (int) inputParmsFromFilename[2];
+        scanTime = inputParmsFromFilename[3];
 
         HashMap<String, Object> waterParameters = new HashMap<>();
         waterParameters.put("resolution", 150);
@@ -226,32 +230,46 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         configurator.defineSample(TRG_SNOW_MASK, "snow_mask");
     }
 
-    private void extractInputParmsFromFilename() {
+    /**
+     * Extracts parameters from source product name which are required for BRF --> BBDR conversion
+     *
+     * @param sourceProductName - source product name
+     *
+     * @return double[] input parameters
+     */
+    static double[] extractInputParmsFromFilename(String sourceProductName) {
         // filenames are like: W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04
         // or W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000_h18v06
-        final String sourceProductName = sourceProduct.getName();
+        double satDegLon;
+        int year;
+        int doy;
+        double scanTime;
         if (sourceProductName.contains("VIRI_C_BRF") || sourceProductName.contains("VIRI_HRVIS_000_C_BRF")) {
             satDegLon = 0.0;
+            scanTime = 12.0;
         } else if (sourceProductName.contains("VIRI_057_C_BRF") || sourceProductName.contains("VIRI_HRVIS_057_C_BRF")) {
             satDegLon = 57.0;
+            scanTime = 8.0;   // should be ok?!
         } else if (sourceProductName.contains("VIRI_063_C_BRF") || sourceProductName.contains("VIRI_HRVIS_063_C_BRF")) {
             satDegLon = 63.0;
+            scanTime = 8.0;   // should be ok?!
         } else {
             throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
         }
 
         if (sourceProductName.contains("BRF_EUMP_")) {
             // e.g. BRF_EUMP_20050501
-            final int dateSubstringStart = sourceProductName.indexOf("BRF_EUMP_") + 10;
+            final int dateSubstringStart = sourceProductName.indexOf("BRF_EUMP_") + 9;
             year = Integer.parseInt(sourceProductName.substring(dateSubstringStart, dateSubstringStart+4));
             int month = Integer.parseInt(sourceProductName.substring(dateSubstringStart+4, dateSubstringStart+6));
             int day = Integer.parseInt(sourceProductName.substring(dateSubstringStart+6, dateSubstringStart+8));
-            doy = MeteosatGeometry.getDoyFromYearMonthDay(year, month, day);
+            doy = MeteosatGeometry.getDoyFromYearMonthDay(year, month -1, day);
         } else {
             throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
         }
-    }
 
+        return new double[]{satDegLon, doy, year, scanTime};
+    }
 
     public static class Spi extends OperatorSpi {
 

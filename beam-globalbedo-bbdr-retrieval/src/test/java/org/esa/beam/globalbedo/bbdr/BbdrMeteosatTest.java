@@ -7,15 +7,31 @@ import static org.junit.Assert.assertEquals;
 
 public class BbdrMeteosatTest {
 
-//    @Test
-//    public void testIfModisTileIntersectsMeteosatDisk() {
-//        String tile = "h18v06";
-//
-//        float[] values = {1.8f, 2.2f, 4.5f, 5.5f};
-//        assertEquals(0, BbdrUtils.getIndexBefore(1.2f, values));
-//        assertEquals(1, BbdrUtils.getIndexBefore(2.5f, values));
-//        assertEquals(2, BbdrUtils.getIndexBefore(4.6f, values));
-//        assertEquals(2, BbdrUtils.getIndexBefore(7.7f, values));
-//    }
+    @Test
+    public void testExtractInputParmsFromFilename() {
+        String filename = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04";
+        double[] parmsFromFilename = MeteosatBbdrFromBrfOp.extractInputParmsFromFilename(filename);
+
+        assertEquals(0.0, parmsFromFilename[0], 1.E-6);
+        assertEquals(121, parmsFromFilename[1], 1.E-6);
+        assertEquals(2005, parmsFromFilename[2], 1.E-6);
+        assertEquals(12.0, parmsFromFilename[3], 1.E-6);
+
+        filename = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000_h18v06";
+        parmsFromFilename = MeteosatBbdrFromBrfOp.extractInputParmsFromFilename(filename);
+
+        assertEquals(0.0, parmsFromFilename[0], 1.E-6);
+        assertEquals(182, parmsFromFilename[1], 1.E-6);
+        assertEquals(2006, parmsFromFilename[2], 1.E-6);
+        assertEquals(12.0, parmsFromFilename[3], 1.E-6);
+
+        filename = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET5+MVIRI_063_C_BRF_EUMP_20051018000000_h19v06";
+        parmsFromFilename = MeteosatBbdrFromBrfOp.extractInputParmsFromFilename(filename);
+
+        assertEquals(63.0, parmsFromFilename[0], 1.E-6);
+        assertEquals(291, parmsFromFilename[1], 1.E-6);
+        assertEquals(2005, parmsFromFilename[2], 1.E-6);
+        assertEquals(8.0, parmsFromFilename[3], 1.E-6);
+    }
 
 }
