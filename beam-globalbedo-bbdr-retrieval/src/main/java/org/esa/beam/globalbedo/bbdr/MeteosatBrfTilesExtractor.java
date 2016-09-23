@@ -272,9 +272,11 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
     private void writeTileProduct(Product product, String tileName) {
         File dir = new File(bbdrDir, tileName);
-        final boolean madeDir = dir.mkdirs();
-        if (!madeDir) {
-            throw new OperatorException("Could not create directory '" + dir + "'.");
+        if (!dir.exists()) {
+            final boolean madeDir = dir.mkdirs();
+            if (!madeDir) {
+                throw new OperatorException("Could not create directory '" + dir + "'.");
+            }
         }
         File file;
         String writeFormat;

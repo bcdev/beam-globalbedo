@@ -41,4 +41,15 @@ public class BbdrUtilsTest {
         assertEquals(31.73, sza, 1.E-2);
     }
 
+    @Test
+    public void testComputeConstantKernels() {
+        double vzaRad = MathUtils.DTOR * 73.03463;
+        double szaRad = MathUtils.DTOR * 92.6708;
+        double phiRad = MathUtils.DTOR * 115.6619;
+        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+
+        assertEquals(3.6714, kernels[0], 1.E-4);
+        assertTrue(Double.isNaN(kernels[1]));
+    }
+
 }

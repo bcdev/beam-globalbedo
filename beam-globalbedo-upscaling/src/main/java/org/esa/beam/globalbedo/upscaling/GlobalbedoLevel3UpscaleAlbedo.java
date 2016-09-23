@@ -32,6 +32,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 
@@ -57,11 +58,21 @@ import java.util.Map;
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
 public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisOp {
 
-    @Parameter(valueSet = {"5", "6", "60"}, description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 60 = 1/2deg resolution", defaultValue = "60")
-    int scaling;
+    @Parameter(valueSet = {"1200", "200"},
+            description = "Input product tile size (default = 1200 (MODIS), 200 for AVHRR/GEO",
+            defaultValue = "1200")
+    private int inputProductTileSize;
+
+    @Parameter(valueSet = {"1", "6", "10", "60"},
+            description = "Scaling: 1/20deg: 1 (AVHRR/GEO), 6 (MODIS); 1/2deg: 10 (AVHRR/GEO), 60 (MODIS)",
+            defaultValue = "60")
+    private int scaling;
 
     @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
+
+    @Parameter(defaultValue = "Albedo",  description = "Name of albedo subdirectory.")
+    private String albedoSubdirName;
 
     @TargetProduct
     private Product targetProduct;
@@ -73,6 +84,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
     private String[] bhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     private Band relEntropyBand;
+    private Band dataMaskBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -85,6 +97,9 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
         if (productReader == null) {
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
+        if (productReader instanceof GlobAlbedoMosaicProductReader) {
+            ((GlobAlbedoMosaicProductReader) productReader).setTileSize(inputProductTileSize);
+        }
 
         Product mosaicProduct;
         try {
@@ -93,12 +108,12 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
-        setReprojectedProduct(mosaicProduct, MosaicConstants.MODIS_TILE_SIZE);
+        setReprojectedProduct(mosaicProduct, inputProductTileSize);
 
-        final int width = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling;
-        final int height = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling;
-        final int tileWidth = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
-        final int tileHeight = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
+        final int width = inputProductTileSize * MosaicConstants.NUM_H_TILES / scaling;
+        final int height = inputProductTileSize * MosaicConstants.NUM_V_TILES / scaling;
+        final int tileWidth = inputProductTileSize / scaling / 2;
+        final int tileHeight = inputProductTileSize / scaling / 2;
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
         for (Band srcBand : reprojectedProduct.getBands()) {
@@ -114,6 +129,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
         bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
 
         relEntropyBand = reprojectedProduct.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
+        dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
 
         targetProduct = upscaledProduct;
     }
@@ -125,57 +141,59 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
                                           targetRect.width * scaling,
                                           targetRect.height * scaling);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
-        if (hasValidPixel(getSourceTile(relEntropyBand, srcRect), relEntropyBand.getNoDataValue())) {
+//        if (hasValidPixel(getSourceTile(relEntropyBand, srcRect), relEntropyBand.getNoDataValue())) {
+        // todo: check why we ever switched to relEntropy as data mask?!
+        if (hasValidPixel(getSourceTile(dataMaskBand, srcRect), dataMaskBand.getNoDataValue())) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
             for (String dhrBandName : dhrBandNames) {
                 computeNearestAlbedo(srcTiles.get(dhrBandName), targetTiles.get(dhrBandName),
-                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (String bhrBandName : bhrBandNames) {
                 computeNearestAlbedo(srcTiles.get(bhrBandName), targetTiles.get(bhrBandName),
-                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (String dhrSigmaBandName : dhrSigmaBandNames) {
                 computeNearestAlbedo(srcTiles.get(dhrSigmaBandName), targetTiles.get(dhrSigmaBandName),
-                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             for (String bhrSigmaBandName : bhrSigmaBandNames) {
                 computeNearestAlbedo(srcTiles.get(bhrSigmaBandName), targetTiles.get(bhrSigmaBandName),
-                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
 
             computeMajority(srcTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
                             targetTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
-                            srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME), scaling);
-//                            srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME), scaling);
+//                            srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME), scaling);
+                            srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME), scaling);
 
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
-                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
-                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             if (srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME) != null) {
                 computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
                                      targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
-                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                     srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
-                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
-//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//                                 srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME));
+                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
@@ -211,8 +229,7 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             }
         };
 
-        String albedoDirExt = "Albedo";
-        String albedoDirString = gaRootDir + File.separator + albedoDirExt + File.separator + year;
+        String albedoDirString = gaRootDir + File.separator + albedoSubdirName + File.separator + year;
 
         final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString);
         if (albedoFiles != null && albedoFiles.length > 0) {
