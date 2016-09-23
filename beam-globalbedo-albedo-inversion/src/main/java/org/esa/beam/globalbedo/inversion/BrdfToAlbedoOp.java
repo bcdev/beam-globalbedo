@@ -91,10 +91,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private int doy;
 
     @Parameter(description = "Geoposition")
-    private GeoPos latLon ;
+    private GeoPos latLon;
 
     @Parameter(defaultValue = "false", description = "If true, a single pixel is processed (CSV I/O)")
-    private boolean singlePixelMode ;
+    private boolean singlePixelMode;
 
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
@@ -154,10 +154,12 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // but write entropy as Mask in output product!! see BB, GetInversion
         // todo: shouldn't we use entropy instead?? With the given implementation all sigmas are zero if we do not
         // use Priors, see computation of relEntropy in inversion code!
-        double maskRelEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
-                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
-        if (maskRelEntropy > 0.0) {
+//        double maskRelEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
+//        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
+//                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
+        double maskEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+//        if (maskRelEntropy > 0.0) {
+        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
@@ -252,11 +254,14 @@ public class BrdfToAlbedoOp extends PixelOperator {
             relEntropy = Math.exp(relEntropy / 9.0);
         }
 
-        double[] alphaDHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];;
-        double[] alphaBHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];;
+        double[] alphaDHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        ;
+        double[] alphaBHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        ;
         if (!computeSeaice) {
             // calculate alpha terms
-            if (AlbedoInversionUtils.isValid(relEntropy)) {
+//            if (AlbedoInversionUtils.isValid(relEntropy)) {
+            if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
                 alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR
                 alphaBHR = computeAlphaBHR(C);      // wsa = BHR
             } else {
@@ -287,9 +292,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
-                BHR, alphaBHR, sigmaBHR,
-                weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
-                maskEntropy, SZAdeg);
+                                               BHR, alphaBHR, sigmaBHR,
+                                               weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
+                                               maskEntropy, SZAdeg);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -351,7 +356,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
 
-        for (Band b:targetProduct.getBands()) {
+        for (Band b : targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
 //            b.setNoDataValue(Float.NaN);
             b.setNoDataValueUsed(true);
@@ -387,17 +392,17 @@ public class BrdfToAlbedoOp extends PixelOperator {
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 SRC_UNCERTAINTIES[index] = index;
                 configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES[index],
-                        uncertaintyBandNames[i][j], brdfMergedProduct);
+                                          uncertaintyBandNames[i][j], brdfMergedProduct);
                 index++;
             }
         }
 
         String entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY,
-                entropyBandName, brdfMergedProduct);
+                                  entropyBandName, brdfMergedProduct);
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY,
-                relEntropyBandName, brdfMergedProduct);
+                                  relEntropyBandName, brdfMergedProduct);
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES,
@@ -408,10 +413,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, brdfMergedProduct);
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT,
-                goodnessOfFitBandName, brdfMergedProduct);
+                                  goodnessOfFitBandName, brdfMergedProduct);
         String proportionNsamplesBandName = AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME;
         configurator.defineSample(SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE,
-                proportionNsamplesBandName, brdfMergedProduct);
+                                  proportionNsamplesBandName, brdfMergedProduct);
 
     }
 
@@ -580,7 +585,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
     private Matrix getCMatrixFromInversionProduct(Sample[] sourceSamples) {
         Matrix C = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
-                3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS);
+                              3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS);
         double[] cTmp = new double[SRC_UNCERTAINTIES.length];
 
         int index = 0;
