@@ -152,6 +152,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
+        // todo: shouldn't we use entropy instead?? With the given implementation all sigmas are zero if we do not
+        // use Priors, see computation of relEntropy in inversion code!
         double maskRelEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
         double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
                 Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;

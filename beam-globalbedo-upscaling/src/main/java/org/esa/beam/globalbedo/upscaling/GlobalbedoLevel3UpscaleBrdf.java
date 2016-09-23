@@ -35,7 +35,6 @@ import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 
-import javax.media.jai.JAI;
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
@@ -60,17 +59,26 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
                 " that exist in multiple Sinusoidal tiles into a 0.5 or 0.05 degree  Plate Caree product.")
 public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp {
 
-    @Parameter(valueSet = {"5", "6", "30", "60"},
-               description = "Scaling (5 = 1/24deg, 6 = 1/20deg, 30 = 1/4deg, 60 = 1/2deg resolution", defaultValue = "60")
+    @Parameter(valueSet = {"1200", "200"},
+            description = "Input product tile size (default = 1200 (MODIS), 200 for AVHRR/GEO",
+            defaultValue = "1200")
+    private int inputProductTileSize;
+
+    @Parameter(valueSet = {"1", "6", "10", "60"},
+            description = "Scaling: 1/20deg: 1 (AVHRR/GEO), 6 (MODIS); 1/2deg: 10 (AVHRR/GEO), 60 (MODIS)",
+            defaultValue = "60")
     private int scaling;
 
     @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"},
-               description = "Input format, either DIMAP or NETCDF.")
+            description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
     @Parameter(defaultValue = "Merge", valueSet = {"Merge", "Snow", "NoSnow"},
-               description = "Input BRDF type, either Merge, Snow or NoSnow.")
+            description = "Input BRDF type, either Merge, Snow or NoSnow.")
     private String inputType;
+
+    @Parameter(defaultValue = "Inversion",  description = "Name of inversion (BRDF) subdirectory.")
+    private String brdfSubdirName;
 
 
     @TargetProduct
@@ -101,6 +109,9 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         if (productReader == null) {
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
+        if (productReader instanceof GlobAlbedoMosaicProductReader) {
+            ((GlobAlbedoMosaicProductReader) productReader).setTileSize(inputProductTileSize);
+        }
 
         Product mosaicProduct;
         try {
@@ -109,12 +120,12 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
-        setReprojectedProduct(mosaicProduct, MosaicConstants.MODIS_TILE_SIZE);
+        setReprojectedProduct(mosaicProduct, inputProductTileSize);
 
-        final int width = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_H_TILES / scaling;
-        final int height = MosaicConstants.MODIS_TILE_SIZE * MosaicConstants.NUM_V_TILES / scaling;
-        final int tileWidth = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
-        final int tileHeight = MosaicConstants.MODIS_TILE_SIZE / scaling / 2;
+        final int width = inputProductTileSize * MosaicConstants.NUM_H_TILES / scaling;
+        final int height = inputProductTileSize * MosaicConstants.NUM_V_TILES / scaling;
+        final int tileWidth = inputProductTileSize / scaling / 2;
+        final int tileHeight = inputProductTileSize / scaling / 2;
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
 
@@ -147,7 +158,8 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
 //        System.out.println("calling computeTileStack: targetRect = " + targetRect);
 //        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
-        if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
+//        if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
+        if (getSourceTile(entropyBand, srcRect) != null && hasValidPixel(getSourceTile(entropyBand, srcRect), entropyBand.getNoDataValue())) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
             computeUncertainty(srcTiles, targetTiles, targetRect);
@@ -203,8 +215,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             }
         };
 
-        String mergeDirExt = "Inversion";
-        String mergeDirString = gaRootDir + File.separator + mergeDirExt + File.separator + inputType + File.separator + year;
+        String mergeDirString = gaRootDir + File.separator + brdfSubdirName + File.separator + inputType + File.separator + year;
 
         final File[] mergeFiles = IOUtils.getTileDirectories(mergeDirString);
         if (mergeFiles != null && mergeFiles.length > 0) {
@@ -260,7 +271,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                         }
                     }
                 }
-                if (mInvSum.lu().isNonsingular() &&  mInvSum.det() != 0.0 && containsData(mInvSum)) {
+                if (mInvSum.lu().isNonsingular() && mInvSum.det() != 0.0 && containsData(mInvSum)) {
                     Matrix mt = mInvSum.inverse();
                     setM(mt, mTargetTiles, x, y);
                     Matrix ft = fmInvsum.times(mt);

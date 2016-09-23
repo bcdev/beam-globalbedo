@@ -19,7 +19,6 @@ package org.esa.beam.globalbedo.mosaic;
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
@@ -48,7 +47,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private static final String PRODUCT_TYPE = "GlobAlbedo_Mosaic";
 
     private final Pattern pattern;
-    private final MosaicDefinition mosaicDefinition;
+    private MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
     private boolean mosaicModisPriors;
     private boolean mosaicNewModisPriors;
@@ -56,26 +55,31 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
     private boolean mosaicAdamPriors;
     private int adamPriorStage;
 
+    private int tileSize;
+
     protected GlobAlbedoMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         this.pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
-        this.mosaicDefinition = new MosaicDefinition(36, 18, 1200);
+        this.mosaicDefinition = new MosaicDefinition(MosaicConstants.NUM_H_TILES, MosaicConstants.NUM_V_TILES,
+                                                     MosaicConstants.MODIS_TILE_SIZE);
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
+        mosaicDefinition = new MosaicDefinition(MosaicConstants.NUM_H_TILES, MosaicConstants.NUM_V_TILES, tileSize);
+
         final File inputFile = getInputFile();
         Set<MosaicTile> mosaicTiles;
         if (mosaicModisPriors) {
             mosaicTiles = createPriorMosaicTiles(inputFile);
         } else if (mosaicAdam) {
-            mosaicDefinition.setTileSize(120);
+            mosaicDefinition.setTileSize(MosaicConstants.MODIS_TILE_SIZE/10);
             mosaicTiles = createMosaicTiles(inputFile);
         } else if (mosaicAdamPriors) {
-            mosaicDefinition.setTileSize(120);
+            mosaicDefinition.setTileSize(MosaicConstants.MODIS_TILE_SIZE/10);
             mosaicTiles = createPriorMosaicTiles(inputFile);
         } else if (mosaicNewModisPriors) {
-            mosaicDefinition.setTileSize(1200);
+            mosaicDefinition.setTileSize(MosaicConstants.MODIS_TILE_SIZE);
             mosaicTiles = createPriorMosaicTiles(inputFile);
         } else {
             mosaicTiles = createMosaicTiles(inputFile);
@@ -97,7 +101,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         if (mosaicAdam || mosaicAdamPriors) {
             crsGeoCoding = getMosaicGeocoding(10);
         } else {
-            crsGeoCoding = getMosaicGeocoding(1);
+            crsGeoCoding = getMosaicGeocoding(MosaicConstants.MODIS_TILE_SIZE/tileSize);
         }
         product.setGeoCoding(crsGeoCoding);
 
@@ -242,6 +246,10 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         return priorDirs;
     }
 
+    public void setTileSize(int tileSize) {
+        this.tileSize = tileSize;
+    }
+
     public void setMosaicModisPriors(boolean mosaicModisPriors) {
         this.mosaicModisPriors = mosaicModisPriors;
     }
@@ -300,7 +308,6 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
         }
     }
 
-
     @Override
     protected void readBandRasterDataImpl(int sourceOffsetX, int sourceOffsetY, int sourceWidth, int sourceHeight,
                                           int sourceStepX, int sourceStepY, Band destBand, int destOffsetX,
@@ -336,7 +343,7 @@ public class GlobAlbedoMosaicProductReader extends AbstractProductReader {
                     }
                 } else {
                     System.out.println("WARNING: band '" + destBand.getName() + "' not found in product '" +
-                            mosaicTile.getProduct().getName() + "'.");
+                                               mosaicTile.getProduct().getName() + "'.");
                     double nodataValue = destBand.getNoDataValue();
                     for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
                         for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
