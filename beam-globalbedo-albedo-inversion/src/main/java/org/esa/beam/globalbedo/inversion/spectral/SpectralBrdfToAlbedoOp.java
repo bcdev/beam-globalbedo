@@ -77,16 +77,16 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 
         setupSpectralWaveBandsMap(numSdrBands);
 
-        srcParameters = new int[3*numSdrBands];
+        srcParameters = new int[3 * numSdrBands];
         final int urMatrixOffset = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
         srcUncertainties = new int[urMatrixOffset];
 
-        numAlphaTerms = ((numSdrBands-1) * (numSdrBands-1) - (numSdrBands-1))/2 + (numSdrBands-1);
+        numAlphaTerms = ((numSdrBands - 1) * (numSdrBands - 1) - (numSdrBands - 1)) / 2 + (numSdrBands - 1);
 
         dhrBandNames = new String[numSdrBands];
         bhrBandNames = new String[numSdrBands];
-        dhrAlphaBandNames = new String[numSdrBands-1][numSdrBands-1];
-        bhrAlphaBandNames = new String[numSdrBands-1][numSdrBands-1];
+        dhrAlphaBandNames = new String[numSdrBands - 1][numSdrBands - 1];
+        bhrAlphaBandNames = new String[numSdrBands - 1][numSdrBands - 1];
         dhrSigmaBandNames = new String[numSdrBands];
         bhrSigmaBandNames = new String[numSdrBands];
 
@@ -145,18 +145,20 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
                 -1.377622
         };
         for (int i = 0; i < numSdrBands; i++) {
-            for (int j=0; j<AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                uWsa[i].set(0, 3*i+j, uWsaArray[j]);
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                uWsa[i].set(0, 3 * i + j, uWsaArray[j]);
             }
         }
 
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        double maskRelEntropyDataValue = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_REL_ENTROPY].getDouble();
-        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
-                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
-        if (maskRelEntropy > 0.0) {
+//        double maskRelEntropyDataValue = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_REL_ENTROPY].getDouble();
+//        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
+//                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
+        double maskEntropyDataValue = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_ENTROPY].getDouble();
+//        if (maskRelEntropy > 0.0) {
+        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
@@ -183,8 +185,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 //                }
                 // becomes for spectral approach:
                 for (int i = 0; i < numSdrBands; i++) {
-                    for (int j=0; j<AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                        uBsa[i].set(0, 3*i+j, uBsaArray[j]);
+                    for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                        uBsa[i].set(0, 3 * i + j, uBsaArray[j]);
                     }
                 }
 
@@ -211,8 +213,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
                     AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
                 DHR[i] = fParams[3 * i] +
-                        fParams[1 + 3 * i] * uBsa[i].get(0, 3*i+1) +
-                        fParams[2 + 3 * i] * uBsa[i].get(0, 3*i+2);
+                        fParams[1 + 3 * i] * uBsa[i].get(0, 3 * i + 1) +
+                        fParams[2 + 3 * i] * uBsa[i].get(0, 3 * i + 2);
             } else {
                 DHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
             }
@@ -224,8 +226,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
                     AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
                 BHR[i] = fParams[3 * i] +
-                        fParams[1 + 3 * i] * uWsa[i].get(0, 3*i+1)  +
-                        fParams[2 + 3 * i] * uWsa[i].get(0, 3*i+2);
+                        fParams[1 + 3 * i] * uWsa[i].get(0, 3 * i + 1) +
+                        fParams[2 + 3 * i] * uWsa[i].get(0, 3 * i + 2);
             } else {
                 BHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
             }
@@ -240,9 +242,9 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         double[] alphaDHR = new double[numAlphaTerms];
         double[] alphaBHR = new double[numAlphaTerms];
 
-
         // calculate alpha terms
-        if (AlbedoInversionUtils.isValid(relEntropy)) {
+//        if (AlbedoInversionUtils.isValid(relEntropy)) {
+        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
             alphaDHR = computeSpectralAlphaDHR(SZA, C); // bsa = DHR
             alphaBHR = computeSpectralAlphaBHR(C);      // wsa = BHR
         } else {
@@ -288,8 +290,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         }
 
         dhrAlphaBandNames = SpectralIOUtils.getSpectralAlbedoAlphaBandNames("DHR", numSdrBands, spectralWaveBandsMap);
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 targetProduct.addBand(dhrAlphaBandNames[i][j], ProductData.TYPE_FLOAT32);
             }
         }
@@ -305,8 +307,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         }
 
         bhrAlphaBandNames = SpectralIOUtils.getSpectralAlbedoAlphaBandNames("BHR", numSdrBands, spectralWaveBandsMap);
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 targetProduct.addBand(bhrAlphaBandNames[i][j], ProductData.TYPE_FLOAT32);
             }
         }
@@ -393,8 +395,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             configurator.defineSample(index++, dhrBandNames[i]);
         }
 
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 configurator.defineSample(index++, dhrAlphaBandNames[i][j]);
             }
         }
@@ -403,8 +405,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             configurator.defineSample(index++, bhrBandNames[i]);
         }
 
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 configurator.defineSample(index++, bhrAlphaBandNames[i][j]);
             }
         }
@@ -463,8 +465,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 
         // DHR_ALPHA (black sky albedo)
         int dhrAlphaIndex = 0;
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 targetSamples[index++].set(result.getBsaAlpha()[dhrAlphaIndex++]);
             }
         }
@@ -476,8 +478,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 
         // BHR_ALPHA (white sky albedo)
         int bhrAlphaIndex = 0;
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 targetSamples[index++].set(result.getWsaAlpha()[bhrAlphaIndex++]);
             }
         }
@@ -529,7 +531,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
                 // C matrix affects alpha and sigma terms (not albedos)
                 // see code in Albedo.py and clarify with Gerardo!
 //                final int finalIndex = index1 - n + i;    // original
-                final int finalIndex = (index1 - n)/7 + i;  // keep index reasonably small fort the moment to get code running
+                final int finalIndex = (index1 - n) / 7 + i;  // keep index reasonably small fort the moment to get code running
 //                System.out.println("n,k,i,index1,index2,n-k,n-k+i,finalIndex = " + n + "," + k + "," + i + "," + index1 + "," + index2 + "," +
 //                                           (n-k) + "," + (n-k+i) + "," + finalIndex);
                 C.set(n - k, n - k + i, cTmp[finalIndex]);
