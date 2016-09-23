@@ -255,9 +255,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         }
 
         double[] alphaDHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        ;
         double[] alphaBHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        ;
         if (!computeSeaice) {
             // calculate alpha terms
 //            if (AlbedoInversionUtils.isValid(relEntropy)) {
