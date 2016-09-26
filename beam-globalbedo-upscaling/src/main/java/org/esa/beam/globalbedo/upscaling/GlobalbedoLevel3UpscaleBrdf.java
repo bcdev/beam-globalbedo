@@ -34,12 +34,14 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
 
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 
@@ -77,7 +79,7 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
             description = "Input BRDF type, either Merge, Snow or NoSnow.")
     private String inputType;
 
-    @Parameter(defaultValue = "Inversion",  description = "Name of inversion (BRDF) subdirectory.")
+    @Parameter(defaultValue = "Inversion", description = "Name of inversion (BRDF) subdirectory.")
     private String brdfSubdirName;
 
 
@@ -132,12 +134,18 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         for (Band srcBand : reprojectedProduct.getBands()) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+//            if (srcBand.getName().equals(INV_ENTROPY_BAND_NAME) || srcBand.getName().equals(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME)
+//                    || srcBand.getName().endsWith("_to_the_Closest_Sample")) {
+//                Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
+//                ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+//            }
         }
 
         attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
 
         brdfModelBandNames = IOUtils.getInversionParameterBandNames();
-        matrixNodataValue = upscaledProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
+//        matrixNodataValue = upscaledProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
+        matrixNodataValue = reprojectedProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
         uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
         entropyBand = reprojectedProduct.getBand(INV_ENTROPY_BAND_NAME);
         relEntropyBand = reprojectedProduct.getBand(INV_REL_ENTROPY_BAND_NAME);
@@ -152,32 +160,38 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
     @Override
     public void computeTileStack(Map<Band, Tile> targetBandTiles, Rectangle targetRect, ProgressMonitor pm) throws OperatorException {
         Rectangle srcRect = new Rectangle(targetRect.x * scaling,
-                                          targetRect.y * scaling,
-                                          targetRect.width * scaling,
-                                          targetRect.height * scaling);
+                targetRect.y * scaling,
+                targetRect.width * scaling,
+                targetRect.height * scaling);
 //        System.out.println("calling computeTileStack: targetRect = " + targetRect);
 //        System.out.println("calling computeTileStack: srcRect    = " + srcRect);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
 //        if (hasValidPixel(getSourceTile(entropyBand, srcRect))) {
-        if (getSourceTile(entropyBand, srcRect) != null && hasValidPixel(getSourceTile(entropyBand, srcRect), entropyBand.getNoDataValue())) {
+        final Tile entropyTile = getSourceTile(entropyBand, srcRect);
+        boolean tileValid = hasValidPixel(entropyTile, entropyBand.getNoDataValue());
+        BeamLogManager.getSystemLogger().log(Level.INFO, "targetRect/hasValidPixels: " +
+                targetRect.x + "," + targetRect.y + " // " + tileValid);
+        if (entropyTile != null && tileValid) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
             computeUncertainty(srcTiles, targetTiles, targetRect);
-            computeNearest(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
-            computeNearest(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearestBrdf(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearestBrdf(srcTiles.get(INV_REL_ENTROPY_BAND_NAME), targetTiles.get(INV_REL_ENTROPY_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearestBrdf(srcTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), targetTiles.get(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeNearestBrdf(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             if (inputType.equals("Merge")) {
-                computeNearest(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
+                computeNearestBrdf(srcTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), targetTiles.get(MERGE_PROPORTION_NSAMPLES_BAND_NAME), srcTiles.get(INV_ENTROPY_BAND_NAME));
             }
 
             String closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME;
             if (srcTiles.get(closestSampleBandName) == null || targetTiles.get(closestSampleBandName) == null) {
-                // the originally processed files before 'netcdf polishing' have this band name
+            // the originally processed files before 'netcdf polishing' have this band name
                 closestSampleBandName = ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD;
             }
-            computeMajority(srcTiles.get(closestSampleBandName), targetTiles.get(closestSampleBandName), srcTiles.get(INV_ENTROPY_BAND_NAME));
+            computeMajorityBrdf(srcTiles.get(closestSampleBandName), targetTiles.get(closestSampleBandName), srcTiles.get(INV_ENTROPY_BAND_NAME));
         } else {
+            BeamLogManager.getSystemLogger().log(Level.INFO, "targetRect/hasValidPixels: " +
+                    targetRect.x + "," + targetRect.y + " //  NO VALID PIXELS");
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
 
@@ -233,19 +247,19 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         return null;
     }
 
-    private boolean hasValidPixel(Tile entropy) {
-        double noDataValue = entropyBand.getNoDataValue();
-        Rectangle rect = entropy.getRectangle();
-        for (int y = rect.y; y < rect.y + rect.height; y++) {
-            for (int x = rect.x; x < rect.x + rect.width; x++) {
-                double sample = entropy.getSampleDouble(x, y);
-                if (sample != 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+//    private boolean hasValidPixel(Tile entropy) {
+//        double noDataValue = entropyBand.getNoDataValue();
+//        Rectangle rect = entropy.getRectangle();
+//        for (int y = rect.y; y < rect.y + rect.height; y++) {
+//            for (int x = rect.x; x < rect.x + rect.width; x++) {
+//                double sample = entropy.getSampleDouble(x, y);
+//                if (sample != 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
+//                    return true;
+//                }
+//            }
+//        }
+//        return false;
+//    }
 
     private void computeUncertainty(Map<String, Tile> srcTiles, Map<String, Tile> targetTiles, Rectangle targetRectangle) {
         Tile[] fSrcTiles = getFTiles(srcTiles);
@@ -367,22 +381,24 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         }
     }
 
-    private void computeNearest(Tile src, Tile target, Tile mask) {
+    private void computeNearestBrdf(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                 float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sample == 0.0 || sampleMask == 0.0 || !AlbedoInversionUtils.isValid(sample)) {
-                    sample = AlbedoInversionConstants.NO_DATA_VALUE;
+//                final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
+//                if (sample == 0.0 || sampleMask == 0.0 || !AlbedoInversionUtils.isValid(sample)) {
+                if (AlbedoInversionUtils.isValid(sample)) {
+                    target.setSample(x, y, sample);
+                } else {
+                    target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
                 }
-                target.setSample(x, y, sample);
             }
         }
     }
 
-    private void computeMajority(Tile src, Tile target, Tile mask) {
+    private void computeMajorityBrdf(Tile src, Tile target, Tile mask) {
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
@@ -395,7 +411,8 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                     }
                 }
                 final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                if (sampleMask > 0.0) {
+//                if (sampleMask > 0.0) {
+                if (AlbedoInversionUtils.isValid(sampleMask)) {
                     target.setSample(x, y, max);
                 } else {
                     target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
