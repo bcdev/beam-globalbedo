@@ -275,12 +275,12 @@ public class InversionOpOld extends PixelOperator {
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
-//            final Matrix mAcc = accumulator.getM();
-//            Matrix vAcc = accumulator.getV();
-//            final Matrix eAcc = accumulator.getE();
-            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
-            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
-            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
+            final Matrix mAcc = accumulator.getM();
+            Matrix vAcc = accumulator.getV();
+            final Matrix eAcc = accumulator.getE();
+//            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
+//            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
+//            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
 
             if (usePrior && prior != null) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {

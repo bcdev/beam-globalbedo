@@ -123,9 +123,9 @@ public class InversionOpTest extends TestCase {
         Accumulator accumulator = Accumulator.createForInversion(sumMatrices, 0, 0);
         double maskAcc = accumulator.getMask();
 
-        final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
-        Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
-        final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
+        final Matrix mAcc = accumulator.getM();
+        Matrix vAcc = accumulator.getV();
+        final Matrix eAcc = accumulator.getE();
 
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1, AlbedoInversionConstants.NO_DATA_VALUE);
 

@@ -7,14 +7,17 @@ import org.esa.beam.framework.datamodel.*;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.image.Raster;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.logging.Level;
 
 /**
  * Utility class for Albedo Inversion part
@@ -472,32 +475,6 @@ public class AlbedoInversionUtils {
         return (float) Math.exp(-1.0 * Math.abs(dayDifference) / AlbedoInversionConstants.HALFLIFE);
     }
 
-    public static Matrix getMatrix2DTruncated(Matrix m) {
-        // this is just because we want to have float precision as in standard algo, where we go down to floats
-        // when writing/reading the binary accumulators.
-        final double[][] mArray = m.getArray();
-        for (int i = 0; i < mArray.length; i++) {
-            for (int j = 0; j < mArray[0].length; j++) {
-                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
-                mArray[i][j] = dElem;
-            }
-        }
-        return new Matrix(mArray);
-    }
-
-    public static Matrix getMatrix1DTruncated(Matrix m) {
-        // this is just because we want to have float precision as in standard algo, where we go down to floats
-        // when writing/reading the binary accumulators.
-        final double[][] mArray = m.getArray();
-        for (int i = 0; i < mArray.length; i++) {
-            for (int j = 0; j < mArray[0].length; j++) {
-                final double dElem = Math.round(mArray[i][j] * 1000.) / 1000.;
-                mArray[i][j] = dElem;
-            }
-        }
-        return new Matrix(mArray);
-    }
-
     public static boolean isValidCMatrix(Matrix c) {
         for (int i = 0; i <3; i++) {
             for (int j = 0; j < 3; j++) {
@@ -508,7 +485,6 @@ public class AlbedoInversionUtils {
         }
         return false;
     }
-
 
     public static GeoPos getLatLonFromProduct(Product inputProduct) {
         final Band latBand = inputProduct.getBand(AlbedoInversionConstants.LAT_BAND_NAME);
@@ -559,10 +535,34 @@ public class AlbedoInversionUtils {
         return repro.getTargetProduct();
     }
 
+    public static void printAccumulatorMatrices(Accumulator acc) {
+        // for debug purposes
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing M... ");
+        for (int i = 0; i < acc.getM().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getM().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,M(i,j) = " + i + "," + j + "," + acc.getM().get(i, j));
+            }
+        }
 
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing V... ");
+        for (int i = 0; i < acc.getV().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getV().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,V(i,j) = " + i + "," + j + "," + acc.getV().get(i, j));
+            }
+        }
 
-    public static double truncate(double d) {
-        return Math.round(d * 1000.) / 1000.;
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing E... ");
+        for (int i = 0; i < acc.getE().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getE().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,E(i,j) = " + i + "," + j + "," + acc.getE().get(i, j));
+            }
+        }
+
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing mask... ");
+        BeamLogManager.getSystemLogger().log(Level.INFO, "acc.getMask() = " + acc.getMask());
     }
 
 }
