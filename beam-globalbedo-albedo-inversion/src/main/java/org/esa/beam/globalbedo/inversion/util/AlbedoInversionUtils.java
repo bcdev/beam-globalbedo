@@ -3,21 +3,19 @@ package org.esa.beam.globalbedo.inversion.util;
 import Jama.Matrix;
 import org.apache.commons.math3.linear.Array2DRowRealMatrix;
 import org.apache.commons.math3.linear.RealMatrix;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
-import org.esa.beam.framework.gpf.pointop.SampleConfigurer;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
-import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.gpf.operators.standard.BandMathsOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
-import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.image.Raster;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.logging.Level;
 
 /**
  * Utility class for Albedo Inversion part
@@ -57,97 +55,6 @@ public class AlbedoInversionUtils {
     }
 
     /**
-     * Adds a land mask sample definition to a configurator used in a point operator
-     *
-     * @param configurator  - the configurator
-     * @param index         - the sample index
-     * @param sourceProduct - the source product
-     */
-    public static void setLandMaskSourceSample(SampleConfigurer configurator, int index,
-                                               Product sourceProduct, boolean computeSeaice) {
-        if ((sourceProduct.getProductType().startsWith("MER") ||
-                sourceProduct.getName().startsWith("MER")) || computeSeaice) {
-            BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                    (AlbedoInversionConstants.merisLandMaskExpression, sourceProduct);
-            Product landMaskProduct = landOp.getTargetProduct();
-            configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
-        } else if ((sourceProduct.getProductType().startsWith("VGT") ||
-                sourceProduct.getName().startsWith("VGT"))) {
-            configurator.defineSample(index, AlbedoInversionConstants.BBDR_VGT_SM_NAME, sourceProduct);
-        } else {
-            if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrNadirLandMaskExpression)) {
-                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                        (AlbedoInversionConstants.aatsrNadirLandMaskExpression, sourceProduct);
-                Product landMaskProduct = landOp.getTargetProduct();
-                configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
-            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)) {
-                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                        (AlbedoInversionConstants.aatsrFwardLandMaskExpression, sourceProduct);
-                Product landMaskProduct = landOp.getTargetProduct();
-                configurator.defineSample(index, landMaskProduct.getBandAt(0).getName(), landMaskProduct);
-            }
-        }
-    }
-
-    public static Product computeLandMaskProduct(Product sourceProduct) {
-        Product landMaskProduct = null;
-        if ((sourceProduct.getProductType().startsWith("MER") ||
-                sourceProduct.getName().startsWith("MER"))) {
-            BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                    (AlbedoInversionConstants.merisLandMaskExpression, sourceProduct);
-            landMaskProduct = landOp.getTargetProduct();
-        } else if ((sourceProduct.getProductType().startsWith("VGT") ||
-                sourceProduct.getName().startsWith("VGT"))) {
-        } else {
-            if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrNadirLandMaskExpression)) {
-                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                        (AlbedoInversionConstants.aatsrNadirLandMaskExpression, sourceProduct);
-                landMaskProduct = landOp.getTargetProduct();
-            } else if (sourceProduct.containsBand(AlbedoInversionConstants.aatsrFwardLandMaskExpression)) {
-                BandMathsOp landOp = BandMathsOp.createBooleanExpressionBand
-                        (AlbedoInversionConstants.aatsrFwardLandMaskExpression, sourceProduct);
-                landMaskProduct = landOp.getTargetProduct();
-            }
-        }
-        return landMaskProduct;
-    }
-
-
-    /**
-     * Adds a land mask sample definition to a configurator used in a point operator
-     *
-     * @param configurator  - the configurator
-     * @param index         - the sample index
-     * @param sourceProduct - the source product
-     */
-    public static void setSeaiceMaskSourceSample(SampleConfigurer configurator, int index,
-                                                 Product sourceProduct) {
-        BandMathsOp seaiceOp = BandMathsOp.createBooleanExpressionBand
-                (AlbedoInversionConstants.seaiceMaskExpression, sourceProduct);
-        Product seaiceProduct = seaiceOp.getTargetProduct();
-        configurator.defineSample(index, seaiceProduct.getBandAt(0).getName(), seaiceProduct);
-    }
-
-    /**
-     * Returns a matrix which contains on the diagonal the original elements, and zeros elsewhere
-     * Input must be a nxm matrix with n = m
-     *
-     * @param m - original matrix
-     * @return Matrix - the filtered matrix
-     */
-    public static Matrix getRectangularDiagonalMatrix(Matrix m) {
-        if (m.getRowDimension() != m.getColumnDimension()) {
-            return null;
-        }
-
-        Matrix diag = new Matrix(m.getRowDimension(), m.getRowDimension());
-        for (int i = 0; i < m.getRowDimension(); i++) {
-            diag.set(i, i, m.get(i, i));
-        }
-        return diag;
-    }
-
-    /**
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix
@@ -163,47 +70,6 @@ public class AlbedoInversionUtils {
             diagFlat.set(i, 0, m.get(i, i));
         }
         return diagFlat;
-    }
-
-    /**
-     * Returns a rows x columns matrix with reciprocal elements
-     *
-     * @param m - the input matrix
-     * @return Matrix - the result matrix
-     */
-    public static Matrix getReciprocalMatrix(Matrix m) {
-        final int rows = m.getRowDimension();
-        final int cols = m.getColumnDimension();
-        Matrix resultM = new Matrix(rows, cols);
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                if (m.get(i, j) != 0.0) {
-                    resultM.set(i, j, 1.0 / m.get(i, j));
-                } else {
-                    resultM.set(i, j, 0.0);
-                }
-            }
-        }
-        return resultM;
-    }
-
-    /**
-     * Returns the product of all elements of a matrix
-     * (equivalent to Python's numpy.product(m))
-     *
-     * @param m - the input matrix
-     * @return double - the result
-     */
-    public static double getMatrixAllElementsProduct(Matrix m) {
-        final int rows = m.getRowDimension();
-        final int cols = m.getColumnDimension();
-        double result = 1.0;
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                result *= m.get(i, j);
-            }
-        }
-        return result;
     }
 
     /**
@@ -238,84 +104,6 @@ public class AlbedoInversionUtils {
         }
         return false;
     }
-
-
-    /**
-     * Returns the upper left corner of a MODIS tile (e.g. h18v04) in (x,y)-coordinates of sinusoidal projection used
-     * in the Globalbedo project. These values represent the easting/northing parameters.
-     *
-     * @param modisTile - the MODIS tile name
-     * @return double[] - the upper left corner coordinate
-     * @throws NumberFormatException -
-     */
-    public static double[] getUpperLeftCornerOfModisTiles(String modisTile) throws NumberFormatException {
-        double[] upperLeftPoint = new double[2];
-
-        final int eastingIndex = Integer.parseInt(modisTile.substring(1, 3)) - 18;
-        final int northingIndex = 9 - Integer.parseInt(modisTile.substring(4, 6));
-
-        upperLeftPoint[0] = eastingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
-        upperLeftPoint[1] = northingIndex * AlbedoInversionConstants.modisSinusoidalProjectionTileSizeIncrement;
-
-        return upperLeftPoint;
-    }
-
-    /**
-     * gets the corresponding MODIS tile for a given lat/lon pair
-     *
-     * @param latitude  - the latitude
-     * @param longitude - the longitude
-     * @return String
-     */
-    public static String getModisTileFromLatLon(float latitude, float longitude) {
-        int latTileIndex = (90 - (int) latitude) / 10;   // e.g. latTileIndex = 3 for 55.49N
-        final int yIndexInTile =
-                (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT * (90.0 - latTileIndex * 10.0 - latitude) / 10.0);
-
-        // check tiles on that latitude
-        // e.g. h06v03, h07v03,..., h29v03:
-        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
-        if (longitude >= 0.0) {
-            for (int lonIndex = 18; lonIndex < 36; lonIndex++) {
-                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
-                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
-                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
-                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
-                    // our latitude, and check if our longitude is in between them
-                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
-                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
-                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
-                        return tileToCheck;
-                    }
-                    // we haven't found the tile yet, but are at the off-planet eastern edge now. So this must be the one.
-                    if (!rightGeoPos.isValid()) {
-                        return tileToCheck;
-                    }
-                }
-            }
-        } else {
-            for (int lonIndex = 17; lonIndex >= 0; lonIndex--) {
-                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
-                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
-                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
-                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
-                    // our latitude, and check if our longitude is in between them
-                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
-                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
-                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
-                        return tileToCheck;
-                    }
-                    // we haven't found the tile yet, but are at the off-planet western edge now. So this must be the one.
-                    if (!leftGeoPos.isValid()) {
-                        return tileToCheck;
-                    }
-                }
-            }
-        }
-
-        return null;
-    }
-
 
     /**
      * Computes solar zenith angle at local noon as function of Geoposition and DoY
@@ -431,46 +219,6 @@ public class AlbedoInversionUtils {
         return (srcValue != (double) AlbedoInversionConstants.NO_DATA_VALUE) && !Double.isNaN(srcValue);
     }
 
-    public static int[] getReferenceDate(int year, int day) {
-        int referenceYear = year;
-        int referenceDay = day;
-        if (day < 0) {
-            referenceYear -= 1;
-            referenceDay += 365;
-        } else if (day > 365) {
-            referenceYear += 1;
-            referenceDay -= 365;
-        }
-        return new int[]{referenceYear, referenceDay};
-    }
-
-    public static int[] getReferenceDate(int year, int doy, int dayOffset) {
-        int referenceYear = year;
-        int referenceDoy = doy + dayOffset;
-        if (dayOffset < 0 && Math.abs(dayOffset) > doy) {
-            referenceYear -= 1;
-            referenceDoy += 365;
-        } else if (dayOffset > 0 && dayOffset + doy > 365) {
-            referenceYear += 1;
-            referenceDoy -= 365;
-        }
-
-        return new int[]{referenceYear, referenceDoy};
-    }
-
-    public static int computeDayOffset(int[] referenceDate, int year, int day) {
-        final int referenceYear = referenceDate[0];
-        final int referenceDay = referenceDate[1];
-
-        if (year == referenceYear) {
-            return Math.abs(referenceDay - day);
-        } else if (year > referenceYear) {
-            return (365 - referenceDay) + day;
-        } else {
-            return (365 - day) + referenceDay;
-        }
-    }
-
     public static float getWeight(int dayDifference) {
         return (float) Math.exp(-1.0 * Math.abs(dayDifference) / AlbedoInversionConstants.HALFLIFE);
     }
@@ -535,34 +283,34 @@ public class AlbedoInversionUtils {
         return repro.getTargetProduct();
     }
 
-    public static void printAccumulatorMatrices(Accumulator acc) {
-        // for debug purposes
-        BeamLogManager.getSystemLogger().log(Level.INFO, "printing M... ");
-        for (int i = 0; i < acc.getM().getRowDimension(); i++) {
-            for (int j = 0; j < acc.getM().getColumnDimension(); j++) {
-                BeamLogManager.getSystemLogger().log(Level.INFO,
-                                                     "i,j,M(i,j) = " + i + "," + j + "," + acc.getM().get(i, j));
-            }
-        }
-
-        BeamLogManager.getSystemLogger().log(Level.INFO, "printing V... ");
-        for (int i = 0; i < acc.getV().getRowDimension(); i++) {
-            for (int j = 0; j < acc.getV().getColumnDimension(); j++) {
-                BeamLogManager.getSystemLogger().log(Level.INFO,
-                                                     "i,j,V(i,j) = " + i + "," + j + "," + acc.getV().get(i, j));
-            }
-        }
-
-        BeamLogManager.getSystemLogger().log(Level.INFO, "printing E... ");
-        for (int i = 0; i < acc.getE().getRowDimension(); i++) {
-            for (int j = 0; j < acc.getE().getColumnDimension(); j++) {
-                BeamLogManager.getSystemLogger().log(Level.INFO,
-                                                     "i,j,E(i,j) = " + i + "," + j + "," + acc.getE().get(i, j));
-            }
-        }
-
-        BeamLogManager.getSystemLogger().log(Level.INFO, "printing mask... ");
-        BeamLogManager.getSystemLogger().log(Level.INFO, "acc.getMask() = " + acc.getMask());
-    }
+    // activate for debug purposes
+//    public static void printAccumulatorMatrices(Accumulator acc) {
+//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing M... ");
+//        for (int i = 0; i < acc.getM().getRowDimension(); i++) {
+//            for (int j = 0; j < acc.getM().getColumnDimension(); j++) {
+//                BeamLogManager.getSystemLogger().log(Level.INFO,
+//                                                     "i,j,M(i,j) = " + i + "," + j + "," + acc.getM().get(i, j));
+//            }
+//        }
+//
+//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing V... ");
+//        for (int i = 0; i < acc.getV().getRowDimension(); i++) {
+//            for (int j = 0; j < acc.getV().getColumnDimension(); j++) {
+//                BeamLogManager.getSystemLogger().log(Level.INFO,
+//                                                     "i,j,V(i,j) = " + i + "," + j + "," + acc.getV().get(i, j));
+//            }
+//        }
+//
+//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing E... ");
+//        for (int i = 0; i < acc.getE().getRowDimension(); i++) {
+//            for (int j = 0; j < acc.getE().getColumnDimension(); j++) {
+//                BeamLogManager.getSystemLogger().log(Level.INFO,
+//                                                     "i,j,E(i,j) = " + i + "," + j + "," + acc.getE().get(i, j));
+//            }
+//        }
+//
+//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing mask... ");
+//        BeamLogManager.getSystemLogger().log(Level.INFO, "acc.getMask() = " + acc.getMask());
+//    }
 
 }

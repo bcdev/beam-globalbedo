@@ -9,7 +9,7 @@ import org.esa.beam.framework.gpf.Tile;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
-import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.DailyAccumulationUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -169,18 +169,17 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private Accumulator getMatricesPerBBDRDataset(int x, int y) {
-        if (isSnowFilter(x, y) || isBBDRFilter(x, y) || isSDFilter(x, y)) {
-            // do not consider non-land pixels (BBDR = NaN), non-snowfilter pixels,
-            // pixels with BBDR == 0.0 or -9999.0, SD == 0.0
+
+        // check validity of ALL inputs used:
+        final Matrix bbdr = getBBDR(x, y);
+        final double[] stdev = getSD(x, y);
+        final double[] correlation = getCorrelation(x, y);
+        final Matrix kernels = getKernels(x, y);
+        if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(bbdr, stdev, correlation, kernels)) {
             return getZeroAccumulator();
         }
 
-        // get kernels...
-        Matrix kernels = getKernels(x, y);
-
         // compute C matrix...
-        final double[] correlation = getCorrelation(x, y);
-        final double[] SD = getSD(x, y);
         Matrix C = new Matrix(
                 AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
         Matrix thisC = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
@@ -188,45 +187,35 @@ public class DailyAccumulationOp extends Operator {
 
         int count = 0;
         int cCount = 0;
-        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-            for (int k = j + 1; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
-                if (k == j + 1) {
-                    cCount++;
-                }
-                C.set(cCount, 0, correlation[count] * SD[j] * SD[k]);
-                count++;
-                cCount++;
-            }
-        }
+        DailyAccumulationUtils.setDailyAccCMatrix(stdev, correlation[count], C, count, cCount);
 
         cCount = 0;
         for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-            C.set(cCount, 0, SD[j] * SD[j]);
+            C.set(cCount, 0, stdev[j] * stdev[j]);
             cCount = cCount + AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS - j;
         }
 
         count = 0;
-        for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-            for (int k = j; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
-                thisC.set(j, k, C.get(count, 0));
-                thisC.set(k, j, thisC.get(j, k));
-                count++;
-            }
-        }
+        DailyAccumulationUtils.setDailyAccThisCMatrix(C, thisC, count);
 
         // compute M, V, E matrices...
         if (thisC.lu().isNonsingular()) {
-            final Matrix bbdr = getBBDR(x, y);
             final Matrix inverseC = thisC.inverse();
             final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
-            final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
-            final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
-            final Matrix V = kernelTimesInvCDiag.times(bbdr);
-            final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
+            final Matrix inverseCDiagFlat = DailyAccumulationUtils.getRectangularDiagonalMatrix(inverseC);
+            if (inverseCDiagFlat != null) {
+                final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
+                final Matrix V = kernelTimesInvCDiag.times(bbdr);
+                final Matrix E = (bbdr.transpose().times(inverseC)).times(bbdr);
 
-            // return result
-            return new Accumulator(M, V, E, 1);
+                // return result
+                return new Accumulator(M, V, E, 1);
+            } else {
+                // this should never happen!
+                return getZeroAccumulator();
+            }
         } else {
+            // this might happen!
             return getZeroAccumulator();
         }
     }
@@ -278,7 +267,6 @@ public class DailyAccumulationOp extends Operator {
         resultArray[offset][x][y] = (float) accumulator.getMask();
     }
 
-
     private Matrix getKernels(int x, int y) {
         Matrix kernels = new Matrix(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                                     3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);
@@ -300,24 +288,6 @@ public class DailyAccumulationOp extends Operator {
         return ((computeSnow && !(snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
                 (!computeSnow && (snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
-
-    private boolean isBBDRFilter(int x, int y) {
-        final double bbVis = bbVisTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double bbNir = bbNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double bbSw = bbSwTile[currentSourceProductIndex].getSampleDouble(x, y);
-
-        return (bbVis == 0.0 || !AlbedoInversionUtils.isValid(bbVis) || bbVis == 9999.0 ||
-                bbNir == 0.0 || !AlbedoInversionUtils.isValid(bbNir) || bbNir == 9999.0 ||
-                bbSw == 0.0 || !AlbedoInversionUtils.isValid(bbSw) || bbSw == 9999.0);
-    }
-
-    private boolean isSDFilter(int x, int y) {
-        final double sigBbVisVis = sigBbVisVisTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double sigBbNirNir = sigBbNirNirTile[currentSourceProductIndex].getSampleDouble(x, y);
-        final double sigBbSwSw = sigBbSwSwTile[currentSourceProductIndex].getSampleDouble(x, y);
-        return (sigBbVisVis == 0.0 && sigBbNirNir == 0.0 && sigBbSwSw == 0.0);
-    }
-
 
     public static class Spi extends OperatorSpi {
 

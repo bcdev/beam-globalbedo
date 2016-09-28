@@ -1,5 +1,6 @@
 package org.esa.beam.globalbedo.bbdr;
 
+import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.util.math.MathUtils;
 import org.junit.Test;
 
@@ -50,6 +51,54 @@ public class BbdrUtilsTest {
 
         assertEquals(3.6714, kernels[0], 1.E-4);
         assertTrue(Double.isNaN(kernels[1]));
+    }
+
+    public void testGetModisTileFromLatLon() {
+        // Texas
+        float lat = 34.2f;
+        float lon = -101.71f;
+        assertEquals("h09v05", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // MeckPomm
+        lat = 53.44f;
+        lon = 10.57f;
+        assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Barrow (a left edge tile)
+        lat = 65.0f;
+        lon = -175.0f;
+        assertEquals("h10v02", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // New Zealand (a right edged tile)
+        lat = -39.5f;
+        lon = 176.71f;
+        assertEquals("h31v12", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+
+        // Antarctica
+        lat = -84.2f;
+        lon = 160.71f;
+        assertEquals("h19v17", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Siberia
+        lat = 65.2f;
+        lon = 111.71f;
+        assertEquals("h22v02", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Madagascar
+        lat = -28.0f;
+        lon = 46.1f;
+        assertEquals("h22v11", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Railroad Valley (USA)
+        lat = 38.497f;
+        lon = -115.69f;
+        assertEquals("h08v05", BbdrUtils.getModisTileFromLatLon(lat, lon));
+
+        // Hainich (Germany)
+        lat = 51.0792f;
+        lon = 10.453f;
+        assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
     }
 
 }

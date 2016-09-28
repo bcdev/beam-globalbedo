@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion;
 
 import Jama.Matrix;
-import org.esa.beam.globalbedo.inversion.attic.InversionOpOld;
 
 /**
  * Container object holding the M, V, E estimation matrices and mask value
@@ -25,7 +24,7 @@ public class Accumulator {
 
     /**
      * Returns an accumulator object built from matrix array of a full accumulator product to be used
-     * for inversion in {@link InversionOpOld}}.
+     * for inversion in {@link InversionOp}}.
      *
      * @param sumMatrices - array holding M, V, E, mask
      * @param x - pixel_x

@@ -31,32 +31,6 @@ public class AlbedoInversionUtilsTest extends TestCase {
         assertEquals("2004-12-31", AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy-MM-dd"));
     }
 
-    public void testGetDiagonalMatrix() {
-        Matrix m = new Matrix(3, 3);
-        m.set(0, 0, 2.0);
-        m.set(1, 0, 4.0);
-        m.set(2, 0, 6.0);
-        m.set(0, 1, 8.0);
-        m.set(1, 1, 3.0);
-        m.set(2, 1, 5.0);
-        m.set(0, 2, 7.0);
-        m.set(1, 2, 9.0);
-        m.set(2, 2, 12.0);
-
-        Matrix diag = AlbedoInversionUtils.getRectangularDiagonalMatrix(m);
-        assertNotNull(diag);
-        assertEquals(3, diag.getRowDimension());
-        assertEquals(3, diag.getColumnDimension());
-        assertEquals(2.0, diag.get(0, 0));
-        assertEquals(0.0, diag.get(1, 0));
-        assertEquals(0.0, diag.get(2, 0));
-        assertEquals(0.0, diag.get(0, 1));
-        assertEquals(3.0, diag.get(1, 1));
-        assertEquals(0.0, diag.get(2, 1));
-        assertEquals(0.0, diag.get(0, 2));
-        assertEquals(0.0, diag.get(1, 2));
-        assertEquals(12.0, diag.get(2, 2));
-    }
 
     public void testGetDiagonalFlatMatrix() {
         Matrix m = new Matrix(3, 3);
@@ -78,44 +52,6 @@ public class AlbedoInversionUtilsTest extends TestCase {
         assertEquals(3.0, diagFlat.get(1, 0));
         assertEquals(12.0, diagFlat.get(2, 0));
     }
-
-    public void testGetReciprocalMatrix() {
-        Matrix m = new Matrix(3, 3);
-        m.set(0, 0, 2.0);
-        m.set(1, 0, 4.0);
-        m.set(2, 0, 6.0);
-        m.set(0, 1, 8.0);
-        m.set(1, 1, 3.0);
-        m.set(2, 1, 5.0);
-        m.set(0, 2, 7.0);
-        m.set(1, 2, 9.0);
-        m.set(2, 2, 12.0);
-
-        Matrix recip = AlbedoInversionUtils.getReciprocalMatrix(m);
-        assertNotNull(recip);
-        assertEquals(3, recip.getRowDimension());
-        assertEquals(3, recip.getColumnDimension());
-        assertEquals(0.5, recip.get(0, 0));
-        assertEquals(0.125, recip.get(0, 1));
-        assertEquals(0.11111, recip.get(1, 2), 1.E-4);
-    }
-
-    public void testGetMatrixAllElementsProduct() {
-        Matrix m = new Matrix(3, 3);
-        m.set(0, 0, 2.0);
-        m.set(1, 0, 4.0);
-        m.set(2, 0, 6.0);
-        m.set(0, 1, 8.0);
-        m.set(1, 1, 3.0);
-        m.set(2, 1, 5.0);
-        m.set(0, 2, 7.0);
-        m.set(1, 2, 9.0);
-        m.set(2, 2, 12.0);
-
-        double product = AlbedoInversionUtils.getMatrixAllElementsProduct(m);
-        assertEquals(4354560.0, product);
-    }
-
 
     public void testMatrixHasNaNElements() throws Exception {
         Matrix m = new Matrix(3, 3);
@@ -143,76 +79,6 @@ public class AlbedoInversionUtilsTest extends TestCase {
         assertFalse(AlbedoInversionUtils.matrixHasZerosInDiagonale(m));
         m.set(2, 2, 0.0);
         assertTrue(AlbedoInversionUtils.matrixHasZerosInDiagonale(m));
-    }
-
-    public void testGetUpperLeftCornerOfModisTiles() throws Exception {
-        String tile = "h18v04";
-        assertEquals(0.0, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
-        assertEquals(5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
-
-        tile = "h19v08";
-        assertEquals(1111950.519667000044137, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
-        assertEquals(1111950.519667000044137, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
-
-        tile = "h22v02";
-        assertEquals(4447802.078666999936104, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
-        assertEquals(7783653.637667000293732, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
-
-        tile = "h25v06";
-        assertEquals(7783653.637667000293732, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
-        assertEquals(3335851.558999999891967, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
-
-        tile = "h13v14";
-        assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[0], 1.E-3);
-        assertEquals(-5559752.598333000205457, AlbedoInversionUtils.getUpperLeftCornerOfModisTiles(tile)[1], 1.E-3);
-    }
-
-    public void testGetModisTileFromLatLon() {
-        // Texas
-        float lat = 34.2f;
-        float lon = -101.71f;
-        assertEquals("h09v05", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // MeckPomm
-        lat = 53.44f;
-        lon = 10.57f;
-        assertEquals("h18v03", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // Barrow (a left edge tile)
-        lat = 65.0f;
-        lon = -175.0f;
-        assertEquals("h10v02", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // New Zealand (a right edged tile)
-        lat = -39.5f;
-        lon = 176.71f;
-        assertEquals("h31v12", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-
-        // Antarctica
-        lat = -84.2f;
-        lon = 160.71f;
-        assertEquals("h19v17", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // Siberia
-        lat = 65.2f;
-        lon = 111.71f;
-        assertEquals("h22v02", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // Madagascar
-        lat = -28.0f;
-        lon = 46.1f;
-        assertEquals("h22v11", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // Railroad Valley (USA)
-        lat = 38.497f;
-        lon = -115.69f;
-        assertEquals("h08v05", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
-
-        // Hainich (Germany)
-        lat = 51.0792f;
-        lon = 10.453f;
-        assertEquals("h18v03", AlbedoInversionUtils.getModisTileFromLatLon(lat, lon));
     }
 
     public void testGetSunZenith() {
@@ -253,75 +119,6 @@ public class AlbedoInversionUtilsTest extends TestCase {
         assertFalse(AlbedoInversionUtils.isValid(b));
         b = 123.4f;
         assertTrue(AlbedoInversionUtils.isValid(b));
-    }
-
-    public void testComputeDayOffset() {
-        int year = 2005;
-        int doy = 13;
-        int referenceYear = 2005;
-        int referenceDoy = 121;
-        int[] referenceDate = new int[]{referenceYear, referenceDoy};
-        int doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
-        assertEquals(108, doyOffset);
-
-        year = 2006;
-        doy = 27;
-        doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
-        assertEquals(271, doyOffset);
-
-        year = 2004;
-        doy = 279;
-        doyOffset = AlbedoInversionUtils.computeDayOffset(referenceDate, year, doy);
-        assertEquals(207, doyOffset);
-    }
-
-    public void testGetReferenceDate() throws Exception {
-        int doy = 123;
-        int year = 2005;
-        int[] referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
-        assertEquals(2005, referenceDate[0]);
-        assertEquals(123, referenceDate[1]);
-
-        doy = -73;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
-        assertEquals(2004, referenceDate[0]);
-        assertEquals(292, referenceDate[1]);
-
-        doy = 403;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy);
-        assertEquals(2006, referenceDate[0]);
-        assertEquals(38, referenceDate[1]);
-    }
-
-    public void testGetReferenceDate2() throws Exception {
-        int doy = 123;
-        int year = 2005;
-        int dayOffset = 3;
-        int[] referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
-        assertEquals(2005, referenceDate[0]);
-        assertEquals(126, referenceDate[1]);
-
-        dayOffset = -240;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
-        assertEquals(2004, referenceDate[0]);
-        assertEquals(248, referenceDate[1]);
-
-        dayOffset = 240;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
-        assertEquals(2005, referenceDate[0]);
-        assertEquals(363, referenceDate[1]);
-
-        doy = 1;
-        dayOffset = -240;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
-        assertEquals(2004, referenceDate[0]);
-        assertEquals(126, referenceDate[1]);
-
-        doy = 361;
-        dayOffset = 240;
-        referenceDate = AlbedoInversionUtils.getReferenceDate(year, doy, dayOffset);
-        assertEquals(2006, referenceDate[0]);
-        assertEquals(236, referenceDate[1]);
     }
 
 }

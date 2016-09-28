@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.pointop.WritableSample;
 import org.esa.beam.globalbedo.auxdata.Luts;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.math.LookupTable;
@@ -402,6 +403,62 @@ public class BbdrUtils {
         final double kgeo = 0.5 * (1. + muPhiAng) * secSza * secVza + ocap - secVza - secSza;
 
         return new double[]{kvol, kgeo};
+    }
+
+    /**
+     * gets the corresponding MODIS tile for a given lat/lon pair
+     *
+     * @param latitude  - the latitude
+     * @param longitude - the longitude
+     * @return String
+     */
+    public static String getModisTileFromLatLon(float latitude, float longitude) {
+        int latTileIndex = (90 - (int) latitude) / 10;   // e.g. latTileIndex = 3 for 55.49N
+        final int yIndexInTile =
+                (int) (AlbedoInversionConstants.MODIS_TILE_HEIGHT * (90.0 - latTileIndex * 10.0 - latitude) / 10.0);
+
+        // check tiles on that latitude
+        // e.g. h06v03, h07v03,..., h29v03:
+        ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
+        if (longitude >= 0.0) {
+            for (int lonIndex = 18; lonIndex < 36; lonIndex++) {
+                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
+                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
+                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
+                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
+                    // our latitude, and check if our longitude is in between them
+                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
+                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
+                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
+                        return tileToCheck;
+                    }
+                    // we haven't found the tile yet, but are at the off-planet eastern edge now. So this must be the one.
+                    if (!rightGeoPos.isValid()) {
+                        return tileToCheck;
+                    }
+                }
+            }
+        } else {
+            for (int lonIndex = 17; lonIndex >= 0; lonIndex--) {
+                final String tileToCheck = "h" + String.format("%02d", lonIndex) + "v" + String.format("%02d", latTileIndex);
+                if (modisTileCoordinates.findTileIndex(tileToCheck) != -1) {
+                    final ModisTileGeoCoding tileToCheckGeocoding = IOUtils.getSinusoidalTileGeocoding(tileToCheck);
+                    // on the tile being checked, compute geopositions (i.e. longitude) on left and right edge for
+                    // our latitude, and check if our longitude is in between them
+                    GeoPos leftGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(0, yIndexInTile), null);
+                    GeoPos rightGeoPos = tileToCheckGeocoding.getGeoPos(new PixelPos(AlbedoInversionConstants.MODIS_TILE_WIDTH - 1, yIndexInTile), null);
+                    if (longitude > leftGeoPos.lon && longitude < rightGeoPos.lon) {
+                        return tileToCheck;
+                    }
+                    // we haven't found the tile yet, but are at the off-planet western edge now. So this must be the one.
+                    if (!leftGeoPos.isValid()) {
+                        return tileToCheck;
+                    }
+                }
+            }
+        }
+
+        return null;
     }
 
 }
