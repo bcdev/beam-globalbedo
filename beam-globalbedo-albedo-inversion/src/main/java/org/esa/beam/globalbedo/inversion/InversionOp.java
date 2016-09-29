@@ -304,14 +304,8 @@ public class InversionOp extends PixelOperator {
             final Matrix mAcc = accumulator.getM();
             Matrix vAcc = accumulator.getV();
             final Matrix eAcc = accumulator.getE();
-//            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
-//            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
-//            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
 
             if (usePrior && prior != null) {
-                if (x == 199 && y == 150) {
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "using PRIORS!!" );
-                }
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     double m_ii_accum = mAcc.get(i, i);
                     if (prior.getM() != null) {
@@ -323,9 +317,6 @@ public class InversionOp extends PixelOperator {
             }
 
             final LUDecomposition lud = new LUDecomposition(mAcc);
-            if (x == 199 && y == 150) {
-                BeamLogManager.getSystemLogger().log(Level.INFO, "lud.isNonsingular() = " + lud.isNonsingular());
-            }
             if (lud.isNonsingular()) {
                 Matrix tmpM = mAcc.inverse();
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) ||
@@ -346,20 +337,13 @@ public class InversionOp extends PixelOperator {
                 maskAcc = 0.0;
             }
 
-            if (x == 199 && y == 150) {
-                BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
-            }
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
                 entropy = getEntropy(mAcc);
-                if (x == 199 && y == 150) {
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "entropy = " + entropy);
-                }
+                relEntropy = entropy;
                 if (usePrior && prior != null && prior.getM() != null) {
                     final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
-                } else {
-                    relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
             }
             // 'Goodness of Fit'...
