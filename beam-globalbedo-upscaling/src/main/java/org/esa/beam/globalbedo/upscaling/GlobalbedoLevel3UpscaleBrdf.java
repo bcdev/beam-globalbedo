@@ -204,11 +204,6 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                     }
                 }
             }
-//            if (srcBand.getName().equals(INV_REL_ENTROPY_BAND_NAME) ||
-//                    srcBand.getName().equals(MERGE_PROPORTION_NSAMPLES_BAND_NAME) ||
-//                    srcBand.getName().equals(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME)) {
-//                addBand = false;
-//            }
         }
         if (addBand) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
@@ -259,20 +254,6 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         }
         return null;
     }
-
-//    private boolean hasValidPixel(Tile entropy) {
-//        double noDataValue = entropyBand.getNoDataValue();
-//        Rectangle rect = entropy.getRectangle();
-//        for (int y = rect.y; y < rect.y + rect.height; y++) {
-//            for (int x = rect.x; x < rect.x + rect.width; x++) {
-//                double sample = entropy.getSampleDouble(x, y);
-//                if (sample != 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
-//                    return true;
-//                }
-//            }
-//        }
-//        return false;
-//    }
 
     private void computeUncertainty(Map<String, Tile> srcTiles, Map<String, Tile> targetTiles, Rectangle targetRectangle) {
         Tile[] fSrcTiles = getFTiles(srcTiles);
