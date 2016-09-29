@@ -262,7 +262,7 @@ public class GlobalbedoLevel2SinglePixel extends Operator {
     }
 
     private void setBbdrFilename(Product bbdrProduct) {
-        final String modisTile = AlbedoInversionUtils.getModisTileFromLatLon(latitude, longitude);
+        final String modisTile = BbdrUtils.getModisTileFromLatLon(latitude, longitude);
         final ModisTileGeoCoding sinusoidalTileGeocoding = IOUtils.getSinusoidalTileGeocoding(modisTile);
         bbdrProduct.setGeoCoding(sinusoidalTileGeocoding);
         PixelPos pixelPos = sinusoidalTileGeocoding.getPixelPos(new GeoPos(latitude, longitude), null);

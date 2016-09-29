@@ -6,6 +6,7 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.DailyAccumulationUtils;
 
 import java.awt.image.Raster;
 
@@ -132,7 +133,7 @@ public class DailyAccumulationSinglePixel {
         // compute M, V, E matrices...
         final Matrix inverseC = thisC.inverse();
         final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
-        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
+        final Matrix inverseCDiagFlat = DailyAccumulationUtils.getRectangularDiagonalMatrix(inverseC);
         final Matrix kernelTimesInvCDiag;
         if (inverseCDiagFlat != null) {
             kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);

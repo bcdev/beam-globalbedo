@@ -137,9 +137,12 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         // # Calculate uncertainties...
         // Breadboard uses relative entropy as maskRelEntropy here
         // but write entropy as Mask in output product!! see BB, GetInversion
-        double maskRelEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        maskRelEntropy = Math.exp(maskRelEntropy / 9.0);
-        if (maskRelEntropy > 0.0) {
+        //        double maskRelEntropyDataValue = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_REL_ENTROPY].getDouble();
+//        double maskRelEntropy = AlbedoInversionUtils.isValid(maskRelEntropyDataValue) ?
+//                Math.exp(maskRelEntropyDataValue / 9.0) : 0.0;
+        double maskEntropyDataValue = sourceSamples[SRC_PARAMETERS.length + SRC_PARAMETERS.length + SRC_ENTROPY].getDouble();
+//        if (maskRelEntropy > 0.0) {
+        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
@@ -207,8 +210,21 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
                 (fParams[1 + 3 * 2] * uWsaSw.get(0, 1 + 3 * 2)) +
                 (fParams[2 + 3 * 2] * uWsaSw.get(0, 2 + 3 * 2));
 
-        double[] alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR;
-        double[] alphaBHR = computeAlphaBHR(C);      // wsa = BHR;
+        // calculate alpha terms
+//        double[] alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR;
+//        double[] alphaBHR = computeAlphaBHR(C);      // wsa = BHR;
+        double[] alphaDHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+        double[] alphaBHR = new double[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+//            if (AlbedoInversionUtils.isValid(relEntropy)) {
+        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
+            alphaDHR = computeAlphaDHR(SZA, C); // bsa = DHR
+            alphaBHR = computeAlphaBHR(C);      // wsa = BHR
+        } else {
+            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+                alphaDHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+                alphaBHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+            }
+        }
 
         // # Cap uncertainties and calculate sqrt
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {

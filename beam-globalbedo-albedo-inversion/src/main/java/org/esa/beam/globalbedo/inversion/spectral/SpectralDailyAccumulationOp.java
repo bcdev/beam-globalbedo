@@ -12,6 +12,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.DailyAccumulationUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -153,22 +154,18 @@ public class SpectralDailyAccumulationOp extends Operator {
     }
 
     private Accumulator getMatricesPerSDRDataset(int x, int y) {
-        if (isSnowFilter(x, y) || isSDRFilter(x, y) || isSDFilter(x, y)) {
-            // do not consider non-land pixels (SDR = NaN), non-snowfilter pixels,
-            // pixels with SDR == 0.0 or -9999.0, SD == 0.0
+        // check validity of ALL inputs used:
+        final Matrix sdr = getSDR(x, y);
+        final double[] stdev = getSD(x, y);
+        final double[] correlation = getCorrelation(x, y);
+        final Matrix kernels = getKernels(x, y);
+        if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(sdr, stdev, correlation, kernels)) {
             return getZeroAccumulator();
         }
 
-        // get kernels...
-        Matrix kernels = getKernels(x, y);
-
         // compute C matrix...
-        final double[] correlation = getCorrelation(x, y);
-        final double[] SD = getSD(x, y);
-        Matrix C = new Matrix(
-                numSdrBands * numSdrBands, 1);
-        Matrix thisC = new Matrix(numSdrBands,
-                                  numSdrBands);
+        Matrix C = new Matrix(numSdrBands * numSdrBands, 1);
+        Matrix thisC = new Matrix(numSdrBands, numSdrBands);
 
         int count = 0;
         int cCount = 0;
@@ -177,7 +174,7 @@ public class SpectralDailyAccumulationOp extends Operator {
                 if (k == j + 1) {
                     cCount++;
                 }
-                C.set(cCount, 0, correlation[count] * SD[j] * SD[k]);
+                C.set(cCount, 0, correlation[count] * stdev[j] * stdev[k]);
                 count++;
                 cCount++;
             }
@@ -185,7 +182,7 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         cCount = 0;
         for (int j = 0; j < numSdrBands; j++) {
-            C.set(cCount, 0, SD[j] * SD[j]);
+            C.set(cCount, 0, stdev[j] * stdev[j]);
             cCount = cCount + numSdrBands - j;
         }
 
@@ -199,16 +196,19 @@ public class SpectralDailyAccumulationOp extends Operator {
         }
 
         // compute M, V, E matrices...
-        final Matrix sdr = getSDR(x, y);
-        final Matrix inverseC = thisC.inverse();
-        final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
-        final Matrix inverseCDiagFlat = AlbedoInversionUtils.getRectangularDiagonalMatrix(inverseC);
-        final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
-        final Matrix V = kernelTimesInvCDiag.times(sdr);
-        final Matrix E = (sdr.transpose().times(inverseC)).times(sdr);
+        if (thisC.lu().isNonsingular()) {
+            final Matrix inverseC = thisC.inverse();
+            final Matrix M = (kernels.transpose().times(inverseC)).times(kernels);
+            final Matrix inverseCDiagFlat = DailyAccumulationUtils.getRectangularDiagonalMatrix(inverseC);
+            final Matrix kernelTimesInvCDiag = kernels.transpose().times(inverseCDiagFlat);
+            final Matrix V = kernelTimesInvCDiag.times(sdr);
+            final Matrix E = (sdr.transpose().times(inverseC)).times(sdr);
 
-        // return result
-        return new Accumulator(M, V, E, 1);
+            // return result
+            return new Accumulator(M, V, E, 1);
+        } else {
+            return getZeroAccumulator();
+        }
     }
 
     private Accumulator getZeroAccumulator() {

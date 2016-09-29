@@ -3,8 +3,6 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
-import org.apache.commons.math3.linear.RealMatrix;
-import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -15,6 +13,9 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.logging.BeamLogManager;
+
+import java.util.logging.Level;
 
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
@@ -147,7 +148,7 @@ public class InversionOp extends PixelOperator {
             // add bands only for UR triangular matrix
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
                 boolean addBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW") &&
-                !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
+                        !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
                 if (addBand) {
                     Band b = productConfigurer.addBand(UNCERTAINTY_BAND_NAMES[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
                     if (computeSeaice) {
@@ -162,9 +163,6 @@ public class InversionOp extends PixelOperator {
         Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-//        Band bInvGoodnessFitTerm1 = productConfigurer.addBand("GoF_TERM_1", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-//        Band bInvGoodnessFitTerm2 = productConfigurer.addBand("GoF_TERM_2", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-//        Band bInvGoodnessFitTerm3 = productConfigurer.addBand("GoF_TERM_3", ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
@@ -253,7 +251,7 @@ public class InversionOp extends PixelOperator {
         index = 0;
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * NUM_ALBEDO_PARAMETERS; j++) {
-                boolean addedBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW")  &&
+                boolean addedBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW") &&
                         !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
                 if (addedBand) {
                     configurator.defineSample(NUM_TRG_PARAMETERS + index, UNCERTAINTY_BAND_NAMES[i][j]);
@@ -268,20 +266,12 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
-//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_1, "GoF_TERM_1");
-//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_2, "GoF_TERM_2");
-//        configurator.defineSample(offset + TRG_GOODNESS_OF_FIT_TERM_3, "GoF_TERM_3");
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1, AlbedoInversionConstants.NO_DATA_VALUE);
-//        Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
-
-        if (x == 50 && y == 50) {
-            System.out.println("x = " + x);
-        }
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
@@ -300,16 +290,20 @@ public class InversionOp extends PixelOperator {
             maskPrior = prior.getMask();
         }
 
+//        if (x == 199 && y == 150) {
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
+//            if (accumulator != null) {
+//                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
+//            }
+//        }
+
         double goodnessOfFit = 0.0;
         double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
         float daysToTheClosestSample = 0.0f;
         if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
-//            final Matrix mAcc = accumulator.getM();
-//            Matrix vAcc = accumulator.getV();
-//            final Matrix eAcc = accumulator.getE();
-            final Matrix mAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getM());
-            Matrix vAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getV());
-            final Matrix eAcc = AlbedoInversionUtils.getMatrix2DTruncated(accumulator.getE());
+            final Matrix mAcc = accumulator.getM();
+            Matrix vAcc = accumulator.getV();
+            final Matrix eAcc = accumulator.getE();
 
             if (usePrior && prior != null) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
@@ -346,15 +340,17 @@ public class InversionOp extends PixelOperator {
             if (maskAcc != 0.0) {
                 parameters = mAcc.solve(vAcc);
                 entropy = getEntropy(mAcc);
+                relEntropy = entropy;
                 if (usePrior && prior != null && prior.getM() != null) {
                     final double entropyPrior = getEntropy(prior.getM());
                     relEntropy = entropyPrior - entropy;
-                } else {
-                    relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
                 }
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
+            if (x == 199 && y == 150) {
+                BeamLogManager.getSystemLogger().log(Level.INFO, "goodnessOfFit = " + goodnessOfFit);
+            }
             goodnessOfFitTerms = getGoodnessOfFitTerms(mAcc, vAcc, eAcc, parameters, maskAcc);
 
             // finally we need the 'Days to the closest sample'...
@@ -421,7 +417,7 @@ public class InversionOp extends PixelOperator {
 //
 //            return GoodnessOfFit
 
-    private double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
+    static double getGoodnessOfFit(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
         Matrix goodnessOfFitMatrix = new Matrix(1, 1, 0.0);
         if (maskAcc > 0) {
             final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
@@ -434,7 +430,7 @@ public class InversionOp extends PixelOperator {
         return goodnessOfFitMatrix.get(0, 0);
     }
 
-    private double[] getGoodnessOfFitTerms(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
+    static double[] getGoodnessOfFitTerms(Matrix mAcc, Matrix vAcc, Matrix eAcc, Matrix fPars, double maskAcc) {
         if (maskAcc > 0) {
             final Matrix gofTerm1 = fPars.transpose().times(mAcc).times(fPars);
             final Matrix gofTerm2 = fPars.transpose().times(vAcc);
@@ -461,8 +457,6 @@ public class InversionOp extends PixelOperator {
             for (int j = 0; j < NUM_BBDR_WAVE_BANDS; j++) {
                 boolean addedBand = !writeSwOnly || (writeSwOnly && PARAMETER_BAND_NAMES[bandIndex].contains("SW"));
                 if (addedBand) {
-//                    targetSamples[index].set(parameters.get(index, 0));
-//                    System.out.println("i, j, index, bandIndex = " + i + "," + j + "," + index + "," + bandIndex);
                     targetSamples[index].set(parameters.get(bandIndex, 0));
                     index++;
                 }
@@ -473,10 +467,9 @@ public class InversionOp extends PixelOperator {
         index = 0;
         for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = i; j < 3 * NUM_BBDR_WAVE_BANDS; j++) {
-                boolean addBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW")  &&
+                boolean addBand = !writeSwOnly || (writeSwOnly && UNCERTAINTY_BAND_NAMES[i][j].contains("SW") &&
                         !UNCERTAINTY_BAND_NAMES[i][j].contains("VIS") && !UNCERTAINTY_BAND_NAMES[i][j].contains("NIR"));
                 if (addBand) {
-//                    targetSamples[index].set(uncertainties.get(i, j));
                     targetSamples[NUM_TRG_PARAMETERS + index].set(uncertainties.get(i, j));
                     index++;
                 }
@@ -489,26 +482,15 @@ public class InversionOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_1].set(goodnessOfFitTerms[0]);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_2].set(goodnessOfFitTerms[1]);
-//        targetSamples[offset + TRG_GOODNESS_OF_FIT_TERM_3].set(goodnessOfFitTerms[2]);
-
     }
 
-    private double getEntropy(Matrix m) {
-        // final SingularValueDecomposition svdM = m.svd();     // this sometimes gets stuck at CEMS!!
-        //  --> single value decomposition from apache.commons.math3 seems to do better
-        final RealMatrix rm = AlbedoInversionUtils.getRealMatrixFromJamaMatrix(m);
-        final SingularValueDecomposition svdM = new SingularValueDecomposition(rm);
-        final double[] svdMSingularValues = svdM.getSingularValues();
-        // see python BB equivalent at http://nullege.com/codes/search/numpy.prod
-        double productSvdMSRecip = 1.0;
-        for (double svdMSingularValue : svdMSingularValues) {
-            if (svdMSingularValue != 0.0) {
-                productSvdMSRecip *= (1.0 / svdMSingularValue);
-            }
-        }
-        return 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
+    static double getEntropy(Matrix m) {
+        // A bit unclear. The ATBD just calls the matrix determinant the 'entropy'. The breadboard uses a
+        // SingularValue decomposition. Why?
+
+        final int mDim = m.getRowDimension(); // we know we have a symmetric matrix here
+        final double offset = mDim * sqrt(log(2.0 * PI * E));
+        return 0.5 * log(m.det()) + offset;   // ATBD v4.12 p.272
     }
 
     public static class Spi extends OperatorSpi {

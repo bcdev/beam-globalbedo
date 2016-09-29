@@ -191,7 +191,8 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         for (int y = rect.y; y < rect.y + rect.height; y++) {
             for (int x = rect.x; x < rect.x + rect.width; x++) {
                 double sample = dataMask.getSampleDouble(x, y);
-                if (sample > 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
+//                if (sample > 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
+                if (sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
                     return true;
                 }
             }
