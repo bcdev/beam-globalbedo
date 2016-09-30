@@ -4,6 +4,7 @@ import org.esa.beam.dataio.netcdf.AbstractNetCdfWriterPlugIn;
 import org.esa.beam.dataio.netcdf.ProfileWriteContext;
 import org.esa.beam.dataio.netcdf.metadata.ProfileInitPartWriter;
 import org.esa.beam.dataio.netcdf.metadata.ProfilePartWriter;
+import org.esa.beam.dataio.netcdf.metadata.profiles.cf.CfGeocodingPart;
 import org.esa.beam.dataio.netcdf.nc.NFileWriteable;
 import org.esa.beam.dataio.netcdf.nc.NVariable;
 import org.esa.beam.dataio.netcdf.nc.NWritableFactory;
@@ -48,7 +49,8 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfilePartWriter createGeoCodingPartWriter() {
-        return new AlbedoInversionGeocodingPart();
+        //        return new AlbedoInversionGeocodingPart();
+        return new CfGeocodingPart();
     }
 
     @Override

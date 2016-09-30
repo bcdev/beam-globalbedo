@@ -1,6 +1,9 @@
 package org.esa.beam.globalbedo.upscaling;
 
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.GeoPos;
+import org.esa.beam.framework.datamodel.PixelPos;
+import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.Tile;
@@ -56,9 +59,9 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     @Parameter(defaultValue = "true", description = "If True product will be reprojected")
     boolean reprojectToPlateCarre;
 
-//    @Parameter(interval = "[0,17]", defaultValue = "0",
-//            description = "SIN tile latitude (v) index")
-//    int tileLatIndex;
+
+    public static final String BRDF_ALBEDO_PRODUCT_LAT_NAME = "lat";  // lat name in BRDF of Albedo tile nc files
+    public static final String BRDF_ALBEDO_PRODUCT_LON_NAME = "lon";  // lon name in BRDF of Albedo tile nc files
 
     Product reprojectedProduct;
     Product upscaledProduct;
@@ -169,9 +172,27 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         }
     }
 
+    protected void computeLatLon(Tile latTile, Tile lonTile, Tile target) {
+        // computes a simple lat/lon grid in given tile
+        Rectangle targetRectangle = target.getRectangle();
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                float lon = -180.0f + 360.0f*(x+0.5f)/upscaledProduct.getSceneRasterWidth();
+                float lat = 90.0f - 180.0f*(y+0.5f)/upscaledProduct.getSceneRasterHeight();
+                latTile.setSample(x, y, lat);
+                lonTile.setSample(x, y, lon);
+            }
+        }
+    }
+
+    protected boolean isLatLonBand(String bandName) {
+        return bandName.equals(BRDF_ALBEDO_PRODUCT_LAT_NAME) || bandName.equals(BRDF_ALBEDO_PRODUCT_LON_NAME);
+    }
+
     protected Map<String, Tile> getSourceTiles(Rectangle srcRect) {
         Band[] srcBands = reprojectedProduct.getBands();
-        Map<String, Tile> srcTiles = new HashMap<String, Tile>(srcBands.length);
+        Map<String, Tile> srcTiles = new HashMap<>(srcBands.length);
         for (Band band : srcBands) {
             srcTiles.put(band.getName(), getSourceTile(band, srcRect));
         }
@@ -179,7 +200,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     }
 
     protected Map<String, Tile> getTargetTiles(Map<Band, Tile> targetBandTiles) {
-        Map<String, Tile> targetTiles = new HashMap<String, Tile>();
+        Map<String, Tile> targetTiles = new HashMap<>();
         for (Map.Entry<Band, Tile> entry : targetBandTiles.entrySet()) {
             targetTiles.put(entry.getKey().getName(), entry.getValue());
         }
@@ -191,7 +212,6 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         for (int y = rect.y; y < rect.y + rect.height; y++) {
             for (int x = rect.x; x < rect.x + rect.width; x++) {
                 double sample = dataMask.getSampleDouble(x, y);
-//                if (sample > 0.0 && sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
                 if (sample != noDataValue && AlbedoInversionUtils.isValid(sample)) {
                     return true;
                 }

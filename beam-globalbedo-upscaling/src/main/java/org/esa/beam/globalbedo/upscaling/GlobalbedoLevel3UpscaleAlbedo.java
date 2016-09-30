@@ -89,8 +89,8 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
     private String[] dhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] bhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
-    private Band relEntropyBand;
     private Band dataMaskBand;
+    private Band szaBand;
 
     @Override
     public void initialize() throws OperatorException {
@@ -129,18 +129,14 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
         final int tileHeight = inputProductTileSize / scaling / 2;
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
-//        for (Band srcBand : reprojectedProduct.getBands()) {
-//            Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
-//            ProductUtils.copyRasterDataNodeProperties(srcBand, band);
-//        }
         for (Band srcBand : reprojectedProduct.getBands()) {
             addTargetBand(srcBand);
         }
 
         attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
 
-        relEntropyBand = reprojectedProduct.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME);
         dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
+        szaBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
 
         targetProduct = upscaledProduct;
     }
@@ -152,6 +148,18 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
                                           targetRect.width * scaling,
                                           targetRect.height * scaling);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
+
+        final Tile latTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME);
+        final Tile lonTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME);
+        if (reprojectToPlateCarre && latTile != null && lonTile != null) {
+            computeLatLon(latTile, lonTile, latTile);
+        }
+
+        final Tile szaSrcTile = getSourceTile(szaBand, srcRect);
+        computeNearestAlbedo(szaSrcTile,
+                             targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
+                             getSourceTile(dataMaskBand, srcRect));
+
 //        if (hasValidPixel(getSourceTile(relEntropyBand, srcRect), relEntropyBand.getNoDataValue())) {
         // todo: check why we ever switched to relEntropy as data mask?!
         if (hasValidPixel(getSourceTile(dataMaskBand, srcRect), dataMaskBand.getNoDataValue())) {
@@ -205,16 +213,24 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            if (!reprojectToPlateCarre && latTile != null && lonTile != null) {
+                computeNearestAlbedo(srcTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME), latTile,
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+                computeNearestAlbedo(srcTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME), lonTile,
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            }
         } else {
             for (Map.Entry<String, Tile> tileEntry : targetTiles.entrySet()) {
                 checkForCancellation();
 
                 Tile targetTile = tileEntry.getValue();
                 String bandName = tileEntry.getKey();
-                double noDataValue = getTargetProduct().getBand(bandName).getNoDataValue();
-                for (int y = targetRect.y; y < targetRect.y + targetRect.height; y++) {
-                    for (int x = targetRect.x; x < targetRect.x + targetRect.width; x++) {
-                        targetTile.setSample(x, y, noDataValue);
+                if (!isLatLonBand(bandName) &&!bandName.equals(AlbedoInversionConstants.ALB_SZA_BAND_NAME)) {
+                    double noDataValue = getTargetProduct().getBand(bandName).getNoDataValue();
+                    for (int y = targetRect.y; y < targetRect.y + targetRect.height; y++) {
+                        for (int x = targetRect.x; x < targetRect.x + targetRect.width; x++) {
+                            targetTile.setSample(x, y, noDataValue);
+                        }
                     }
                 }
             }

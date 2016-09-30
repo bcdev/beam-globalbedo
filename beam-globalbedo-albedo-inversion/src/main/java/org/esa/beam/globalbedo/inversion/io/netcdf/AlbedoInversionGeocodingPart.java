@@ -19,6 +19,7 @@ import java.util.logging.Level;
 
 /**
  * Geocoding part to allow specific GA/QA4ECV modifications in netcdf attributes
+ * CURRENTLY NOT USED
  *
  * @author olafd
  */
@@ -30,7 +31,6 @@ public class AlbedoInversionGeocodingPart extends CfGeocodingPart {
 
     @Override
     public void preEncode(ProfileWriteContext ctx, Product p) throws IOException {
-        super.preEncode(ctx, p);
         final GeoCoding geoCoding = p.getGeoCoding();
         if (geoCoding instanceof TiePointGeoCoding) {
             final TiePointGeoCoding tpGC = (TiePointGeoCoding) geoCoding;
