@@ -207,15 +207,20 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
         boolean addBand = true;
         if (reducedOutput) {
             // to save resources, do not write uncertainties, relEntropy, proportionNSamples, daysToClosestSample
-            for (String[] brdfUncertaintyBandName : brdfUncertaintyBandNames) {
+            for (int i = 0; i < brdfUncertaintyBandNames.length; i++) {
                 for (int j = 0; j < brdfUncertaintyBandNames[0].length; j++) {
-                    if (srcBand.getName().equals(brdfUncertaintyBandName[j])) {
+                    if (srcBand.getName().equals(brdfUncertaintyBandNames[i][j])) {
                         addBand = false;
                         break;
                     }
                 }
             }
         }
+
+        if (addBand && !inputType.equals("Merge")) {
+            addBand = !srcBand.getName().equals(MERGE_PROPORTION_NSAMPLES_BAND_NAME);
+        }
+
         if (addBand) {
             Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
             ProductUtils.copyRasterDataNodeProperties(srcBand, band);
