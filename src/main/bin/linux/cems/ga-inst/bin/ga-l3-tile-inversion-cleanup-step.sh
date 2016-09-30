@@ -14,17 +14,12 @@ nextYear=`printf '%04d\n' "$((10#$year + 1))"`
 dailyAccNextNosnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/NoSnow
 dailyAccNextSnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/Snow
 
-fullAccNosnowDir=$gaRootDir/BBDR/FullAcc/$year/$tile/NoSnow
-fullAccSnowDir=$gaRootDir/BBDR/FullAcc/$year/$tile/Snow
-
 # cleanup
-rm -Rf $dailyAccSnowDir/*
-rm -Rf $dailyAccNosnowDir/*
-rm -Rf $dailyAccPrevSnowDir/*
-rm -Rf $dailyAccPrevNosnowDir/*
-rm -Rf $dailyAccNextSnowDir/*
-rm -Rf $dailyAccNextNosnowDir/*
-rm -Rf $fullAccSnowDir/*
-rm -Rf $fullAccNosnowDir/*
+rm -Rf $dailyAccSnowDir
+rm -Rf $dailyAccNosnowDir
+rm -Rf $dailyAccPrevSnowDir
+rm -Rf $dailyAccPrevNosnowDir
+rm -Rf $dailyAccNextSnowDir
+rm -Rf $dailyAccNextNosnowDir
 
 echo `date`

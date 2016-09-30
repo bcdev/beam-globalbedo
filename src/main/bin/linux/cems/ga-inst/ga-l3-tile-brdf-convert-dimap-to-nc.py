@@ -15,7 +15,8 @@ year = '2005'    #test  --> we should run this with  a single year only! todo: m
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest'
 #beamDir = '/group_workspaces/cems/globalalbedo/soft/beam-5.0.1'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km'
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km'
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km'
 
 doys = []
 for i in range(46): # one year

@@ -2,7 +2,7 @@
 
 . ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic.sh
 
-echo "entered ga-l3-mosaic-brdf-albedo-step..."
+echo "entered ga-l3-albedomosaic-step..."
 
 year=$1
 doy=$2
@@ -16,11 +16,9 @@ doy=`printf '%03d\n' "$((10#$doy))"`
 task="ga-l3-albedomosaic"
 jobname="${task}-${year}-${doy}-${snowMode}-${deg}"
 command="./bin/${task}-beam.sh ${year} ${doy} ${snowMode} ${deg} ${gaRootDir} ${beamDir}"
-memory="16384"
 
 echo "jobname: $jobname"
 echo "command: $command"
-echo "memory: ${memory}"
 
 echo "`date -u +%Y%m%d-%H%M%S` submitting job '${jobname}' for task ${task}"
 

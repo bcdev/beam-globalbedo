@@ -12,7 +12,8 @@ __author__ = 'olafd'
 
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest'
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km'
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km'
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km'
 #stagingMatchingResultDir = gaRootDir + '/staging/matching'
 stagingMatchingResultDir = gaRootDir + '/staging/lists/matching'
 

@@ -19,7 +19,7 @@ def get_file_basename(filepath):
 
 def getMonth(year):
     if year == '2002':
-        return ['06', '07', '08', '09', '10', '11', '12']
+        return ['04', '05', '06', '07', '08', '09', '10', '11', '12']
     if year == '2012':
         return ['01', '02', '03', '04']
     return ['05']

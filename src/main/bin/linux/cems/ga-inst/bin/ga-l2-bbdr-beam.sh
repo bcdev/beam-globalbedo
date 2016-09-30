@@ -10,7 +10,7 @@ month=$7
 gaRootDir=$8
 beamRootDir=$9
 
-bbdrFile=$bbdrL2Dir/${l1bBaseName}_BBDR.dim
+bbdrFile=$bbdrL2Dir/${l1bBaseName}_BBDR_${sensor}.nc
 
 if [ ! -e "$bbdrL2Dir" ]
 then
@@ -21,8 +21,11 @@ then
     mkdir -p $bbdrTileDir
 fi
 
-echo "time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -t $bbdrFile $l1bPath"
-time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -t $bbdrFile $l1bPath
+#echo "time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -PsubsetAatsr=true -f NetCDF4-BEAM -t $bbdrFile $l1bPath"
+#time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -PsubsetAatsr=true -f NetCDF4-BEAM -t $bbdrFile $l1bPath
+echo "time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -f NetCDF4-BEAM -t $bbdrFile $l1bPath"
+time $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.l2 -e -c 8000M -q 24 -Psensor=$sensor -f NetCDF4-BEAM -t $bbdrFile $l1bPath
+
 
 status=$?
 echo "Status: $status"
@@ -37,14 +40,16 @@ then
     echo "BBDR tile products created."
 else
     echo "No BBDR products created."
+    echo "Status: -1"
 fi
 
-echo "Removing BBDR intermediate product..."
-if [ -e "${bbdrL2Dir}/${l1bBaseName}_BBDR.dim" ] 
-then
-    rm -f ${bbdrL2Dir}/${l1bBaseName}_BBDR.dim
-    rm -rf ${bbdrL2Dir}/${l1bBaseName}_BBDR.data
-fi
+#echo "Removing BBDR intermediate product..."
+#if [ -e "${bbdrL2Dir}/${l1bBaseName}_BBDR.nc" ] 
+#then
+#    rm -f ${bbdrL2Dir}/${l1bBaseName}_BBDR.nc
+#    #rm -f ${bbdrL2Dir}/${l1bBaseName}_BBDR.dim
+#    #rm -rf ${bbdrL2Dir}/${l1bBaseName}_BBDR.data
+#fi
 
 #if [ $sensor = "VGT" ] 
 #then

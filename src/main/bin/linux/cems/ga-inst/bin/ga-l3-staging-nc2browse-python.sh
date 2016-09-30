@@ -84,9 +84,10 @@ do
 	echo -e "\n\n\n-------------------------------------------------------------"
         echo python2.7 ${PYTHON2} $line $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
 	python2.7 ${PYTHON2} $line $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
-        echo -e "\n\n\n-------------------------------------------------------------"
-        echo python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
-        python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
+# reduced products, skip uncertainties:
+#        echo -e "\n\n\n-------------------------------------------------------------"
+#        echo python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
+#        python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
 	echo -e "\n\n\n-------------------------------------------------------------"
         echo python2.7 ${PYTHON4} $line $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
         python2.7 ${PYTHON4} $line $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4

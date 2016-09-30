@@ -11,13 +11,15 @@ __author__ = 'olafd'
 ##################################################################################################
 
 years=['2005']
-snowModes=['Merge']
+#snowModes=['Merge']
+snowModes=['NoSnow']
 #resolutions=['005','05']
 resolutions=['005']
 #projections=['PC','SIN']
-projections=['SIN']
+#projections=['SIN']
+projections=['PC']
 
-gaRootDir = '/group_workspaces/cems2/qa4ecv/vol1/olafd/GlobAlbedoTest'
+gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 stagingListsRootDir = gaRootDir + '/staging/lists'
 
 inputs = ['dummy']

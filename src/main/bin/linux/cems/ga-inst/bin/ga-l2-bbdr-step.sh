@@ -12,7 +12,7 @@ sensor=$7
 gaRootDir=$8
 beamDir=$9
 
-if [ $sensor = "VGT" ]
+if [ $sensor == "VGT" ]
 then
     l1bBaseName=`basename $l1bFile .ZIP`
 else

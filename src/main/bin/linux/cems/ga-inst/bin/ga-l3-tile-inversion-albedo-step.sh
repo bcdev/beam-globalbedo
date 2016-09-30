@@ -4,17 +4,18 @@
 
 tile=$1
 year=$2
-startdoy=$3
+doy=$3
 gaRootDir=$4
-priorDir=$5
-beamDir=$6
-albedoTargetDir=$7
-
-enddoy=`printf '%03d\n' "$((10#$startdoy + 7))"`
+bbdrRootDir=$5
+inversionRootDir=$6
+priorDir=$7
+beamDir=$8
+modisTileScaleFactor=$9
+albedoTargetDir=${10}  # remind the brackets if >= 10!!
 
 task="ga-l3-tile-inversion-albedo"
-jobname="${task}-${tile}-${year}-${startdoy}"
-command="./bin/${task}-beam.sh ${tile} ${year} ${startdoy} ${enddoy} ${gaRootDir} ${priorDir} ${beamDir} ${albedoTargetDir}"
+jobname="${task}-${tile}-${year}-${doy}"
+command="./bin/${task}-beam.sh ${tile} ${year} ${doy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${priorDir} ${beamDir} ${modisTileScaleFactor} ${albedoTargetDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"
