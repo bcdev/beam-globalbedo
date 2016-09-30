@@ -284,11 +284,12 @@ public class BrdfToAlbedoOp extends PixelOperator {
         }
 
         double relEntropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_REL_ENTROPY].getDouble();
-        if (AlbedoInversionUtils.isValid(relEntropy)) {
+        final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
+        if (AlbedoInversionUtils.isValid(relEntropy) && AlbedoInversionUtils.isValid(entropy) && relEntropy != entropy) {
             relEntropy = Math.exp(relEntropy / 9.0);
+        } else {
+            relEntropy = entropy;
         }
-
-
 
         // write results to target product...
         final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
@@ -297,7 +298,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
         if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
             snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
         }
-        final double entropy = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_ENTROPY].getDouble();
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
                                                BHR, alphaBHR, sigmaBHR,
@@ -358,8 +358,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+            snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+            targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+        }
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
@@ -483,7 +485,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
-        configurator.defineSample(index++, snowFractionBandName);
+        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+            configurator.defineSample(index++, snowFractionBandName);
+        }
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index, szaBandName);
 
@@ -591,15 +595,17 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
         final int offsetFactor = reducedOutput ? 2 : 6;
         int index = offsetFactor * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
-        targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
-        targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
-        targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
-        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
-        targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
-        targetSamples[index + TRG_SZA].set(result.getSza());
+        targetSamples[index++].set(result.getWeightedNumberOfSamples());
+        targetSamples[index++].set(result.getRelEntropy());
+        targetSamples[index++].set(result.getGoodnessOfFit());
+        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+            targetSamples[index++].set(result.getSnowFraction());
+        }
+        targetSamples[index++].set(result.getDataMask());
+        targetSamples[index++].set(result.getSza());
         if (singlePixelMode) {
-            targetSamples[index + TRG_LAT].set(latLon.getLat());
-            targetSamples[index + TRG_LON].set(latLon.getLon());
+            targetSamples[index++].set(latLon.getLat());
+            targetSamples[index].set(latLon.getLon());
         }
     }
 
