@@ -35,6 +35,11 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(label = "Sensors to ingest in BRDF retrieval", defaultValue = "MERIS,VGT")
     private String[] sensors;
 
+    @Parameter(label = "If true for a Meteosat sensor, ingest all longitudes (000, 057 and 063) in BRDF retrieval." +
+            " Otherwise 000 only",
+            defaultValue = "false")
+    private boolean meteosatUseAllLongitudes;
+
     @Parameter(description = "MODIS tile")
     private String tile;
 
@@ -69,7 +74,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         // STEP 1: get BBDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, tile, year, doy);
+            inputProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, sensors, meteosatUseAllLongitudes, tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }

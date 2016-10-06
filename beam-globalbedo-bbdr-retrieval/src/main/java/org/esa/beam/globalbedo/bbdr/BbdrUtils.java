@@ -461,4 +461,9 @@ public class BbdrUtils {
         return null;
     }
 
+    public static boolean isBrfInputInvalid(double brf, double sigmaBrf) {
+        return Double.isNaN(brf) || Double.isNaN(sigmaBrf) ||
+                brf >= 1.0 || brf <= 0.0 || sigmaBrf >= 1.0 || sigmaBrf <= 0.0;
+    }
+
 }

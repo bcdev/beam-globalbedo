@@ -111,8 +111,12 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
         double broadbandBrf = sourceSamples[SRC_BROADBAND_BRF].getDouble();
         double sigmaBroadbandBrf = sourceSamples[SRC_SIGMA_BROADBAND_BRF].getDouble();
-        if (broadbandBrf == 1.0) broadbandBrf += 0.1*(Math.random()-0.5);
-        if (sigmaBroadbandBrf == 1.0) sigmaBroadbandBrf += 0.1*(Math.random()-0.5);
+
+        if (BbdrUtils.isBrfInputInvalid(broadbandBrf, sigmaBroadbandBrf)) {
+            // not meaningful values
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            return;
+        }
 
         final double degLat = sourceSamples[SRC_LAT].getDouble();
         final double degLon = sourceSamples[SRC_LON].getDouble();

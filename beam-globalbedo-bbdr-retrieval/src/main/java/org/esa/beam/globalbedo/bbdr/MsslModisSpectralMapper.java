@@ -43,6 +43,8 @@ public class MsslModisSpectralMapper {
             vals[a] += Math.sqrt((vals[a]*vals[a])+mse[a]);
             if(vals[a]>1f)
                 vals[a]=1f;
+            if(vals[a]<=0f)
+                vals[a]=0.01f;
         }
         return vals;
     }

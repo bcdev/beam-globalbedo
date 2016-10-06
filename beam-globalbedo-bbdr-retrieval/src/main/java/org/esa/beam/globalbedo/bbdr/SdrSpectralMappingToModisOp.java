@@ -235,7 +235,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         final float[] spectralMappedSigmaSdrDiagonal = sm.getSpectralMappedSigmaSdr(sdrErrors);
         for (int i = 0; i < numSigmaSdrMappedBands; i++) {
             // use random number in [0.0, 0.05]
-            sdrSigmaMapped[i] = (float) Math.abs((0.1 * (Math.random() - 0.5)));
+            // sdrSigmaMapped[i] = (float) Math.abs((0.1 * (Math.random() - 0.5)));
+            // better: initialize to zero
+            // sdrSigmaMapped[i] = 0.0f
             for (int j = 0; j < diagonalIndices.length; j++) {
                 if (i == diagonalIndices[j]) {
                     // use SK results for diagonal elements

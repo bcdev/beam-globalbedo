@@ -18,7 +18,9 @@ import java.io.*;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.regex.Pattern;
 
@@ -68,10 +70,27 @@ public class IOUtils {
         return bbdrProducts;
     }
 
-    public static Product[] getAccumulationInputProducts(String bbdrRootDir, String[] sensors, String tile, int year, int doy) throws
+    public static Product[] getAccumulationInputProducts(String bbdrRootDir, String[] sensors, final boolean meteosatUseAllLongitudes, String tile, int year, int doy) throws
             IOException {
+
         final String daystring_yyyymmdd = AlbedoInversionUtils.getDateFromDoy(year, doy);
         final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd");  // for AVHRR products
+
+        final FilenameFilter filenameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                if (!meteosatUseAllLongitudes && (name.contains("_057_C_") || (name.contains("_063_C_")))) {
+                    return false;
+                }
+
+                if ((name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
+                        (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd))) {
+                    return true;
+                }
+
+                return false;
+            }
+        };
+
         List<Product> bbdrProductList = new ArrayList<>();
         if (StringUtils.isNotNullAndNotEmpty(daystring_yyyymmdd)) {
             for (String sensor : sensors) {
@@ -79,16 +98,13 @@ public class IOUtils {
                 final String sensorBbdrDirName = bbdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
                 final File sensorBbdrDir = new File(sensorBbdrDirName);
                 if (sensorBbdrDir.exists()) {
-                    final String[] sensorBbdrFiles = sensorBbdrDir.list();
+                    final String[] sensorBbdrFiles = sensorBbdrDir.list(filenameFilter);
                     for (String sensorBbdrFile : sensorBbdrFiles) {
-                        if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz") || sensorBbdrFile.endsWith(".dim")) &&
-                                (sensorBbdrFile.contains(daystring_yyyymmdd) || sensorBbdrFile.contains(daystring_yyyy_mm_dd))) {
-                            final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
-                            Product product = ProductIO.readProduct(sourceProductFileName);
-                            if (product != null) {
-                                bbdrProductList.add(product);
-                                numProducts++;
-                            }
+                        final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
+                        Product product = ProductIO.readProduct(sourceProductFileName);
+                        if (product != null) {
+                            bbdrProductList.add(product);
+                            numProducts++;
                         }
                     }
                 }
@@ -576,8 +592,8 @@ public class IOUtils {
         for (int i = 0; i < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
             for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                bandNames[i][j] = "VAR_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i/3] + "_f" + (i % 3) + "_" +
-                        AlbedoInversionConstants.BBDR_WAVE_BANDS[j/3] + "_f" + (j % 3);
+                bandNames[i][j] = "VAR_" + AlbedoInversionConstants.BBDR_WAVE_BANDS[i / 3] + "_f" + (i % 3) + "_" +
+                        AlbedoInversionConstants.BBDR_WAVE_BANDS[j / 3] + "_f" + (j % 3);
             }
         }
         return bandNames;
