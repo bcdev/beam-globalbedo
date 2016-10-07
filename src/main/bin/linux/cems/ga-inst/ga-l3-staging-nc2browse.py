@@ -34,11 +34,16 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
         for res in resolutions:
+            albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + res
             for proj in projections:
-                stagingNc2browseListFile = gaRootDir + '/staging/lists/nc2browse/list_albedo_mosaics_' + snowMode + '_' + year + '_' + res + '_' + proj + '.txt'
-                stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
-                m.execute('ga-l3-staging-nc2browse-step.sh', ['dummy'], [stagingNc2browseResultDir], 
-                          parameters=[year,snowMode,res,proj,stagingNc2browseListFile, stagingNc2browseResultDir])
+                for idoy in range(0,365):
+                #for idoy in range(0,5):
+                    doy = str(idoy+1).zfill(3)             
+                    stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
+                    stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+
+                    m.execute('ga-l3-staging-nc2browse-step.sh', ['dummy'], [stagingNc2browseResultDir], 
+                          parameters=[year,doy,snowMode,res,proj,stagingNc2browseFile, stagingNc2browseResultDir])
 
 # wait for processing to complete
 m.wait_for_completion()

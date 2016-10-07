@@ -13,7 +13,8 @@ __author__ = 'olafd'
 ###    - Albedo tiles --> Albedo mosaic with reduced output
 ########################################################################
 
-mosaicMode = 'simple'
+#mosaicMode = 'simple'
+mosaicMode = 'default'
 
 ###########################
 # set MODIS tile size
@@ -59,8 +60,8 @@ for year in years:
 m = PMonitor(inputs, 
              request='ga-l3-mosaic', 
              logdir='log',
-             hosts=[('localhost',72)],
-	     types=[('ga-l3-brdfmosaic-step.sh', 48), ('ga-l3-albedomosaic-step.sh',24)])
+             hosts=[('localhost',128)],
+	     types=[('ga-l3-brdfmosaic-step.sh', 64), ('ga-l3-albedomosaic-step.sh',64)])
      
 for year in years:
     for snowMode in snowModes:
@@ -68,13 +69,15 @@ for year in years:
 
         #for doy in doys:    
         for idoy in range(0,365):    
+        #for idoy in range(0,5):    
             doy = str(idoy+1).zfill(3)
             for resolution in resolutions:
 
                 if mosaicMode == 'simple':
                     ### the simplified way: Albedo tiles --> Albedo mosaic, no alpha/sigma output
                     albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + resolution
-                    m.execute('ga-l3-albedomosaic-simple-step.sh', [brdfMosaicDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,gaRootDir,beamDir])
+                    ### TODO: set correct input dir! we have no BRDF mosaic dir
+                    #m.execute('ga-l3-albedomosaic-simple-step.sh', [brdfMosaicDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,gaRootDir,beamDir])
                 else:
                     ### the Alex Loew energy conservation way (as requested in GA and more precise, but slower: double number of jobs)                
                     # BRDF tiles --> BRDF mosaic:

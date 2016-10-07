@@ -37,7 +37,9 @@ mode = 'DAILY'  # new QA4ECVsetup, time and disk space consuming!
 #######
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_allBands/1km'
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km'
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km'
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.mcd43a.c5.broadband/1km' # moved by SK, 20160930?!
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/snownosnow/tile' # this will be the new daily priors. TODO: adapt code
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 doys = []
@@ -69,7 +71,7 @@ tiles.sort()
 #tiles = ['h18v03']
 #tiles = ['h18v04']
 #tiles = ['h19v02']
-#tiles = ['h19v08']
+tiles = ['h17v08']
 #tiles = ['h25v06']
 #tiles = ['h00v08']
 
@@ -98,7 +100,6 @@ years = ['2005']
 #         '1991','1992','1993','1994','1995','1996','1997','1998','1999','2000']
 
 for year in years:
-
     leftyear = str(int(year)-1)
     rightyear = str(int(year)+1)
 
@@ -194,13 +195,14 @@ for year in years:
         if mode == 'DAILY':
             # NEW setup: DAILY albedos for whole year (for the moment we assume that 8-day Priors are representative for each single day) 
             for doy in range(365):
+            #for doy in range(31):
                 # albedo product e.g.: GlobAlbedoTest/Albedo/2005/h18v04/GlobAlbedo.albedo.2005097.h18v04.nc
                 doystring = str(doy+1).zfill(3)
                 albedoProduct = gaRootDir + '/Albedo/' + year + '/' + tile + '/GlobAlbedo.albedo.' + year + doystring + '.' + tile + '.nc'
                 albedoProducts.append(albedoProduct)
 
             for doy in range(365):
-            #for doy in range(1,2):
+            #for doy in range(31):
                 doystring = str(doy+1).zfill(3)
                 m.execute('ga-l3-tile-inversion-albedo-step.sh', dailyAccs, albedoProducts, parameters=[tile,year,doystring,gaRootDir,bbdrRootDir,inversionRootDir,priorDir,beamDir,modisTileScaleFactor,albedoDir])
             # end NEW setup

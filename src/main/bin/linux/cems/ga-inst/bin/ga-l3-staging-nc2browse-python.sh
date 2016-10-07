@@ -11,11 +11,11 @@
 ###################################################################################################################
 
 #list of netcdf albedo files
-LIST=$1
+INPUT=$1
 
-if [ ! -f "$LIST" ]
+if [ ! -f "$INPUT" ]
 then
-    echo "Nc2browse list file '$LIST' does not exist - will exit."
+    echo "Nc2browse input file '$INPUT' does not exist - will exit."
     exit 1
 fi
 
@@ -61,39 +61,34 @@ BANDSname4=$BANDS4
 MINMAX4=0:1,0:1,0:1
 LUT4=''
 
-while read line
-do
+bn=$(basename $INPUT)
 
-	bn=$(basename $line)
+SIZE='none'
 
-	SIZE='none'
+if [[ "$bn" =~ '.005.' ]]
+then
+	SIZE=$SIZE005
+fi
 
-	if [[ "$bn" =~ '.005.' ]]
-	then
-		SIZE=$SIZE005
-	fi
-
-	if [[ "$bn" =~ '.05.' ]]
-	then
-        	SIZE=$SIZE05
-	fi
-
-        echo -e "\n\n\n-------------------------------------------------------------"
-	echo python2.7 ${PYTHON1} $line $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
-        python2.7 ${PYTHON1} $line $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
-	echo -e "\n\n\n-------------------------------------------------------------"
-        echo python2.7 ${PYTHON2} $line $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
-	python2.7 ${PYTHON2} $line $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
+if [[ "$bn" =~ '.05.' ]]
+then
+       	SIZE=$SIZE05
+fi
+\
+echo -e "\n\n\n-------------------------------------------------------------"
+echo python2.7 ${PYTHON1} $INPUT $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
+python2.7 ${PYTHON1} $INPUT $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
+echo -e "\n\n\n-------------------------------------------------------------"
+echo python2.7 ${PYTHON2} $INPUT $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
+python2.7 ${PYTHON2} $INPUT $OUTDIR  $BANDS2  $MINMAX2  $LUT2  $SIZE $idxDate $COLORTXT $BANDSname2
 # reduced products, skip uncertainties:
 #        echo -e "\n\n\n-------------------------------------------------------------"
-#        echo python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
-#        python2.7 ${PYTHON3} $line $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
-	echo -e "\n\n\n-------------------------------------------------------------"
-        echo python2.7 ${PYTHON4} $line $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
-        python2.7 ${PYTHON4} $line $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
+#        echo python2.7 ${PYTHON3} $INPUT $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
+#        python2.7 ${PYTHON3} $INPUT $OUTDIR  $BANDS3  $MINMAX3  $LUT3  $SIZE $idxDate $COLORTXT $BANDSname3
+echo -e "\n\n\n-------------------------------------------------------------"
+echo python2.7 ${PYTHON4} $INPUT $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
+python2.7 ${PYTHON4} $INPUT $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
 
-
-done<$LIST
 
 echo -e "\n\n\nDone."
 

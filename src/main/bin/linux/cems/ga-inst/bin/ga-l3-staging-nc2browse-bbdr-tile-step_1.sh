@@ -2,17 +2,16 @@
 
 . ${GA_INST}/bin/ga_env/ga-env-l3-staging-nc2browse.sh
 
-echo "entered ga-l3-staging-ncbrowse-step..."
+echo "entered ga-l3-staging-ncbrowse-bbdr-tile-step..."
 year=$1
 doy=$2
-snowMode=$3
-res=$4
-proj=$5
-stagingNc2browseFile=$6
-stagingNc2browseResultDir=$7
+tile=$3
+sensor=$4
+stagingNc2browseFile=$5
+stagingNc2browseResultDir=$6
 
-task="ga-l3-staging-nc2browse"
-jobname="${task}-${year}-${doy}-${snowMode}-${res}-${proj}"
+task="ga-l3-staging-nc2browse-bbdr-tile"
+jobname="${task}-${year}-${doy}-${tile}-${sensor}"
 command="./bin/${task}-python.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
 
 echo "jobname: $jobname"

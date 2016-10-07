@@ -2,49 +2,43 @@
 
 
 ###################################################################
-#this program is creating browse images from BBDR netcdf files
-#authors: Said Kharbouche, MSSL.UCL(2014); O.Danne, BC (2016)
+# Wrapper script to call Python from LSF job
+# authors: Said Kharbouche, MSSL.UCL(2014); O.Danne, BC (2016)
 ####################################################################
 
+stagingNc2browseFile=$1
+stagingNc2browseResultDir=$2
+gaRootDir=$3
+datestring=$4
+band=$5
+plot_min=$6
+plot_max=$7
 
-###################################################### INPUT #####################################################
-
-#netcdf BBDR input file
-INPUT=$1
-
-if [ ! -f "$INPUT" ]
+if [ ! -f "$stagingNc2browseFile" ]
 then
-    echo "Nc2browse input file '$INPUT' does not exist - will exit."
+    echo "Nc2browse input file '$stagingNc2browseFile' does not exist - will exit."
+    echo "Status: 1"
     exit 1
 fi
 
-#output directory
-OUTDIR=$2
+mkdir -p $stagingNc2browseResultDir
 
-#scripts and colorlut directory
-#HOME=/group_workspaces/cems/globalalbedo/scripts/
-HOME=$GA_INST/staging_said
-###################################################################################################################
+stagingDir=${gaRootDir}/staging
+stagingSrcDir=bin/staging_said
 
-#if not existing, create output directory
-mkdir -p $OUTDIR
-
-idxDate=5  # todo: this is MVIRI only
-
+LUT=${stagingSrcDir}/params/color_lut.txt
+MINMAX=${plot_min}:${plot_max}
+SIZE='600x600'
 COLORTXT='white'
 
-PYTHON1=$HOME/python/ncbbdr2png_od.py
-BANDS1=BB_VIS,BB_NIR,BB_SW
-MINMAX1=0:0.2,0:0.2,0:0.2
-LUT1=$HOME/params/color_lut.txt
-BANDSname1=$BANDS1
+pythonCmd=${stagingSrcDir}/python/ncbbdr2png.py
 
-SIZE='600x600'
-
-\
 echo -e "\n\n\n-------------------------------------------------------------"
-echo python2.7 ${PYTHON1} $INPUT $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
-python2.7 ${PYTHON1} $INPUT $OUTDIR  $BANDS1  $MINMAX1  $LUT1  $SIZE $idxDate $COLORTXT $BANDSname1
+echo "python2.7 ${pythonCmd} ${stagingNc2browseFile} ${stagingNc2browseResultDir} ${datestring} ${band} ${MINMAX} ${LUT} ${SIZE} ${COLORTXT}"
+python2.7 ${pythonCmd} ${stagingNc2browseFile} ${stagingNc2browseResultDir} ${datestring} ${band} ${MINMAX} ${LUT} ${SIZE} ${COLORTXT}
+
+status=$?
+echo "Status: $status"
 
 echo -e "\n\n\nDone."
 

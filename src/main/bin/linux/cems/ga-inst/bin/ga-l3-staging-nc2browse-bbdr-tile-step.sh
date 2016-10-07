@@ -3,16 +3,21 @@
 . ${GA_INST}/bin/ga_env/ga-env-l3-staging-nc2browse.sh
 
 echo "entered ga-l3-staging-ncbrowse-bbdr-tile-step..."
-year=$1
-doy=$2
-tile=$3
-sensor=$4
-stagingNc2browseFile=$5
-stagingNc2browseResultDir=$6
+datestring=$1
+tile=$2
+sensor=$3
+lon_geo=$4
+band=$5
+plot_min=$6
+plot_max=$7
+stagingNc2browseFile=$8
+stagingNc2browseResultDir=$9
+gaRootDir=${10}
 
 task="ga-l3-staging-nc2browse-bbdr-tile"
-jobname="${task}-${year}-${doy}-${tile}-${sensor}"
-command="./bin/${task}-python.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
+jobname="${task}-${datestring}-${tile}-${sensor}${lon_geo}-${band}"
+#command="${pythonCmd} ${stagingNc2browseFile} ${stagingNc2browseResultDir} ${datestring} ${band} ${MINMAX} ${LUT} ${SIZE} ${COLORTXT}"
+command="./bin/${task}-python.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir} ${gaRootDir} ${datestring} ${band} ${plot_min} ${plot_max}"
 
 echo "jobname: $jobname"
 echo "command: $command"
