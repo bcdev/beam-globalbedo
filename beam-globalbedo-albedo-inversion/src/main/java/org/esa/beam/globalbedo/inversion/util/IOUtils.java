@@ -548,7 +548,8 @@ public class IOUtils {
     }
 
     public static boolean isPolarTile(String tile) {
-        return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("16") || tile.endsWith("17");
+        return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("02") ||
+                tile.endsWith("15") || tile.endsWith("16") || tile.endsWith("17");
     }
 
     public static String[] getDailyAccumulatorBandNames() {

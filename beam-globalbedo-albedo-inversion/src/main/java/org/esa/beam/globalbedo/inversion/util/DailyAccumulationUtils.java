@@ -60,7 +60,7 @@ public class DailyAccumulationUtils {
         for (int i = 0; i < bbdr.getRowDimension(); i++) {
             for (int j = 0; j < bbdr.getColumnDimension(); j++) {
                 final double elem = bbdr.get(i, j);
-                if (elem < 0.0 || elem > 1.0 || Double.isNaN(elem)) {
+                if (elem <= 0.0 || elem >= 1.0 || Double.isNaN(elem)) {   // BBDR must be in ]0, 1[
                     return true;
                 }
             }
@@ -70,7 +70,7 @@ public class DailyAccumulationUtils {
 
     private static boolean isSDInvalid(double[] stdevArr) {
         for (double stdev : stdevArr) {
-            if (stdev < 0.0 | Double.isNaN(stdev)) {
+            if (stdev <= 0.0 | Double.isNaN(stdev)) {    // stdev must not be zero (algorithm would fail)
                 return true;
             }
         }
@@ -79,7 +79,7 @@ public class DailyAccumulationUtils {
 
     private static boolean isCorrelationInvalid(double[] correlArr) {
         for (double correl : correlArr) {
-            if (correl < 0.0 | Double.isNaN(correl)) {
+            if (correl < 0.0 | Double.isNaN(correl)) {    // correlation might be zero
                 return true;
             }
         }
