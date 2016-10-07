@@ -1,0 +1,12 @@
+#The aggregation method for each layer
+#for energy conserving use "MEAN" and "VAR"
+#for nearest neighbor use "NN"
+#for majority filter use "MF" 
+#for average use "AV"
+
+
+MEAN::mean_VIS_f0,mean_VIS_f1,mean_VIS_f2,mean_NIR_f0,mean_NIR_f1,mean_NIR_f2,mean_SW_f0,mean_SW_f1,mean_SW_f2
+VAR::VAR_VIS_f0_VIS_f0,VAR_VIS_f0_VIS_f1,VAR_VIS_f0_VIS_f2,VAR_VIS_f0_NIR_f0,VAR_VIS_f0_NIR_f1,VAR_VIS_f0_NIR_f2,VAR_VIS_f0_SW_f0,VAR_VIS_f0_SW_f1,VAR_VIS_f0_SW_f2,VAR_VIS_f1_VIS_f1,VAR_VIS_f1_VIS_f2,VAR_VIS_f1_NIR_f0,VAR_VIS_f1_NIR_f1,VAR_VIS_f1_NIR_f2,VAR_VIS_f1_SW_f0,VAR_VIS_f1_SW_f1,VAR_VIS_f1_SW_f2,VAR_VIS_f2_VIS_f2,VAR_VIS_f2_NIR_f0,VAR_VIS_f2_NIR_f1,VAR_VIS_f2_NIR_f2,VAR_VIS_f2_SW_f0,VAR_VIS_f2_SW_f1,VAR_VIS_f2_SW_f2,VAR_NIR_f0_NIR_f0,VAR_NIR_f0_NIR_f1,VAR_NIR_f0_NIR_f2,VAR_NIR_f0_SW_f0,VAR_NIR_f0_SW_f1,VAR_NIR_f0_SW_f2,VAR_NIR_f1_NIR_f1,VAR_NIR_f1_NIR_f2,VAR_NIR_f1_SW_f0,VAR_NIR_f1_SW_f1,VAR_NIR_f1_SW_f2,VAR_NIR_f2_NIR_f2,VAR_NIR_f2_SW_f0,VAR_NIR_f2_SW_f1,VAR_NIR_f2_SW_f2,VAR_SW_f0_SW_f0,VAR_SW_f0_SW_f1,VAR_SW_f0_SW_f2,VAR_SW_f1_SW_f1,VAR_SW_f1_SW_f2,VAR_SW_f2_SW_f2
+NN::Entropy,Goodness_of_Fit,Relative_Entropy
+MF::Time_to_the_Closest_Sample
+AV::Weighted_Number_of_Samples,Proportion_NSamples
