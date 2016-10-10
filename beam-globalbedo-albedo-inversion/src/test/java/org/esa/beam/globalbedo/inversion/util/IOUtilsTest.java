@@ -4,13 +4,11 @@ import junit.framework.TestCase;
 import org.junit.Ignore;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -91,7 +89,7 @@ public class IOUtilsTest extends TestCase {
         assertEquals(0, day4ProductNames.size());
     }
 
-    public void testGetPriorProductNames() throws Exception {
+    public void testGetPriorProductNamesCollection5() throws Exception {
         String[] priorDirContent = new String[]{
                 "Kernels.105.005.h18v04.backGround.NoSnow.bin",
                 "Kernels.105.005.h18v04.backGround.NoSnow.hdr",
@@ -108,13 +106,32 @@ public class IOUtilsTest extends TestCase {
                 "bla.dat"
         };
 
-        List<String> priorProductNames = IOUtils.getPriorProductNames(priorDirContent, false);
+        final int priorVersion = 5;
+        List<String> priorProductNames = IOUtils.getPriorProductNames(priorVersion, priorDirContent, false);
         assertNotNull(priorProductNames);
         assertEquals(3, priorProductNames.size());
         assertEquals("Kernels.105.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(0));
         assertEquals("Kernels.117.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(1));
         assertEquals("Kernels.129.005.h18v04.backGround.NoSnow.hdr", priorProductNames.get(2));
     }
+
+    public void testGetPriorProductNamesCollection6() throws Exception {
+        String[] priorDirContent = new String[]{
+                "prior.modis.c6.121.h18v04.snownosnow.stage2.nc",
+                "prior.modis.c6.121.h18v04.snownosnow.stage2.dim",
+                "prior.modis.c6.121.h18v04.snow.stage2.nc",
+                "Kernels.105.005.h18v04.backGround.NoSnow.hdr",
+                "blubb.txt",
+                "bla.dat"
+        };
+
+        final int priorVersion = 6;
+        List<String> priorProductNames = IOUtils.getPriorProductNames(priorVersion, priorDirContent, false);
+        assertNotNull(priorProductNames);
+        assertEquals(1, priorProductNames.size());
+        assertEquals("prior.modis.c6.121.h18v04.snownosnow.stage2.nc", priorProductNames.get(0));
+    }
+
 
     public void testGetInversionParameterBandnames() throws Exception {
         String[] bandNames = IOUtils.getInversionParameterBandNames();

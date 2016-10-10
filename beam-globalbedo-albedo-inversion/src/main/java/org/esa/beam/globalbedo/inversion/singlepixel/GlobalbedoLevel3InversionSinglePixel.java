@@ -102,6 +102,9 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @SourceProduct(description = "Prior product as single pixel (i.e. CSV)", optional = true)
     private Product priorPixelProduct;
 
+    @Parameter(defaultValue = "5", description = "Prior version (MODIS collection)")  // todo: change default to 6 later
+    private int priorVersion;
+
 
     private float latitude = Float.NaN;
     private float longitude = Float.NaN;
@@ -197,7 +200,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
                     priorDir + "'...");
 
             try {
-                priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, computeSnow);
+                priorProduct = IOUtils.getPriorProduct(priorVersion, priorDir, priorFileNamePrefix, doy, computeSnow);
             } catch (IOException e) {
                 throw new OperatorException("No prior file available for DoY " + IOUtils.getDoyString(doy) +
                                                     " - cannot proceed...: " + e.getMessage());

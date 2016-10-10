@@ -9,6 +9,7 @@ package org.esa.beam.globalbedo.inversion;
 public class AlbedoInversionConstants {
 
     public final static String[] BBDR_WAVE_BANDS = {"VIS", "NIR", "SW"};
+    public final static String[] PRIOR_6_WAVE_BANDS = {"vis", "nir", "shortwave"}; // new, Oct. 2016
 
     public final static String BBDR_BB_VIS_NAME = "BB_VIS";
     public final static String BBDR_BB_NIR_NAME = "BB_NIR";

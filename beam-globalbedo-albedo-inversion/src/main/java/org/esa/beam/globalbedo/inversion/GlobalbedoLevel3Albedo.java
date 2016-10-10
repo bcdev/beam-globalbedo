@@ -57,6 +57,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
+    @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
+    private int priorVersion;
+
     @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
     // e.g., background/processed.p1.0.618034.p2.1.00000
     private String priorRootDirSuffix;
@@ -137,7 +140,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
                     // todo: allow continuation without Prior: set usePrior to false
                     // if Prior not available or cannot be read
 //                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
-                    final Product tmpPriorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
+                    final Product tmpPriorProduct = IOUtils.getPriorProduct(priorVersion, priorDir, priorFileNamePrefix, doy, true);
                     if (tmpPriorProduct != null) {
                         tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
                         if (modisTileScaleFactor != 1.0) {

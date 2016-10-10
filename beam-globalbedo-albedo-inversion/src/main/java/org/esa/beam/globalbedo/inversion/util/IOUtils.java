@@ -192,12 +192,12 @@ public class IOUtils {
         return dailyBBDRFilenames;
     }
 
-    public static Product getPriorProduct(String priorDir, String priorFileNamePrefix, int doy, boolean computeSnow) throws IOException {
+    public static Product getPriorProduct(int priorVersion, String priorDir, String priorFileNamePrefix, int doy, boolean computeSnow) throws IOException {
 
         final File priorPath = new File(priorDir);
         if (priorPath.exists()) {
             final String[] priorFiles = priorPath.list();
-            final List<String> snowFilteredPriorList = getPriorProductNames(priorFiles, computeSnow);
+            final List<String> snowFilteredPriorList = getPriorProductNames(priorVersion, priorFiles, computeSnow);
 
             // allow all days within 8-day prior period:
             final int refDoy = 8 * ((doy - 1) / 8) + 1;
@@ -306,16 +306,24 @@ public class IOUtils {
         }
     }
 
-    static List<String> getPriorProductNames(String[] priorFiles, boolean computeSnow) {
+    static List<String> getPriorProductNames(int priorVersion, String[] priorFiles, boolean computeSnow) {
 
         List<String> snowFilteredPriorList = new ArrayList<>();
         if (priorFiles != null && priorFiles.length > 0) {
             for (String s : priorFiles) {
-                // CEMS: kernel.001.006.h18v04.Snow.1km.nc
-                if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr")) ||
-                        (computeSnow && s.endsWith(".Snow.nc")) || (!computeSnow && s.endsWith(".NoSnow.nc")) ||
-                        (computeSnow && s.endsWith(".Snow.1km.nc")) || (!computeSnow && s.endsWith(".NoSnow.1km.nc"))) {
-                    snowFilteredPriorList.add(s);
+                if (priorVersion == 5) {
+                    // CEMS: kernel.001.006.h18v04.Snow.1km.nc
+                    if ((computeSnow && s.endsWith(".Snow.hdr")) || (!computeSnow && s.endsWith(".NoSnow.hdr")) ||
+                            (computeSnow && s.endsWith(".Snow.nc")) || (!computeSnow && s.endsWith(".NoSnow.nc")) ||
+                            (computeSnow && s.endsWith(".Snow.1km.nc")) || (!computeSnow && s.endsWith(".NoSnow.1km.nc"))) {
+                        snowFilteredPriorList.add(s);
+                    }
+                } else if (priorVersion == 6) {
+                    if (s.endsWith("snownosnow.stage2.nc")) {
+                        snowFilteredPriorList.add(s);
+                    }
+                } else {
+                    throw new OperatorException("Prior version " + priorVersion + " not supported.");
                 }
             }
         }
