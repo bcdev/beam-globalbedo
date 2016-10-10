@@ -129,8 +129,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
             String priorDir = priorRootDir + File.separator + tile;
 
             if (priorRootDirSuffix == null) {
-                final int refDoy = 8 * ((doy - 1) / 8) + 1;
-                priorRootDirSuffix = IOUtils.getDoyString(refDoy);
+                if (priorVersion == 6) {
+                    // daily priors available
+                    priorRootDirSuffix = IOUtils.getDoyString(doy);
+                } else {
+                    final int refDoy = 8 * ((doy - 1) / 8) + 1;
+                    priorRootDirSuffix = IOUtils.getDoyString(refDoy);
+                }
             }
             priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             logger.log(Level.INFO, "Searching for SNOW prior file in directory: '" + priorDir + "'...");
