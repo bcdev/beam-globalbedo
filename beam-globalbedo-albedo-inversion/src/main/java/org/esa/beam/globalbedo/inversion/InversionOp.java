@@ -123,14 +123,16 @@ public class InversionOp extends PixelOperator {
     private int priorBandStartIndex;
 
 //    @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
-    @Parameter(defaultValue = "BRDF_Albedo_Parameters_bb_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "BRDF_Albedo_Parameters_bb_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_nir_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
     // Oct. 2016:
     private String priorNSamplesBandName;
 
     //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
 //    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
     // Oct. 2016:
-    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
     private String priorDataMaskBandName;
 
     @Parameter(defaultValue = "1.0",

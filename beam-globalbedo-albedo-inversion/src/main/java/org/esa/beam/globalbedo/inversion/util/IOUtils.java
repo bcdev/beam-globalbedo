@@ -200,8 +200,9 @@ public class IOUtils {
             final List<String> snowFilteredPriorList = getPriorProductNames(priorVersion, priorFiles, computeSnow);
 
             // allow all days within 8-day prior period:
-            final int refDoy = 8 * ((doy - 1) / 8) + 1;
-            String doyString = getDoyString(refDoy);
+//            final int refDoy = 8 * ((doy - 1) / 8) + 1;
+//            String doyString = getDoyString(refDoy);
+            final String doyString = getDoyString(doy);
 
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
