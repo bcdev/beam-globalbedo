@@ -64,7 +64,9 @@ public class GlobalbedoLevel3Albedo extends Operator {
     // e.g., background/processed.p1.0.618034.p2.1.00000
     private String priorRootDirSuffix;
 
-    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    //    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    // Oct. 2016:
+    @Parameter(defaultValue = "prior.modis.c6", description = "MODIS Prior file name prefix")
     // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
@@ -129,8 +131,13 @@ public class GlobalbedoLevel3Albedo extends Operator {
             String priorDir = priorRootDir + File.separator + tile;
 
             if (priorRootDirSuffix == null) {
-                final int refDoy = 8 * ((doy - 1) / 8) + 1;
-                priorRootDirSuffix = IOUtils.getDoyString(refDoy);
+                if (priorVersion == 6) {
+                    // daily priors available
+                    priorRootDirSuffix = IOUtils.getDoyString(doy);
+                } else {
+                    final int refDoy = 8 * ((doy - 1) / 8) + 1;
+                    priorRootDirSuffix = IOUtils.getDoyString(refDoy);
+                }
             }
             priorDir = priorDir.concat(File.separator + priorRootDirSuffix);
             logger.log(Level.INFO, "Searching for SNOW prior file in directory: '" + priorDir + "'...");

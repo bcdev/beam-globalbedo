@@ -109,9 +109,11 @@ public class MergeBrdfOp extends PixelOperator {
     @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorNSamplesBandName;
 
-//    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
-    @Parameter(defaultValue = "Data_Mask", description = "Prior NSamples band name (default fits to the latest prior version)")
-    private String priorLandMaskBandName;
+    //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
+    // Oct. 2016:
+    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    private String priorDataMaskBandName;
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -466,7 +468,7 @@ public class MergeBrdfOp extends PixelOperator {
 //        }
 //        configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
         if (priorProduct != null) {
-            configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
+            configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);
         }
     }
 

@@ -123,14 +123,16 @@ public class InversionOp extends PixelOperator {
     private int priorBandStartIndex;
 
 //    @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
-    @Parameter(defaultValue = "BRDF_Albedo_Parameters_bb_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "BRDF_Albedo_Parameters_bb_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_nir_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
     // Oct. 2016:
     private String priorNSamplesBandName;
 
     //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
 //    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
     // Oct. 2016:
-    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
     private String priorDataMaskBandName;
 
     @Parameter(defaultValue = "1.0",
@@ -250,9 +252,9 @@ public class InversionOp extends PixelOperator {
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-        if (x == 800 & y == 100) {
-            System.out.println("x = " + x);
-        }
+//        if (x == 800 & y == 100) {
+//            System.out.println("x = " + x);
+//        }
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
