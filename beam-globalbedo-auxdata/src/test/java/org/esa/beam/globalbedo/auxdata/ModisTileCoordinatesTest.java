@@ -32,7 +32,7 @@ public class ModisTileCoordinatesTest {
         ModisTileCoordinates instance = ModisTileCoordinates.getInstance();
         assertNotNull(instance);
         int tileCount = instance.getTileCount();
-        assertEquals(326, tileCount);
+        assertEquals(330, tileCount);
     }
 
     @Test
@@ -59,8 +59,13 @@ public class ModisTileCoordinatesTest {
         assertEquals(-4447802.079, instance.getUpperLeftY(tileIndex), 1e-5);
 
         tileIndex = instance.findTileIndex("h35v10");
-        assertEquals(325, tileIndex);
+        assertEquals(329, tileIndex);
         assertEquals(18903158.834, instance.getUpperLeftX(tileIndex), 1e-5);
         assertEquals(-1111950.520, instance.getUpperLeftY(tileIndex), 1e-5);
+
+        tileIndex = instance.findTileIndex("h14v00");
+        assertEquals(94, tileIndex);
+        assertEquals(-4447802.079, instance.getUpperLeftX(tileIndex), 1e-5);
+        assertEquals(1.0007554677E7, instance.getUpperLeftY(tileIndex), 1e-5);
     }
 }
