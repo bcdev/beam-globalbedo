@@ -73,16 +73,6 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private static final int[] TRG_BHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int[] TRG_SIGMA_BHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private static final int TRG_WEIGHTED_NUM_SAMPLES = 0;
-    private static final int TRG_REL_ENTROPY = 1;
-    private static final int TRG_GOODNESS_OF_FIT = 2;
-    private static final int TRG_SNOW_FRACTION = 3;
-    private static final int TRG_DATA_MASK = 4;
-
-
-    private static final int TRG_SZA = 5;
-    private static final int TRG_LAT = 6;
-    private static final int TRG_LON = 7;
 
     @SourceProduct(description = "BRDF merged product")
     private Product brdfMergedProduct;

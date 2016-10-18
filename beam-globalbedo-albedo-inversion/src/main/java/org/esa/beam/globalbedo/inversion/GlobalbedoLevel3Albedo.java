@@ -168,7 +168,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
             }
 
 
-            Product brdfSnowProduct;
+            Product brdfSnowProduct = null;
             Product brdfNoSnowProduct;
             try {
                 brdfSnowProduct = IOUtils.getBrdfProduct(brdfSnowDir, year, doy, true);

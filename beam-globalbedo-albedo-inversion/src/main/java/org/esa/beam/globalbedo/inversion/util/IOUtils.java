@@ -259,16 +259,20 @@ public class IOUtils {
         return geoCoding;
     }
 
-    public static Product getBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
-        final String[] brdfFiles = (new File(brdfDir)).list();
-        final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);
+    public static Product getBrdfProduct(String brdfDirName, int year, int doy, boolean isSnow) throws IOException {
 
-        String doyString = getDoyString(doy);
+        final File brdfDir = new File(brdfDirName);
+        if (brdfDir.exists()) {
+            final String[] brdfFiles = brdfDir.list();
+            final List<String> brdfFileList = getBrdfProductNames(brdfFiles, isSnow);
 
-        for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
-                String sourceProductFileName = brdfDir + File.separator + brdfFileName;
-                return ProductIO.readProduct(sourceProductFileName);
+            String doyString = getDoyString(doy);
+
+            for (String brdfFileName : brdfFileList) {
+                if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
+                    String sourceProductFileName = brdfDirName + File.separator + brdfFileName;
+                    return ProductIO.readProduct(sourceProductFileName);
+                }
             }
         }
 

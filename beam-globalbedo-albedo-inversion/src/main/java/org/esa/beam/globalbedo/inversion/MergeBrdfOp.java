@@ -112,7 +112,8 @@ public class MergeBrdfOp extends PixelOperator {
     //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
 //    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
     // Oct. 2016:
-    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
     private String priorDataMaskBandName;
 
     @Override

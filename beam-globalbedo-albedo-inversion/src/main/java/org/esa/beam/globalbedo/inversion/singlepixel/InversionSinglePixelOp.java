@@ -28,7 +28,7 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
  *
  * @author Olaf Danne
  */
-@OperatorMetadata(alias = "ga.inversion.inversion",
+@OperatorMetadata(alias = "ga.inversion.inversion.single",
         description = "Pixel operator for inversion of a single pixel",
         authors = "Olaf Danne",
         version = "1.0",
