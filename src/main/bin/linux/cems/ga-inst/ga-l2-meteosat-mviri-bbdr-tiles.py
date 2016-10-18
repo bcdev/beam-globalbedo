@@ -24,8 +24,13 @@ sensor = 'MVIRI'
 #years = ['1990','1991','1992','1993','1994']    # DONE 
 #years = ['1982','1983','1984','1985','1986','1987','1988','1989']     
 
-years = ['2005'] # done reprocessing
-years = ['2004']
+#years = ['2005'] # done reprocessing after bug fix 20160922
+#years = ['2006'] # done reprocessing
+#years = ['2001','2002','2003','2004'] # done reprocessing
+#years = ['1997','1998','1999','2000'] # done reprocessing
+#years = ['1993','1994','1995','1996'] # done reprocessing
+#years = ['1989','1990','1991','1992'] # done reprocessing
+years = ['1984','1985','1986','1987','1988']
 
 #allMonths = ['01', '02', '03']
 allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']

@@ -17,20 +17,20 @@ albedoTargetDir=${11}  # remind the brackets if >= 10!!
 gpt=$beamRootDir/bin/gpt-d-l2.sh
 
 inversionNosnowTargetDir=$inversionRootDir/NoSnow/$year/$tile
-inversionSnowTargetDir=$inversionRootDir/Snow/$year/$tile
-inversionMergeTargetDir=$inversionRootDir/Merge/$year/$tile
+#inversionSnowTargetDir=$inversionRootDir/Snow/$year/$tile
+#inversionMergeTargetDir=$inversionRootDir/Merge/$year/$tile
 if [ ! -d "$inversionNosnowTargetDir" ]
 then
    mkdir -p $inversionNosnowTargetDir
 fi
-if [ ! -d "$inversionSnowTargetDir" ]
-then
-   mkdir -p $inversionSnowTargetDir
-fi
-if [ ! -d "$inversionMergeTargetDir" ]
-then
-   mkdir -p $inversionMergeTargetDir
-fi
+#if [ ! -d "$inversionSnowTargetDir" ]
+#then
+#   mkdir -p $inversionSnowTargetDir
+#fi
+#if [ ! -d "$inversionMergeTargetDir" ]
+#then
+#   mkdir -p $inversionMergeTargetDir
+#fi
 
 if [ ! -d "$albedoTargetDir" ]
 then
@@ -47,23 +47,23 @@ then
     status=$?
     echo "Status: $status"
 
-    if [ "$status" -eq 0 ]; then
-        echo "Compute SNOW BRDF for tile $tile, year $year, DoY $doy, ..."
-        TARGET=${inversionSnowTargetDir}/GlobAlbedo.brdf.$year$doy.$tile.Snow.nc
-        echo "time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
-        time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
-        status=$?
-        echo "Status: $status"
-    fi
-
-    if [ "$status" -eq 0 ]; then
-        echo "Compute MERGED BRDF for tile $tile, year $year, DoY $doy ..."
-        TARGET=${inversionMergeTargetDir}/GlobAlbedo.brdf.merge.$year$doy.$tile.nc
-        echo "time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
-        time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
-        status=$?
-        echo "Status: $status"
-    fi
+#   if [ "$status" -eq 0 ]; then
+#       echo "Compute SNOW BRDF for tile $tile, year $year, DoY $doy, ..."
+#       TARGET=${inversionSnowTargetDir}/GlobAlbedo.brdf.$year$doy.$tile.Snow.nc
+#       echo "time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
+#       time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
+#       status=$?
+#       echo "Status: $status"
+#   fi
+#
+#    if [ "$status" -eq 0 ]; then
+#        echo "Compute MERGED BRDF for tile $tile, year $year, DoY $doy ..."
+#        TARGET=${inversionMergeTargetDir}/GlobAlbedo.brdf.merge.$year$doy.$tile.nc
+#        echo "time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
+#        time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
+#        status=$?
+#        echo "Status: $status"
+#    fi
 
     if [ "$status" -eq 0 ]; then
         echo "Compute ALBEDO for tile $tile, year $year, DoY $doy ..."

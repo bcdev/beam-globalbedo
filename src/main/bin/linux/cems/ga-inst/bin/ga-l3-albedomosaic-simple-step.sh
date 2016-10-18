@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l3-brdfmosaic.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic.sh
 
 echo "entered ga-l3-albedomosaic-simple-step..."
 

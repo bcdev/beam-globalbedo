@@ -74,6 +74,18 @@ then
         echo "Status: $status"
     fi
 
+    # create marker file that albedo for given tile/DoY was processed
+    touch $albedoTargetDir/PROCESSED_ALL_$doy
+
+    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
+    numAlbedoFiles=`ls -1 $albedoTargetDir/PROCESSED_ALL_* |wc -l`
+    echo "numAlbedoFiles: $numAlbedoFiles"
+    if [ $numAlbedoFiles -eq 365 ]
+    then
+        echo "All albedo products for year $year, tile $tile done."
+        touch $albedoTargetDir/PROCESSED_ALL
+    fi
+
 else
     echo "Directory '$priorRootDir/$tile' does not exist - no BRDF computed for tile $tile, year $year, DoY $doy."
     echo "Status: -1"

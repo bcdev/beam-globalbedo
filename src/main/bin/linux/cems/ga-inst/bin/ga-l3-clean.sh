@@ -23,40 +23,50 @@ then
     if [ -n "$doy" ]
     then
 	echo "deleting inversion results for year $year, tile $tile, DoY $doy..."
-        rm -Rf $gaRootDir/BBDR/AccumulatorFiles/$year/$tile/*/matrices*_$year$doy.bin    
         rm -Rf $gaRootDir/BBDR/DailyAcc/$year/$tile/*/matrices*_$year$doy.bin    
-        rm -Rf $gaRootDir/BBDR/FullAcc/$year/$tile/*/matrices*_$year$doy.bin    
         rm -Rf $gaRootDir/Inversion/*/$year/$tile/*/GlobAlbedo.brdf.${year}${doy}.${tile}.*.*
         rm -Rf $gaRootDir/Albedo/$year/$tile/GlobAlbedo.albedo.${year}${doy}.${tile}*.*
-        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}${doy}.d*
+        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}${doy}*.*
     else
 	echo "deleting inversion results for year $year, tile $tile, all doys..."
-        rm -Rf $gaRootDir/BBDR/AccumulatorFiles/$year/$tile/*/matrices*_$year*.bin    
         rm -Rf $gaRootDir/BBDR/DailyAcc/$year/$tile/*/matrices*_$year*.bin    
-        rm -Rf $gaRootDir/BBDR/FullAcc/$year/$tile/*/matrices*_$year*.bin    
         rm -Rf $gaRootDir/Inversion/*/$year/$tile/*/GlobAlbedo.brdf.${year}*.${tile}.*.*    
         rm -Rf $gaRootDir/Albedo/$year/$tile/GlobAlbedo.albedo.${year}*.${tile}*.*
-        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}.d*
+        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}*.*
     fi
 else
     if [ -n "$doy" ]
     then
 	echo "deleting inversion results for year $year, all tiles, DoY $doy..."
-        rm -Rf $gaRootDir/BBDR/AccumulatorFiles/$year/*/*/matrices*_$year$doy.bin    
         rm -Rf $gaRootDir/BBDR/DailyAcc/$year/*/*/matrices*_$year$doy.bin    
-        rm -Rf $gaRootDir/BBDR/FullAcc/$year/*/*/matrices*_$year$doy.bin    
         rm -Rf $gaRootDir/Inversion/*/$year/*/*/GlobAlbedo.brdf.${year}${doy}*.*
         rm -Rf $gaRootDir/Albedo/$year/*/GlobAlbedo.albedo.${year}${doy}*.*
-        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}${doy}.d*
+        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}${doy}*.*
     else
 	echo "deleting inversion results for year $year, all tiles, all doys..."
-        rm -Rf $gaRootDir/BBDR/AccumulatorFiles/$year/*/*/matrices*_$year*.bin    
         rm -Rf $gaRootDir/BBDR/DailyAcc/$year/*    
-        rm -Rf $gaRootDir/BBDR/FullAcc/$year/*    
-        rm -Rf $gaRootDir/Inversion/Merge/$year/*/*/GlobAlbedo.brdf.${year}*.*
-        rm -Rf $gaRootDir/Inversion/Snow/$year/*/*/GlobAlbedo.brdf.${year}*.*
-        rm -Rf $gaRootDir/Inversion/NoSnow/$year/*/*/GlobAlbedo.brdf.${year}*.*
-        rm -Rf $gaRootDir/Albedo/$year/*/GlobAlbedo.albedo.${year}*.*
-        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}.d*
+
+        for tileDir in `ls $gaRootDir/Inversion/Merge/$year/$tile`;
+        do
+            rm -Rf $tileDir/*
+            rmdir $tileDir
+        done 
+        for tileDir in `ls $gaRootDir/Inversion/Snow/$year/$tile`;
+        do
+            rm -Rf $tileDir/*
+            rmdir $tileDir
+        done
+        for tileDir in `ls $gaRootDir/Inversion/NoSnow/$year/$tile`;
+        do
+            rm -Rf $tileDir/*
+            rmdir $tileDir
+        done
+        for tileDir in `ls $gaRootDir/Albedo/$year/$tile`;
+        do
+            rm -Rf $tileDir/*
+            rmdir $tileDir
+        done
+
+        #rm -Rf $gaRootDir/Mosaic/*/*/*/GlobAlbedo.${year}*.*
     fi
 fi

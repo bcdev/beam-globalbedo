@@ -11,6 +11,7 @@ __author__ = 'olafd'
 ##################################################################################################
 
 years=['2005']
+#years=['2006']
 #snowModes=['Merge']
 snowModes=['NoSnow']
 #resolutions=['005','05']
@@ -36,6 +37,7 @@ for year in years:
         for res in resolutions:
             albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + res
             for proj in projections:
+                #for idoy in range(180,365):
                 for idoy in range(0,365):
                 #for idoy in range(0,5):
                     doy = str(idoy+1).zfill(3)             

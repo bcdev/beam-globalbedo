@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# cleanup of daily accumulator binary files which use a lot of disk space...
+
 tile=$1
 year=$2
 gaRootDir=$3
@@ -14,7 +16,27 @@ nextYear=`printf '%04d\n' "$((10#$year + 1))"`
 dailyAccNextNosnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/NoSnow
 dailyAccNextSnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/Snow
 
+
+# make sure albedos are done:
+albedoTileDir=$gaRootDir/Albedo/$year/$tile
+waitCount=0
+while [  "$waitCount" -lt "15" ]; do
+    markerAlbedo=$albedoTileDir/PROCESSED_ALL
+    thedate=`date`
+    echo "Waiting for $waitCount minutes for completion of albedos... $thedate"
+    if [ -f "$markerAlbedo" ]; then
+        echo "Albedo computation completed - ready for inversion cleanup."
+        break
+    fi
+    let waitCount=waitCount+1
+    sleep 60
+done
+if [ "$waitCount" -ge "15" ]; then
+    echo "WARNING: Albedo computation not complete but starting inversion cleanup anyway."
+fi
+
 # cleanup
+echo "cleaning up daily accumulators for tile $tile, year $year..."
 rm -Rf $dailyAccSnowDir
 rm -Rf $dailyAccNosnowDir
 rm -Rf $dailyAccPrevSnowDir
@@ -22,4 +44,8 @@ rm -Rf $dailyAccPrevNosnowDir
 rm -Rf $dailyAccNextSnowDir
 rm -Rf $dailyAccNextNosnowDir
 
+echo "cleaning up albedo processing marker files for tile $tile, year $year..."
+rm -Rf $albedoTileDir/PROCESSED_*
+
+echo "done."
 echo `date`

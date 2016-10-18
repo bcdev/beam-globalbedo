@@ -25,18 +25,23 @@ tileSize='200' # AVHRR/GEO
 #years = ['2003']    #test  
 #years = ['2001']    #test  
 #years = ['2003']    #test  
-#years = ['2006']    #test  
 years = ['2005']    #test  
 #snowModes = ['Snow', 'NoSnow', 'Merge']
-#snowModes = ['Merge']
 snowModes = ['NoSnow']
 #resolutions = ['05', '005']
 resolutions = ['005']
 #resolutions = ['05']
 
+doys = []
+for i in range(46): # one year
+#for i in range(4):   # one month
+#for i in range(1):   # one doy
+    doy = 8*i + 1
+    #doy = 8*i + 121  # May01
+    doys.append(str(doy).zfill(3))
+
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
-
 inputs = []
 for year in years:
     if mosaicMode == 'simple':
@@ -54,7 +59,7 @@ for year in years:
 #### Upscaling/Mosaicing ####
 
 m = PMonitor(inputs, 
-             request='ga-l3-mosaic', 
+             request='ga-l3-mosaic_simple', 
              logdir='log',
              hosts=[('localhost',16)],
 	     types=[('ga-l3-brdfmosaic-step.sh', 16), ('ga-l3-albedomosaic-step.sh',16)])
@@ -62,9 +67,10 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
 
-        for idoy in range(0,365):    
+        #for doy in doys:    
+        #for idoy in range(0,365):    
         #for idoy in range(0,5):    
-        #for idoy in range(180,331):    
+        for idoy in range(31,365):    
             doy = str(idoy+1).zfill(3)
             for resolution in resolutions:
 

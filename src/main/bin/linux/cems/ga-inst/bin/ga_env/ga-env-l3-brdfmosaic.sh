@@ -96,7 +96,7 @@ submit_job() {
     echo "command: ${command}"
 
     # L3 BRDF mosaics:
-    bsubmit="bsub -W 120 -R rusage[swp=32768] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -W 120 -R rusage[mem=32000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 

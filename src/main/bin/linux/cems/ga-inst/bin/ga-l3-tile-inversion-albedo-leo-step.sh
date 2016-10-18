@@ -14,7 +14,7 @@ beamDir=$9
 modisTileScaleFactor=${10}
 albedoTargetDir=${11}  # remind the brackets if >= 10!!
 
-task="ga-l3-tile-inversion-albedo"
+task="ga-l3-tile-inversion-albedo-leo"
 jobname="${task}-${tile}-${year}-${doy}"
 command="./bin/${task}-beam.sh ${tile} ${year} ${doy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${usePrior} ${priorDir} ${beamDir} ${modisTileScaleFactor} ${albedoTargetDir}"
 

@@ -33,9 +33,8 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
     then
         echo "Create NOSNOW daily accumulators for tile $tile, year $year, DoY $doy..."
 
-        # we have the possible sensors (set manually below):
-        #     LEO: MERIS, VGT, AATSR, PROBAV
-        #     GEO: MVIRI, SEVIRI, AVHRR
+        # we have the possible LEO sensors (set combinations manually below):
+        #     MERIS, VGT, AATSR, PROBAV
 
         # MERIS, VGT (the GlobAlbedo default):
         echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
@@ -53,32 +52,11 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         #echo "time $gpt  ga.l3.dailyacc -Psensors="PROBAV" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
         #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="PROBAV" -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
-        # MVIRI, SEVIRI and AVHRR (the GEO default):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
-
-        # MVIRI and SEVIRI (test purposes):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
-
-        # MVIRI and AVHRR (test purposes):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","AVHRR" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","AVHRR" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
-
-        # AVHRR only (test purposes):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
-
-        # MVIRI only (test purposes):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e"
-        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e
-
         status=$?
         echo "Status: $status"
         if [ "$status" -ne "0" ]; then
            break
         fi
-#        rm -Rf $dailyAccNosnowDir/SUCCESS_dailyacc_${year}_$doy*.d*  # test: leave files!!
     fi
 
     TARGET=$dailyAccSnowDir/SUCCESS_dailyacc_${year}_$doy.dim
@@ -87,10 +65,8 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
     then
         echo "Create SNOW daily accumulators for tile $tile, year $year, DoY $doy..."
 
-        # we have the possible sensors (set manually below):
-        #     LEO: MERIS, VGT, AATSR, PROBAV
-        # (for GEO we compute noSnow mode only, as we have no distinct snow detection)
-        echo " (for GEO we compute noSnow mode only, as we have no distinct snow detection)"
+        # we have the possible LEO sensors (set manually below):
+        #     MERIS, VGT, AATSR, PROBAV
 
         # MERIS, VGT (the GlobAlbedo default):
         echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
@@ -108,17 +84,16 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         #echo "time $gpt  ga.l3.dailyacc -Psensors="PROBAV" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
         #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="PROBAV" -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
-        #status=$?
-        #echo "Status: $status"
-        #if [ "$status" -ne "0" ]; then
-        #    break
-        #fi
-#        rm -Rf $dailyAccSnowDir/SUCCESS_dailyacc_${year}_$doy*.d*   # test: leave files!!
+        status=$?
+        echo "Status: $status"
+        if [ "$status" -ne "0" ]; then
+            break
+        fi
     fi
 
 done
 
-# create marker file for PMonitor that all daily accs for given tile/DoY were processed
+# create marker files that all daily accs for given tile/DoY were processed
 touch $dailyAccNosnowDir/PROCESSED_ALL_$start
 touch $dailyAccSnowDir/PROCESSED_ALL_$start
 

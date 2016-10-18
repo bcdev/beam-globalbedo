@@ -11,11 +11,13 @@ __author__ = 'olafd'
 #############################################################################################################################
 
 years=['2005']
+#years=['2006']
 #snowModes=['Merge']
 snowModes=['NoSnow']
 #resolutions=['005','05']
 resolutions=['005']
-projections=['PC','SIN']
+#projections=['PC','SIN']
+projections=['PC']
 bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_SW_CoV','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']

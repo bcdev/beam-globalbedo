@@ -24,7 +24,7 @@ OUTDIR=$2
 
 #scripts and colorlut directory
 #HOME=/group_workspaces/cems/globalalbedo/scripts/
-HOME=$GA_INST/staging_said
+HOME=$GA_INST/bin/staging_said
 ###################################################################################################################
 
 #if not existing, create output directory
@@ -89,6 +89,8 @@ echo -e "\n\n\n-------------------------------------------------------------"
 echo python2.7 ${PYTHON4} $INPUT $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
 python2.7 ${PYTHON4} $INPUT $OUTDIR  $BANDS4  $MINMAX4  $LUT4  $SIZE $idxDate $COLORTXT $BANDSname4
 
+status=$?
+echo "Status: $status"
 
 echo -e "\n\n\nDone."
 
