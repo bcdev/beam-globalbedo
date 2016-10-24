@@ -61,6 +61,9 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false", label = " If set, only SDR are computed and written")
     private boolean computeSdr;
 
+    @Parameter(defaultValue = "false", label = " If set, SDR are computed everywhere (brute force, ignores clouds etc.)")
+    private boolean computeSdrEverywhere;
+
     @Parameter(defaultValue = "false", label = " If set, BBDR are computed from previously written SDR")
     private boolean computeBbdrFromSdr;
 
@@ -115,6 +118,7 @@ public class GlobalbedoLevel2 extends Operator {
             gaMasterOp.setParameterDefaultValues();
             gaMasterOp.setParameter("copyToaRadBands", false);
             gaMasterOp.setParameter("copyToaReflBands", true);
+            gaMasterOp.setParameter("computeAotEverywhere", computeSdrEverywhere);
             gaMasterOp.setParameter("gaUseL1bLandWaterFlag", gaUseL1bLandWaterFlag);    // todo: default tbd
             gaMasterOp.setParameter("gaRefineClassificationNearCoastlines", gaRefineClassificationNearCoastlines);
             gaMasterOp.setSourceProduct(productToProcess);
@@ -139,6 +143,7 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameterDefaultValues();
                     if (computeSdr) {
                         bbdrOp.setParameter("sdrOnly", true);
+                        bbdrOp.setParameter("computeSdrEverywhere", computeSdrEverywhere);
                         bbdrOp.setParameter("doUclCloudDetection", false);
                         bbdrOp.setParameter("writeGeometryAndAOT", true);
                     }

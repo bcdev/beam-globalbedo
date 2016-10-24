@@ -121,6 +121,10 @@ public class SdrMerisOp extends BbdrMasterOp {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
+        if (x == 60 && y ==1060) {
+            System.out.println("x = " + x);
+        }
+
         if (writeGeometryAndAOT) {
             // copy these source pixels in any case
             targetSamples[TRG_SZA].set(sourceSamples[SRC_SZA].getDouble());
@@ -137,7 +141,7 @@ public class SdrMerisOp extends BbdrMasterOp {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
             double sdr13;
-            if (sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
+            if (computeSdrEverywhere || sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
                 // dem_alt from TP includes sea depth
                 sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
                 for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {

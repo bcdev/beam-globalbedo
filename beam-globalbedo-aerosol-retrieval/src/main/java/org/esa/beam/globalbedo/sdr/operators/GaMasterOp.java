@@ -110,6 +110,9 @@ public class GaMasterOp extends Operator {
     @Parameter(defaultValue = "false", label = "Copy cloud top pressure")
     private boolean gaCopyCTP;
 
+    @Parameter(defaultValue = "false", label = " If set, AOT are computed everywhere (brute force, ignores clouds etc.)")
+    private boolean computeAotEverywhere;
+
     private String instrument;
 
     @Override
@@ -211,6 +214,7 @@ public class GaMasterOp extends Operator {
             upsclProducts.put("hiresProduct", reflProduct);
             Map<String, Object> sclParams = new HashMap<String, Object>(1);
             sclParams.put("scale", scale);
+            sclParams.put("computeAotEverywhere", computeAotEverywhere);
             Product aotHiresProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(UpSclOp.class), sclParams, upsclProducts, rhTarget);
 
             targetProduct = mergeToTargetProduct(reflProduct, aotHiresProduct);

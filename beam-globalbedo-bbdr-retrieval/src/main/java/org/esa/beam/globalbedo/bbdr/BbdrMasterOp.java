@@ -51,6 +51,9 @@ public class BbdrMasterOp extends PixelOperator {
     @Parameter(defaultValue = "false")
     protected boolean sdrOnly;
 
+    @Parameter(defaultValue = "false", label = " If set, SDR are computed everywhere (brute force, ignores clouds etc.)")
+    protected boolean computeSdrEverywhere;
+
     @Parameter(defaultValue = "true")
     protected boolean doUclCloudDetection;
 
@@ -304,14 +307,20 @@ public class BbdrMasterOp extends PixelOperator {
 
             // JM, 20160315:
 //            String statusExpression = sensor.getL1InvalidExpr() + " ? 0 : " +
-            String statusExpression = "cloud_classif_flags.F_INVALID ? 0 : " +
-                    "(cloud_classif_flags.F_HAZE AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLEAR_SNOW AND cloud_classif_flags.F_LAND ? 11 : " +
-                    "(cloud_classif_flags.F_CLOUD_BUFFER ? 6 : " +
-                    "(cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND cloud_classif_flags.F_LAND ? 5 : " +
-                    "(cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_HAZE ? 4 : " +
-                    "(cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 3 : " +
-                    "(cloud_classif_flags.F_CLEAR_WATER AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 2 : 1 ))))))";
 
+            String statusExpression;
+            if (computeSdrEverywhere) {
+                // test: compute everywhere: set all but invalid pixels to status '1':
+                statusExpression = "cloud_classif_flags.F_INVALID ? 0 : (cloud_classif_flags.F_CLEAR_WATER ? 2 : 1)";
+            } else {
+                statusExpression = "cloud_classif_flags.F_INVALID ? 0 : " +
+                        "(cloud_classif_flags.F_HAZE AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLEAR_SNOW AND cloud_classif_flags.F_LAND ? 11 : " +
+                        "(cloud_classif_flags.F_CLOUD_BUFFER ? 6 : " +
+                        "(cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND cloud_classif_flags.F_LAND ? 5 : " +
+                        "(cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER AND NOT cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_SHADOW AND NOT cloud_classif_flags.F_HAZE ? 4 : " +
+                        "(cloud_classif_flags.F_CLEAR_SNOW AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 3 : " +
+                        "(cloud_classif_flags.F_CLEAR_WATER AND NOT cloud_classif_flags.F_CLOUD AND NOT cloud_classif_flags.F_CLOUD_BUFFER ? 2 : 1 ))))))";
+            }
 
             BandMathsOp.BandDescriptor statusBd = new BandMathsOp.BandDescriptor();
             statusBd.name = "status";

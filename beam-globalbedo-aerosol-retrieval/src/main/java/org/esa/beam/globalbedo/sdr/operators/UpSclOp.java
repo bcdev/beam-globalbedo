@@ -6,6 +6,7 @@
 package org.esa.beam.globalbedo.sdr.operators;
 
 import com.bc.ceres.core.ProgressMonitor;
+import org.esa.beam.dataio.envisat.EnvisatConstants;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Mask;
@@ -43,8 +44,12 @@ public class UpSclOp extends Operator {
     @TargetProduct
     private Product targetProduct;
 
+    @Parameter(defaultValue = "false", label = " If set, AOT are computed everywhere (brute force, ignores clouds etc.)")
+    private boolean computeAotEverywhere;
+
     @Parameter(defaultValue = "9")
     private int scale;
+
     private int offset;
     private int sourceRasterWidth;
     private int sourceRasterHeight;
@@ -60,7 +65,20 @@ public class UpSclOp extends Operator {
         offset = scale / 2;
         InstrumentConsts instrC = InstrumentConsts.getInstance();
         String instrument = instrC.getInstrument(hiresProduct);
-        final String validExpression = instrC.getValAotOutExpression(instrument);
+//        final String validExpression = instrC.getValAotOutExpression(instrument);
+        String validExpression;
+        if (computeAotEverywhere) {
+            if (instrument.equals("MERIS")) {
+                validExpression = "!l1_flags.INVALID && " + EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME + " < 70";
+            } else if (instrument.equals("VGT")) {
+                validExpression = "(SM.B0_GOOD && SM.B2_GOOD && SM.B3_GOOD && (SM.MIR_GOOD or MIR <= 0.65) "
+                    + " && (SZA<70)) ";
+            } else {
+                validExpression = instrC.getValAotOutExpression(instrument);
+            }
+        } else {
+            validExpression = instrC.getValAotOutExpression(instrument);
+        }
         final BandMathsOp validBandOp = BandMathsOp.createBooleanExpressionBand(validExpression, hiresProduct);
         validBand = validBandOp.getTargetProduct().getBandAt(0);
 
