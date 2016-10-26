@@ -87,7 +87,7 @@ public class SdrVgtOp extends BbdrMasterOp {
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        if (x == 800 && y == 400 ) {
+        if (x == 100 && y == 400 ) {
             System.out.println("x = " + x);
         }
         if (writeGeometryAndAOT) {
@@ -107,7 +107,17 @@ public class SdrVgtOp extends BbdrMasterOp {
         status = sourceSamples[SRC_STATUS].getInt();
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            // water, do simple atmospheric correction
+//            if (computeSdrEverywhere) {
+//                // water, just copy TOA here
+//                for (int i = 0; i < Sensor.VGT.getNumBands(); i++) {
+//                    final double sdr = sourceSamples[i+11].getDouble();
+//                    targetSamples[i].set(sdr);
+//                }
+//            } else {
+//                targetSamples[TRG_SDR_STATUS].set(status);
+//                return;
+//            }
+
             targetSamples[TRG_SDR_STATUS].set(status);
             return;
         } else if (status != StatusPostProcessOp.STATUS_LAND &&

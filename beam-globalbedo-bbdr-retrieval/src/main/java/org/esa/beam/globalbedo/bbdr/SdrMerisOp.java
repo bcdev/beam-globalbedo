@@ -140,19 +140,19 @@ public class SdrMerisOp extends BbdrMasterOp {
         if (status == StatusPostProcessOp.STATUS_WATER) {
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             // water, do simple atmospheric correction
-            double sdr13;
-            if (computeSdrEverywhere || sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
-                // dem_alt from TP includes sea depth
-                sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
-                for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
-                    double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
-                    sdr = sdr - sdr13;  // normalize
-                    targetSamples[i].set(sdr);
-                }
-            } else {
-                targetSamples[TRG_SDR_STATUS].set(status);
-                return;
-            }
+//            double sdr13;
+//            if (computeSdrEverywhere || sourceSamples[SRC_STATUS + 1].getDouble() > -100) {
+//                // dem_alt from TP includes sea depth
+//                sdr13 = (sourceSamples[SRC_TOA_RFL + 12].getDouble() - PATH_RADIANCE[12]) / TRANSMISSION[12];
+//                for (int i = 0; i < Sensor.MERIS.getNumBands(); i++) {
+//                    double sdr = (sourceSamples[SRC_TOA_RFL + i].getDouble() - PATH_RADIANCE[i]) / TRANSMISSION[i];
+//                    sdr = sdr - sdr13;  // normalize
+//                    targetSamples[i].set(sdr);
+//                }
+//            } else {
+//                targetSamples[TRG_SDR_STATUS].set(status);
+//                return;
+//            }
 
             targetSamples[TRG_SDR_STATUS].set(status);
             return;

@@ -160,6 +160,7 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp.setParameterDefaultValues();
                     if (computeSdr) {
                         bbdrOp.setParameter("sdrOnly", true);
+                        bbdrOp.setParameter("computeSdrEverywhere", computeSdrEverywhere);
                         bbdrOp.setParameter("writeGeometryAndAOT", true);
                     }
                     bbdrOp.setParameter("useAotClimatology", useAotClimatology);
