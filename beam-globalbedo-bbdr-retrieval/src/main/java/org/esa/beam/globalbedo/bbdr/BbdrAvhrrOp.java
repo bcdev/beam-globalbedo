@@ -178,6 +178,8 @@ public class BbdrAvhrrOp extends PixelOperator {
 
         targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
         ProductUtils.copyBand("QA", sourceProduct, targetProduct, true);
+        // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
+        ProductUtils.copyBand("LDTR_FLAG", sourceProduct, targetProduct, true);
     }
 
     @Override
@@ -189,7 +191,9 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(SRC_TS, "TS", sourceProduct);
         configurator.defineSample(SRC_TV, "TV", sourceProduct);
         configurator.defineSample(SRC_PHI, "PHI", sourceProduct);
-        configurator.defineSample(SRC_QA, "QA", sourceProduct);
+//        configurator.defineSample(SRC_QA, "QA", sourceProduct);
+        // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
+        configurator.defineSample(SRC_QA, "LDTR_FLAG", sourceProduct);
     }
 
     @Override
