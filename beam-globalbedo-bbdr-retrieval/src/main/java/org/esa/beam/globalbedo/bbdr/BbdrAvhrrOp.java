@@ -48,7 +48,7 @@ public class BbdrAvhrrOp extends PixelOperator {
     protected static final int SRC_TS = 4;
     protected static final int SRC_TV = 5;
     protected static final int SRC_PHI = 6;
-    protected static final int SRC_QA = 7;
+    protected static final int SRC_LDTR_FLAG = 7;
 
     protected static final int TRG_BB_VIS = 0;
     protected static final int TRG_BB_NIR = 1;
@@ -88,12 +88,12 @@ public class BbdrAvhrrOp extends PixelOperator {
         final double sza = sourceSamples[SRC_TV].getDouble();
 
         final double phi = sourceSamples[SRC_PHI].getDouble();
-        final int qa = sourceSamples[SRC_QA].getInt();
+        final int ldtrFlag = sourceSamples[SRC_LDTR_FLAG].getInt();
 
-        // decode qa flag and extract cloud info, see emails from Mirko Marioni, 20160513:
-        final boolean isCloud = BitSetter.isFlagSet(qa, 1);
-        final boolean isCloudShadow = BitSetter.isFlagSet(qa, 2);
-        final boolean isSea = BitSetter.isFlagSet(qa, 3);
+        // decode ldtrFlag flag and extract cloud info, see emails from Mirko Marioni, 20160513:
+        final boolean isCloud = BitSetter.isFlagSet(ldtrFlag, 1);
+        final boolean isCloudShadow = BitSetter.isFlagSet(ldtrFlag, 2);
+        final boolean isSea = BitSetter.isFlagSet(ldtrFlag, 3);
         if (isSea || isCloud || isCloudShadow) {
             // only compute over clear land
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
@@ -193,7 +193,7 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(SRC_PHI, "PHI", sourceProduct);
 //        configurator.defineSample(SRC_QA, "QA", sourceProduct);
         // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
-        configurator.defineSample(SRC_QA, "LDTR_FLAG", sourceProduct);
+        configurator.defineSample(SRC_LDTR_FLAG, "LDTR_FLAG", sourceProduct);
     }
 
     @Override
