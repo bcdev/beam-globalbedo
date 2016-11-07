@@ -1,51 +1,25 @@
 #!/bin/bash
 
-# cleanup of daily accumulator binary files which use a lot of disk space...
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-cleanup.sh
 
 tile=$1
 year=$2
 gaRootDir=$3
 
-dailyAccNosnowDir=$gaRootDir/BBDR/DailyAcc/$year/$tile/NoSnow
-dailyAccSnowDir=$gaRootDir/BBDR/DailyAcc/$year/$tile/Snow
+task="ga-l3-tile-inversion-cleanup"
+jobname="${task}-${tile}-${year}"
+command="./bin/${task}-bash.sh ${tile} ${year} ${gaRootDir}"
 
-prevYear=`printf '%04d\n' "$((10#$year - 1))"`
-dailyAccPrevNosnowDir=$gaRootDir/BBDR/DailyAcc/$prevYear/$tile/NoSnow
-dailyAccPrevSnowDir=$gaRootDir/BBDR/DailyAcc/$prevYear/$tile/Snow
-nextYear=`printf '%04d\n' "$((10#$year + 1))"`
-dailyAccNextNosnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/NoSnow
-dailyAccNextSnowDir=$gaRootDir/BBDR/DailyAcc/$nextYear/$tile/Snow
+echo "jobname: $jobname"
+echo "command: $command"
 
+echo "`date -u +%Y%m%d-%H%M%S` submitting job '${jobname}' for task ${task}"
 
-# make sure albedos are done:
-albedoTileDir=$gaRootDir/Albedo/$year/$tile
-waitCount=0
-while [  "$waitCount" -lt "15" ]; do
-    markerAlbedo=$albedoTileDir/PROCESSED_ALL
-    thedate=`date`
-    echo "Waiting for $waitCount minutes for completion of albedos... $thedate"
-    if [ -f "$markerAlbedo" ]; then
-        echo "Albedo computation completed - ready for inversion cleanup."
-        break
-    fi
-    let waitCount=waitCount+1
-    sleep 60
-done
-if [ "$waitCount" -ge "15" ]; then
-    echo "WARNING: Albedo computation not complete but starting inversion cleanup anyway."
+echo "calling read_task_jobs()..."
+read_task_jobs ${jobname}
+
+if [ -z ${jobs} ]; then
+    submit_job ${jobname} ${command}
 fi
 
-# cleanup
-echo "cleaning up daily accumulators for tile $tile, year $year..."
-rm -Rf $dailyAccSnowDir
-rm -Rf $dailyAccNosnowDir
-rm -Rf $dailyAccPrevSnowDir
-rm -Rf $dailyAccPrevNosnowDir
-rm -Rf $dailyAccNextSnowDir
-rm -Rf $dailyAccNextNosnowDir
-
-echo "cleaning up albedo processing marker files for tile $tile, year $year..."
-rm -Rf $albedoTileDir/PROCESSED_*
-
-echo "done."
-echo `date`
+wait_for_task_jobs_completion ${jobname}

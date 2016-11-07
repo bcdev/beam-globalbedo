@@ -17,8 +17,8 @@ snowModes=['NoSnow']
 #resolutions=['005','05']
 resolutions=['005']
 #projections=['PC','SIN']
-#projections=['SIN']
-projections=['PC']
+projections=['SIN']
+#projections=['PC']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 stagingListsRootDir = gaRootDir + '/staging/lists'

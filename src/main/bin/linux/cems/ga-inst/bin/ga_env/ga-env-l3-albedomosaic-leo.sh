@@ -45,8 +45,8 @@ wait_for_task_jobs_completion() {
     jobname=$1
     while true
     do
-        #sleep 30
-        sleep 180
+        #sleep 10
+        sleep 120
         # Output of bjobs command (example from SST CCI):
         # JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
         # 619450  rquast  RUN   lotus      lotus.jc.rl host042.jc. *r.n10-sub Aug 14 10:15
@@ -95,9 +95,9 @@ submit_job() {
     echo "jobname: ${jobname}"
     echo "command: ${command}"
 
-    # L3 tile inversion albedo:
-    #bsubmit="bsub -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    bsubmit="bsub -R rusage[mem=12000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # L3 albedo mosaics:
+    # for LEO (1200x1200 tiles), check from log/*.out files how much Max Memory and time is used and set suitable mem and -W values:
+    bsubmit="bsub -W 180 -R rusage[mem=32000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 
