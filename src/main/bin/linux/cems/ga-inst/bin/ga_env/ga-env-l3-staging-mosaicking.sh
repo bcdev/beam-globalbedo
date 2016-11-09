@@ -95,7 +95,10 @@ submit_job() {
     echo "command: ${command}"
 
     # staging
-    bsubmit="bsub -R rusage[mem=16000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # for AVHRRGEO (200x200 tiles):
+    bsubmit="bsub -W 120 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # for LEO (1200x1200 tiles), check from log/*.out files how much Max Memory and time is used and set suitable mem and -W values:
+    # bsubmit="bsub -W 180 -R rusage[mem=32000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 

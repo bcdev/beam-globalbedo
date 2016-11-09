@@ -28,6 +28,7 @@ read_task_jobs() {
 	    echo "log: $log"
             #if grep -qF 'Successfully completed.' ${log}
             #if ! grep -qF 'Status: 1' ${log}
+            # also make sure that terminated jobs are not interpreted as successful:
             if [ ! grep -qF 'Status: 1' ${log} ] && [ ! grep -qF 'TERM_RUNLIMIT' ${log} ]
             then
                 if [ "${jobs}" != "" ]
@@ -45,8 +46,8 @@ wait_for_task_jobs_completion() {
     jobname=$1
     while true
     do
-        #sleep 30
-        sleep 180
+        #sleep 10
+        sleep 120
         # Output of bjobs command (example from SST CCI):
         # JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
         # 619450  rquast  RUN   lotus      lotus.jc.rl host042.jc. *r.n10-sub Aug 14 10:15
@@ -95,9 +96,8 @@ submit_job() {
     echo "jobname: ${jobname}"
     echo "command: ${command}"
 
-    # L3 tile inversion albedo:
-    #bsubmit="bsub -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    bsubmit="bsub -R rusage[mem=12000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # BRF unzip:
+    bsubmit="bsub -W 00:15 -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 

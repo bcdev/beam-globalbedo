@@ -47,24 +47,6 @@ then
     status=$?
     echo "Status: $status"
 
-#   if [ "$status" -eq 0 ]; then
-#       echo "Compute SNOW BRDF for tile $tile, year $year, DoY $doy, ..."
-#       TARGET=${inversionSnowTargetDir}/GlobAlbedo.brdf.$year$doy.$tile.Snow.nc
-#       echo "time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
-#       time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
-#       status=$?
-#       echo "Status: $status"
-#   fi
-#
-#    if [ "$status" -eq 0 ]; then
-#        echo "Compute MERGED BRDF for tile $tile, year $year, DoY $doy ..."
-#        TARGET=${inversionMergeTargetDir}/GlobAlbedo.brdf.merge.$year$doy.$tile.nc
-#        echo "time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
-#        time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
-#        status=$?
-#        echo "Status: $status"
-#    fi
-
     if [ "$status" -eq 0 ]; then
         echo "Compute ALBEDO for tile $tile, year $year, DoY $doy ..."
         TARGET=$albedoTargetDir/GlobAlbedo.albedo.$year$doy.$tile.nc
@@ -72,6 +54,18 @@ then
         time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PinversionRootDir=$inversionRootDir -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-ALBEDO -t $TARGET
         status=$?
         echo "Status: $status"
+    fi
+
+    # create marker file that albedo for given tile/DoY was processed
+    touch $albedoTargetDir/PROCESSED_ALL_$doy
+
+    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
+    numAlbedoFiles=`ls -1 $albedoTargetDir/PROCESSED_ALL_* |wc -l`
+    echo "numAlbedoFiles: $numAlbedoFiles"
+    if [ $numAlbedoFiles -eq 365 ]
+    then
+	echo "All albedo products for year $year, tile $tile done."
+	touch $albedoTargetDir/PROCESSED_ALL
     fi
 
 else

@@ -10,7 +10,10 @@ hEnd=$5
 gaRootDir=$6
 beamDir=$7
 
-bbdrBaseName=`basename $bbdrFile .nc`
+# old products:
+# bbdrBaseName=`basename $bbdrFile .nc`
+# new products:
+bbdrBaseName=`basename $bbdrFile .NC.bz2`
 
 task="ga-l2-avhrr-bbdr-tiles"
 jobname="${task}-AVHRR-${hStart}-${hEnd}-${bbdrBaseName}"

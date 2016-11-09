@@ -46,8 +46,8 @@ wait_for_task_jobs_completion() {
 
     while true
     do
-        sleep 30
-        #sleep 120
+        #sleep 30
+        sleep 180
         # Output of bjobs command (example from SST CCI):
         # JOBID   USER    STAT  QUEUE      FROM_HOST   EXEC_HOST   JOB_NAME   SUBMIT_TIME
         # 619450  rquast  RUN   lotus      lotus.jc.rl host042.jc. *r.n10-sub Aug 14 10:15
