@@ -32,7 +32,7 @@ import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.globalbedo.mosaic.GlobAlbedoMosaicProductReader;
+import org.esa.beam.globalbedo.mosaic.GlobAlbedoQa4ecvMosaicProductReader;
 import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 
@@ -56,7 +56,7 @@ import java.util.Map;
         internal = true,
         description = "Reprojects and upscales horizontal subsets of GlobAlbedo tile products \n" +
                 " into a SIN or a 0.5 or 0.05 degree  Plate Caree product.")
-public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3UpscaleBasisOp {
+public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3UpscaleBasisOp {
 
     @Parameter(valueSet = {"1200", "200"},
             description = "Input product tile size (default = 1200 (MODIS), 200 for AVHRR/GEO",
@@ -77,6 +77,13 @@ public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3Upscale
     @Parameter(defaultValue = "false",
             description = "If set, not all bands (i.e. no alphas/sigmas) are written. Set to true to save computation time and disk space.")
     private boolean reducedOutput;
+
+    @Parameter(defaultValue = "0")   // to define a subset of 'vertical stripes' of tiles
+    protected int horizontalTileStartIndex;
+
+    @Parameter(defaultValue = "35")   // to define a subset of 'vertical stripes' of tiles
+    protected int horizontalTileEndIndex;
+
 
     @TargetProduct
     private Product targetProduct;
@@ -103,8 +110,10 @@ public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3Upscale
         if (productReader == null) {
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
         }
-        if (productReader instanceof GlobAlbedoMosaicProductReader) {
-            ((GlobAlbedoMosaicProductReader) productReader).setTileSize(inputProductTileSize);
+        if (productReader instanceof GlobAlbedoQa4ecvMosaicProductReader) {
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setTileSize(inputProductTileSize);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileStartIndex(horizontalTileStartIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileEndIndex(horizontalTileEndIndex);
         }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
@@ -250,6 +259,7 @@ public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3Upscale
 
         final FilenameFilter albedoFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
+                // e.g. GlobAlbedo.albedo.2006335.h18v04.nc
                 String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
                 String expectedFilename;
 
@@ -261,7 +271,11 @@ public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3Upscale
                             dir.getName() + expectedFilenameExt;
                 }
 
-                return name.equals(expectedFilename);
+                final boolean isTileToProcess =
+                        GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
+                                horizontalTileStartIndex,
+                                horizontalTileEndIndex);
+                return isTileToProcess && name.equals(expectedFilename);
             }
         };
 
@@ -406,7 +420,7 @@ public class GlobalbedoLevel3UpscaleAlbedoSubset extends GlobalbedoLevel3Upscale
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3UpscaleAlbedoSubset.class);
+            super(GlobalbedoLevel3UpscaleQa4ecvAlbedo.class);
         }
     }
 }
