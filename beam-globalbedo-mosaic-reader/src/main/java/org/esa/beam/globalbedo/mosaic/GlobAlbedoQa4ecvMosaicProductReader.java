@@ -45,7 +45,7 @@ import java.util.regex.Pattern;
  */
 public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
 
-    private static final String PRODUCT_TYPE = "QA4ECV_Mosaic";
+    private static final String PRODUCT_TYPE = "GLOBALBEDO-L3-MOSAIC-QA4ECV";
 
     private final Pattern pattern;
     private MosaicDefinition mosaicDefinition;
@@ -54,8 +54,10 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     private int tileSize;
     private int horizontalTileStartIndex;
     private int horizontalTileEndIndex;
+    private int verticalTileStartIndex;
+    private int verticalTileEndIndex;
 
-    protected GlobAlbedoQa4ecvMosaicProductReader(GlobAlbedoMosaicReaderPlugIn readerPlugIn) {
+    protected GlobAlbedoQa4ecvMosaicProductReader(GlobAlbedoQa4ecvMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         this.pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         this.mosaicDefinition = new MosaicDefinition(MosaicConstants.NUM_H_TILES, MosaicConstants.NUM_V_TILES,
@@ -65,7 +67,8 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     @Override
     protected Product readProductNodesImpl() throws IOException {
         final int numHorizontalTiles = horizontalTileEndIndex - horizontalTileStartIndex + 1;
-        mosaicDefinition = new MosaicDefinition(numHorizontalTiles, MosaicConstants.NUM_V_TILES, tileSize);
+        final int numVerticalTiles = verticalTileEndIndex - verticalTileStartIndex + 1;
+        mosaicDefinition = new MosaicDefinition(numHorizontalTiles, numVerticalTiles, tileSize);
 
         final File inputFile = getInputFile();
         Set<MosaicTile> mosaicTiles = createMosaicTiles(inputFile);
@@ -167,47 +170,79 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     private Set<MosaicTile> createMosaicTiles(File refFile) throws IOException {
         HashSet<MosaicTile> mosaicTiles = new HashSet<>();
         File refTileDir = refFile.getParentFile();
-        MosaicTile mosaicTile = createMosaicTile(refFile);
-        if (refTileDir == null && mosaicTile != null) {
-            mosaicTiles.add(mosaicTile);
+        if (refTileDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
             return mosaicTiles;
         }
-        File rootDir = null;
-        if (refTileDir != null) {
-            rootDir = refTileDir.getParentFile();
-        }
-        if (rootDir == null && mosaicTile != null) {
-            mosaicTiles.add(mosaicTile);  // todo: unclear. check what this does.
+        File rootDir = refTileDir.getParentFile();
+        if (rootDir == null) {
+            mosaicTiles.add(createMosaicTile(refFile));
             return mosaicTiles;
         }
-
         String regex = getMosaicFileRegex(refFile.getName());
-        final File[] tileDirs;
-        if (rootDir != null) {
-            tileDirs = rootDir.listFiles(new TileDirFilter());
-            if (tileDirs != null) {
-                for (File tileDir : tileDirs) {
-                    final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
-                    if (mosaicFiles != null && mosaicFiles.length == 1) {
-                        mosaicTile = createMosaicTile(mosaicFiles[0]);
-                        mosaicTiles.add(mosaicTile);
-                    } else {
-                        // TODO error
-                    }
+        final File[] tileDirs = rootDir.listFiles(new TileDirFilter());
+        for (File tileDir : tileDirs) {
+            final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+            if (mosaicFiles.length == 1) {
+                final MosaicTile mosaicTile = createMosaicTile(mosaicFiles[0]);
+                if (mosaicTile != null) {
+                    mosaicTiles.add(mosaicTile);
                 }
+            } else {
+                // TODO error
             }
         }
         return mosaicTiles;
     }
 
+
+//    private Set<MosaicTile> createMosaicTiles(File refFile) throws IOException {
+//        HashSet<MosaicTile> mosaicTiles = new HashSet<>();
+//        File refTileDir = refFile.getParentFile();
+//        if (refTileDir == null) {
+//            MosaicTile mosaicTile = createMosaicTile(refFile);
+//            if (mosaicTile != null) {
+//                mosaicTiles.add(mosaicTile);
+//                return mosaicTiles;
+//            }
+//        }
+//        File rootDir = null;
+//        if (refTileDir != null) {
+//            rootDir = refTileDir.getParentFile();
+//        }
+//        if (rootDir == null && mosaicTile != null) {
+//            mosaicTiles.add(mosaicTile);  // todo: unclear. check what this does.
+//            return mosaicTiles;
+//        }
+//
+//        String regex = getMosaicFileRegex(refFile.getName());
+//        final File[] tileDirs;
+//        if (rootDir != null) {
+//            tileDirs = rootDir.listFiles(new TileDirFilter());
+//            if (tileDirs != null) {
+//                for (File tileDir : tileDirs) {
+//                    final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
+//                    if (mosaicFiles != null && mosaicFiles.length == 1) {
+//                        mosaicTile = createMosaicTile(mosaicFiles[0]);
+//                        mosaicTiles.add(mosaicTile);
+//                    } else {
+//                        // TODO error
+//                    }
+//                }
+//            }
+//        }
+//        return mosaicTiles;
+//    }
+
     private MosaicTile createMosaicTile(File file) {
-        if (isTileToProcess(file.getName(), horizontalTileStartIndex, horizontalTileEndIndex)) {
-            Matcher matcher = pattern.matcher(file.getName());
+        if (isTileToProcess(file.getParentFile().getName(), horizontalTileStartIndex, horizontalTileEndIndex,
+                            verticalTileStartIndex, verticalTileEndIndex)) {
+            Matcher matcher = pattern.matcher(file.getParentFile().getName());
             boolean found = matcher.find();
             if (found) {
                 int x = Integer.parseInt(matcher.group(1));
                 int y = Integer.parseInt(matcher.group(2));
-                int index = mosaicDefinition.calculateIndex(x, y);
+                int index = mosaicDefinition.calculateIndex(x, y);       // TODO: check this !!!!!!!!
                 return new MosaicTile(x, y, index, file);
             } else {
                 return null;
@@ -233,9 +268,12 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
         return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
     }
 
-    public static boolean isTileToProcess(String tileName, int startIndex, int endIndex) {
+    public static boolean isTileToProcess(String tileName, int horizontalTileStartIndex, int horizontalTileEndIndex,
+                                          int verticalTileStartIndex, int verticalTileEndIndex) {
         final int hIndex = Integer.parseInt(tileName.substring(1, 3));
-        return startIndex <= hIndex && hIndex <= endIndex;
+        final int vIndex = Integer.parseInt(tileName.substring(4, 6));
+        return horizontalTileStartIndex <= hIndex && hIndex <= horizontalTileEndIndex &&
+                verticalTileStartIndex <= vIndex && vIndex <= verticalTileEndIndex;
     }
 
     private File getInputFile() throws IOException {
@@ -278,6 +316,13 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
         this.horizontalTileEndIndex = horizontalTileEndIndex;
     }
 
+    public void setVerticalTileStartIndex(int verticalTileStartIndex) {
+        this.verticalTileStartIndex = verticalTileStartIndex;
+    }
+
+    public void setVerticalTileEndIndex(int verticalTileEndIndex) {
+        this.verticalTileEndIndex = verticalTileEndIndex;
+    }
 
     ///// private classes //////
     private class TileDirFilter implements FileFilter {

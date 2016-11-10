@@ -33,7 +33,6 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoQa4ecvMosaicProductReader;
-import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 
 import java.awt.*;
@@ -49,7 +48,7 @@ import java.util.Map;
  * @author olafd
  */
 @OperatorMetadata(
-        alias = "ga.l3.upscale.albedo.subset",
+        alias = "ga.l3.upscale.albedo.qa4ecv",
         authors = "Olaf Danne",
         copyright = "2016 Brockmann Consult",
         version = "0.1",
@@ -84,6 +83,12 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     @Parameter(defaultValue = "35")   // to define a subset of 'vertical stripes' of tiles
     protected int horizontalTileEndIndex;
 
+    @Parameter(defaultValue = "0")   // to define a subset of 'vertical stripes' of tiles
+    protected int verticalTileStartIndex;
+
+    @Parameter(defaultValue = "17")   // to define a subset of 'vertical stripes' of tiles
+    protected int verticalTileEndIndex;
+
 
     @TargetProduct
     private Product targetProduct;
@@ -106,14 +111,16 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             throw new OperatorException("No albedo files for mosaicing found.");
         }
 
-        final ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC");
+        final ProductReader productReader = ProductIO.getProductReader("GLOBALBEDO-L3-MOSAIC-QA4ECV");
         if (productReader == null) {
-            throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC' reader available.");
+            throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC-QA4ECV' reader available.");
         }
         if (productReader instanceof GlobAlbedoQa4ecvMosaicProductReader) {
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setTileSize(inputProductTileSize);
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileStartIndex(horizontalTileStartIndex);
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileEndIndex(horizontalTileEndIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVerticalTileStartIndex(verticalTileStartIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVerticalTileEndIndex(verticalTileEndIndex);
         }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
@@ -132,8 +139,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         setReprojectedProduct(mosaicProduct, inputProductTileSize);
 
-        final int width = inputProductTileSize * MosaicConstants.NUM_H_TILES / scaling;
-        final int height = inputProductTileSize * MosaicConstants.NUM_V_TILES / scaling;
+        final int numHorizontalTiles = horizontalTileEndIndex - horizontalTileStartIndex + 1;
+        final int numVerticalTiles = verticalTileEndIndex - verticalTileStartIndex + 1;
+        final int width = inputProductTileSize * numHorizontalTiles / scaling;
+        final int height = inputProductTileSize * numVerticalTiles / scaling;
         final int tileWidth = inputProductTileSize / scaling / 2;
         final int tileHeight = inputProductTileSize / scaling / 2;
 
@@ -234,7 +243,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
                 Tile targetTile = tileEntry.getValue();
                 String bandName = tileEntry.getKey();
-                if (!isLatLonBand(bandName) &&!bandName.equals(AlbedoInversionConstants.ALB_SZA_BAND_NAME)) {
+                if (!isLatLonBand(bandName) && !bandName.equals(AlbedoInversionConstants.ALB_SZA_BAND_NAME)) {
                     double noDataValue = getTargetProduct().getBand(bandName).getNoDataValue();
                     for (int y = targetRect.y; y < targetRect.y + targetRect.height; y++) {
                         for (int x = targetRect.x; x < targetRect.x + targetRect.width; x++) {
@@ -273,8 +282,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
                 final boolean isTileToProcess =
                         GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
-                                horizontalTileStartIndex,
-                                horizontalTileEndIndex);
+                                                                            horizontalTileStartIndex, horizontalTileEndIndex,
+                                                                            verticalTileStartIndex, verticalTileEndIndex);
                 return isTileToProcess && name.equals(expectedFilename);
             }
         };
