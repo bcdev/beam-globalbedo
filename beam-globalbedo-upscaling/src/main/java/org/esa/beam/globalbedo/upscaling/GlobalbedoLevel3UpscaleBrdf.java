@@ -240,13 +240,17 @@ public class GlobalbedoLevel3UpscaleBrdf extends GlobalbedoLevel3UpscaleBasisOp 
                                 IOUtils.getDoyString(doy) + "." + dir.getName() + expectedFilenameExt;
                         break;
                     case "Snow":
+                        // e.g. GlobAlbedo.brdf.2005121.h34v09.Snow.nc
                         expectedFilename = "GlobAlbedo.brdf." + year +
                                 IOUtils.getDoyString(doy) + "." + dir.getName() + ".Snow" + expectedFilenameExt;
                         break;
-                    default:
+                    case "NoSnow":
+                        // e.g. GlobAlbedo.brdf.2005121.h34v09.NoSnow.nc
                         expectedFilename = "GlobAlbedo.brdf." + year +
                                 IOUtils.getDoyString(doy) + "." + dir.getName() + ".NoSnow" + expectedFilenameExt;
                         break;
+                    default:
+                        throw new OperatorException("Snow mode '" + inputType + "' not supported");
                 }
 
                 return name.equals(expectedFilename);

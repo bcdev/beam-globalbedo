@@ -52,23 +52,24 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     private MosaicGrid mosaicGrid;
 
     private int tileSize;
-    private int horizontalTileStartIndex;
-    private int horizontalTileEndIndex;
-    private int verticalTileStartIndex;
-    private int verticalTileEndIndex;
+
+    private int hStartIndex;
+    private int hEndIndex;
+    private int vStartIndex;
+    private int vEndIndex;
 
     protected GlobAlbedoQa4ecvMosaicProductReader(GlobAlbedoQa4ecvMosaicReaderPlugIn readerPlugIn) {
         super(readerPlugIn);
         this.pattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         this.mosaicDefinition = new MosaicDefinition(MosaicConstants.NUM_H_TILES, MosaicConstants.NUM_V_TILES,
-                MosaicConstants.MODIS_TILE_SIZE);
+                                                     MosaicConstants.MODIS_TILE_SIZE);
     }
 
     @Override
     protected Product readProductNodesImpl() throws IOException {
-        final int numHorizontalTiles = horizontalTileEndIndex - horizontalTileStartIndex + 1;
-        final int numVerticalTiles = verticalTileEndIndex - verticalTileStartIndex + 1;
-        mosaicDefinition = new MosaicDefinition(numHorizontalTiles, numVerticalTiles, tileSize);
+        final int numHorizontalTiles = hEndIndex - hStartIndex + 1;
+        final int numVerticalTiles = vEndIndex - vStartIndex + 1;
+        mosaicDefinition = new MosaicDefinition(numHorizontalTiles, numVerticalTiles, hStartIndex, vStartIndex, tileSize);
 
         final File inputFile = getInputFile();
         Set<MosaicTile> mosaicTiles = createMosaicTiles(inputFile);
@@ -111,9 +112,15 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
                                           ProgressMonitor pm) throws IOException {
 
         Rectangle sourceRect = new Rectangle(sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight);
-        Point[] indexes = mosaicGrid.getAffectedSourceTiles(sourceRect);
+        Point[] indexes = MosaicGrid.getAffectedSourceTiles(sourceRect,
+                                                            mosaicDefinition.getHStartIndex(),
+                                                            mosaicDefinition.getVStartIndex(),
+                                                            mosaicDefinition.getTileSize());
         for (Point index : indexes) {
-            Rectangle tileBounds = mosaicGrid.getTileBounds(index.x, index.y);
+            Rectangle tileBounds = MosaicGrid.getTileBounds(index.x, index.y,
+                                                            mosaicDefinition.getHStartIndex(),
+                                                            mosaicDefinition.getVStartIndex(),
+                                                            mosaicDefinition.getTileSize());
             Rectangle toRead = sourceRect.intersection(tileBounds);
             if (toRead.isEmpty()) {
                 continue;
@@ -139,7 +146,7 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
                     }
                 } else {
                     System.out.println("WARNING: band '" + destBand.getName() + "' not found in product '" +
-                            mosaicTile.getProduct().getName() + "'.");
+                                               mosaicTile.getProduct().getName() + "'.");
                     double nodataValue = destBand.getNoDataValue();
                     for (int y = toWrite.y - destOffsetY; y < toWrite.y + toWrite.height - destOffsetY; y++) {
                         for (int x = toWrite.x - destOffsetX; x < toWrite.x + toWrite.width - destOffsetX; x++) {
@@ -195,55 +202,20 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
         return mosaicTiles;
     }
 
-
-//    private Set<MosaicTile> createMosaicTiles(File refFile) throws IOException {
-//        HashSet<MosaicTile> mosaicTiles = new HashSet<>();
-//        File refTileDir = refFile.getParentFile();
-//        if (refTileDir == null) {
-//            MosaicTile mosaicTile = createMosaicTile(refFile);
-//            if (mosaicTile != null) {
-//                mosaicTiles.add(mosaicTile);
-//                return mosaicTiles;
-//            }
-//        }
-//        File rootDir = null;
-//        if (refTileDir != null) {
-//            rootDir = refTileDir.getParentFile();
-//        }
-//        if (rootDir == null && mosaicTile != null) {
-//            mosaicTiles.add(mosaicTile);  // todo: unclear. check what this does.
-//            return mosaicTiles;
-//        }
-//
-//        String regex = getMosaicFileRegex(refFile.getName());
-//        final File[] tileDirs;
-//        if (rootDir != null) {
-//            tileDirs = rootDir.listFiles(new TileDirFilter());
-//            if (tileDirs != null) {
-//                for (File tileDir : tileDirs) {
-//                    final File[] mosaicFiles = tileDir.listFiles(new MosaicFileFilter(regex));
-//                    if (mosaicFiles != null && mosaicFiles.length == 1) {
-//                        mosaicTile = createMosaicTile(mosaicFiles[0]);
-//                        mosaicTiles.add(mosaicTile);
-//                    } else {
-//                        // TODO error
-//                    }
-//                }
-//            }
-//        }
-//        return mosaicTiles;
-//    }
-
     private MosaicTile createMosaicTile(File file) {
-        if (isTileToProcess(file.getParentFile().getName(), horizontalTileStartIndex, horizontalTileEndIndex,
-                            verticalTileStartIndex, verticalTileEndIndex)) {
+        if (isTileToProcess(file.getParentFile().getName(), hStartIndex, hEndIndex,
+                            vStartIndex, vEndIndex)) {
             Matcher matcher = pattern.matcher(file.getParentFile().getName());
             boolean found = matcher.find();
             if (found) {
                 int x = Integer.parseInt(matcher.group(1));
                 int y = Integer.parseInt(matcher.group(2));
-                int index = mosaicDefinition.calculateIndex(x, y);       // TODO: check this !!!!!!!!
-                return new MosaicTile(x, y, index, file);
+                int index = mosaicDefinition.calculateIndex(x, y);
+                if (index >= 0) {
+                    return new MosaicTile(x, y, index, file);
+                } else {
+                    return null;
+                }
             } else {
                 return null;
             }
@@ -268,12 +240,11 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
         return pattern.matcher(filename).replaceFirst("h\\\\d\\\\dv\\\\d\\\\d");
     }
 
-    public static boolean isTileToProcess(String tileName, int horizontalTileStartIndex, int horizontalTileEndIndex,
-                                          int verticalTileStartIndex, int verticalTileEndIndex) {
+    public static boolean isTileToProcess(String tileName, int hStartIndex, int hEndIndex,
+                                          int vStartIndex, int vEndIndex) {
         final int hIndex = Integer.parseInt(tileName.substring(1, 3));
         final int vIndex = Integer.parseInt(tileName.substring(4, 6));
-        return horizontalTileStartIndex <= hIndex && hIndex <= horizontalTileEndIndex &&
-                verticalTileStartIndex <= vIndex && vIndex <= verticalTileEndIndex;
+        return hStartIndex <= hIndex && hIndex <= hEndIndex && vStartIndex <= vIndex && vIndex <= vEndIndex;
     }
 
     private File getInputFile() throws IOException {
@@ -287,12 +258,13 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
 
     private ModisTileGeoCoding getMosaicGeocoding() {
         final int downscalingFactor = MosaicConstants.MODIS_TILE_SIZE / tileSize;
-        final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X;
         final String crsString = MosaicConstants.MODIS_SIN_PROJECTION_CRS_STRING;
         final double pixelSizeX = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * downscalingFactor;
         final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * downscalingFactor;
         final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y -
-                horizontalTileStartIndex * pixelSizeY * tileSize;
+                vStartIndex * pixelSizeY * tileSize;
+        final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X +
+                hStartIndex * pixelSizeX * tileSize;
         try {
             final CoordinateReferenceSystem crs = CRS.parseWKT(crsString);
             return new ModisTileGeoCoding(crs, easting, northing, pixelSizeX, pixelSizeY);
@@ -308,20 +280,20 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
         this.tileSize = tileSize;
     }
 
-    public void setHorizontalTileStartIndex(int horizontalTileStartIndex) {
-        this.horizontalTileStartIndex = horizontalTileStartIndex;
+    public void setHStartIndex(int horizontalTileStartIndex) {
+        this.hStartIndex = horizontalTileStartIndex;
     }
 
-    public void setHorizontalTileEndIndex(int horizontalTileEndIndex) {
-        this.horizontalTileEndIndex = horizontalTileEndIndex;
+    public void setHEndIndex(int horizontalTileEndIndex) {
+        this.hEndIndex = horizontalTileEndIndex;
     }
 
-    public void setVerticalTileStartIndex(int verticalTileStartIndex) {
-        this.verticalTileStartIndex = verticalTileStartIndex;
+    public void setVStartIndex(int verticalTileStartIndex) {
+        this.vStartIndex = verticalTileStartIndex;
     }
 
-    public void setVerticalTileEndIndex(int verticalTileEndIndex) {
-        this.verticalTileEndIndex = verticalTileEndIndex;
+    public void setVEndIndex(int verticalTileEndIndex) {
+        this.vEndIndex = verticalTileEndIndex;
     }
 
     ///// private classes //////

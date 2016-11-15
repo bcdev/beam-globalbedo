@@ -47,15 +47,35 @@ class MosaicGrid {
         return new Rectangle(x * tileSize, y * tileSize, tileSize, tileSize);
     }
 
+    public static Rectangle getTileBounds(int x, int y, int hStart, int vStart, int tileSize) {
+        return new Rectangle((x - hStart) * tileSize,
+                             (y - vStart) * tileSize,
+                             tileSize, tileSize);
+    }
+
     public Point[] getAffectedSourceTiles(Rectangle rect) {
         int tileSize = mosaicDefinition.getTileSize();
         final int indexX0 = rect.x / tileSize;
         final int indexY0 = rect.y / tileSize;
         final int indexWidth = ((rect.x + rect.width) / tileSize) + 1;
         final int indexHeight = ((rect.y + rect.height) / tileSize) + 1;
-        List<Point> indexes = new ArrayList<Point>();
+        List<Point> indexes = new ArrayList<>();
         for (int y = indexY0; y < indexHeight; y++) {
             for (int x = indexX0; x < indexWidth; x++) {
+                indexes.add(new Point(x, y));
+            }
+        }
+        return indexes.toArray(new Point[indexes.size()]);
+    }
+
+    public static Point[] getAffectedSourceTiles(Rectangle rect, int hStart, int vStart, int tileSize) {
+        final int indexX0 = hStart + rect.x / tileSize;
+        final int indexY0 = vStart + rect.y / tileSize;
+        final int indexWidth = ((rect.x + rect.width) / tileSize) + 1;
+        final int indexHeight = ((rect.y + rect.height) / tileSize) + 1;
+        List<Point> indexes = new ArrayList<>();
+        for (int y = indexY0; y < vStart + indexHeight; y++) {
+            for (int x = indexX0; x < hStart + indexWidth; x++) {
                 indexes.add(new Point(x, y));
             }
         }

@@ -44,6 +44,7 @@ import java.util.Map;
 /**
  * Reprojects and upscales horizontal subsets of GlobAlbedo tile products
  * into a SIN or a 0.5 or 0.05 degree  Plate Caree product.
+ * QA4ECV improvement: new options to generate subsets of mosaics (defined by tile numbers
  *
  * @author olafd
  */
@@ -62,11 +63,6 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             defaultValue = "1200")
     private int inputProductTileSize;
 
-    @Parameter(valueSet = {"1", "6", "10", "60"},
-            description = "Scaling: 1/20deg: 1 (AVHRR/GEO), 6 (MODIS); 1/2deg: 10 (AVHRR/GEO), 60 (MODIS)",
-            defaultValue = "60")
-    private int scaling;
-
     @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
@@ -77,17 +73,17 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             description = "If set, not all bands (i.e. no alphas/sigmas) are written. Set to true to save computation time and disk space.")
     private boolean reducedOutput;
 
-    @Parameter(defaultValue = "0")   // to define a subset of 'vertical stripes' of tiles
-    protected int horizontalTileStartIndex;
+    @Parameter(defaultValue = "0", description = "Tile h start index of mosaic")
+    protected int hStartIndex;
 
-    @Parameter(defaultValue = "35")   // to define a subset of 'vertical stripes' of tiles
-    protected int horizontalTileEndIndex;
+    @Parameter(defaultValue = "35", description = "Tile h end index of mosaic")
+    protected int hEndIndex;
 
-    @Parameter(defaultValue = "0")   // to define a subset of 'vertical stripes' of tiles
-    protected int verticalTileStartIndex;
+    @Parameter(defaultValue = "0", description = "Tile v start index of mosaic")
+    protected int vStartIndex;
 
-    @Parameter(defaultValue = "17")   // to define a subset of 'vertical stripes' of tiles
-    protected int verticalTileEndIndex;
+    @Parameter(defaultValue = "17", description = "Tile v end index of mosaic")
+    protected int vEndIndex;
 
 
     @TargetProduct
@@ -117,10 +113,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
         }
         if (productReader instanceof GlobAlbedoQa4ecvMosaicProductReader) {
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setTileSize(inputProductTileSize);
-            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileStartIndex(horizontalTileStartIndex);
-            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHorizontalTileEndIndex(horizontalTileEndIndex);
-            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVerticalTileStartIndex(verticalTileStartIndex);
-            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVerticalTileEndIndex(verticalTileEndIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHStartIndex(hStartIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHEndIndex(hEndIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVStartIndex(vStartIndex);
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVEndIndex(vEndIndex);
         }
 
         dhrBandNames = IOUtils.getAlbedoDhrBandNames();
@@ -132,15 +128,16 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         Product mosaicProduct;
         try {
-            mosaicProduct = productReader.readProductNodes(refTile, null);
+            mosaicProduct = productReader.readProductNodes(refTile, null);    // this is a mosaic on SIN projection!!
         } catch (IOException e) {
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
         setReprojectedProduct(mosaicProduct, inputProductTileSize);
+        targetProduct = reprojectedProduct;
 
-        final int numHorizontalTiles = horizontalTileEndIndex - horizontalTileStartIndex + 1;
-        final int numVerticalTiles = verticalTileEndIndex - verticalTileStartIndex + 1;
+        final int numHorizontalTiles = hEndIndex - hStartIndex + 1;
+        final int numVerticalTiles = vEndIndex - vStartIndex + 1;
         final int width = inputProductTileSize * numHorizontalTiles / scaling;
         final int height = inputProductTileSize * numVerticalTiles / scaling;
         final int tileWidth = inputProductTileSize / scaling / 2;
@@ -151,12 +148,14 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             addTargetBand(srcBand);
         }
 
-        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
+//        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
+        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojectToPlateCarre);
 
         dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
         szaBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
 
         targetProduct = upscaledProduct;
+        targetProduct.setPreferredTileSize(inputProductTileSize, inputProductTileSize);
     }
 
     @Override
@@ -255,6 +254,25 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
         }
     }
 
+    @Override
+    protected void computeLatLon(Tile latTile, Tile lonTile, Tile target) {
+        // computes a simple lat/lon grid in given tile
+        float lonStart = -180.0f + 10.0f*hStartIndex;
+        float lonRange = 10.0f*(hEndIndex - hStartIndex + 1);
+        float latStart = 90.0f - 10.0f*vStartIndex;
+        float latRange = 10.0f*(vEndIndex - vStartIndex + 1);
+        Rectangle targetRectangle = target.getRectangle();
+        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+            checkForCancellation();
+            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                float lon = lonStart + lonRange*(x+0.5f)/upscaledProduct.getSceneRasterWidth();
+                float lat = latStart - latRange*(y+0.5f)/upscaledProduct.getSceneRasterHeight();
+                latTile.setSample(x, y, lat);
+                lonTile.setSample(x, y, lon);
+            }
+        }
+    }
+
     private void addTargetBand(Band srcBand) {
         boolean skipBand = reducedOutput && (srcBand.getName().contains("alpha") || srcBand.getName().contains("sigma"));
         if (!skipBand) {
@@ -282,8 +300,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
                 final boolean isTileToProcess =
                         GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
-                                                                            horizontalTileStartIndex, horizontalTileEndIndex,
-                                                                            verticalTileStartIndex, verticalTileEndIndex);
+                                                                            hStartIndex, hEndIndex,
+                                                                            vStartIndex, vEndIndex);
                 return isTileToProcess && name.equals(expectedFilename);
             }
         };
@@ -311,120 +329,6 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
         applySouthPoleCorrection(src, target, mask);
     }
 
-    private void applySouthPoleCorrection(Tile src, Tile target, Tile mask) {
-        Rectangle targetRectangle = target.getRectangle();
-        final PixelPos pixelPos = new PixelPos(targetRectangle.x * scaling,
-                                               (targetRectangle.y + targetRectangle.height) * scaling);
-        final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
-
-        // correct for projection failures near south pole...
-        if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
-            float[][] correctedSampleWest = null;    // i.e. tile h17v17
-            if (geoPos.getLon() < 0.0) {
-                correctedSampleWest = correctFromWest(target);    // i.e. tile h17v17
-            }
-            float[][] correctedSampleEast = null;    // i.e. tile h18v17
-            if (geoPos.getLon() >= 0.0) {
-                correctedSampleEast = correctFromEast(target);    // i.e. tile h17v17
-            }
-
-            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-                checkForCancellation();
-                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                    float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                    final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                    if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                        sample = AlbedoInversionConstants.NO_DATA_VALUE;
-                    }
-                    final int xCorr = x - targetRectangle.x;
-                    final int yCorr = y - targetRectangle.y;
-                    if (geoPos.getLon() < 0.0) {
-                        if (correctedSampleWest != null) {
-                            if (correctedSampleWest[xCorr][yCorr] != 0.0) {
-                                target.setSample(x, y, correctedSampleWest[xCorr][yCorr]);
-                            } else {
-                                target.setSample(x, y, sample);
-                            }
-                        }
-                    } else {
-                        if (correctedSampleEast != null) {
-                            if (correctedSampleEast[xCorr][yCorr] != 0.0) {
-                                target.setSample(x, y, correctedSampleEast[xCorr][yCorr]);
-                            } else {
-                                target.setSample(x, y, sample);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private float[][] correctFromWest(Tile src) {
-        final Rectangle sourceRectangle = src.getRectangle();
-        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
-        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-            // go east direction
-            int xIndex = sourceRectangle.x;
-            float corrValue;
-            float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
-                    && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
-                xIndex++;
-                value = src.getSampleFloat(xIndex, y);
-            }
-            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
-                // go north direction, we WILL find a non-zero value
-                int yIndex = y;
-                float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
-                        && yIndex > sourceRectangle.y + 1) {
-                    yIndex--;
-                    value2 = src.getSampleFloat(xIndex, yIndex);
-                }
-                corrValue = value2;
-            } else {
-                corrValue = value;
-            }
-            for (int i = sourceRectangle.x; i <= xIndex; i++) {
-                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
-            }
-        }
-        return correctedSample;
-    }
-
-    private float[][] correctFromEast(Tile src) {
-        final Rectangle sourceRectangle = src.getRectangle();
-        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
-        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-            // go west direction
-            int xIndex = sourceRectangle.x + sourceRectangle.width - 1;
-            float corrValue;
-            float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
-                    && xIndex > sourceRectangle.x) {
-                xIndex--;
-                value = src.getSampleFloat(xIndex, y);
-            }
-            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
-                // go north direction, we WILL find a non-zero value
-                int yIndex = y;
-                float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
-                        && yIndex > sourceRectangle.y + 1) {
-                    yIndex--;
-                    value2 = src.getSampleFloat(xIndex, yIndex);
-                }
-                corrValue = value2;
-            } else {
-                corrValue = value;
-            }
-            for (int i = sourceRectangle.x + sourceRectangle.width - 1; i >= xIndex; i--) {
-                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
-            }
-        }
-        return correctedSample;
-    }
 
     public static class Spi extends OperatorSpi {
 

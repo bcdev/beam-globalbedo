@@ -63,11 +63,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
             defaultValue = "1200")
     private int inputProductTileSize;
 
-    @Parameter(valueSet = {"1", "6", "10", "60"},
-            description = "Scaling: 1/20deg: 1 (AVHRR/GEO), 6 (MODIS); 1/2deg: 10 (AVHRR/GEO), 60 (MODIS)",
-            defaultValue = "60")
-    private int scaling;
-
     @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
@@ -286,121 +281,6 @@ public class GlobalbedoLevel3UpscaleAlbedo extends GlobalbedoLevel3UpscaleBasisO
     private void computeNearestAlbedo(Tile src, Tile target, Tile mask) {
         computeNearest(src, target, mask, scaling);
         applySouthPoleCorrection(src, target, mask);
-    }
-
-    private void applySouthPoleCorrection(Tile src, Tile target, Tile mask) {
-        Rectangle targetRectangle = target.getRectangle();
-        final PixelPos pixelPos = new PixelPos(targetRectangle.x * scaling,
-                                               (targetRectangle.y + targetRectangle.height) * scaling);
-        final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
-
-        // correct for projection failures near south pole...
-        if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
-            float[][] correctedSampleWest = null;    // i.e. tile h17v17
-            if (geoPos.getLon() < 0.0) {
-                correctedSampleWest = correctFromWest(target);    // i.e. tile h17v17
-            }
-            float[][] correctedSampleEast = null;    // i.e. tile h18v17
-            if (geoPos.getLon() >= 0.0) {
-                correctedSampleEast = correctFromEast(target);    // i.e. tile h17v17
-            }
-
-            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-                checkForCancellation();
-                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                    float sample = src.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                    final float sampleMask = mask.getSampleFloat(x * scaling + scaling / 2, y * scaling + scaling / 2);
-                    if (sample == 0.0 || sampleMask == 0.0 || Float.isNaN(sample)) {
-                        sample = AlbedoInversionConstants.NO_DATA_VALUE;
-                    }
-                    final int xCorr = x - targetRectangle.x;
-                    final int yCorr = y - targetRectangle.y;
-                    if (geoPos.getLon() < 0.0) {
-                        if (correctedSampleWest != null) {
-                            if (correctedSampleWest[xCorr][yCorr] != 0.0) {
-                                target.setSample(x, y, correctedSampleWest[xCorr][yCorr]);
-                            } else {
-                                target.setSample(x, y, sample);
-                            }
-                        }
-                    } else {
-                        if (correctedSampleEast != null) {
-                            if (correctedSampleEast[xCorr][yCorr] != 0.0) {
-                                target.setSample(x, y, correctedSampleEast[xCorr][yCorr]);
-                            } else {
-                                target.setSample(x, y, sample);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private float[][] correctFromWest(Tile src) {
-        final Rectangle sourceRectangle = src.getRectangle();
-        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
-        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-            // go east direction
-            int xIndex = sourceRectangle.x;
-            float corrValue;
-            float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
-                    && xIndex < sourceRectangle.x + sourceRectangle.width - 1) {
-                xIndex++;
-                value = src.getSampleFloat(xIndex, y);
-            }
-            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
-                // go north direction, we WILL find a non-zero value
-                int yIndex = y;
-                float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
-                        && yIndex > sourceRectangle.y + 1) {
-                    yIndex--;
-                    value2 = src.getSampleFloat(xIndex, yIndex);
-                }
-                corrValue = value2;
-            } else {
-                corrValue = value;
-            }
-            for (int i = sourceRectangle.x; i <= xIndex; i++) {
-                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
-            }
-        }
-        return correctedSample;
-    }
-
-    private float[][] correctFromEast(Tile src) {
-        final Rectangle sourceRectangle = src.getRectangle();
-        float[][] correctedSample = new float[sourceRectangle.width][sourceRectangle.height];
-        for (int y = sourceRectangle.y; y < sourceRectangle.y + sourceRectangle.height; y++) {
-            // go west direction
-            int xIndex = sourceRectangle.x + sourceRectangle.width - 1;
-            float corrValue;
-            float value = src.getSampleFloat(xIndex, y);
-            while ((value == 0.0 || !AlbedoInversionUtils.isValid(value))
-                    && xIndex > sourceRectangle.x) {
-                xIndex--;
-                value = src.getSampleFloat(xIndex, y);
-            }
-            if (value == 0.0 || !AlbedoInversionUtils.isValid(value)) {
-                // go north direction, we WILL find a non-zero value
-                int yIndex = y;
-                float value2 = src.getSampleFloat(xIndex, yIndex);
-                while ((value2 == 0.0 || !AlbedoInversionUtils.isValid(value2))
-                        && yIndex > sourceRectangle.y + 1) {
-                    yIndex--;
-                    value2 = src.getSampleFloat(xIndex, yIndex);
-                }
-                corrValue = value2;
-            } else {
-                corrValue = value;
-            }
-            for (int i = sourceRectangle.x + sourceRectangle.width - 1; i >= xIndex; i--) {
-                correctedSample[i - sourceRectangle.x][y - sourceRectangle.y] = corrValue;
-            }
-        }
-        return correctedSample;
     }
 
     public static class Spi extends OperatorSpi {

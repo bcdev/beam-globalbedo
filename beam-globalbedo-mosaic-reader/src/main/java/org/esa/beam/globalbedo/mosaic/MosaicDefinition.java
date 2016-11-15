@@ -22,16 +22,28 @@ package org.esa.beam.globalbedo.mosaic;
 class MosaicDefinition {
     private final int numTileX;
     private final int numTileY;
+    private final int hStartIndex;
+    private final int vStartIndex;
     private int tileSize;
 
     public MosaicDefinition(int numTileX, int numTileY, int tileSize) {
         this.numTileX = numTileX;
         this.numTileY = numTileY;
+        this.hStartIndex = 0;
+        this.vStartIndex = 0;
+        this.tileSize = tileSize;
+    }
+
+    public MosaicDefinition(int numTileX, int numTileY, int hStartIndex, int vStartIndex, int tileSize) {
+        this.numTileX = numTileX;
+        this.numTileY = numTileY;
+        this.hStartIndex = hStartIndex;
+        this.vStartIndex = vStartIndex;
         this.tileSize = tileSize;
     }
 
     public int calculateIndex(int x, int y) {
-        return y * numTileX + x;
+        return (y - vStartIndex) * numTileX + (x - hStartIndex);
     }
 
     public int getNumTiles() {
@@ -44,6 +56,14 @@ class MosaicDefinition {
 
     public int getHeight() {
         return numTileY * tileSize;
+    }
+
+    public int getHStartIndex() {
+        return hStartIndex;
+    }
+
+    public int getVStartIndex() {
+        return vStartIndex;
     }
 
     public int getTileSize() {
