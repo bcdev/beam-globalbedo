@@ -134,7 +134,6 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
         }
 
         setReprojectedProduct(mosaicProduct, inputProductTileSize);
-        targetProduct = reprojectedProduct;
 
         final int numHorizontalTiles = hEndIndex - hStartIndex + 1;
         final int numVerticalTiles = vEndIndex - vStartIndex + 1;
@@ -148,7 +147,6 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             addTargetBand(srcBand);
         }
 
-//        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
         attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojectToPlateCarre);
 
         dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
