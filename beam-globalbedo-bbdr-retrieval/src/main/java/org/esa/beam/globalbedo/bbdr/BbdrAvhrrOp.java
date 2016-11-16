@@ -94,7 +94,9 @@ public class BbdrAvhrrOp extends PixelOperator {
         final boolean isCloud = BitSetter.isFlagSet(ldtrFlag, 1);
         final boolean isCloudShadow = BitSetter.isFlagSet(ldtrFlag, 2);
         final boolean isSea = BitSetter.isFlagSet(ldtrFlag, 3);
-        if (isSea || isCloud || isCloudShadow) {
+        final boolean isBrf1Invalid = BitSetter.isFlagSet(ldtrFlag, 8);    // NG/MM, Nov 2016
+        final boolean isBrf2Invalid = BitSetter.isFlagSet(ldtrFlag, 9);    // NG/MM, Nov 2016
+        if (isSea || isCloud || isCloudShadow || isBrf1Invalid || isBrf2Invalid) {
             // only compute over clear land
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
