@@ -97,7 +97,8 @@ submit_job() {
     echo "command: ${command}"
 
     # L2 BBDR:
-    bsubmit="bsub -W 180 -R "rusage[mem=16000]" -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -W 180 -R "rusage[mem=16000]" -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -q short-serial -W 180 -R "rusage[mem=16000]" -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 

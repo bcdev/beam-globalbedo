@@ -17,16 +17,17 @@ __author__ = 'olafd'
 #years = ['2006']    #test  
 #years = ['1989','1990','1991','1992','1993','1994','1995','1996','1997']  
 #years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008']     
-years = ['2009','2010','2011','2012','2013','2014']     
+#years = ['2009','2010','2011','2012','2013','2014']     
 #years = ['1998']     
 #years = ['2002','2003','2004','2005']     
-#years = ['2005']     
+years = ['2005']     
+#years = ['2004']     
 
 months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 #months = ['01']
 
-#hStart = '18'
-#hEnd = '20'
+#hStart = ['12']
+#hEnd = ['14']
 
 hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
 hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
@@ -56,17 +57,21 @@ for year in years:
                 for index in range(0, len(brfFiles)):
                 #for index in range(0, 3): # test
                     brfOrbitFilePath = brfOrbitDir + '/' + brfFiles[index]
-                    brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.nc'
 
-                    m.execute('ga-l2-avhrr-brf-unzip-step.sh', ['dummy'],
-                                                              [brfUnzippedFilePath],
-                                                              parameters=[brfOrbitFilePath,gaRootDir])
+                    # AVH_20050718_001D_900S900N1800W1800E_0005D_BRDF_N18.NC.bz2
+                    if brfFiles[index].endswith("_N18.NC.bz2"): # test!! 
+                    #if brfFiles[index].endswith("_N16.NC.bz2"): # test!! 
+                        brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.nc'
 
-                    # TODO: in case of multiple NOAA versions per day, take highest version only
-                    for subtilesIndex in range(0, len(hStart)):
-                        m.execute('ga-l2-avhrr-bbdr-tiles-step.sh', [brfUnzippedFilePath], 
-                                                              [bbdrTileDir], 
-                                                              parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
+                        m.execute('ga-l2-avhrr-brf-unzip-step.sh', ['dummy'],
+                                                                  [brfUnzippedFilePath],
+                                                                  parameters=[brfOrbitFilePath,gaRootDir])
+
+                        # TODO: in case of multiple NOAA versions per day, take highest version only
+                        for subtilesIndex in range(0, len(hStart)):
+                            m.execute('ga-l2-avhrr-bbdr-tiles-step.sh', [brfUnzippedFilePath], 
+                                                                  [bbdrTileDir], 
+                                                                  parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
 
 m.wait_for_completion()
 

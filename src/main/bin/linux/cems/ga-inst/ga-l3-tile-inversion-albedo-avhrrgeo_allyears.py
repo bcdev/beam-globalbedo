@@ -33,7 +33,8 @@ usePrior = 'true'
 step = '8'  # always!
 #######
 
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 # all 326 tiles we have:
@@ -42,7 +43,7 @@ tiles.sort()
 
 #tiles = ['h17v03']
 #tiles = ['h20v06']
-tiles = ['h20v08']
+#tiles = ['h18v07']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 #tiles = glob.glob1(priorDir, 'h??v05') # we have same number (326) of snow and noSnow prior directories
 #tiles = ['h18v03','h21v06']
@@ -62,8 +63,8 @@ for tile in tiles:
 
     ### daily accumulation for all years:
     allDailyAccPostConds = []
-    for iyear in range(1998, 2015):
-#    for iyear in range(1998, 2000):
+#    for iyear in range(1998, 2015):
+    for iyear in range(2005, 2006):
         year = str(iyear)
 
         startDoy = '000'
@@ -74,8 +75,8 @@ for tile in tiles:
 
     ### now full accumulation, inversion and albedo:
     allAlbedoPostConds = []
-    for iyear in range(1998, 2015):
-#    for iyear in range(1998, 2000):
+#    for iyear in range(1998, 2015):
+    for iyear in range(2005, 2006):
         year = str(iyear)
         albedoDir = gaRootDir + '/Albedo/' + year + '/' + tile
         startDoy = '001'
@@ -93,8 +94,8 @@ for tile in tiles:
         #########################################################################################################################
 
     ### cleanup (i.e. daily acc binary files):
-    for iyear in range(1998, 2015):
-#    for iyear in range(1998, 2000):
+#    for iyear in range(1998, 2015):
+    for iyear in range(2005, 2006):
         year = str(iyear)
         m.execute('ga-l3-tile-inversion-cleanup-step.sh', allAlbedoPostConds, ['dummy'], parameters=[tile,year,gaRootDir])
 

@@ -25,7 +25,7 @@ submit_job() {
 
     # L3 tile inversion albedo:
     #bsubmit="bsub -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    bsubmit="bsub -R rusage[mem=12000] -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -q short-serial -R rusage[mem=12000] -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 

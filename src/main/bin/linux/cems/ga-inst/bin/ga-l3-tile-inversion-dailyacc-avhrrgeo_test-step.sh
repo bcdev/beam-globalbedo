@@ -1,7 +1,7 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc.sh
-#. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc_nologs.sh
+#. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc_nologs.sh
 
 # test script to set up one LSF job per single 8-day-interval accumulation, but invoked
 # from just one PMonitor execution for whole time window (i.e. one year or the wings) instead of

@@ -42,8 +42,8 @@ fi
 #   mkdir -p $sinTargetDir
 #fi
 #sinTarget=$sinTargetDir/GlobAlbedo.brdf.$snowMode.$deg.$year$doy.SIN.nc
-#echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=false -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $sinTarget"
-#time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=false -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $sinTarget
+#echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=false -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $sinTarget"
+#time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=false -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $sinTarget
 #
 #
 #status=$?
@@ -59,8 +59,8 @@ then
    mkdir -p $pcTargetDir
 fi
 pcTarget=$pcTargetDir/GlobAlbedo.brdf.$snowMode.$deg.$year$doy.PC.nc
-echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -PreducedOutput=true -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=true -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $pcTarget"
-time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputFormat=NETCDF -PreducedOutput=true -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=true -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $pcTarget
+echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=true -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $pcTarget"
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -PreprojectToPlateCarre=true -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $pcTarget
 
 
 echo "Status: $status"

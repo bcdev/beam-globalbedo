@@ -13,8 +13,8 @@ __author__ = 'olafd'
 ###    - Albedo tiles --> Albedo mosaic with reduced output
 ########################################################################
 
-mosaicMode = 'simple'
-#mosaicMode = 'default'
+#mosaicMode = 'simple'
+mosaicMode = 'default'
 
 ###########################
 # set MODIS tile size
@@ -30,8 +30,8 @@ years = ['2005']    #test
 snowModes = ['NoSnow'] # usually for AVHRRGEO
 
 #resolutions = ['05', '005']
-#resolutions = ['005']
-resolutions = ['05']
+resolutions = ['005']
+#resolutions = ['05']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
@@ -61,9 +61,9 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
 
-        #for idoy in range(0,365):    
+        for idoy in range(0,365):    
         #for idoy in range(0,5):    
-        for idoy in range(121,153):    
+        #for idoy in range(121,153):    
         #for idoy in range(0,4):    
         #for idoy in range(180,331):    
             doy = str(idoy+1).zfill(3) # daily

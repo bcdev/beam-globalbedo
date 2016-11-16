@@ -97,7 +97,7 @@ submit_job() {
 
     # L3 BRDF mosaics:
     # for LEO (1200x1200 tiles), check from log/*.out files how much Max Memory and time is used and set suitable mem and -W values:
-    bsubmit="bsub -W 180 -R rusage[mem=32000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -q short-serial -W 180 -R rusage[mem=32000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 
