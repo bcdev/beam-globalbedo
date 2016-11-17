@@ -181,31 +181,33 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     }
 
     protected void computeMajority(Tile src, Tile target, Tile mask, double scaling) {
-        Rectangle targetRectangle = target.getRectangle();
+        if (src != null && target != null && mask != null) {
+            Rectangle targetRectangle = target.getRectangle();
 
-        final PixelPos pixelPos = new PixelPos((int) (targetRectangle.x * scaling),
-                                               (int)((targetRectangle.y + targetRectangle.height) * scaling));
-        final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
+            final PixelPos pixelPos = new PixelPos((int) (targetRectangle.x * scaling),
+                                                   (int) ((targetRectangle.y + targetRectangle.height) * scaling));
+            final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
 
-        for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
-            checkForCancellation();
-            for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                Rectangle pixelSrc = new Rectangle((int) (x * scaling), (int) (y * scaling), (int) scaling, (int) scaling);
-                int max = -1;
-                for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
-                    for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
-                        max = Math.max(max, src.getSampleInt(sx, sy));
+            for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
+                checkForCancellation();
+                for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
+                    Rectangle pixelSrc = new Rectangle((int) (x * scaling), (int) (y * scaling), (int) scaling, (int) scaling);
+                    int max = -1;
+                    for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
+                        for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
+                            max = Math.max(max, src.getSampleInt(sx, sy));
+                        }
                     }
-                }
-                final float sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
-                if (sampleMask > 0.0) {
-                    target.setSample(x, y, max);
-                } else {
-                    // south pole correction
-                    if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
-                        target.setSample(x, y, 0.0);
+                    final float sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
+                    if (sampleMask > 0.0) {
+                        target.setSample(x, y, max);
                     } else {
-                        target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
+                        // south pole correction
+                        if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
+                            target.setSample(x, y, 0.0);
+                        } else {
+                            target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
+                        }
                     }
                 }
             }

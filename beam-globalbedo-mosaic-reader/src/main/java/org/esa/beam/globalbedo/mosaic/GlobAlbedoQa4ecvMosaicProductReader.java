@@ -21,6 +21,7 @@ import org.esa.beam.framework.dataio.AbstractProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -50,6 +51,8 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     private final Pattern pattern;
     private MosaicDefinition mosaicDefinition;
     private MosaicGrid mosaicGrid;
+
+    private String[] bandsToWrite;
 
     private int tileSize;
 
@@ -94,8 +97,34 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
 
             Band[] bands = firstMosaicProduct.getBands();
             for (Band srcBand : bands) {
-                Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
-                ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                if (bandsToWrite != null && bandsToWrite.length > 0) {
+                    for (String bandToWrite : bandsToWrite) {
+                        if (bandToWrite.equals(srcBand.getName())) {
+                            Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
+                            ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                        }
+                    }
+                } else {
+                    Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
+                    ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                }
+
+                if (bandsToWrite == null ||
+                        srcBand.getName().startsWith("lat") ||
+                        srcBand.getName().startsWith("lon") ||
+                        srcBand.getName().equals(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME)) {
+                    Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
+                    ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                } else {
+                    for (String bandToWrite : bandsToWrite) {
+                        if (bandToWrite.equals(srcBand.getName())) {
+                            if (!product.containsBand(srcBand.getName())) {
+                                Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
+                                ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                            }
+                        }
+                    }
+                }
             }
             ProductUtils.copyMetadata(firstMosaicProduct, product);
 
@@ -278,6 +307,10 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
     ///// setters //////
     public void setTileSize(int tileSize) {
         this.tileSize = tileSize;
+    }
+
+    public void setBandsToWrite(String[] bandsToWrite) {
+        this.bandsToWrite = bandsToWrite;
     }
 
     public void setHStartIndex(int horizontalTileStartIndex) {

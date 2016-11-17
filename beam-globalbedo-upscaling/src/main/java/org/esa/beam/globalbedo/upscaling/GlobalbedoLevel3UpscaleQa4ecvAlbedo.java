@@ -20,8 +20,6 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
-import org.esa.beam.framework.datamodel.GeoPos;
-import org.esa.beam.framework.datamodel.PixelPos;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -30,7 +28,6 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoQa4ecvMosaicProductReader;
 import org.esa.beam.util.ProductUtils;
@@ -73,6 +70,9 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             description = "If set, not all bands (i.e. no alphas/sigmas) are written. Set to true to save computation time and disk space.")
     private boolean reducedOutput;
 
+    @Parameter(label = "If set, only these bands will be written into mosaic")
+    private String[] bandsToWrite;
+
     @Parameter(defaultValue = "0", description = "Tile h start index of mosaic")
     protected int hStartIndex;
 
@@ -112,6 +112,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             throw new OperatorException("No 'GLOBALBEDO-L3-MOSAIC-QA4ECV' reader available.");
         }
         if (productReader instanceof GlobAlbedoQa4ecvMosaicProductReader) {
+            ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setBandsToWrite(bandsToWrite);
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setTileSize(inputProductTileSize);
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHStartIndex(hStartIndex);
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setHEndIndex(hEndIndex);
@@ -144,7 +145,17 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         setUpscaledProduct(mosaicProduct, width, height, tileWidth, tileHeight);
         for (Band srcBand : reprojectedProduct.getBands()) {
-            addTargetBand(srcBand);
+            if (bandsToWrite == null ||
+                    srcBand.getName().equals(BRDF_ALBEDO_PRODUCT_LAT_NAME) ||
+                    srcBand.getName().equals(BRDF_ALBEDO_PRODUCT_LON_NAME)) {
+                addTargetBand(srcBand);
+            } else {
+                for (String bandToWrite : bandsToWrite) {
+                    if (bandToWrite.equals(srcBand.getName())) {
+                        addTargetBand(srcBand);
+                    }
+                }
+            }
         }
 
         attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojectToPlateCarre);
@@ -170,10 +181,12 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             computeLatLon(latTile, lonTile, latTile);
         }
 
-        final Tile szaSrcTile = getSourceTile(szaBand, srcRect);
-        computeNearestAlbedo(szaSrcTile,
-                             targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
-                             getSourceTile(dataMaskBand, srcRect));
+        if (szaBand != null) {
+            final Tile szaSrcTile = getSourceTile(szaBand, srcRect);
+            computeNearestAlbedo(szaSrcTile,
+                                 targetTiles.get(AlbedoInversionConstants.ALB_SZA_BAND_NAME),
+                                 getSourceTile(dataMaskBand, srcRect));
+        }
 
 //        if (hasValidPixel(getSourceTile(relEntropyBand, srcRect), relEntropyBand.getNoDataValue())) {
         // todo: check why we ever switched to relEntropy as data mask?!
@@ -255,16 +268,16 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     @Override
     protected void computeLatLon(Tile latTile, Tile lonTile, Tile target) {
         // computes a simple lat/lon grid in given tile
-        float lonStart = -180.0f + 10.0f*hStartIndex;
-        float lonRange = 10.0f*(hEndIndex - hStartIndex + 1);
-        float latStart = 90.0f - 10.0f*vStartIndex;
-        float latRange = 10.0f*(vEndIndex - vStartIndex + 1);
+        float lonStart = -180.0f + 10.0f * hStartIndex;
+        float lonRange = 10.0f * (hEndIndex - hStartIndex + 1);
+        float latStart = 90.0f - 10.0f * vStartIndex;
+        float latRange = 10.0f * (vEndIndex - vStartIndex + 1);
         Rectangle targetRectangle = target.getRectangle();
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             checkForCancellation();
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                float lon = lonStart + lonRange*(x+0.5f)/upscaledProduct.getSceneRasterWidth();
-                float lat = latStart - latRange*(y+0.5f)/upscaledProduct.getSceneRasterHeight();
+                float lon = lonStart + lonRange * (x + 0.5f) / upscaledProduct.getSceneRasterWidth();
+                float lat = latStart - latRange * (y + 0.5f) / upscaledProduct.getSceneRasterHeight();
                 latTile.setSample(x, y, lat);
                 lonTile.setSample(x, y, lon);
             }
@@ -274,8 +287,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     private void addTargetBand(Band srcBand) {
         boolean skipBand = reducedOutput && (srcBand.getName().contains("alpha") || srcBand.getName().contains("sigma"));
         if (!skipBand) {
-            Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
-            ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+            if (!upscaledProduct.containsBand(srcBand.getName())) {
+                Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
+                ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+            }
         }
     }
 
@@ -323,8 +338,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     }
 
     private void computeNearestAlbedo(Tile src, Tile target, Tile mask) {
-        computeNearest(src, target, mask, scaling);
-        applySouthPoleCorrection(src, target, mask);
+        if (src != null && target != null && mask != null) {
+            computeNearest(src, target, mask, scaling);
+            applySouthPoleCorrection(src, target, mask);
+        }
     }
 
 
