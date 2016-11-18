@@ -248,7 +248,7 @@ public class IOUtilsTest extends TestCase {
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2005169.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
-        accName = "matrices_2004364.bin"; // the accumulator product name
+        accName = "matrices_2004264.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2006002.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
@@ -258,7 +258,7 @@ public class IOUtilsTest extends TestCase {
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2004277.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
-        accName = "matrices_2004276.bin"; // the accumulator product name
+        accName = "matrices_2004176.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
 
         processDoy = 361; // the reference doy to process
@@ -266,7 +266,7 @@ public class IOUtilsTest extends TestCase {
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
         accName = "matrices_2006086.bin"; // the accumulator product name
         assertTrue(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
-        accName = "matrices_2006087.bin"; // the accumulator product name
+        accName = "matrices_2006187.bin"; // the accumulator product name
         assertFalse(IOUtils.isInWingsInterval(wings, processYear, processDoy, tile, accName));
 
         tile = "h18v00";
@@ -307,21 +307,21 @@ public class IOUtilsTest extends TestCase {
 
         List<String> result = IOUtils.sortAccumulatorFileList(inputList, 2005, 121);
         assertNotNull(result);
-        assertEquals(69, result.size());
-        assertEquals("matrices_2005087.bin", result.get(0));
-        assertEquals("matrices_2005155.bin", result.get(68));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2005091.bin", result.get(0));
+        assertEquals("matrices_2005150.bin", result.get(59));
 
         result = IOUtils.sortAccumulatorFileList(inputList, 2005, 9);
         assertNotNull(result);
-        assertEquals(69, result.size());
-        assertEquals("matrices_2004340.bin", result.get(0));
-        assertEquals("matrices_2005043.bin", result.get(68));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2004344.bin", result.get(0));
+        assertEquals("matrices_2005038.bin", result.get(59));
 
         result = IOUtils.sortAccumulatorFileList(inputList, 2005, 353);
         assertNotNull(result);
-        assertEquals(70, result.size());
-        assertEquals("matrices_2005319.bin", result.get(0));
-        assertEquals("matrices_2006022.bin", result.get(69));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2005323.bin", result.get(0));
+        assertEquals("matrices_2006016.bin", result.get(59));
         System.out.println();
 
         List<String> inputListWinter = new ArrayList<>();
@@ -333,9 +333,9 @@ public class IOUtilsTest extends TestCase {
         }
         result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 121);
         assertNotNull(result);
-        assertEquals(66, result.size());
-        assertEquals("matrices_2005090.bin", result.get(0));
-        assertEquals("matrices_2005155.bin", result.get(65));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2005091.bin", result.get(0));
+        assertEquals("matrices_2005150.bin", result.get(59));
 
         result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 9);
         assertNotNull(result);
@@ -372,16 +372,20 @@ public class IOUtilsTest extends TestCase {
 
         result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 9);
         assertNotNull(result);
-        assertEquals(69, result.size());
-        assertEquals("matrices_2004340.bin", result.get(0));
-        assertEquals("matrices_2005043.bin", result.get(68));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2004344.bin", result.get(0));
+        assertEquals("matrices_2005038.bin", result.get(59));
 
         result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 353);
         assertNotNull(result);
-        assertEquals(70, result.size());
-        assertEquals("matrices_2005319.bin", result.get(0));
-        assertEquals("matrices_2006022.bin", result.get(69));
+        assertEquals(60, result.size());
+        assertEquals("matrices_2005323.bin", result.get(0));
+        assertEquals("matrices_2006016.bin", result.get(59));
         System.out.println();
+
+//        for (int i=0; i<180; i+=2) {
+//            System.out.println("i, weight = " + i + ", " + AlbedoInversionUtils.getWeight(i));
+//        }
     }
 
     @Ignore

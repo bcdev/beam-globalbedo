@@ -450,47 +450,50 @@ public class IOUtils {
         // we want to sort from center:
         // e.g. reference date: 2005121
         // -->  matrices_2005121.bin, matrices_2005122.bin, matrices_2005120.bin, matrices_2005123.bin, , matrices_2005119.bin...
-        // and stop if distance weight is lower than some minimum (e.g. 5%) and we have enough (e.g. 60) accumulators...
+        // and stop if distance weight is lower than some very low minimum (e.g. 1.E-7) and we have 'enough' (e.g. 60) accumulators...
 
         List<String> accumulatorNameSortedList = new ArrayList<>();
 
         int doyPlus = refDoy;
         int doyMinus = refDoy;
 
+        final int maxAccs = 60;
+        final double weightThresh = 1.E-7; // day difference ~180
+
         while (doyMinus > 0 && doyPlus < 366) {
             String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + ".bin";
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                    (AlbedoInversionUtils.getWeight(refDoy - doyMinus) > 0.05 ||
-                            accumulatorNameSortedList.size() < 60)) {
+                    AlbedoInversionUtils.getWeight(refDoy - doyMinus) > weightThresh &&
+                            accumulatorNameSortedList.size() < maxAccs) {
                 accumulatorNameSortedList.add(accName);
             }
             doyMinus--;
 
             accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + ".bin";
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                    (AlbedoInversionUtils.getWeight(doyPlus - refDoy) > 0.05 ||
-                            accumulatorNameSortedList.size() < 60)) {
+                    AlbedoInversionUtils.getWeight(doyPlus - refDoy) > weightThresh &&
+                            accumulatorNameSortedList.size() < maxAccs) {
                 accumulatorNameSortedList.add(accName);
             }
             doyPlus++;
         }
 
-        if (accumulatorNameSortedList.size() < 60) {
+        if (accumulatorNameSortedList.size() < maxAccs) {
             if (doyMinus == 0) {
                 int doyMinus2 = 365;
                 while (doyMinus2 > 180 && doyPlus < 366) {
                     String accName = "matrices_" + Integer.toString(refYear - 1) + String.format("%03d", doyMinus2) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                            (AlbedoInversionUtils.getWeight(refDoy + 365 - doyMinus2) > 0.05 ||
-                                    accumulatorNameSortedList.size() < 60)) {
+                            AlbedoInversionUtils.getWeight(refDoy + 365 - doyMinus2) > weightThresh &&
+                                    accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyMinus2--;
 
                     accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                            (AlbedoInversionUtils.getWeight(doyPlus - refDoy) > 0.05 ||
-                                    accumulatorNameSortedList.size() < 60)) {
+                            AlbedoInversionUtils.getWeight(doyPlus - refDoy) > weightThresh &&
+                                    accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyPlus++;
@@ -500,16 +503,16 @@ public class IOUtils {
                 while (doyPlus2 < 180 && doyMinus > 0) {
                     String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                            (AlbedoInversionUtils.getWeight(refDoy - doyMinus) > 0.05 ||
-                                    accumulatorNameSortedList.size() < 60)) {
+                            AlbedoInversionUtils.getWeight(refDoy - doyMinus) > weightThresh &&
+                                    accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyMinus--;
 
                     accName = "matrices_" + Integer.toString(refYear + 1) + String.format("%03d", doyPlus2) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
-                            (AlbedoInversionUtils.getWeight(doyPlus2 + 365 - refDoy) > 0.05 ||
-                                    accumulatorNameSortedList.size() < 60)) {
+                            AlbedoInversionUtils.getWeight(doyPlus2 + 365 - refDoy) > weightThresh &&
+                                    accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyPlus2++;
@@ -530,7 +533,10 @@ public class IOUtils {
             final int accDoy = Integer.parseInt(accName.substring(13, 16));
 
             // make sure that we always cover a period with daylight at the poles
-            int offset = isPolarTile(tile) ? Math.max(180, wings / 2) : wings / 2;
+            // this seems to cause discontinuities with Priors under certain conditions with missing data! Do not use!
+            // int offset = isPolarTile(tile) ? Math.max(180, wings / 2) : wings / 2;
+
+            final int offset = wings; // usually 180
             //    # Left wing
             if (365 + (processDoy - wings) <= 366) {
                 int firstLeftDoy = Math.min(365, Math.max(1, 366 - offset));
@@ -560,10 +566,10 @@ public class IOUtils {
         return isInWingsInterval;
     }
 
-    public static boolean isPolarTile(String tile) {
-        return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("02") ||
-                tile.endsWith("15") || tile.endsWith("16") || tile.endsWith("17");
-    }
+//    public static boolean isPolarTile(String tile) {
+//        return tile.endsWith("00") || tile.endsWith("01") || tile.endsWith("02") ||
+//                tile.endsWith("15") || tile.endsWith("16") || tile.endsWith("17");
+//    }
 
     public static String[] getDailyAccumulatorBandNames() {
         String[] bandNames = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
