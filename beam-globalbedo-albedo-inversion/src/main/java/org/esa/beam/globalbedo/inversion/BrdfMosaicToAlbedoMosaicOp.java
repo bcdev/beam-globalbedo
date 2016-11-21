@@ -88,7 +88,7 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
     @SourceProduct(description = "BRDF merged product")
     private Product brdfMergedProduct;
 
-    @Parameter(description = "doy")
+    @Parameter(description = "doy", interval = "[1,366]")
     private int doy;
 
     @Override

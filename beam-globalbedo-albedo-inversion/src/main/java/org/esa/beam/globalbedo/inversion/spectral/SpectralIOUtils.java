@@ -149,7 +149,7 @@ public class SpectralIOUtils {
         return accumulatorHolder;
     }
 
-    static List<String> getDailyAccumulatorBinaryFileNames(String accumulatorRootDir, final int doyIn,
+    static List<String> getDailyAccumulatorBinaryFileNames(String accumulatorRootDir, final int doy,
                                                            final int year, String tile,
                                                            final int subStartX, final int subStartY,
                                                            int wings,
@@ -173,15 +173,16 @@ public class SpectralIOUtils {
         final FilenameFilter accumulatorNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005123_SUB_300_600.bin'...
-                return name.startsWith("matrices_" + Integer.toString(year) + Integer.toString(doyIn)) &&
+                return name.startsWith("matrices_" + Integer.toString(year) + Integer.toString(doy)) &&
                         name.endsWith(".bin");
             }
         };
 
         final String[] accumulatorYears = (new File(accumulatorRootDir)).list(yearFilter);
 
-        int doy = doyIn + 8; // 'MODIS day'
-        doy = Math.min(doy + 8, 365); // at least we need to set this limit
+        // keep SAME day now, as we support daily albedos!
+//        int doy = doyIn + 8; // 'MODIS day'
+//        doy = Math.min(doy + 8, 365); // at least we need to set this limit
 
         final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
 

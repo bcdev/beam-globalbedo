@@ -273,7 +273,9 @@ public class GlobalbedoLevel3FullAccumulation extends Operator implements Output
     private static int getDayDifference(String filename, AccumulatorHolder inputProduct) {
         final int year = inputProduct.getReferenceYear();
         final int fileYear = Integer.parseInt(filename.substring(9, 13));  // 'matrices_yyyydoy.bin'
-        final int doy = inputProduct.getReferenceDoy() + 8;
+//        final int doy = inputProduct.getReferenceDoy() + 8;
+        // keep SAME day now, as we support daily albedos!
+        final int doy = inputProduct.getReferenceDoy();
         final int fileDoy = Integer.parseInt(filename.substring(13, 16)); // 'matrices_yyyydoy.bin'
 
         return IOUtils.getDayDifference(fileDoy, fileYear, doy, year);

@@ -139,11 +139,15 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
         File file;
         String writeFormat;
         if (convertToBbdr) {
-            file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
+//            file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
+            // new file version:
+            file = new File(dir, sourceProduct.getName().replace("_BRDF_", "_BBDR_") + "_" + tileName + ".nc");
             writeFormat = "NetCDF4-BEAM";
         } else {
-            file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
-            writeFormat = "NetCDF4-GA-BBDR";
+//            file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
+            file = new File(dir, sourceProduct.getName().replace("_BRDF_", "_BRF_") + "_" + tileName + ".nc");
+//            writeFormat = "NetCDF4-GA-BBDR";
+            writeFormat = "NetCDF4-BEAM";
         }
         WriteOp writeOp = new WriteOp(product, file, writeFormat);
         writeOp.writeProduct(ProgressMonitor.NULL);

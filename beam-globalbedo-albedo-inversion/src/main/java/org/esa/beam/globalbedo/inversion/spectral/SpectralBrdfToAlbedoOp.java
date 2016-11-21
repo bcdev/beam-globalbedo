@@ -34,7 +34,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
     @SourceProduct(description = "Spectral BRDF product")
     private Product spectralBrdfProduct;
 
-    @Parameter(description = "doy")
+    @Parameter(description = "doy", interval = "[1,366]")
     private int doy;
 
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")

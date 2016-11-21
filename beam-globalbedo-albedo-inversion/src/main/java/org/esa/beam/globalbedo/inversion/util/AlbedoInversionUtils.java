@@ -177,18 +177,22 @@ public class AlbedoInversionUtils {
                 float nd = 0.0f;
                 float sum = 0.0f;
                 for (final int doy : eightDayTimePeriod) {
-                    if (doy >= startingDayInMonth - 8 && doy <= startingDayInMonth + numberOfDaysInMonth + 8) {
+//                    if (doy >= startingDayInMonth - 8 && doy <= startingDayInMonth + numberOfDaysInMonth + 8) {
+                    if (doy >= startingDayInMonth && doy <= startingDayInMonth + numberOfDaysInMonth) {
                         float monthlyWeight = 1.0f;
                         if (doy >= startingDayInMonth + numberOfDaysInMonth - 8) {
                             final float distance = (startingDayInMonth + numberOfDaysInMonth - doy) / 8.0f;
                             monthlyWeight = distance * 0.5f + 0.5f;
                         }
-                        if (doy <= startingDayInMonth + 8) {
-                            final float distance = (startingDayInMonth + 8 - doy) / 8.0f;
+//                        if (doy <= startingDayInMonth + 8) {
+                        if (doy <= startingDayInMonth) {
+//                            final float distance = (startingDayInMonth + 8 - doy) / 8.0f;
+                            final float distance = (startingDayInMonth - doy) / 8.0f;
                             monthlyWeight = distance * 0.5f + 0.5f;
                         }
                         nd += monthlyWeight;
-                        sum += weight[(doy + 8 - 1) / 8][day - 1] * monthlyWeight;
+//                        sum += weight[(doy + 8 - 1) / 8][day - 1] * monthlyWeight;
+                        sum += weight[(doy - 1) / 8][day - 1] * monthlyWeight;
                     }
                 }
                 monthlyWeighting[j][day - 1] = sum / nd;

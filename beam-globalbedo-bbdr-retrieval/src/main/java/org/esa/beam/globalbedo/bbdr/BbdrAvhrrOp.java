@@ -17,6 +17,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -63,6 +64,7 @@ public class BbdrAvhrrOp extends PixelOperator {
     protected static final int TRG_SZA = 10;
     protected static final int TRG_RAA = 11;
     protected static final int TRG_KERN = 12;
+    protected static final int TRG_LTDR_SNAP = 18;
 
     @SourceProduct
     protected Product sourceProduct;
@@ -74,21 +76,23 @@ public class BbdrAvhrrOp extends PixelOperator {
         final double brf2 = sourceSamples[SRC_BRF_2].getDouble();
         final double sigmaBrf1 = sourceSamples[SRC_SIGMA_BRF_1].getDouble();
         final double sigmaBrf2 = sourceSamples[SRC_SIGMA_BRF_2].getDouble();
+        final int ldtrFlag = sourceSamples[SRC_LDTR_FLAG].getInt();
 
         if (BbdrUtils.isBrfInputInvalid(brf1, sigmaBrf1) || BbdrUtils.isBrfInputInvalid(brf2, sigmaBrf2)) {
             // not meaningful values
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            computeLtdrSnapFlag(ldtrFlag, targetSamples);
             return;
         }
 
-//        final double sza = sourceSamples[SRC_TS].getDouble();
-//        final double vza = sourceSamples[SRC_TV].getDouble();
         // JRC swapped the angles in input products, so correct here. todo: remove this when JRC delivered correct data
-        final double vza = sourceSamples[SRC_TS].getDouble();
-        final double sza = sourceSamples[SRC_TV].getDouble();
+//        final double vza = sourceSamples[SRC_TS].getDouble();
+//        final double sza = sourceSamples[SRC_TV].getDouble();
+        final double vza = sourceSamples[SRC_TV].getDouble();  // done now
+        final double sza = sourceSamples[SRC_TS].getDouble();
 
         final double phi = sourceSamples[SRC_PHI].getDouble();
-        final int ldtrFlag = sourceSamples[SRC_LDTR_FLAG].getInt();
+
 
         // decode ldtrFlag flag and extract cloud info, see emails from Mirko Marioni, 20160513:
         final boolean isCloud = BitSetter.isFlagSet(ldtrFlag, 1);
@@ -99,8 +103,11 @@ public class BbdrAvhrrOp extends PixelOperator {
         if (isSea || isCloud || isCloudShadow || isBrf1Invalid || isBrf2Invalid) {
             // only compute over clear land
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            computeLtdrSnapFlag(ldtrFlag, targetSamples);
             return;
         }
+
+        computeLtdrSnapFlag(ldtrFlag, targetSamples);
 
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
         double[] bb = new double[BbdrConstants.N_SPC];
@@ -182,6 +189,13 @@ public class BbdrAvhrrOp extends PixelOperator {
         ProductUtils.copyBand("QA", sourceProduct, targetProduct, true);
         // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
         ProductUtils.copyBand("LDTR_FLAG", sourceProduct, targetProduct, true);
+
+        // set up also an LTDR flag band for SNAP
+        final Band ltdrFlagSnapBand = targetProduct.addBand("LTDR_FLAG_snap", ProductData.TYPE_INT16);
+        FlagCoding flagCoding = AvhrrLtdrFlag.createLtdrFlagCoding("LTDR_FLAG_snap_flag");
+        ltdrFlagSnapBand.setSampleCoding(flagCoding);
+        targetProduct.getFlagCodingGroup().add(flagCoding);
+        AvhrrLtdrFlag.setupLtdrBitmasks(targetProduct);
     }
 
     @Override
@@ -221,6 +235,24 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
         configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
         configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
+
+        configurator.defineSample(TRG_LTDR_SNAP, "LTDR_FLAG_snap");
+
+    }
+
+    private void computeLtdrSnapFlag(int srcValue, WritableSample[] targetSamples) {
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.SPARE_BIT_INDEX, AvhrrLtdrFlag.isSpare(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.CLOUD_BIT_INDEX, AvhrrLtdrFlag.isCloud(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.CLOUD_SHADOW_BIT_INDEX, AvhrrLtdrFlag.isCloudShadow(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.WATER_BIT_INDEX, AvhrrLtdrFlag.isWater(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.GLINT_BIT_INDEX, AvhrrLtdrFlag.isGlint(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.DARK_VEGETATION_BIT_INDEX, AvhrrLtdrFlag.isDarkVegetation(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.NIGHT_BIT_INDEX, AvhrrLtdrFlag.isNight(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.UNKNOWN_BIT_INDEX, AvhrrLtdrFlag.isUnknown(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.CHANNEL_1_INVALID_BIT_INDEX, AvhrrLtdrFlag.isChannel1Invalid(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.CHANNEL_2_INVALID_BIT_INDEX, AvhrrLtdrFlag.isChannel2Invalid(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.BRDF_CORR_ISSUES_BIT_INDEX, AvhrrLtdrFlag.isBrdfCorrIssues(srcValue));
+        targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.POLAR_BIT_INDEX, AvhrrLtdrFlag.isPolar(srcValue));
 
     }
 

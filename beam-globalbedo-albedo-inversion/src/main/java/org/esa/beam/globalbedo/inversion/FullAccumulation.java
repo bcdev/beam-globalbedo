@@ -200,7 +200,8 @@ public class FullAccumulation {
     private static int getDayDifference(String filename, AccumulatorHolder inputProduct) {
         final int year = inputProduct.getReferenceYear();
         final int fileYear = Integer.parseInt(filename.substring(9, 13));  // 'matrices_yyyydoy.bin'
-        final int doy = inputProduct.getReferenceDoy() + 8;
+//        final int doy = inputProduct.getReferenceDoy() + 8;
+        final int doy = inputProduct.getReferenceDoy(); // take SAME day now, as we support daily albedos!
         final int fileDoy = Integer.parseInt(filename.substring(13, 16)); // 'matrices_yyyydoy.bin'
 
         return IOUtils.getDayDifference(fileDoy, fileYear, doy, year);

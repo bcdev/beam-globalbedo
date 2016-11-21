@@ -88,7 +88,7 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(description = "Year")
     private int year;
 
-    @Parameter(description = "DoY")
+    @Parameter(description = "DoY", interval = "[1,366]")
     private int doy;
 
     @Parameter(defaultValue = "false", description = "Write merged BRDF product only (no albedo compuation)")

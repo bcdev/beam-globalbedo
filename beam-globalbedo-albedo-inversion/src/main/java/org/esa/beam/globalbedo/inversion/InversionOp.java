@@ -79,7 +79,7 @@ public class InversionOp extends PixelOperator {
     @Parameter(description = "Tile")
     private String tile;
 
-    @Parameter(description = "Day of year")
+    @Parameter(description = "Day of year", interval = "[1,366]")
     private int doy;
 
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year

@@ -383,9 +383,9 @@ public class IOUtilsTest extends TestCase {
         assertEquals("matrices_2006016.bin", result.get(59));
         System.out.println();
 
-//        for (int i=0; i<180; i+=2) {
-//            System.out.println("i, weight = " + i + ", " + AlbedoInversionUtils.getWeight(i));
-//        }
+        for (int i=0; i<180; i+=2) {
+            System.out.println("i, weight = " + i + ", " + AlbedoInversionUtils.getWeight(i));
+        }
     }
 
     @Ignore

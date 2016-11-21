@@ -409,8 +409,8 @@ public class IOUtils {
 
         final String[] accumulatorYears = (new File(accumulatorRootDir)).list(yearFilter);
 
-        doy = doy + 8; // 'MODIS day'    // ??? todo: check!!
-        doy = Math.min(doy + 8, 365); // at least we need to set this limit
+        // keep SAME day now, as we support daily albedos!
+//        doy = doy + 8; // 'MODIS day'    // ??? todo: check!!
 
         // fill the name list year by year...
         for (String accProductYear : accumulatorYears) {
