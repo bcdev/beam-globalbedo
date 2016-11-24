@@ -95,7 +95,9 @@ public class SpectralInversionOp extends PixelOperator {
         uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
 
         numTargetParameters = 3 * numSdrBands;
-        numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
+//        numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
+        // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+        numTargetUncertainties = 3 * numSdrBands;
 
         int subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor;
         int subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor;
@@ -184,10 +186,13 @@ public class SpectralInversionOp extends PixelOperator {
 
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][j]);
-                index++;
-            }
+//            for (int j = i; j < 3 * numSdrBands; j++) {
+//                configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][j]);
+//                index++;
+//            }
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][i]);
+            index++;
         }
 
         int offset = numTargetParameters + numTargetUncertainties;
@@ -208,9 +213,11 @@ public class SpectralInversionOp extends PixelOperator {
 
         for (int i = 0; i < 3 * numSdrBands; i++) {
             // add bands only for UR triangular matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                productConfigurer.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-            }
+//            for (int j = i; j < 3 * numSdrBands; j++) {
+//                productConfigurer.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+//            }
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            productConfigurer.addBand(uncertaintyBandNames[i][i], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         }
 
         productConfigurer.addBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32,
@@ -262,12 +269,16 @@ public class SpectralInversionOp extends PixelOperator {
             index++;
         }
 
+        // uncertainties
         index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                targetSamples[numTargetParameters + index].set(uncertainties.get(i, j));
-                index++;
-            }
+//            for (int j = i; j < 3 * numSdrBands; j++) {
+//                targetSamples[numTargetParameters + index].set(uncertainties.get(i, j));
+//                index++;
+//            }
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            targetSamples[numTargetParameters + index].set(uncertainties.get(i, i));
+            index++;
         }
 
         int offset = numTargetParameters + numTargetUncertainties;

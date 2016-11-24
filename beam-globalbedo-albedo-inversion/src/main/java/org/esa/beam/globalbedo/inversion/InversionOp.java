@@ -3,6 +3,8 @@ package org.esa.beam.globalbedo.inversion;
 
 import Jama.LUDecomposition;
 import Jama.Matrix;
+import org.apache.commons.math3.linear.RealMatrix;
+import org.apache.commons.math3.linear.SingularValueDecomposition;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
@@ -252,18 +254,28 @@ public class InversionOp extends PixelOperator {
         Matrix parameters = new Matrix(NUM_BBDR_WAVE_BANDS * NUM_ALBEDO_PARAMETERS, 1, AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties = new Matrix(3 * NUM_BBDR_WAVE_BANDS, 3 * NUM_ALBEDO_PARAMETERS);  // todo: how to initialize??
 
-//        if (x == 800 & y == 100) {
-//            System.out.println("x = " + x);
-//        }
+        if (x == 46 & y == 113) {
+            // in stripe
+            System.out.println("x = " + x);
+        }
+        if (x == 47 & y == 113) {
+            // outside stripe
+            System.out.println("x = " + x);
+        }
 
         double entropy = 0.0; // == det in BB
         double relEntropy = 0.0;
 
         double maskAcc = 0.0;
         Accumulator accumulator = null;
+        float daysToTheClosestSample = 0.0f;
+        boolean trustAccumulation = false;
         if (fullAccumulator != null) {
             accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
             maskAcc = accumulator.getMask();
+            daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
+            trustAccumulation = maskAcc > 1.0 && daysToTheClosestSample < 10.0;
+            trustAccumulation = true;  // todo: test
         }
 
         double maskPrior = 1.0;
@@ -282,21 +294,32 @@ public class InversionOp extends PixelOperator {
 
         double goodnessOfFit = 0.0;
         double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
-        float daysToTheClosestSample = 0.0f;
-        if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
+        if (trustAccumulation && accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
             final Matrix mAcc = accumulator.getM();
             Matrix vAcc = accumulator.getV();
             final Matrix eAcc = accumulator.getE();
+
+//            final double priorWeighting = Math.max(1.0, 1.0 + 111.0*(10.0 - maskAcc));
+//            final double priorWeighting = Math.max(1.0, 0.5*(1.0 + 111.0*(10.0 - maskAcc)));
+            final double priorWeighting = 1.0;
 
             if (usePrior && prior != null) {
                 for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
                     double m_ii_accum = mAcc.get(i, i);
                     if (prior.getM() != null) {
-                        m_ii_accum += prior.getM().get(i, i);
+//                        m_ii_accum += prior.getM().get(i, i);
+                        m_ii_accum += prior.getM().get(i, i) * priorWeighting; // test!
                     }
                     mAcc.set(i, i, m_ii_accum);
                 }
-                vAcc = vAcc.plus(prior.getV());
+//                vAcc = vAcc.plus(prior.getV());
+                for (int i = 0; i < 3 * NUM_BBDR_WAVE_BANDS; i++) {
+                    double v_i_accum = vAcc.get(i, 0);
+                    if (prior.getV() != null) {
+                        v_i_accum += prior.getV().get(i, 0) * priorWeighting; // test!
+                    }
+                    vAcc.set(i, 0, v_i_accum);
+                }
             }
 
             final LUDecomposition lud = new LUDecomposition(mAcc);
@@ -331,13 +354,6 @@ public class InversionOp extends PixelOperator {
             }
             // 'Goodness of Fit'...
             goodnessOfFit = getGoodnessOfFit(mAcc, vAcc, eAcc, parameters, maskAcc);
-            if (x == 199 && y == 150) {
-                BeamLogManager.getSystemLogger().log(Level.INFO, "goodnessOfFit = " + goodnessOfFit);
-            }
-            goodnessOfFitTerms = getGoodnessOfFitTerms(mAcc, vAcc, eAcc, parameters, maskAcc);
-
-            // finally we need the 'Days to the closest sample'...
-            daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
         } else {
             if (maskPrior > 0.0) {
                 if (usePrior) {
@@ -466,13 +482,40 @@ public class InversionOp extends PixelOperator {
     }
 
 
-    static double getEntropy(Matrix m) {
-        // A bit unclear. The ATBD just calls the matrix determinant the 'entropy'. The breadboard uses a
-        // SingularValue decomposition. Why?
+//    static double getEntropy(Matrix m) {
+//        // A bit unclear. The ATBD just calls the matrix determinant the 'entropy'. The breadboard uses a
+//        // SingularValue decomposition. Why?
+//
+//        final int mDim = m.getRowDimension(); // we know we have a symmetric matrix here
+//        final double offset = mDim * sqrt(log(2.0 * PI * E));
+//        return 0.5 * log(m.det()) + offset;   // ATBD v4.12 p.272
+//    }
 
-        final int mDim = m.getRowDimension(); // we know we have a symmetric matrix here
-        final double offset = mDim * sqrt(log(2.0 * PI * E));
-        return 0.5 * log(m.det()) + offset;   // ATBD v4.12 p.272
+    static double getEntropy(Matrix m) {
+
+        // breadboard:
+//        U, S, Vh = svd(M)
+//        det[column,row] = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+//
+//        # This can be calculated earlier for the prior
+//        U, S, Vh = svd(numpy.matrix(M_p))
+//        PriorDet = 0.5*numpy.log(numpy.product(1/S)) + S.shape[0] * numpy.sqrt(numpy.log(2*numpy.pi*numpy.e))
+//        if UsePrior == 1:
+//        RelativeEntropy[column,row] = PriorDet - det[column,row]
+
+        // final SingularValueDecomposition svdM = m.svd();     // this sometimes gets stuck at CEMS!!
+        //  --> single value decomposition from apache.commons.math3 seems to do better
+        final RealMatrix rm = AlbedoInversionUtils.getRealMatrixFromJamaMatrix(m);
+        final SingularValueDecomposition svdM = new SingularValueDecomposition(rm);
+        final double[] svdMSingularValues = svdM.getSingularValues();
+        // see python BB equivalent at http://nullege.com/codes/search/numpy.prod
+        double productSvdMSRecip = 1.0;
+        for (double svdMSingularValue : svdMSingularValues) {
+            if (svdMSingularValue != 0.0) {
+                productSvdMSRecip *= (1.0 / svdMSingularValue);
+            }
+        }
+        return 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
     }
 
     private void configurePriorSourceSamples(SampleConfigurer configurator) {
