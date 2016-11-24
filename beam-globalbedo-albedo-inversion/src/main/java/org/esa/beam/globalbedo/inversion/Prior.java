@@ -82,7 +82,7 @@ public class Prior {
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
             // priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 1.0)); // original
             // this will lead to higher weighting of the Prior:
-            priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 0.01));
+            priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 0.01));  // todo: make configurable!
             C.set(i, i, priorSD.get(i, 0) * priorSD.get(i, 0));
         }
 
