@@ -39,21 +39,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     private static final int SRC_STATUS = 70;
 
-    @Parameter(description = "MODIS tile")
-    private String tile;
-
-    @Parameter(description = "Year")
-    private int year;
-
-    @Parameter(description = "Day of Year", interval = "[1,366]")
-    private int doy;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
-
-    @Parameter(defaultValue = "false", description = "Write ancillary bands (angles, AOT) to target product")
-    private boolean writeGeometryAndAOT;
-
 
     @Parameter(defaultValue = "7", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
     protected int numMappedSdrBands;
@@ -180,9 +168,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
         int[] sinCoordinates = null;  // todo: clarify what means sinCoordinates
         final float[] sdrMapped =
-                getSpectralMappedSdr(numMappedSdrBands, sensor.name(), sdr, year, doy, sinCoordinates, computeSnow);
+                getSpectralMappedSdr(numMappedSdrBands, sensor.name(), sdr, sinCoordinates, computeSnow);
         final float[] sdrSigmaMapped =
-                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, year, doy, sinCoordinates, computeSnow);
+                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, computeSnow);
 
         // calculation of kernels (kvol, kgeo)
         final double sza = sourceSamples[SRC_SZA].getDouble();
@@ -212,7 +200,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         targetSamples[index].set(sourceSamples[SRC_SNOW_MASK].getInt());
     }
 
-    float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr, int year, int doy,
+    float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr,
                                  int[] sinCoordinates, boolean snow) {
 //        float[] sdrMapped = new float[numMappedSdrBands];   // the 7 MODIS channels
 //        return sdrMapped;
@@ -220,7 +208,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         return sm.getSpectralMappedSdr(sdr);
     }
 
-    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors, int year, int doy,
+    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors,
                                       int[] sinCoordinates, boolean snow) {
 
         // todo: SK to explain how to address the other parameters?!

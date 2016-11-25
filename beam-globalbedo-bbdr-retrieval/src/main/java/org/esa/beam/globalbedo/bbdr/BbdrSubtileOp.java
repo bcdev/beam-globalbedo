@@ -48,7 +48,7 @@ public class BbdrSubtileOp extends Operator implements Output {
     @SourceProduct
     private Product sourceProduct;
 
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
+    @Parameter(defaultValue = "4", description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
     private int subtileFactor;
 
     private int numSubTiles;
