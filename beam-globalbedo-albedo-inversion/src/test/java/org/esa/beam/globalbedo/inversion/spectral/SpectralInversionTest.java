@@ -24,17 +24,14 @@ public class SpectralInversionTest extends TestCase {
 
     public void testGetSdrSigmaBandNames() {
         int numSdrBands = 7;
-        int numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands) / 2 + numSdrBands;
-        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
+//        int numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands) / 2 + numSdrBands;
+        int numSigmaSdrBands = numSdrBands;
+        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
         assertNotNull(sigmaSdrBandNames);
-        assertEquals(28, sigmaSdrBandNames.length);
-        assertEquals("SDR_SIGMA_0_0", sigmaSdrBandNames[0]);
-        assertEquals("SDR_SIGMA_0_2", sigmaSdrBandNames[2]);
-        assertEquals("SDR_SIGMA_0_5", sigmaSdrBandNames[5]);
-        assertEquals("SDR_SIGMA_1_6", sigmaSdrBandNames[12]);
-        assertEquals("SDR_SIGMA_2_6", sigmaSdrBandNames[17]);
-        assertEquals("SDR_SIGMA_4_4", sigmaSdrBandNames[22]);
-        assertEquals("SDR_SIGMA_6_6", sigmaSdrBandNames[27]);
+        assertEquals(7, sigmaSdrBandNames.length);
+        assertEquals("SDR_SIGMA_0", sigmaSdrBandNames[0]);
+        assertEquals("SDR_SIGMA_4", sigmaSdrBandNames[4]);
+        assertEquals("SDR_SIGMA_6", sigmaSdrBandNames[6]);
     }
 
     public void testGetSigmaSdrDiagonalIndices() {

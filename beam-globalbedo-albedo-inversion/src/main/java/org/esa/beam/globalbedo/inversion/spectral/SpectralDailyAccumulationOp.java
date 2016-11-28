@@ -83,13 +83,16 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         sdrTiles = new Tile[sourceProducts.length][numSdrBands];
         // (7*7 - 7)/2  + 7 = 28 sigma bands default (UR matrix)
-        numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands)/2 + numSdrBands;
+//        numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands)/2 + numSdrBands;
+        // we need only the stdevs, no cross correlations?!
+        numSigmaSdrBands = numSdrBands;
         sigmaSdrTiles = new Tile[sourceProducts.length][numSigmaSdrBands];
 
         final String[] sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
-        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
-        sigmaSdrDiagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numSdrBands);
-        sigmaSdrURIndices = SpectralInversionUtils.getSigmaSdrURIndices(numSdrBands, numSigmaSdrBands);
+//        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
+        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
+//        sigmaSdrDiagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numSdrBands);
+//        sigmaSdrURIndices = SpectralInversionUtils.getSigmaSdrURIndices(numSdrBands, numSigmaSdrBands);
 
         kvolTile = new Tile[sourceProducts.length];
         kgeoTile = new Tile[sourceProducts.length];
@@ -157,9 +160,9 @@ public class SpectralDailyAccumulationOp extends Operator {
         // check validity of ALL inputs used:
         final Matrix sdr = getSDR(x, y);
         final double[] stdev = getSD(x, y);
-        final double[] correlation = getCorrelation(x, y);
+//        final double[] correlation = getCorrelation(x, y);
         final Matrix kernels = getKernels(x, y);
-        if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(sdr, stdev, correlation, kernels)) {
+        if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(sdr, stdev, kernels)) {
             return getZeroAccumulator();
         }
 
@@ -174,7 +177,9 @@ public class SpectralDailyAccumulationOp extends Operator {
                 if (k == j + 1) {
                     cCount++;
                 }
-                C.set(cCount, 0, correlation[count] * stdev[j] * stdev[k]);
+//                C.set(cCount, 0, correlation[count] * stdev[j] * stdev[k]);
+                // we neglect the cross terms...
+                C.set(cCount, 0, 0.0);
                 count++;
                 cCount++;
             }
@@ -228,35 +233,45 @@ public class SpectralDailyAccumulationOp extends Operator {
         return sdr;
     }
 
+    // we do not need the cross terms...
     private double[] getSD(int x, int y) {
         double[] SD = new double[numSdrBands];
-        // sigma_00 xx xx xx xx xx xx
-        // sigma_   01 xx xx xx xx xx
-        // sigma_      02 xx xx xx xx
-        // sigma_         03 xx xx xx
-        // sigma_            04 xx xx
-        // sigma_               05 xx
-        // sigma_                  06
         for (int j = 0; j < numSdrBands; j++) {
-            SD[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
+            SD[j] = sigmaSdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y);
         }
         return SD;
     }
 
-    private double[] getCorrelation(int x, int y) {
-        double[] correlation = new double[numSigmaSdrBands - numSdrBands];
-        // sigma_xx 01 02 03 04 05 06
-        // sigma_   xx 02 03 04 05 06
-        // sigma_      xx 03 04 05 06
-        // sigma_         xx 04 05 06
-        // sigma_            xx 05 06
-        // sigma_               xx 06
-        // sigma_                  xx
-        for (int j = 0; j < sigmaSdrURIndices.length; j++) {
-            correlation[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrURIndices[j]].getSampleDouble(x, y);
-        }
-        return correlation;
-    }
+
+//    private double[] getSD(int x, int y) {
+//        double[] SD = new double[numSdrBands];
+//        // sigma_00 xx xx xx xx xx xx
+//        // sigma_   01 xx xx xx xx xx
+//        // sigma_      02 xx xx xx xx
+//        // sigma_         03 xx xx xx
+//        // sigma_            04 xx xx
+//        // sigma_               05 xx
+//        // sigma_                  06
+//        for (int j = 0; j < numSdrBands; j++) {
+//            SD[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
+//        }
+//        return SD;
+//    }
+
+//    private double[] getCorrelation(int x, int y) {
+//        double[] correlation = new double[numSigmaSdrBands - numSdrBands];
+//        // sigma_xx 01 02 03 04 05 06
+//        // sigma_   xx 02 03 04 05 06
+//        // sigma_      xx 03 04 05 06
+//        // sigma_         xx 04 05 06
+//        // sigma_            xx 05 06
+//        // sigma_               xx 06
+//        // sigma_                  xx
+//        for (int j = 0; j < sigmaSdrURIndices.length; j++) {
+//            correlation[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrURIndices[j]].getSampleDouble(x, y);
+//        }
+//        return correlation;
+//    }
 
     private void fillBinaryResultArray(Accumulator accumulator, int x, int y) {
         int offset = 0;
@@ -304,25 +319,15 @@ public class SpectralDailyAccumulationOp extends Operator {
                 (!computeSnow && (snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
 
-    private boolean isSDRFilter(int x, int y) {
-        for (int j = 0; j < numSdrBands; j++) {
-            final double sdr = sdrTiles[currentSourceProductIndex][j].getSampleDouble(x, y);
-            if (sdr == 0.0 || !AlbedoInversionUtils.isValid(sdr) || sdr == 9999.0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private boolean isSDFilter(int x, int y) {
-        for (int j = 0; j < numSdrBands; j++) {
-            final double sigmaSdr = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
-            if (sigmaSdr == 0.0 || !AlbedoInversionUtils.isValid(sigmaSdr) || sigmaSdr == 9999.0) {
-                return true;
-            }
-        }
-        return false;
-    }
+//    private boolean isSDFilter(int x, int y) {
+//        for (int j = 0; j < numSdrBands; j++) {
+//            final double sigmaSdr = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
+//            if (sigmaSdr == 0.0 || !AlbedoInversionUtils.isValid(sigmaSdr) || sigmaSdr == 9999.0) {
+//                return true;
+//            }
+//        }
+//        return false;
+//    }
 
 
     public static class Spi extends OperatorSpi {

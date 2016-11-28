@@ -54,13 +54,17 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     @Override
     protected void prepareInputs() throws OperatorException {
         sdrMappedBandNames = SpectralInversionUtils.getSdrBandNames(numMappedSdrBands);
-        int numSigmaSdrBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
-        sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numMappedSdrBands, numSigmaSdrBands);
+//        int numSigmaSdrBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+        // we do not need the cross terms...
+        int numSigmaSdrBands = numMappedSdrBands;
+//        sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numMappedSdrBands, numSigmaSdrBands);
+        sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
         kernelBandNames = AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES;
 
         sm = new MsslModisSpectralMapper();
         // read coefficients from a text file
-        sm.readCoeff();
+        // we have constants now, 20161118
+//        sm.readCoeff();
     }
 
     @Override
@@ -167,10 +171,15 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         }
 
         int[] sinCoordinates = null;  // todo: clarify what means sinCoordinates
+        if (x == 400 && y == 700) {
+            System.out.println("status = " + status);
+        }
+
         final float[] sdrMapped =
                 getSpectralMappedSdr(numMappedSdrBands, sensor.name(), sdr, sinCoordinates, computeSnow);
-        final float[] sdrSigmaMapped =
-                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, computeSnow);
+//        final float[] sdrSigmaMapped =
+//                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, computeSnow);
+        final float[] sdrSigmaMapped = getSpectralMappedSigmaSdr(numMappedSdrBands, sigmaSdr);
 
         // calculation of kernels (kvol, kgeo)
         final double sza = sourceSamples[SRC_SZA].getDouble();
@@ -208,34 +217,40 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         return sm.getSpectralMappedSdr(sdr);
     }
 
-    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors,
-                                      int[] sinCoordinates, boolean snow) {
+//    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors,
+//                                      int[] sinCoordinates, boolean snow) {
+//
+//        // todo: SK to explain how to address the other parameters?!
+//        // todo: SK to provide 7+6+5+4+3+2+1 sigma UR matrix elements. Currently we only get diagonal elements sigma_ii!
+////        return sm.getSpectralMappedSigmaSdr(sdrErrors);
+//
+//        // todo: this is preliminary until issues above are addressed.
+//        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
+//        float[] sdrSigmaMapped = new float[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
+//        final int[] diagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numMappedSdrBands);
+//
+//        final float[] spectralMappedSigmaSdrDiagonal = sm.getSpectralMappedSigmaSdr(sdrErrors);
+//        for (int i = 0; i < numSigmaSdrMappedBands; i++) {
+//            // use random number in [0.0, 0.05]
+//            // sdrSigmaMapped[i] = (float) Math.abs((0.1 * (Math.random() - 0.5)));
+//            // better: initialize to zero
+//            // sdrSigmaMapped[i] = 0.0f
+//            for (int j = 0; j < diagonalIndices.length; j++) {
+//                if (i == diagonalIndices[j]) {
+//                    // use SK results for diagonal elements
+//                    sdrSigmaMapped[i] = spectralMappedSigmaSdrDiagonal[j];
+//                    break;
+//                }
+//            }
+//        }
+//        return sdrSigmaMapped;
+//    }
 
-        // todo: SK to explain how to address the other parameters?!
-        // todo: SK to provide 7+6+5+4+3+2+1 sigma UR matrix elements. Currently we only get diagonal elements sigma_ii!
-//        return sm.getSpectralMappedSigmaSdr(sdrErrors);
-
-        // todo: this is preliminary until issues above are addressed.
-        final int numSigmaSdrMappedBands = (numMappedSdrBands * numMappedSdrBands - numMappedSdrBands) / 2 + numMappedSdrBands;
-        float[] sdrSigmaMapped = new float[numSigmaSdrMappedBands];   // 28 sigma bands for the 7 MODIS channels
-        final int[] diagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numMappedSdrBands);
-
-        final float[] spectralMappedSigmaSdrDiagonal = sm.getSpectralMappedSigmaSdr(sdrErrors);
-        for (int i = 0; i < numSigmaSdrMappedBands; i++) {
-            // use random number in [0.0, 0.05]
-            // sdrSigmaMapped[i] = (float) Math.abs((0.1 * (Math.random() - 0.5)));
-            // better: initialize to zero
-            // sdrSigmaMapped[i] = 0.0f
-            for (int j = 0; j < diagonalIndices.length; j++) {
-                if (i == diagonalIndices[j]) {
-                    // use SK results for diagonal elements
-                    sdrSigmaMapped[i] = spectralMappedSigmaSdrDiagonal[j];
-                    break;
-                }
-            }
-        }
-        return sdrSigmaMapped;
+    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, float[] sdrErrors) {
+        // todo: clarify if this is what we want
+        return sm.getSpectralMappedSigmaSdr(sdrErrors);
     }
+
 
     private void addMappedSdrBands(Product targetProduct) {
         for (int i = 0; i < sdrMappedBandNames.length; i++) {

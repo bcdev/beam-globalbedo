@@ -56,7 +56,11 @@ public class DailyAccumulationUtils {
         return  isBBDRInvalid(bbdr) || isSDInvalid(stdev) || isCorrelationInvalid(correlation) || areKernelsInvalid(kernels);
     }
 
-    private static boolean isBBDRInvalid(Matrix bbdr) {
+    public static  boolean isAccumulatorInputInvalid(Matrix bbdr, double[] stdev, Matrix kernels) {
+        return  isBBDRInvalid(bbdr) || isSDInvalid(stdev) || areKernelsInvalid(kernels);
+    }
+
+    public static boolean isBBDRInvalid(Matrix bbdr) {
         for (int i = 0; i < bbdr.getRowDimension(); i++) {
             for (int j = 0; j < bbdr.getColumnDimension(); j++) {
                 final double elem = bbdr.get(i, j);
