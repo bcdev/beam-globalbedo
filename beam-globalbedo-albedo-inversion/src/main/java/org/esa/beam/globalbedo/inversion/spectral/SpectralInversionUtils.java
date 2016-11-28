@@ -51,24 +51,33 @@ public class SpectralInversionUtils {
         return sigmaSdrURIndices;
     }
 
-    public static String[] getSigmaSdrBandNames(int numSdrBands, int numSigmaSdrBands) {
-        // sigma_00 01 02 03 04 05 06
-        // sigma_   01 02 03 04 05 06
-        // sigma_      02 03 04 05 06
-        // sigma_         03 04 05 06
-        // sigma_            04 05 06
-        // sigma_               05 06
-        // sigma_                  06
-        String[] sigmaSdrBandNames = new String[numSigmaSdrBands];
-        int index = 0;
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = i; j < numSdrBands; j++) {
-                if (index < numSigmaSdrBands) {
-                    sigmaSdrBandNames[index++] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + i + "_" + j;
-                }
-            }
+//    public static String[] getSigmaSdrBandNames(int numSdrBands, int numSigmaSdrBands) {
+//        // sigma_00 01 02 03 04 05 06
+//        // sigma_   01 02 03 04 05 06
+//        // sigma_      02 03 04 05 06
+//        // sigma_         03 04 05 06
+//        // sigma_            04 05 06
+//        // sigma_               05 06
+//        // sigma_                  06
+//        String[] sigmaSdrBandNames = new String[numSigmaSdrBands];
+//        int index = 0;
+//        for (int i = 0; i < numSdrBands; i++) {
+//            for (int j = i; j < numSdrBands; j++) {
+//                if (index < numSigmaSdrBands) {
+//                    sigmaSdrBandNames[index++] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + i + "_" + j;
+//                }
+//            }
+//        }
+//        return sigmaSdrBandNames;
+//    }
+
+    public static String[] getSigmaSdrBandNames(int numSigmaSdrBands) {
+        // we do not need the cross terms...
+        String[] sdrBandNames = new String[numSigmaSdrBands];
+        for (int i = 0; i < numSigmaSdrBands; i++) {
+            sdrBandNames[i] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + i;
         }
-        return sigmaSdrBandNames;
+        return sdrBandNames;
     }
 
     public static String[] getSdrBandNames(int numSdrBands) {
