@@ -173,8 +173,7 @@ public class SpectralIOUtils {
         final FilenameFilter accumulatorNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // accept only filenames like 'matrices_2005123_SUB_300_600.bin'...
-                return name.startsWith("matrices_" + Integer.toString(year) + Integer.toString(doy)) &&
-                        name.endsWith(".bin");
+                return name.startsWith("matrices_") && name.endsWith(".bin");
             }
         };
 

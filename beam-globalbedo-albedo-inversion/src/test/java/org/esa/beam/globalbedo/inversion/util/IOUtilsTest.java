@@ -3,6 +3,7 @@ package org.esa.beam.globalbedo.inversion.util;
 import junit.framework.TestCase;
 import org.junit.Ignore;
 
+import java.awt.*;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.nio.ByteBuffer;
@@ -457,5 +458,47 @@ public class IOUtilsTest extends TestCase {
         assertEquals(2, tileDirs.length);
         assertEquals("h18v04", tileDirs[0].getName());
         assertEquals("h25v06", tileDirs[1].getName());
+    }
+
+    public void testSomething()  {
+        new Color(220, 230, 240);
+        new Color(230, 253, 200);
+        new Color(250, 250, 210);
+        new Color(240, 240, 180);
+        new Color(246, 235, 155);
+        new Color(246, 225, 135);
+        new Color(240, 220, 120);
+        new Color(231, 210, 113);
+        new Color(216, 193,  99);
+        new Color(201, 176,  85);
+        new Color(186, 159,  71);
+        new Color(171, 142,  56);
+        new Color(156, 125,  42);
+        new Color(141, 108,  28);
+        new Color(126,  91,  14);
+        new Color(120,  82,   7);
+        new Color(111,  75,   0);
+        new Color(120,  80,   0);
+        new Color(125,  99,   0);
+        new Color(130, 110,   0);
+        new Color(140, 120,   0);
+        new Color(120, 140,  10);
+        new Color(110, 150,  10);
+        new Color(100, 160,  20);
+        new Color( 80, 180,  30);
+        new Color( 60, 160,  50);
+        new Color( 50, 140,  50);
+        new Color( 40, 120,  40);
+        new Color( 30, 100,  30);
+        new Color( 20,  80,  20);
+        new Color( 60,  80,  40);
+        new Color( 80,  60,  40);
+        new Color(100,  50,  30);
+        new Color(100,  30,  20);
+        new Color( 80,  20,  10);
+        new Color(0,     0, 255);
+        new Color(0,     0, 200);
+        new Color(0,     0, 100);
+        new Color(0,     0, 50);
     }
 }
