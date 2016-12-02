@@ -152,7 +152,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvBrdf extends GlobalbedoLevel3UpscaleBa
             addTargetBand(srcBand);
         }
 
-        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojectToPlateCarre);
+        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojection);
 
         matrixNodataValue = reprojectedProduct.getBand(brdfModelBandNames[0]).getNoDataValue();
         entropyBand = reprojectedProduct.getBand(INV_ENTROPY_BAND_NAME);
@@ -171,7 +171,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvBrdf extends GlobalbedoLevel3UpscaleBa
         final Tile latTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME);
         final Tile lonTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME);
         // in Plate-Carree case, compute a simple lat/lon grid over whole mosaic
-        if (reprojectToPlateCarre && latTile != null && lonTile != null) {
+        if (reprojection.equals("PC") && latTile != null && lonTile != null) {
             computeLatLon(latTile, lonTile, targetTiles.get(INV_ENTROPY_BAND_NAME));
         }
 
@@ -186,7 +186,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvBrdf extends GlobalbedoLevel3UpscaleBa
             computeNearestBrdf(srcTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME), targetTiles.get(INV_GOODNESS_OF_FIT_BAND_NAME));
             computeNearestBrdf(srcTiles.get(INV_ENTROPY_BAND_NAME), targetTiles.get(INV_ENTROPY_BAND_NAME));
             // Sinusoidal case: also nearest neighbour for lat/lon
-            if (!reprojectToPlateCarre && latTile != null && lonTile != null) {
+            if (reprojection.equals("SIN") && latTile != null && lonTile != null) {
                 computeNearestBrdf(srcTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME), latTile);
                 computeNearestBrdf(srcTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME), lonTile);
             }

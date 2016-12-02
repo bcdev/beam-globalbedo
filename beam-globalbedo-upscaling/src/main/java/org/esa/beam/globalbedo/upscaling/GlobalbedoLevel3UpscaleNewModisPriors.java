@@ -133,7 +133,7 @@ public class GlobalbedoLevel3UpscaleNewModisPriors extends GlobalbedoLevel3Upsca
         upscaledProduct.setPreferredTileSize((int) (MosaicConstants.MODIS_TILE_SIZE / scaling / 4),
                                              (int) (MosaicConstants.MODIS_TILE_SIZE / scaling / 4));
 
-        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, true);
+        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, "PC");
 
         targetProduct = upscaledProduct;
     }
