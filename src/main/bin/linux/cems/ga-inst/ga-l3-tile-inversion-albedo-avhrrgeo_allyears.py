@@ -39,14 +39,20 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 # all 326 tiles we have:
 tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories
+#tiles = glob.glob1(priorDir, 'h3?v??') # we have same number (326) of snow and noSnow prior directories
 tiles.sort()
 
 #tiles = ['h17v03']
-#tiles = ['h20v06']
+#tiles = ['h22v03']
 #tiles = ['h18v07']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 #tiles = glob.glob1(priorDir, 'h??v05') # we have same number (326) of snow and noSnow prior directories
-#tiles = ['h18v03','h21v06']
+#tiles = ['h21v02','h21v03']
+
+#startYear = 1998
+#endYear = 2014
+startYear = 2011
+endYear = 2011
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
@@ -63,20 +69,18 @@ for tile in tiles:
 
     ### daily accumulation for all years:
     allDailyAccPostConds = []
-#    for iyear in range(1998, 2015):
-    for iyear in range(2005, 2006):
+    for iyear in range(startYear, endYear+1):
         year = str(iyear)
-
         startDoy = '000'
         endDoy = '361'
-        postCond = 'daily_accs_' + year 
+        postCond = 'daily_accs_' + year + '_' + tile 
+        #postCond = 'daily_accs_' + year 
         allDailyAccPostConds.append(postCond)
         m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
 
     ### now full accumulation, inversion and albedo:
     allAlbedoPostConds = []
-#    for iyear in range(1998, 2015):
-    for iyear in range(2005, 2006):
+    for iyear in range(startYear, endYear+1):
         year = str(iyear)
         albedoDir = gaRootDir + '/Albedo/' + year + '/' + tile
         startDoy = '001'
@@ -94,10 +98,9 @@ for tile in tiles:
         #########################################################################################################################
 
     ### cleanup (i.e. daily acc binary files):
-#    for iyear in range(1998, 2015):
-    for iyear in range(2005, 2006):
-        year = str(iyear)
-        m.execute('ga-l3-tile-inversion-cleanup-step.sh', allAlbedoPostConds, ['dummy'], parameters=[tile,year,gaRootDir])
+    #for iyear in range(startYear, endYear+1):
+    #    year = str(iyear)
+    #    m.execute('ga-l3-tile-inversion-cleanup-step.sh', allAlbedoPostConds, ['dummy'], parameters=[tile,year,gaRootDir])
 
 # wait for processing to complete
 m.wait_for_completion()

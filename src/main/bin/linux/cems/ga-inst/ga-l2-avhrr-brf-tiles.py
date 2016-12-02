@@ -18,8 +18,8 @@ __author__ = 'olafd'
 #years = ['1989','1990','1991','1992','1993','1994','1995','1996','1997']  
 #years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008']     
 #years = ['2009','2010','2011','2012','2013','2014']     
-years = ['2004']     
-#years = ['2002','2003','2004','2005','2006']     
+#years = ['2004']     
+years = ['2001','2002','2003','2004','2005']     
 #years = ['2005']     
 #years = ['2004']     
 
@@ -29,8 +29,12 @@ months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'
 #hStart = ['12']
 #hEnd = ['14']
 
-hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
-hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
+#hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
+#hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
+
+hStart = ['17', '22', '26']
+hEnd   = ['17', '22', '26']
+
 
 ######################## BRF orbits --> tiles: ###########################
 
@@ -39,10 +43,10 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 inputs = ['dummy']
 m = PMonitor(inputs, 
-             request='ga-l2-avhrr-bbdr-tiles',
+             request='ga-l2-avhrr-brf-tiles',
              logdir='log', 
              hosts=[('localhost',192)],
-             types=[('ga-l2-avhrr-brf-unzip-step.sh',32), ('ga-l2-avhrr-bbdr-tiles-step.sh',160)])
+             types=[('ga-l2-avhrr-brf-unzip-step.sh',32), ('ga-l2-avhrr-brf-tiles-step.sh',160)])
 
 ## NOAA versions:
 #...
@@ -83,7 +87,7 @@ m = PMonitor(inputs,
 
 
 for year in years:
-    bbdrTileDir = gaRootDir + '/BBDR/AVHRR/' + year 
+    brfTileDir = gaRootDir + '/BRF/AVHRR/' + year 
     # gaRootDir/../BRF_orbits/AVHRR/2005/AVHRR_GEOG_0.05DEG_2005_12_19_NOAA-N16_BRF.nc
     #brfOrbitDir = gaRootDir + '/BRF_orbits/AVHRR/' + year 
     # gaRootDir/../../avhrr_jrc/h05-ftp.jrc.it/fapar/BRF/1981/08/AVH_19810803_001D_900S900N1800W1800E_0005D_BRDF_N07.NC.bz2
@@ -107,10 +111,10 @@ for year in years:
 
                     # TODO: in case of multiple NOAA versions per day, take highest version only
                     for subtilesIndex in range(0, len(hStart)):
-                        #m.execute('ga-l2-avhrr-bbdr-tiles-step.sh', [brfUnzippedFilePath],  # in case we had to unzip before
-                        m.execute('ga-l2-avhrr-bbdr-tiles-step.sh', ['dummy'],
-                                                              [bbdrTileDir],
-                                                              parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
+                        #m.execute('ga-l2-avhrr-brf-tiles-step.sh', [brfUnzippedFilePath],  # in case we had to unzip before
+                        m.execute('ga-l2-avhrr-brf-tiles-step.sh', ['dummy'],
+                                                              [brfTileDir],
+                                                              parameters=[brfOrbitFilePath,brfFiles[index],brfTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
 
                     #if brfFiles[index].endswith("_N18.NC.bz2"): # test for 2005!! 
                     #if brfFiles[index].endswith("_N16.NC.bz2"): # test for other year?! TBD!! 
@@ -121,8 +125,8 @@ for year in years:
 
                         # TODO: in case of multiple NOAA versions per day, take highest version only (STILL TO BE DISCUSSED!!)
                     #    for subtilesIndex in range(0, len(hStart)):
-                    #        m.execute('ga-l2-avhrr-bbdr-tiles-step.sh', [brfUnzippedFilePath], 
-                    #                                              [bbdrTileDir], 
+                    #        m.execute('ga-l2-avhrr-brf-tiles-step.sh', [brfUnzippedFilePath], 
+                    #                                              [brfTileDir], 
                     #                                              parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
 
 m.wait_for_completion()

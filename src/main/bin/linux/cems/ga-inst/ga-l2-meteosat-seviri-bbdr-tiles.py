@@ -17,8 +17,9 @@ __author__ = 'olafd'
 
 sensor = 'SEVIRI'
 
-years = ['2006','2007','2008','2009']     
+#years = ['2006','2007','2008','2009']     
 #years = ['2008','2009']
+years = ['2011']
 
 allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 #allMonths = ['05']
@@ -34,8 +35,8 @@ inputs = ['dummy']
 m = PMonitor(inputs, 
              request='ga-l2-meteosat-seviri-bbdr-tiles',
              logdir='log', 
-             hosts=[('localhost',192)],
-             types=[('ga-l2-meteosat-bbdr-tiles-step.sh',192)])
+             hosts=[('localhost',128)],
+             types=[('ga-l2-meteosat-bbdr-tiles-step.sh',128)])
 
 diskId = '000'
 diskIdString = 'HRVIS_000_C_BRF'

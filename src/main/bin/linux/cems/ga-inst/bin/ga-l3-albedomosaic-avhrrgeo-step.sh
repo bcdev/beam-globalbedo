@@ -8,14 +8,15 @@ year=$1
 doy=$2
 snowMode=$3
 deg=$4
-gaRootDir=$5
-beamDir=$6
+proj=$5
+gaRootDir=$6
+beamDir=$7
 
 doy=`printf '%03d\n' "$((10#$doy))"`
 
 task="ga-l3-albedomosaic"
-jobname="${task}-${year}-${doy}-${snowMode}-${deg}"
-command="./bin/${task}-beam.sh ${year} ${doy} ${snowMode} ${deg} ${gaRootDir} ${beamDir}"
+jobname="${task}-${year}-${doy}-${snowMode}-${deg}-${proj}"
+command="./bin/${task}-beam.sh ${year} ${doy} ${snowMode} ${deg} ${proj} ${gaRootDir} ${beamDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

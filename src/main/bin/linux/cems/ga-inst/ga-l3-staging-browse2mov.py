@@ -10,19 +10,20 @@ __author__ = 'olafd'
 ###    - staging 'browse2mov' --> 1-year movies from png browse files for each band + BHR RGB from Albedo mosaic netcdf files
 #############################################################################################################################
 
-years=['2005']
-#years=['2006']
+#years=['2005']
+#years=['2004','2005']
+years=['2011']
 #snowModes=['Merge']
 snowModes=['NoSnow']
 #resolutions=['005','05']
 resolutions=['005']
 #projections=['PC','SIN']
-#projections=['PC']
-projections=['SIN']
-bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','WNSamples']
+projections=['PC']
+#projections=['SIN']
+bands=['BHR_SW','WNSamples']
+#bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_SW_CoV','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']
-#bands=['BHR_SW','WNSamples']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 

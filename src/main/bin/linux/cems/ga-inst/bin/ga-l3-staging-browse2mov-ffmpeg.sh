@@ -27,9 +27,10 @@ OUTEXT='mov'
 size=1200x600
 
 #FFMPEG path
-ffmpeg=/group_workspaces/cems/globalalbedo/soft/ffmpeg/ffmpeg-2.0.1-64bit-static/ffmpeg
+#ffmpeg=/group_workspaces/cems/globalalbedo/soft/ffmpeg/ffmpeg-2.0.1-64bit-static/ffmpeg
+# SK 20161118 (note the typo 'globalabedo'...):
+ffmpeg=/group_workspaces/cems2/qa4ecv/vol1/globalabedo/soft/ffmpeg/ffmpeg-2.0.1-64bit-static/ffmpeg
 #################################################################################################################
-
 
 
 ######################

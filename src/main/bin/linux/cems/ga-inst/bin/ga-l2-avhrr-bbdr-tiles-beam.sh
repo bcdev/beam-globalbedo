@@ -22,6 +22,9 @@ bbdrNcFileName=`basename $bbdrPath .NC.bz2`
 # TODO: delete this product once all rows are processed
 bbdrInputProduct=$gaRootDir/tmp/${bbdrNcFileName}.nc
 
+# use this if file was already unzipped 
+bbdrInputProduct=$bbdrPath
+
 # 2. process
 #echo "time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$bbdrPath -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd"
 #time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$bbdrPath -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd

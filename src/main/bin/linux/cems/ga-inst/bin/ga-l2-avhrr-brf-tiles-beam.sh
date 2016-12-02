@@ -14,8 +14,8 @@ fi
 
 echo "Create AVHRR BRF spectral/broadband tile products from global products..."
 
-echo "time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$brfPath -PbbdrDir=$brfTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd"
-time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$brfPath -PbbdrDir=$brfTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd
+echo "time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$brfPath -PconvertToBbdr=false -PbbdrDir=$brfTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd"
+time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.avhrr -e -c 3000M -SsourceProduct=$brfPath -PconvertToBbdr=false -PbbdrDir=$brfTileDir -PhorizontalTileStartIndex=$hStart -PhorizontalTileEndIndex=$hEnd
 status=$?
 echo "Status: $status"
 
