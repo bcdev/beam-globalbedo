@@ -113,8 +113,10 @@ public class GlobAlbedoQa4ecvMosaicProductReader extends AbstractProductReader {
                         srcBand.getName().startsWith("lat") ||
                         srcBand.getName().startsWith("lon") ||
                         srcBand.getName().equals(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME)) {
-                    Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
-                    ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                    if (!product.containsBand(srcBand.getName())) {
+                        Band band = product.addBand(srcBand.getName(), srcBand.getDataType());
+                        ProductUtils.copyRasterDataNodeProperties(srcBand, band);
+                    }
                 } else {
                     for (String bandToWrite : bandsToWrite) {
                         if (bandToWrite.equals(srcBand.getName())) {
