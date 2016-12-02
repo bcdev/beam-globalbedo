@@ -54,8 +54,10 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     @Parameter(defaultValue = "false", description = "Compute snow priors")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "true", description = "If True product will be reprojected")
-    boolean reprojectToPlateCarre;
+    @Parameter(valueSet = {"SIN", "PC"},
+            defaultValue = "SIN",
+            description = "Final projection (Sinusoidal or Plate-Carree)")
+    String reprojection;
 
     @Parameter(valueSet = {"1", "6", "10", "60"},
             description = "Scaling: 1/20deg: 1 (AVHRR/GEO), 6 (MODIS); 1/2deg: 10 (AVHRR/GEO), 60 (MODIS)",
@@ -71,7 +73,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
 
 
     protected void setReprojectedProduct(Product mosaicProduct, int tileSize) {
-        if (reprojectToPlateCarre) {
+        if (reprojection.equals("PC")) {
             ReprojectionOp reprojection = new ReprojectionOp();
             reprojection.setParameterDefaultValues();
             reprojection.setParameter("crs", MosaicConstants.WGS84_CODE);
@@ -92,10 +94,10 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
     }
 
     protected void attachUpscaleGeoCoding(Product mosaicProduct,
-                                        double scaling,
-                                        int width, int height,
-                                        boolean plateCarree) {
-        if (plateCarree) {
+                                          double scaling,
+                                          int width, int height,
+                                          String reprojection) {
+        if (reprojection.equals("PC")) {
             final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
             final double pixelSizeX = modelTransform.getScaleX();
             final double pixelSizeY = modelTransform.getScaleY();
@@ -130,8 +132,8 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                                           double scaling,
                                           int hStartIndex, int vStartIndex,
                                           int width, int height,
-                                          boolean plateCarree) {
-        if (plateCarree) {
+                                          String reprojection) {
+        if (reprojection.equals("PC")) {
             final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
             final double pixelSizeX = 0.05; // todo
             final double pixelSizeY = 0.05;
@@ -203,7 +205,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                         target.setSample(x, y, max);
                     } else {
                         // south pole correction
-                        if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
+                        if (reprojection.equals("PC") && geoPos.getLat() < -86.0) {
                             target.setSample(x, y, 0.0);
                         } else {
                             target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
@@ -269,7 +271,7 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         final GeoPos geoPos = reprojectedProduct.getGeoCoding().getGeoPos(pixelPos, null);
 
         // correct for projection failures near south pole...
-        if (reprojectToPlateCarre && geoPos.getLat() < -86.0) {
+        if (reprojection.equals("PC") && geoPos.getLat() < -86.0) {
             float[][] correctedSampleWest = null;    // i.e. tile h17v17
             if (geoPos.getLon() < 0.0) {
                 correctedSampleWest = correctFromWest(target);    // i.e. tile h17v17

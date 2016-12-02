@@ -126,7 +126,7 @@ public class GlobalbedoLevel3UpscaleModisPriors extends GlobalbedoLevel3UpscaleB
         upscaledProduct.setPreferredTileSize(MosaicConstants.MODIS_TILE_SIZE / scaling / 4,
                                              MosaicConstants.MODIS_TILE_SIZE / scaling / 4);
 
-        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojectToPlateCarre);
+        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, reprojection);
 
         targetProduct = upscaledProduct;
     }

@@ -158,7 +158,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             }
         }
 
-        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojectToPlateCarre);
+        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojection);
 
         dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
         szaBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
@@ -177,7 +177,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         final Tile latTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME);
         final Tile lonTile = targetTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME);
-        if (reprojectToPlateCarre && latTile != null && lonTile != null) {
+        if (reprojection.equals("PC") && latTile != null && lonTile != null) {
             computeLatLon(latTile, lonTile, latTile);
         }
 
@@ -241,7 +241,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-            if (!reprojectToPlateCarre && latTile != null && lonTile != null) {
+            if (reprojection.equals("SIN") && latTile != null && lonTile != null) {
                 computeNearestAlbedo(srcTiles.get(BRDF_ALBEDO_PRODUCT_LAT_NAME), latTile,
                                      srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
                 computeNearestAlbedo(srcTiles.get(BRDF_ALBEDO_PRODUCT_LON_NAME), lonTile,

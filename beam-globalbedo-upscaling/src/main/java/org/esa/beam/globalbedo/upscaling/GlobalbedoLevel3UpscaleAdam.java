@@ -137,7 +137,7 @@ public class GlobalbedoLevel3UpscaleAdam extends GlobalbedoLevel3UpscaleBasisOp 
         upscaledProduct.setPreferredTileSize((int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4),
                                              (int) (MosaicConstants.ADAM_TILE_SIZE / scaling / 4));
 
-        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, true);
+        attachUpscaleGeoCoding(mosaicProduct, scaling, width, height, "PC");
 
         targetProduct = upscaledProduct;
     }
