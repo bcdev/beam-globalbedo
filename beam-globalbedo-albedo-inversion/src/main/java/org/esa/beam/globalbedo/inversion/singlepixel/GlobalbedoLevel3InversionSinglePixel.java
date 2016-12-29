@@ -282,9 +282,9 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     private String getInversionFilename(int doy) {
         // we want e.g.:
         // ../GlobAlbedoTest/Inversion_single/Snow/2005/h18v03/
-        //   GlobAlbedo.brdf.single.2005121.h18v04.<pixelX>.<pixelY>.Snow.nc
+        //   Qa4ecv.brdf.single.2005121.h18v04.<pixelX>.<pixelY>.Snow.nc
         final String snowString = computeSnow ? "Snow" : "NoSnow";
-        final String inversionFileName = "GlobAlbedo.brdf.single." + year + "." + IOUtils.getDoyString(doy) + "." + tile + "." +
+        final String inversionFileName = "Qa4ecv.brdf.single." + year + "." + IOUtils.getDoyString(doy) + "." + tile + "." +
                 pixelX + "." + pixelY + "." + snowString;
         return inversionFileName;
     }

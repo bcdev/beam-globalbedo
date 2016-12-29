@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion.util;
 
 import org.esa.beam.framework.dataio.ProductIO;
-import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
@@ -269,7 +268,9 @@ public class IOUtils {
             String doyString = getDoyString(doy);
 
             for (String brdfFileName : brdfFileList) {
-                if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
+                if (brdfFileName.startsWith("Qa4ecv.brdf." + Integer.toString(year) + doyString) ||
+                        brdfFileName.startsWith("Qa4ecv.avhrrgeo.brdf." + Integer.toString(year) + doyString) ||
+                        brdfFileName.startsWith("Qa4ecv.merisvgt.brdf." + Integer.toString(year) + doyString)) {
                     String sourceProductFileName = brdfDirName + File.separator + brdfFileName;
                     return ProductIO.readProduct(sourceProductFileName);
                 }
@@ -286,7 +287,7 @@ public class IOUtils {
         String doyString = getDoyString(doy);
 
         for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo.brdf." + Integer.toString(year) + doyString)) {
+            if (brdfFileName.startsWith("Qa4ecv.brdf." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
                 return ProductIO.readProduct(sourceProductFileName);
             }
@@ -812,7 +813,7 @@ public class IOUtils {
 
     public static int getDoyFromAlbedoProductName(String productName) {
         String doyString;
-        if (productName.startsWith("GlobAlbedo.albedo.")) {
+        if (productName.startsWith("GlobAlbedo.albedo.")) { // todo: change to Qa4ecv.albedo.<instruments>.*
             doyString = productName.substring(22, 25);
         } else if (productName.startsWith("GlobAlbedo.")) {
             doyString = productName.substring(15, 18);
@@ -826,48 +827,6 @@ public class IOUtils {
         return doy;
     }
 
-    public static Product getTileInfoProduct(String dailyAccumulatorDir, String defaultTileInfoFilename) throws IOException {
-        String tileInfoFilePath = dailyAccumulatorDir + File.separator + defaultTileInfoFilename;
-        File tileInfoFile = new File(tileInfoFilePath);
-        if (!tileInfoFile.exists()) {
-            int index = 1;
-            boolean exists = false;
-            while (!exists && index < 365) {
-                final String newTileInfoFilename = defaultTileInfoFilename.substring(0, 9) + index + ".dim";
-                tileInfoFilePath = dailyAccumulatorDir + File.separator + newTileInfoFilename;
-                final File newTileInfoFile = new File(tileInfoFilePath);
-                exists = newTileInfoFile.exists();
-                index++;
-            }
-            if (!exists) {
-                return null;
-            }
-        }
-        return ProductIO.readProduct(tileInfoFilePath);
-    }
-
-
-    public static void copyLandmask(String gaRootDir, String tile, Product targetProduct) {
-        try {
-            final Product seaiceLandmaskProduct = IOUtils.getSeaiceLandmaskProduct(gaRootDir, tile);
-            if (seaiceLandmaskProduct != null) {
-                final Band landmaskBand = seaiceLandmaskProduct.getBand("land_water_fraction");
-                ProductUtils.copyBand(landmaskBand.getName(), seaiceLandmaskProduct,
-                                      "landmask", targetProduct, true);
-            }
-        } catch (IOException e) {
-            System.out.println("Warning: cannot open landmask product for tile '" + tile + "': " +
-                                       e.getMessage());
-        }
-    }
-
-    public static Product getSeaiceLandmaskProduct(String gaRootDir, String tile) throws IOException {
-        String defaultLandmaskFilename = "GlobAlbedo.landmask." + tile + ".dim";
-        String landmaskFilePath = gaRootDir + File.separator + "landmask" + File.separator +
-                defaultLandmaskFilename;
-        return ProductIO.readProduct(landmaskFilePath);
-    }
-
     public static int getDayDifference(int doy, int year, int referenceDoy, int referenceYear) {
         final int difference = 365 * (year - referenceYear) + (doy - referenceDoy);
         return Math.abs(difference);
@@ -877,6 +836,7 @@ public class IOUtils {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
+                // TODO: 29.12.2016 change names to Qa4ecv.*
                 return ((name.length() == 36 && name.startsWith("GlobAlbedo.albedo.") && name.endsWith(tile + ".dim")) ||
                         (name.length() == 29 && name.startsWith("GlobAlbedo.") && name.endsWith(tile + ".dim")));
             }
@@ -922,6 +882,7 @@ public class IOUtils {
                 // final boolean isCorrectSuffix = name.endsWith(reprojection + ".dim") || name.endsWith(reprojection + ".nc");
 
                 // e.g. GlobAlbedo.albedo.2005129.05.dim
+                // TODO: 29.12.2016 change names to Qa4ecv.*
                 final boolean isCorrectSuffix = name.endsWith(".dim") || name.endsWith(".nc");
                 final boolean isCorrectPattern = name.length() > 30 &&
                         name.substring(0, 29).matches("GlobAlbedo.albedo.[0-9]{7}.[0-9]{2}.");

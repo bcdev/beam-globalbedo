@@ -404,7 +404,7 @@ public class SpectralIOUtils {
         final String doyString = IOUtils.getDoyString(doy);
 
         for (String brdfFileName : brdfFileList) {
-            if (brdfFileName.startsWith("GlobAlbedo.brdf.spectral." + Integer.toString(year) + doyString)) {
+            if (brdfFileName.startsWith("Qa4ecv.brdf.spectral." + Integer.toString(year) + doyString)) {
                 String sourceProductFileName = brdfDir + File.separator + brdfFileName;
                 return ProductIO.readProduct(sourceProductFileName);
             }
