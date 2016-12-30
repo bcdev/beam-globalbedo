@@ -301,13 +301,19 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             public boolean accept(File dir, String name) {
                 // e.g. GlobAlbedo.albedo.2006335.h18v04.nc
                 String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
-                String expectedFilename;
+//                String expectedFilename;
+                final String expectedPrefix = "Qa4ecv.albedo.";
+                String expectedSuffix;
 
                 if (isMonthlyAlbedo) {
-                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getMonthString(monthIndex) + "." +
+//                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getMonthString(monthIndex) + "." +
+//                            dir.getName() + expectedFilenameExt;
+                    expectedSuffix = year + IOUtils.getMonthString(monthIndex) + "." +
                             dir.getName() + expectedFilenameExt;
                 } else {
-                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." +
+//                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." +
+//                            dir.getName() + expectedFilenameExt;
+                    expectedSuffix = year + IOUtils.getDoyString(doy) + "." +
                             dir.getName() + expectedFilenameExt;
                 }
 
@@ -315,7 +321,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                         GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
                                                                             hStartIndex, hEndIndex,
                                                                             vStartIndex, vEndIndex);
-                return isTileToProcess && name.equals(expectedFilename);
+//                return isTileToProcess && name.equals(expectedFilename);
+                return isTileToProcess && name.startsWith(expectedPrefix) && name.endsWith(expectedSuffix);
             }
         };
 
