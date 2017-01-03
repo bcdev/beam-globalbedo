@@ -406,6 +406,46 @@ public class BbdrUtils {
     }
 
     /**
+     * Kernel computation following 'makeBRDFKernels' in 'mapsModisEE.py' provided by PL, 20161221
+     *
+     * @param vzaRad - VZA in radians
+     * @param szaRad - VZA in radians
+     * @param phiRad - VZA in radians
+     *
+     * @return double[]{kvol, kgeo} - the kvol (volumetric RossThick) and kgeo (geometric LiSparse) kernels
+     */
+    public static double[] computeConstantKernels_2(double vzaRad, double szaRad, double phiRad) {
+        final double muv = cos(vzaRad);      // cos1 in Python BB
+        final double mus = cos(szaRad);      // cos2
+
+        final double muPhi = cos(phiRad);        // cos3
+        final double sinPhiRad = sin(phiRad);    // sin3
+        final double muPhiAng = mus * muv + sin(vzaRad) * sin(szaRad) * muPhi;   // cosphaang
+        final double phAng = acos(muPhiAng);  // phaang
+
+        final double kvol = ((Math.PI/2. - phAng)*muPhiAng + phAng)/(muv + mus) - Math.PI/4.;
+
+        final double tanVzaRad = tan(vzaRad);    // tan2
+        final double tanSzaRad = tan(szaRad);    // tan1
+        final double secVza = 1. / muv;
+        final double secSza = 1. / mus;
+
+        final double HB = 2.0;
+        final double dist = Math.sqrt(Math.max(0.0, tanVzaRad*tanVzaRad + tanSzaRad*tanSzaRad * muPhi));
+        final double secSum = secVza + secSza;
+        final double costTmp = HB*Math.sqrt(dist*dist + tanSzaRad*tanSzaRad*tanVzaRad*tanVzaRad*sinPhiRad*sinPhiRad)/secSum;
+        final double cost = Math.min(1.0, Math.max(-1.0, costTmp));
+        final double tvar = Math.acos(cost);
+        final double sint = Math.sin(tvar);
+        final double overlap = Math.max(0.0, (1./Math.PI) * (tvar - sint*cost) * secSum);
+
+        final double kgeo = overlap - secSum + 0.5*(1.0 + muPhiAng)/muv/mus;
+
+        return new double[]{kvol, dist};
+    }
+
+
+    /**
      * gets the corresponding MODIS tile for a given lat/lon pair
      *
      * @param latitude  - the latitude
