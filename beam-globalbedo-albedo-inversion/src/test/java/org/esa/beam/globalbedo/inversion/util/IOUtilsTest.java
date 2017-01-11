@@ -460,6 +460,17 @@ public class IOUtilsTest extends TestCase {
         assertEquals("h25v06", tileDirs[1].getName());
     }
 
+    public void testIsBadAvhrrDate() throws Exception {
+        // uses auxdata file 'avhrr_brf_blacklist.txt'
+        assertFalse(IOUtils.isBadAvhrrDate("19700101"));
+        assertFalse(IOUtils.isBadAvhrrDate("19781207"));
+        assertFalse(IOUtils.isBadAvhrrDate("20170116"));
+
+        assertTrue(IOUtils.isBadAvhrrDate("19820728"));
+        assertTrue(IOUtils.isBadAvhrrDate("19860825"));
+        assertTrue(IOUtils.isBadAvhrrDate("19951008"));
+    }
+
     public void testSomething()  {
         new Color(220, 230, 240);
         new Color(230, 253, 200);
