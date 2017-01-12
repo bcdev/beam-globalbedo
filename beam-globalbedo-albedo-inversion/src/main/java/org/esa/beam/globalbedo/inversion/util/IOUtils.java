@@ -3,6 +3,7 @@ package org.esa.beam.globalbedo.inversion.util;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.OperatorException;
+import org.esa.beam.globalbedo.auxdata.AVHRR.AvhrrBrfBlacklist;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.AccumulatorHolder;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
@@ -81,12 +82,13 @@ public class IOUtils {
                     return false;
                 }
 
-                if ((name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
-                        (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd))) {
-                    return true;
+                if (name.contains("AVH_") && isBadAvhrrDate(name)) {
+                    return false;
                 }
 
-                return false;
+                return (name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
+                        (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd));
+
             }
         };
 
@@ -115,6 +117,17 @@ public class IOUtils {
             }
         }
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
+    }
+
+    public static boolean isBadAvhrrDate(String name) {
+        AvhrrBrfBlacklist brfBlacklist = AvhrrBrfBlacklist.getInstance();
+        for (int i = 0; i < brfBlacklist.getBrfBadDatesNumber(); i++) {
+            if (name.equals(brfBlacklist.getBrfBadDate(i))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
