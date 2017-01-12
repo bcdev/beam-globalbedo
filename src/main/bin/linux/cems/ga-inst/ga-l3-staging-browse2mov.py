@@ -12,7 +12,13 @@ __author__ = 'olafd'
 
 #years=['2005']
 #years=['2004','2005']
-years=['2011']
+
+#years=['2011']
+#years=['2010']
+#years=['2009']
+#years=['2012']
+years=['1993']
+
 #snowModes=['Merge']
 snowModes=['NoSnow']
 #resolutions=['005','05']

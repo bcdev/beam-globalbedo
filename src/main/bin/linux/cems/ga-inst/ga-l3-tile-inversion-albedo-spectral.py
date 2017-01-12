@@ -37,7 +37,8 @@ doys = ['161'] # test!
 
 #tiles = ['h18v04','h22v02','h25v06','h19v08']
 #tiles = ['h19v08']
-tiles = ['h20v06','h25v06']
+#tiles = ['h20v06','h25v06']
+tiles = ['h25v06']
 
 subStartX = ['0', '300', '600', '900']
 subStartY = ['0', '300', '600', '900']

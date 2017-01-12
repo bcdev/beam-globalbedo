@@ -21,12 +21,18 @@ mosaicMode = 'simple'
 tileSize='200' # AVHRR/GEO
 ###########################
 
-years = ['2011']    #test  
+#years = ['2011']    #test  
+#years = ['2010']    #test  
+#years = ['2009']    #test  
+#years = ['2012']    #test  
+#years = ['1998']    #test  
+#years = ['1993']    #test  
+
 #years = ['2001']    #test  
 #years = ['2003']    #test  
 #years = ['2014']    #test  
 #years = ['2005']    #test  
-#years = ['2004','2005']    #test  
+years = ['2004','1998']    #test  
 
 snowModes = ['NoSnow'] # usually for AVHRRGEO
 
@@ -60,8 +66,8 @@ for year in years:
 m = PMonitor(inputs, 
              request='ga-l3-mosaic-avhrrgeo', 
              logdir='log',
-             hosts=[('localhost',32)],
-	     types=[('ga-l3-brdfmosaic-avhrrgeo-step.sh', 32), ('ga-l3-albedomosaic-avhrrgeo-step.sh',32), ('ga-l3-albedomosaic-simple-avhrrgeo-step.sh',32)])
+             hosts=[('localhost',16)], # test 20161230
+	     types=[('ga-l3-brdfmosaic-avhrrgeo-step.sh', 16), ('ga-l3-albedomosaic-avhrrgeo-step.sh',16), ('ga-l3-albedomosaic-simple-avhrrgeo-step.sh',16)])
      
 for year in years:
     for snowMode in snowModes:
@@ -79,17 +85,17 @@ for year in years:
                     if mosaicMode == 'simple':
                         ### the simplified way: Albedo tiles --> Albedo mosaic, no alpha/sigma output
                         albedoTileDir = gaRootDir + '/Albedo/' + year
-                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + resolution
+                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
                         m.execute('ga-l3-albedomosaic-simple-avhrrgeo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
                     else:
                         ### the Alex Loew energy conservation way (as requested in GA and more precise, but slower: double number of jobs)                
                         # BRDF tiles --> BRDF mosaic:
                         brdfTileDir = gaRootDir + '/Inversion/' + snowMode + '/' + year
-                        brdfMosaicDir = gaRootDir + '/Mosaic/brdf/' + snowMode + '/' + resolution
+                        brdfMosaicDir = gaRootDir + '/Mosaic/brdf/' + snowMode + '/' + year + '/' + resolution
                         m.execute('ga-l3-brdfmosaic-avhrrgeo-step.sh', [brdfTileDir], [brdfMosaicDir], parameters=[year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
 
                         ## BRDF mosaic --> Albedo mosaic
-                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + resolution
+                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + year + '/' + '/' + resolution
                         m.execute('ga-l3-albedomosaic-avhrrgeo-step.sh', [brdfMosaicDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,proj,gaRootDir,beamDir])
 
 

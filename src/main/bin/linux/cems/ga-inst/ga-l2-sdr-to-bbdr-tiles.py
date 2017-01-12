@@ -7,11 +7,12 @@ from pmonitor import PMonitor
 __author__ = 'olafd'
 
 #sensors = ['MERIS','VGT']
-sensors = ['MERIS']
-#sensors = ['VGT']
+#sensors = ['MERIS']
+sensors = ['VGT']
 #sensors = ['PROBAV']
 #years = ['2015']    #test  
-years = ['2005']    #test  
+#years = ['2005']    #test  
+years = ['2012']    #test  
 #years = ['2008','2009','2010','2011','2012','2013','2014']  
 
 ######################## SDR --> BBDR: ###########################
@@ -21,7 +22,9 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km'
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/snownosnow/tile' # first version of new C6 daily priors
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/snownosnow/tile' # first version of new C6 daily priors
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115
+
 # all 326 tiles we have:
 #tiles = glob.glob1(priorDir + '/Snow', 'h??v??') # we have same number (326) of snow and noSnow prior directories
 tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories

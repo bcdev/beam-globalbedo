@@ -23,7 +23,8 @@ years = ['2005']
 sensors = ['MERIS'] # start with
 #sensors = ['MERIS','VGT'] # final
 
-tiles = ['h20v06'] # start with
+#tiles = ['h20v06'] # start with
+tiles = ['h25v06'] # start with
 #tiles = ['h18v04','h22v02','h19v08','h25v06'] # final
 
 subtileStartX = ['0','300','600','900']

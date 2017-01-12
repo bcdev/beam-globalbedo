@@ -51,8 +51,9 @@ tiles.sort()
 
 #startYear = 1998
 #endYear = 2014
-startYear = 2011
-endYear = 2011
+### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
+startYear = 2013
+endYear = 2014
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,

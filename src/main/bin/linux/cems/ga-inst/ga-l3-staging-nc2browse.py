@@ -10,7 +10,13 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-years=['2011']
+#years=['2011']
+#years=['2010']
+#years=['2009']
+#years=['2012']
+#years=['1998']
+years=['1993']
+
 #years=['2004','2005']
 #years=['2004']
 #snowModes=['Merge']
@@ -36,14 +42,15 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
         for res in resolutions:
-            albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + res
+            albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
             for proj in projections:
                 #for idoy in range(180,365):
                 for idoy in range(0,365):
                 #for idoy in range(83,84):
                     doy = str(idoy+1).zfill(3)             
                     stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
-                    stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+                    #stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+                    stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.avhrrgeo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
 
                     m.execute('ga-l3-staging-nc2browse-step.sh', ['dummy'], [stagingNc2browseResultDir], 
                           parameters=[year,doy,snowMode,res,proj,stagingNc2browseFile, stagingNc2browseResultDir])

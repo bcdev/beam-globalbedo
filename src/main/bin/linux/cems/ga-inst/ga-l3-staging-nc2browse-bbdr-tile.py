@@ -17,26 +17,35 @@ def getDateFromDoy(year, doy):
 ##################################################################################
 
 #year = '2005'
-year = '2006'
-tile = 'h17v08'
+year = '2011'
+tile = 'h17v17'
 #sensor = 'MVIRI'
-#sensor = 'AVHRR'
-sensor = 'SEVIRI'
-#lonGeo = '000' # needed for MVIRI only
-lonGeo = '063'
-bands = ['BB_SW', 'sig_BB_SW_SW', 'Kvol_BRDF_SW', 'Kgeo_BRDF_SW']
+sensor = 'AVHRR'
+noaa_version = 'N19' # needed for AVHRR only, make sure we have the right one for given year
+#sensor = 'SEVIRI'
+lonGeo = '000' # needed for MVIRI only
+#lonGeo = '063'
+#bands = ['BB_SW', 'sig_BB_SW_SW', 'Kvol_BRDF_SW', 'Kgeo_BRDF_SW']
+bands = ['BB_SW']
+
+#plot_min = {
+#'BB_SW' : '0.0',
+#'sig_BB_SW_SW' : '0.0',
+#'Kvol_BRDF_SW' : '0.0',
+#'Kgeo_BRDF_SW' : '-1.0'
+#}
+#plot_max = {
+#'BB_SW' : '0.5',
+#'sig_BB_SW_SW' : '0.5',
+#'Kvol_BRDF_SW' : '0.1',
+#'Kgeo_BRDF_SW' : '0.0'
+#}
 
 plot_min = {
-'BB_SW' : '0.0',
-'sig_BB_SW_SW' : '0.0',
-'Kvol_BRDF_SW' : '0.0',
-'Kgeo_BRDF_SW' : '-1.0'
+'BB_SW' : '0.0'
 }
 plot_max = {
-'BB_SW' : '0.5',
-'sig_BB_SW_SW' : '0.5',
-'Kvol_BRDF_SW' : '0.1',
-'Kgeo_BRDF_SW' : '0.0'
+'BB_SW' : '0.5'
 }
 
 
@@ -51,8 +60,8 @@ m = PMonitor(inputs,
 	     types=[('ga-l3-staging-nc2browse-bbdr-tile-step.sh',64)])
 
 bbdrTileDir = gaRootDir + '/BBDR/' + sensor + '/' + year + '/' + tile 
-for idoy in range(0,10):
-#for idoy in range(280,365):
+#for idoy in range(0,10):
+for idoy in range(0,365):
     doy = str(idoy+1).zfill(3)             
     thisdate = getDateFromDoy(int(year), idoy+1) # has format yyyyMMdd
     datestring = str(thisdate)
@@ -71,7 +80,10 @@ for idoy in range(0,10):
     else:
        # AVHRR_GEOG_0.05DEG_2004_11_27_NOAA-N16_BRF_h17v08.nc  TODO: change BRF to BBDR in processing!
         lonGeo = 'global' 
-        stagingNc2browseFile = bbdrTileDir + '/AVHRR_GEOG_0.05DEG_' + year + '_' + datestring[5:7] + '_' + datestring[8:10] + '_NOAA-N16_BRF_' + tile + '.nc' 
+       #  stagingNc2browseFile = bbdrTileDir + '/AVHRR_GEOG_0.05DEG_' + year + '_' + datestring[5:7] + '_' + datestring[8:10] + '_NOAA-N16_BRF_' + tile + '.nc' 
+       # AVH_20110101_001D_900S900N1800W1800E_0005D_BRDF_N19_h17v17.nc
+        stagingNc2browseFile = bbdrTileDir + '/AVH_' + year + datestring[5:7] + datestring[8:10] + '_001D_900S900N1800W1800E_0005D_BRDF_' + noaa_version + '_' + tile + '.nc' 
+
     
     for band in bands:
         parms = [datestring,tile,sensor,lonGeo,band,plot_min[band],plot_max[band],stagingNc2browseFile, stagingNc2browseResultDir, gaRootDir]
