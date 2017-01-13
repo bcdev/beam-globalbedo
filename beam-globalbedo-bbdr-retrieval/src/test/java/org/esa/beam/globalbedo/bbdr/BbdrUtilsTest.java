@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.util.math.MathUtils;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
@@ -101,4 +102,17 @@ public class BbdrUtilsTest {
         assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
     }
 
+    @Test
+    @Ignore
+    public void testComputeConstantKernel_2() throws Exception {
+
+        double phiRad = (103.90717 - 149.49255)*MathUtils.DTOR;
+        double vzaRad = 21.1263*MathUtils.DTOR;
+        float szaRad = (float) (41.34555*MathUtils.DTOR);
+        final double[] kernels = BbdrUtils.computeConstantKernels_2(vzaRad, szaRad, phiRad);
+        assertNotNull(kernels);
+        assertEquals(2, kernels.length);
+        assertEquals(0.050839, kernels[0], 1.E-6);
+        assertEquals(-0.71918409, kernels[1], 1.E-6);
+    }
 }
