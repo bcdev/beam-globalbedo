@@ -82,7 +82,7 @@ public class IOUtils {
                     return false;
                 }
 
-                if (name.contains("AVH_") && isBadAvhrrDate(name)) {
+                if (name.contains("AVH_") && isBadAvhrrProduct(name)) {
                     return false;
                 }
 
@@ -119,10 +119,11 @@ public class IOUtils {
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
     }
 
-    public static boolean isBadAvhrrDate(String name) {
+    public static boolean isBadAvhrrProduct(String name) {
         AvhrrBrfBlacklist brfBlacklist = AvhrrBrfBlacklist.getInstance();
         for (int i = 0; i < brfBlacklist.getBrfBadDatesNumber(); i++) {
-            if (name.equals(brfBlacklist.getBrfBadDate(i))) {
+            // AVH_20051230_...
+            if (name.startsWith("AVH_" + brfBlacklist.getBrfBadDate(i))) {
                 return true;
             }
         }
