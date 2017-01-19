@@ -460,15 +460,17 @@ public class IOUtilsTest extends TestCase {
         assertEquals("h25v06", tileDirs[1].getName());
     }
 
-    public void testIsBadAvhrrDate() throws Exception {
-        // uses auxdata file 'avhrr_brf_blacklist.txt'
-        assertFalse(IOUtils.isBadAvhrrDate("19700101"));
-        assertFalse(IOUtils.isBadAvhrrDate("19781207"));
-        assertFalse(IOUtils.isBadAvhrrDate("20170116"));
+    public void testIsBadAvhrrProduct() throws Exception {
+        // e.g. AVH_20051219_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc
 
-        assertTrue(IOUtils.isBadAvhrrDate("19820728"));
-        assertTrue(IOUtils.isBadAvhrrDate("19860825"));
-        assertTrue(IOUtils.isBadAvhrrDate("19951008"));
+        // uses auxdata file 'avhrr_brf_blacklist.txt'
+        assertFalse(IOUtils.isBadAvhrrProduct("AVH_19700101_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
+        assertFalse(IOUtils.isBadAvhrrProduct("AVH_19781207_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
+        assertFalse(IOUtils.isBadAvhrrProduct("AVH_20170116_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
+
+        assertTrue(IOUtils.isBadAvhrrProduct("AVH_19820728_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
+        assertTrue(IOUtils.isBadAvhrrProduct("AVH_19860825_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
+        assertTrue(IOUtils.isBadAvhrrProduct("AVH_19951008_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
     }
 
     public void testSomething()  {
