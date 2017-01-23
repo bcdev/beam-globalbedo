@@ -23,12 +23,16 @@ import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
+import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.util.BitSetter;
 import org.esa.beam.util.ProductUtils;
 
+import static java.lang.Math.pow;
 import static java.lang.StrictMath.toRadians;
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
 
 /**
  * Generates a GlobAlbedo conform BBDR product from AVHRR-LTDR BRF product provided by JRC (NG)
@@ -66,8 +70,48 @@ public class BbdrAvhrrOp extends PixelOperator {
     protected static final int TRG_KERN = 12;
     protected static final int TRG_LTDR_SNAP = 18;
 
+    public static final int[][] SRC_PRIOR_MEAN = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
+
+    public static final int[][] SRC_PRIOR_SD = new int[NUM_ALBEDO_PARAMETERS][NUM_ALBEDO_PARAMETERS];
+
+    public static final int SOURCE_SAMPLE_OFFSET = 0;  // this value must be >= number of bands in a source product
+    public static final int PRIOR_OFFSET = (int) pow(NUM_ALBEDO_PARAMETERS, 2.0);
+    public static final int SRC_PRIOR_NSAMPLES = 2 * PRIOR_OFFSET;
+
+    public static final int SRC_PRIOR_MASK = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET + 1;
+
+
+    @Parameter(defaultValue = "true", description = "Use prior information")
+    private boolean usePrior;
+
+    @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
+    private int priorVersion;
+
+    @Parameter(defaultValue = "30.0", description = "Prior scale factor")
+    private double priorScaleFactor;
+
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    private String priorMeanBandNamePrefix;
+
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    private String priorSdBandNamePrefix;
+
+    @Parameter(defaultValue = "7", description = "Prior broad bands start index (no longer needed for Collection 6 priors)")
+    private int priorBandStartIndex;
+
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_nir_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+    private String priorNSamplesBandName;
+
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
+    private String priorDataMaskBandName;
+
+
     @SourceProduct
     protected Product sourceProduct;
+
+    @SourceProduct(description = "Prior product", optional = true)
+    private Product priorProduct;
+
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -85,15 +129,6 @@ public class BbdrAvhrrOp extends PixelOperator {
             return;
         }
 
-        // JRC swapped the angles in input products, so correct here. todo: remove this when JRC delivered correct data
-//        final double vza = sourceSamples[SRC_TS].getDouble();
-//        final double sza = sourceSamples[SRC_TV].getDouble();
-        final double vza = sourceSamples[SRC_TV].getDouble();  // done now
-        final double sza = sourceSamples[SRC_TS].getDouble();
-
-        final double phi = sourceSamples[SRC_PHI].getDouble();
-
-
         // decode ldtrFlag flag and extract cloud info, see emails from Mirko Marioni, 20160513:
         final boolean isCloud = BitSetter.isFlagSet(ldtrFlag, 1);
         final boolean isCloudShadow = BitSetter.isFlagSet(ldtrFlag, 2);
@@ -108,6 +143,37 @@ public class BbdrAvhrrOp extends PixelOperator {
         }
 
         computeLtdrSnapFlag(ldtrFlag, targetSamples);
+
+        // JRC swapped the angles in input products, so correct here. todo: remove this when JRC delivered correct data
+//        final double vza = sourceSamples[SRC_TS].getDouble();
+//        final double sza = sourceSamples[SRC_TV].getDouble();
+        final double vza = sourceSamples[SRC_TV].getDouble();  // done now
+        final double sza = sourceSamples[SRC_TS].getDouble();
+        final double phi = sourceSamples[SRC_PHI].getDouble();
+
+        // calculation of kernels (kvol, kgeo)
+
+        final double vzaRad = toRadians(vza);
+        final double szaRad = toRadians(sza);
+        final double phiRad = toRadians(phi);
+
+        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+        final double kvol = kernels[0];
+        final double kgeo = kernels[1];
+
+        // todo: new outlier detection from PL
+//        final double
+//
+//        if (isOutlierFilter(x, y, brf1, priorParms, priorSd, kvol, kgeo) ||
+//                isOutlierFilter(x, y, brf2, priorParms, priorSd, kvol, kgeo)) {
+//            // not meaningful values
+//            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+//            computeLtdrSnapFlag(ldtrFlag, targetSamples);
+//            return;
+//        }
+
+
+
 
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
         double[] bb = new double[BbdrConstants.N_SPC];
@@ -143,16 +209,6 @@ public class BbdrAvhrrOp extends PixelOperator {
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_RAA].set(phi);
-
-        // calculation of kernels (kvol, kgeo)
-
-        final double vzaRad = toRadians(vza);
-        final double szaRad = toRadians(sza);
-        final double phiRad = toRadians(phi);
-
-        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
-        final double kvol = kernels[0];
-        final double kgeo = kernels[1];
 
         for (int i_bb = 0; i_bb < BbdrConstants.N_SPC; i_bb++) {
             // for AVHRR, neglect Nsky, coupling terms and weighting (PL, 20160520)
@@ -210,6 +266,13 @@ public class BbdrAvhrrOp extends PixelOperator {
 //        configurator.defineSample(SRC_QA, "QA", sourceProduct);
         // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
         configurator.defineSample(SRC_LDTR_FLAG, "LDTR_FLAG", sourceProduct);
+
+        // prior product:
+        // we have:
+        // 3x3 mean, 3x3 SD, Nsamples, mask
+        if (usePrior) {
+            configurePriorSourceSamples(configurator);
+        }
     }
 
     @Override
@@ -240,6 +303,27 @@ public class BbdrAvhrrOp extends PixelOperator {
 
     }
 
+    /**
+     * New outlier detection for AVHRR as proposed by PL (Jan 2017)
+     *
+     * @param x - pixel x
+     * @param y - pixel y
+     * @param obs - BB value in either VIS, NIR or SW
+     * @param priorParms - [f0, f1, f2] in either VIS, NIR or SW
+     * @param priorSd - [sd0, sd1, sd2] in either VIS, NIR or SW
+     * @param kvol - kvol kernel
+     * @param kgeo - kgeo kernel
+     *
+     * @return boolean
+     */
+    boolean isOutlierFilter(int x, int y, double obs, double[] priorParms, double[] priorSd, double kvol, double kgeo) {
+        final double obsPrediction = priorParms[0] + priorParms[1]*kvol + priorParms[2]*kgeo;
+        final double sdMean = (priorSd[0] + priorSd[1] + priorSd[2])/3.0;   // todo: clarify with PL
+        final double delta = (obsPrediction - obs)/sdMean;
+
+        return false;
+    }
+
     private void computeLtdrSnapFlag(int srcValue, WritableSample[] targetSamples) {
         targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.SPARE_BIT_INDEX, AvhrrLtdrFlag.isSpare(srcValue));
         targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.CLOUD_BIT_INDEX, AvhrrLtdrFlag.isCloud(srcValue));
@@ -255,6 +339,72 @@ public class BbdrAvhrrOp extends PixelOperator {
         targetSamples[TRG_LTDR_SNAP].set(AvhrrLtdrFlag.POLAR_BIT_INDEX, AvhrrLtdrFlag.isPolar(srcValue));
 
     }
+
+    private void configurePriorSourceSamples(SampleConfigurer configurator) {
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            if (priorVersion == 6) {
+                // collection 6 , from Oct 2016
+                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                    // priorMeanBandNamePrefix = priorSdBandNamePrefix = 'BRDF_Albedo_Parameters_'
+                    // BRDF_Albedo_Parameters_vis_f0_avr <--> MEAN_VIS_f0
+                    // BRDF_Albedo_Parameters_nir_f0_avr <--> MEAN_NIR_f0
+                    // BRDF_Albedo_Parameters_shortwave_f0_avr <--> MEAN_SW_f0
+                    // same for f1, f2
+                    final String meanBandName = priorMeanBandNamePrefix +
+                            AlbedoInversionConstants.PRIOR_6_WAVE_BANDS[i] + "_f" + j + "_avr";
+                    final int meanIndex = SRC_PRIOR_MEAN[i][j];
+                    configurator.defineSample(meanIndex, meanBandName, priorProduct);
+
+                    // BRDF_Albedo_Parameters_vis_f0_sd <--> sqrt (Cov_VIS_f0_VIS_f0)
+                    // BRDF_Albedo_Parameters_nir_f0_sd <--> sqrt (Cov_NIR_f0_NIR_f0)
+                    // BRDF_Albedo_Parameters_shortwave_f0_sd <--> sqrt (Cov_SW_f0_SW_f0)
+                    // same for f1, f2
+                    final String sdMeanBandName = priorMeanBandNamePrefix +
+                            AlbedoInversionConstants.PRIOR_6_WAVE_BANDS[i] + "_f" + j + "_sd";
+                    final int sdIndex = SRC_PRIOR_SD[i][j];
+                    configurator.defineSample(sdIndex, sdMeanBandName, priorProduct);
+                }
+                configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+                configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);
+            } else {
+                // collection 5 , before Oct 2016
+                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                    final String indexString = Integer.toString(priorBandStartIndex + i);
+//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
+//                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                    // Oct. 2015 version, e.g. Mean_VIS_f0
+                    final String meanBandName = priorMeanBandNamePrefix + AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+                    final int meanIndex = SRC_PRIOR_MEAN[i][j];
+                    configurator.defineSample(meanIndex, meanBandName, priorProduct);
+
+//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    // 2014, e.g. SD:_BAND_7_PARAMETER_F1
+//                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                    // Oct. 2015 version:
+                    // SD:_BAND_7_PARAMETER_F0 --> now Cov_VIS_f0_VIS_f0
+                    // SD:_BAND_7_PARAMETER_F1 --> now Cov_VIS_f1_VIS_f1
+                    // SD:_BAND_7_PARAMETER_F2 --> now Cov_VIS_f2_VIS_f2
+                    // SD:_BAND_8_PARAMETER_F0 --> now Cov_NIR_f0_NIR_f0
+                    // SD:_BAND_8_PARAMETER_F1 --> now Cov_NIR_f1_NIR_f1
+                    // SD:_BAND_8_PARAMETER_F2 --> now Cov_NIR_f2_NIR_f2
+                    // SD:_BAND_9_PARAMETER_F0 --> now Cov_SW_f0_SW_f0
+                    // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
+                    // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
+                    final String sdMeanBandName = priorSdBandNamePrefix +
+                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j + "_" +
+                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+                    final int sdIndex = SRC_PRIOR_SD[i][j];
+                    configurator.defineSample(sdIndex, sdMeanBandName, priorProduct);
+                }
+//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+                configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+                configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);
+            }
+        }
+    }
+
 
     public static class Spi extends OperatorSpi {
 
