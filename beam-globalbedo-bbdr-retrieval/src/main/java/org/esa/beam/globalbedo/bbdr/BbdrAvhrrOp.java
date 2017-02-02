@@ -317,6 +317,57 @@ public class BbdrAvhrrOp extends PixelOperator {
      * @return boolean
      */
     boolean isOutlierFilter(int x, int y, double obs, double[] priorParms, double[] priorSd, double kvol, double kgeo) {
+//        ==================
+//        outlier pseudocode
+//        ==================
+//
+//
+//        cloud filtering
+//        ------------------
+//                assume we have obs avhrr
+//
+//        prior params = [f0,f1,f2]
+//        prior sd        = [sd0,sd1,sd2]
+//
+//
+//        fwd kernels = [1, k1, k2]
+//        for the AVHRR angles
+//
+//        operations:
+//        =========
+//
+//        # dot product -> scalar output
+//        obs prediction = (prior params) dot (fwd kernels)
+//
+//
+//        # scaled difference
+//        delta = (  (obs prediction) - (obs avhrr)) / (prior sd)
+//
+//
+//        We can decide how many SD to use for filtering, e.g. zthresh = 4? to
+//        be conservative
+//
+//
+//        comments
+//                -----------------
+//                so you will have a delta for each channel.
+//
+//
+//        If |delta| > zthresh:
+//
+//        its probably an outlier ....
+//
+//        if sgn(delta) +ve in both channels, its probably a cloud
+//        if sgn(delta) -ve in both channels, its probably a cloud shadow
+//        if sgn(delta) are different ... probably its an outlier but I don't
+//        know what it is ...
+//
+//
+//        ==================
+//        alternative outlier pseudocode
+//                ==================
+//        use a huber norm, which will be more robust to outliers ...
+
         final double obsPrediction = priorParms[0] + priorParms[1]*kvol + priorParms[2]*kgeo;
         final double sdMean = (priorSd[0] + priorSd[1] + priorSd[2])/3.0;   // todo: clarify with PL
         final double delta = (obsPrediction - obs)/sdMean;

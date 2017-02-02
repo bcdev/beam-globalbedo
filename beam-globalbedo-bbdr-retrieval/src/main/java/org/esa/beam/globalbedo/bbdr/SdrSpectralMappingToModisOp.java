@@ -192,8 +192,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         final double szaRad = toRadians(sza);
         final double phiRad = toRadians(phi);
 
-//        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
-        final double[] kernels = BbdrUtils.computeConstantKernels_2(vzaRad, szaRad, phiRad);
+        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
         final double kvol = kernels[0];
         final double kgeo = kernels[1];
 

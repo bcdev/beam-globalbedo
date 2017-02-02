@@ -152,7 +152,7 @@ public class BbdrNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             writeable.addGlobalAttribute("institution", "Mullard Space Science Laboratory, " +
                     "Department of Space and Climate Physics, University College London");
             writeable.addGlobalAttribute("source", "Satellite observations, Atmospheric Correction and Broadband Conversion");
-            writeable.addGlobalAttribute("references", "GlobAlbedo ATBD V3.1");
+            writeable.addGlobalAttribute("references", "GlobAlbedo ATBD V4.12");
             writeable.addGlobalAttribute("comment", "none");
         }
 
