@@ -377,6 +377,15 @@ public class BbdrUtils {
         return demDescriptor.createDem(Resampling.BILINEAR_INTERPOLATION);
     }
 
+    /**
+     * Computation of constant kernels as suggested by NG.
+     *
+     * @param vzaRad - VZA in radians
+     * @param szaRad - VZA in radians
+     * @param phiRad - VZA in radians
+     *
+     * @return double[]{kvol, kgeo} - the kvol (volumetric RossThick) and kgeo (geometric LiSparse) kernels
+     */
     public static double[] computeConstantKernels(double vzaRad, double szaRad, double phiRad) {
         final double muv = cos(vzaRad);
         final double mus = cos(szaRad);
@@ -407,6 +416,9 @@ public class BbdrUtils {
 
     /**
      * Kernel computation following 'makeBRDFKernels' in 'mapsModisEE.py' provided by PL, 20161221
+     *
+     * Jan 2017: This does not work, but we get expected results from old computeConstantKernels.
+     * So forget this one for the moment.
      *
      * @param vzaRad - VZA in radians
      * @param szaRad - VZA in radians

@@ -37,7 +37,7 @@ public class MetadataUtils {
         final MetadataAttribute sourceAttr = new MetadataAttribute("source", sourceAttrData, true);
         globalElement.addAttribute(sourceAttr);
 
-        final ProductData referencesAttrData = ProductData.createInstance("GlobAlbedo ATBD V3.1");
+        final ProductData referencesAttrData = ProductData.createInstance("GlobAlbedo ATBD V4.12");
         final MetadataAttribute referencesAttr = new MetadataAttribute("references", referencesAttrData, true);
         globalElement.addAttribute(referencesAttr);
 

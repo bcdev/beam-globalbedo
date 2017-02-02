@@ -48,10 +48,42 @@ public class BbdrUtilsTest {
         double vzaRad = MathUtils.DTOR * 73.03463;
         double szaRad = MathUtils.DTOR * 92.6708;
         double phiRad = MathUtils.DTOR * 115.6619;
-        final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+        double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
 
         assertEquals(3.6714, kernels[0], 1.E-4);
         assertTrue(Double.isNaN(kernels[1]));
+
+        // Two PL test vectors, Dec 2016:
+//        sza = [ 41.34555, 35.90641]
+//        vza = [ 21.1263,  24.85346]
+//        saa = [149.49255, 138.92919]
+//        vaa = [103.90717, 102.18219]
+//
+//        kk = Kernels(vza,sza,np.array(vaa)-saa,RossHS=False,MODISSPARSE=True,RecipFlag=True,nbar=0.,normalise=1,doIntegrals=False,LiType='Sparse',RossType='Thick')
+//
+//        In [14]: kk.Ross
+//        Out[14]: array([ 0.05083901,  0.07715809])
+//
+//        In [15]: kk.Li
+//        Out[15]: array([-0.71918409, -0.46050085])
+
+        phiRad = (103.90717 - 149.49255)*MathUtils.DTOR;
+        vzaRad = 21.1263*MathUtils.DTOR;
+        szaRad = (float) (41.34555*MathUtils.DTOR);
+        kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+        assertNotNull(kernels);
+        assertEquals(2, kernels.length);
+        assertEquals(0.050839, kernels[0], 1.E-6);
+        assertEquals(-0.71918409, kernels[1], 1.E-6);
+
+        phiRad = (102.18219 - 138.92919)*MathUtils.DTOR;
+        vzaRad = 24.85346*MathUtils.DTOR;
+        szaRad = (float) (35.90641*MathUtils.DTOR);
+        kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
+        assertNotNull(kernels);
+        assertEquals(2, kernels.length);
+        assertEquals(0.07715809, kernels[0], 1.E-6);
+        assertEquals(-0.46050085, kernels[1], 1.E-6);
     }
 
     public void testGetModisTileFromLatLon() {
@@ -102,17 +134,4 @@ public class BbdrUtilsTest {
         assertEquals("h18v03", BbdrUtils.getModisTileFromLatLon(lat, lon));
     }
 
-    @Test
-    @Ignore
-    public void testComputeConstantKernel_2() throws Exception {
-
-        double phiRad = (103.90717 - 149.49255)*MathUtils.DTOR;
-        double vzaRad = 21.1263*MathUtils.DTOR;
-        float szaRad = (float) (41.34555*MathUtils.DTOR);
-        final double[] kernels = BbdrUtils.computeConstantKernels_2(vzaRad, szaRad, phiRad);
-        assertNotNull(kernels);
-        assertEquals(2, kernels.length);
-        assertEquals(0.050839, kernels[0], 1.E-6);
-        assertEquals(-0.71918409, kernels[1], 1.E-6);
-    }
 }
