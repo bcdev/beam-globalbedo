@@ -102,23 +102,21 @@ public class MergeSpectralBrdfOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        final int snowOffset = 6 * numSdrBands+ 5;
 
-        final double nSamplesSnowDataValue = sourceSamples[srcSnowParams.length + srcSnowUncertainties.length +
-                SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double nSamplesSnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double nSamplesSnow = AlbedoInversionUtils.isValid(nSamplesSnowDataValue) ? nSamplesSnowDataValue : 0.0;
 
-        final double nSamplesNoSnowDataValue = sourceSamples[sourceSampleOffset + srcNoSnowParams.length +
-                srcNoSnowUncertainties.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double nSamplesNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands +
+                SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double nSamplesNoSnow = AlbedoInversionUtils.isValid(nSamplesNoSnowDataValue) ? nSamplesNoSnowDataValue : 0.0;
 
         final double totalNSamples = nSamplesSnow + nSamplesNoSnow;
 
 
-        final double entropySnowDataValue = sourceSamples[srcSnowParams.length + srcSnowUncertainties.length +
-                SRC_SNOW_ENTROPY].getDouble();
+        final double entropySnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_ENTROPY].getDouble();
         final double entropySnow = AlbedoInversionUtils.isValid(entropySnowDataValue) ? entropySnowDataValue : 0.0;
-        final double entropyNoSnowDataValue = sourceSamples[sourceSampleOffset + srcNoSnowParams.length +
-                srcNoSnowUncertainties.length + SRC_NOSNOW_ENTROPY].getDouble();
+        final double entropyNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands + SRC_NOSNOW_ENTROPY].getDouble();
         final double entropyNoSnow = AlbedoInversionUtils.isValid(entropyNoSnowDataValue) ? entropyNoSnowDataValue : 0.0;
 
         double proportionNsamplesSnow;
@@ -178,12 +176,12 @@ public class MergeSpectralBrdfOp extends PixelOperator {
                                 double proportionNsamplesNoSnow) {
 
         // parameters
-        int index = 0;
+        int snowOffset = 6 * numSdrBands+ 5;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            final double sampleParameterSnowDataValue = sourceSamples[index].getDouble();
+            final double sampleParameterSnowDataValue = sourceSamples[i].getDouble();
             final double sampleParameterSnow =
                     AlbedoInversionUtils.isValid(sampleParameterSnowDataValue) ? sampleParameterSnowDataValue : 0.0;
-            final double sampleParameterNoSnowDataValue = sourceSamples[sourceSampleOffset + index].getDouble();
+            final double sampleParameterNoSnowDataValue = sourceSamples[snowOffset + i].getDouble();
             final double sampleParameterNoSnow =
                     AlbedoInversionUtils.isValid(sampleParameterNoSnowDataValue) ?
                             sampleParameterNoSnowDataValue : 0.0;
@@ -191,42 +189,36 @@ public class MergeSpectralBrdfOp extends PixelOperator {
                     sampleParameterNoSnow * proportionNsamplesNoSnow;
 
             if (sampleParameterNoSnow == 0.0 && sampleParameterSnow == 0.0) {
-                targetSamples[trgParameters[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+                targetSamples[trgParameters[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
             } else {
-                targetSamples[trgParameters[index]].set(resultParameters);
+                targetSamples[trgParameters[i]].set(resultParameters);
             }
-            index++;
         }
 
         // uncertainties
-        index = 0;
+        int offset = snowOffset + 3 * numSdrBands;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                final double sampleUncertaintySnowDataValue = sourceSamples[srcSnowParams.length + index].getDouble();
-                final double sampleUncertaintySnow =
-                        AlbedoInversionUtils.isValid(sampleUncertaintySnowDataValue) ? sampleUncertaintySnowDataValue : 0.0;
-                final double sampleUncertaintyNoSnowDataValue = sourceSamples[sourceSampleOffset + srcSnowParams.length + index].getDouble();
-                final double sampleUncertaintyNoSnow =
-                        AlbedoInversionUtils.isValid(sampleUncertaintyNoSnowDataValue) ? sampleUncertaintyNoSnowDataValue : 0.0;
-                final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
-                        sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            final double sampleUncertaintySnowDataValue = sourceSamples[3 * numSdrBands + i].getDouble();
+            final double sampleUncertaintySnow =
+                    AlbedoInversionUtils.isValid(sampleUncertaintySnowDataValue) ? sampleUncertaintySnowDataValue : 0.0;
+            final double sampleUncertaintyNoSnowDataValue = sourceSamples[offset + i].getDouble();
+            final double sampleUncertaintyNoSnow =
+                    AlbedoInversionUtils.isValid(sampleUncertaintyNoSnowDataValue) ? sampleUncertaintyNoSnowDataValue : 0.0;
+            final double resultUncertainties = sampleUncertaintySnow * proportionNsamplesSnow +
+                    sampleUncertaintyNoSnow * proportionNsamplesNoSnow;
 
-                if (sampleUncertaintySnow == 0.0 && sampleUncertaintyNoSnow == 0.0) {
-                    targetSamples[trgParameters.length + trgUncertainties[index]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-                } else {
-                    targetSamples[trgParameters.length + trgUncertainties[index]].set(resultUncertainties);
-                }
-                index++;
+            if (sampleUncertaintySnow == 0.0 && sampleUncertaintyNoSnow == 0.0) {
+                targetSamples[3 * numSdrBands + i].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            } else {
+                targetSamples[3 * numSdrBands + i].set(resultUncertainties);
             }
         }
 
-        final double sampleEntropySnowDataValue =
-                sourceSamples[srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_ENTROPY].getDouble();
+        final double sampleEntropySnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_ENTROPY].getDouble();
         final double sampleEntropySnow = AlbedoInversionUtils.isValid
                 (sampleEntropySnowDataValue) ? sampleEntropySnowDataValue : 0.0;
-        final double sampleEntropyNoSnowDataValue =
-                sourceSamples[sourceSampleOffset + srcNoSnowParams.length +
-                        srcNoSnowUncertainties.length + SRC_NOSNOW_ENTROPY].getDouble();
+        final double sampleEntropyNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands + SRC_NOSNOW_ENTROPY].getDouble();
         final double sampleEntropyNoSnow = AlbedoInversionUtils.isValid
                 (sampleEntropyNoSnowDataValue) ? sampleEntropyNoSnowDataValue : 0.0;
         final double resultEntropy = sampleEntropySnow * proportionNsamplesSnow +
@@ -238,13 +230,10 @@ public class MergeSpectralBrdfOp extends PixelOperator {
             targetSamples[trgParameters.length + trgUncertainties.length + TRG_ENTROPY].set(resultEntropy);
         }
 
-        final double sampleRelEntropySnowDataValue =
-                sourceSamples[srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_REL_ENTROPY].getDouble();
+        final double sampleRelEntropySnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_REL_ENTROPY].getDouble();
         final double sampleRelEntropySnow = AlbedoInversionUtils.isValid(
                 sampleRelEntropySnowDataValue) ? sampleRelEntropySnowDataValue : 0.0;
-        final double sampleRelEntropyNoSnowDataValue =
-                sourceSamples[sourceSampleOffset + srcNoSnowParams.length +
-                        srcNoSnowUncertainties.length + SRC_NOSNOW_REL_ENTROPY].getDouble();
+        final double sampleRelEntropyNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands + SRC_NOSNOW_REL_ENTROPY].getDouble();
         final double sampleRelEntropyNoSnow = AlbedoInversionUtils.isValid(
                 sampleRelEntropyNoSnowDataValue) ? sampleRelEntropyNoSnowDataValue : 0.0;
         final double resultRelEntropy = sampleRelEntropySnow * proportionNsamplesSnow +
@@ -256,12 +245,12 @@ public class MergeSpectralBrdfOp extends PixelOperator {
             targetSamples[trgParameters.length + trgUncertainties.length + TRG_REL_ENTROPY].set(resultRelEntropy);
         }
 
-        final double sampleWeightedNumSamplesSnowDataValue = sourceSamples[srcSnowParams.length +
-                srcSnowUncertainties.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double sampleWeightedNumSamplesSnowDataValue =
+                sourceSamples[6 * numSdrBands + SRC_SNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double sampleWeightedNumSamplesSnow = AlbedoInversionUtils.isValid(
                 sampleWeightedNumSamplesSnowDataValue) ? sampleWeightedNumSamplesSnowDataValue : 0.0;
-        final double sampleWeightedNumSamplesNoSnowDataValue = sourceSamples[sourceSampleOffset +
-                srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
+        final double sampleWeightedNumSamplesNoSnowDataValue =
+                sourceSamples[snowOffset + 6 * numSdrBands + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES].getDouble();
         final double sampleWeightedNumSamplesNoSnow = AlbedoInversionUtils.isValid(
                 sampleWeightedNumSamplesNoSnowDataValue) ? sampleWeightedNumSamplesNoSnowDataValue : 0.0;
         final double resultWeightedNumSamples = sampleWeightedNumSamplesSnow * proportionNsamplesSnow +
@@ -274,12 +263,10 @@ public class MergeSpectralBrdfOp extends PixelOperator {
                     resultWeightedNumSamples);
         }
 
-        final double sampleDoyClosestSampleSnowDataValue = sourceSamples[srcSnowParams.length +
-                srcSnowUncertainties.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble();
+        final double sampleDoyClosestSampleSnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double sampleDoyClosestSampleSnow = AlbedoInversionUtils.isValid(
                 sampleDoyClosestSampleSnowDataValue) ? sampleDoyClosestSampleSnowDataValue : 0.0;
-        final double sampleDoyClosestSampleNoSnowDataValue = sourceSamples[sourceSampleOffset +
-                srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble();
+        final double sampleDoyClosestSampleNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE].getDouble();
         final double sampleDoyClosestSampleNoSnow = AlbedoInversionUtils.isValid(
                 sampleDoyClosestSampleNoSnowDataValue) ? sampleDoyClosestSampleNoSnowDataValue : 0.0;
         final double resultDoyClosestSample = sampleDoyClosestSampleSnow * proportionNsamplesSnow +
@@ -292,12 +279,11 @@ public class MergeSpectralBrdfOp extends PixelOperator {
                     resultDoyClosestSample);
         }
 
-        final double sampleGoodnessOfFitSnowDataValue = sourceSamples[srcSnowParams.length +
-                srcSnowUncertainties.length + SRC_SNOW_GOODNESS_OF_FIT].getDouble();
+        final double sampleGoodnessOfFitSnowDataValue = sourceSamples[6 * numSdrBands + SRC_SNOW_GOODNESS_OF_FIT].getDouble();
         final double sampleGoodnessOfFitSnow = AlbedoInversionUtils.isValid(
                 sampleGoodnessOfFitSnowDataValue) ? sampleGoodnessOfFitSnowDataValue : 0.0;
-        final double sampleGoodnessOfFitNoSnowDataValue = sourceSamples[sourceSampleOffset + srcNoSnowParams.length +
-                srcNoSnowUncertainties.length + SRC_NOSNOW_GOODNESS_OF_FIT].getDouble();
+        final double sampleGoodnessOfFitNoSnowDataValue = sourceSamples[snowOffset + 6 * numSdrBands +
+                SRC_NOSNOW_GOODNESS_OF_FIT].getDouble();
         final double sampleGoodnessOfFitNoSnow = AlbedoInversionUtils.isValid(
                 sampleGoodnessOfFitNoSnowDataValue) ? sampleGoodnessOfFitNoSnowDataValue : 0.0;
         final double resultGoodnessOfFit = sampleGoodnessOfFitSnow * proportionNsamplesSnow +
@@ -363,60 +349,56 @@ public class MergeSpectralBrdfOp extends PixelOperator {
             configurator.defineSample(srcSnowParams[i], parameterBandNames[i], snowProduct);
         }
 
-        int index = 0;
+        int offset = 3 * numSdrBands;
+
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                srcSnowUncertainties[index] = index;
-                configurator.defineSample(srcSnowParams.length + srcSnowUncertainties[index],
-                                          uncertaintyBandNames[i][j], snowProduct);
-                index++;
-            }
+//            for (int j = i; j < 3 * numSdrBands; j++) {
+//                srcSnowUncertainties[index] = index;
+//                configurator.defineSample(srcSnowParams.length + srcSnowUncertainties[index],
+//                                          uncertaintyBandNames[i][j], snowProduct);
+//                index++;
+//            }
+
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            configurator.defineSample(offset + i, uncertaintyBandNames[i][i], snowProduct);
         }
 
-        configurator.defineSample(srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_ENTROPY,
-                                  entropyBandName, snowProduct);
-        configurator.defineSample(srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_REL_ENTROPY,
-                                  relEntropyBandName, snowProduct);
-        configurator.defineSample(
-                srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_WEIGHTED_NUM_SAMPLES,
-                weightedNumberOfSamplesBandName, snowProduct);
-        configurator.defineSample(
-                srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_DAYS_CLOSEST_SAMPLE,
+        offset = 6 * numSdrBands;
+
+        configurator.defineSample(offset + SRC_SNOW_ENTROPY, entropyBandName, snowProduct);
+        configurator.defineSample(offset + SRC_SNOW_REL_ENTROPY, relEntropyBandName, snowProduct);
+        configurator.defineSample(offset + SRC_SNOW_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName, snowProduct);
+        configurator.defineSample(offset + SRC_SNOW_DAYS_CLOSEST_SAMPLE,
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, snowProduct);
-        configurator.defineSample(srcSnowParams.length + srcSnowUncertainties.length + SRC_SNOW_GOODNESS_OF_FIT,
-                                  goodnessOfFitBandName, snowProduct);
+        configurator.defineSample(offset + SRC_SNOW_GOODNESS_OF_FIT, goodnessOfFitBandName, snowProduct);
+
+        offset = 6 * numSdrBands + 5;
 
         // BRDF parameters NoSnow product:
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            srcNoSnowParams[i] = sourceSampleOffset + i;
-            configurator.defineSample(srcNoSnowParams[i], parameterBandNames[i], noSnowProduct);
+            configurator.defineSample(offset + i, parameterBandNames[i], noSnowProduct);
         }
 
-        index = 0;
+        offset = 9 * numSdrBands + 5;
         for (int i = 0; i < 3 * numSdrBands; i++) {
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                srcNoSnowUncertainties[index] = sourceSampleOffset + index;
-                configurator.defineSample(srcNoSnowParams.length + srcNoSnowUncertainties[index],
-                                          uncertaintyBandNames[i][j], noSnowProduct);
-                index++;
-            }
+//            for (int j = i; j < 3 * numSdrBands; j++) {
+//                srcNoSnowUncertainties[index] = sourceSampleOffset + index;
+//                configurator.defineSample(srcNoSnowParams.length + srcNoSnowUncertainties[index],
+//                                          uncertaintyBandNames[i][j], noSnowProduct);
+//                index++;
+//            }
+
+            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
+            configurator.defineSample(offset + i, uncertaintyBandNames[i][i], noSnowProduct);
         }
 
-        configurator.defineSample(
-                sourceSampleOffset + srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_ENTROPY,
-                entropyBandName, noSnowProduct);
-        configurator.defineSample(
-                sourceSampleOffset + srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_REL_ENTROPY,
-                relEntropyBandName, noSnowProduct);
-        configurator.defineSample(
-                sourceSampleOffset + srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES,
-                weightedNumberOfSamplesBandName, noSnowProduct);
-        configurator.defineSample(
-                sourceSampleOffset + srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE,
+        offset = 12 * numSdrBands + 5;
+        configurator.defineSample(offset + SRC_NOSNOW_ENTROPY, entropyBandName, noSnowProduct);
+        configurator.defineSample(offset + SRC_NOSNOW_REL_ENTROPY, relEntropyBandName, noSnowProduct);
+        configurator.defineSample(offset + SRC_NOSNOW_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName, noSnowProduct);
+        configurator.defineSample(offset + SRC_NOSNOW_DAYS_CLOSEST_SAMPLE,
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, noSnowProduct);
-        configurator.defineSample(
-                sourceSampleOffset + srcNoSnowParams.length + srcNoSnowUncertainties.length + SRC_NOSNOW_GOODNESS_OF_FIT,
-                goodnessOfFitBandName, noSnowProduct);
+        configurator.defineSample(offset + SRC_NOSNOW_GOODNESS_OF_FIT, goodnessOfFitBandName, noSnowProduct);
     }
 
     @Override
