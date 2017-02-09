@@ -81,7 +81,7 @@ public class BbdrAvhrrOp extends PixelOperator {
     public static final int SRC_PRIOR_MASK = SOURCE_SAMPLE_OFFSET + 2 * PRIOR_OFFSET + 1;
 
 
-    @Parameter(defaultValue = "true", description = "Use prior information")
+    @Parameter(defaultValue = "false", description = "Use prior information")
     private boolean usePrior;
 
     @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
