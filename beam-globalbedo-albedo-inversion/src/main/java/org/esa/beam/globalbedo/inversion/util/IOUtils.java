@@ -282,9 +282,14 @@ public class IOUtils {
             String doyString = getDoyString(doy);
 
             for (String brdfFileName : brdfFileList) {
-                if (brdfFileName.startsWith("Qa4ecv.brdf." + Integer.toString(year) + doyString) ||
-                        brdfFileName.startsWith("Qa4ecv.avhrrgeo.brdf." + Integer.toString(year) + doyString) ||
-                        brdfFileName.startsWith("Qa4ecv.merisvgt.brdf." + Integer.toString(year) + doyString)) {
+//                if (brdfFileName.startsWith("Qa4ecv.brdf." + Integer.toString(year) + doyString) ||
+//                        brdfFileName.startsWith("Qa4ecv.avhrrgeo.brdf." + Integer.toString(year) + doyString) ||
+//                        brdfFileName.startsWith("Qa4ecv.merisvgt.brdf." + Integer.toString(year) + doyString)) {
+//                    String sourceProductFileName = brdfDirName + File.separator + brdfFileName;
+//                    return ProductIO.readProduct(sourceProductFileName);
+//                }
+                if (brdfFileName.startsWith("Qa4ecv.") && brdfFileName.contains("brdf") &&
+                        brdfFileName.contains(Integer.toString(year) + doyString)) {
                     String sourceProductFileName = brdfDirName + File.separator + brdfFileName;
                     return ProductIO.readProduct(sourceProductFileName);
                 }

@@ -303,8 +303,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                 String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
 //                String expectedFilename;
                 final String expectedPrefix1 = "Qa4ecv.albedo.";
-                final String expectedPrefix2 = "Qa4ecv.avhrrgeo.albedo.";
-                final String expectedPrefix3 = "Qa4ecv.merisvgt.albedo.";
+//                final String expectedPrefix2 = "Qa4ecv.avhrrgeo.albedo.";
+//                final String expectedPrefix3 = "Qa4ecv.merisvgt.albedo.";
                 String expectedSuffix;
 
                 if (isMonthlyAlbedo) {
@@ -324,8 +324,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                                                                             hStartIndex, hEndIndex,
                                                                             vStartIndex, vEndIndex);
 //                return isTileToProcess && name.equals(expectedFilename);
+//                return isTileToProcess && name.endsWith(expectedSuffix) &&
+//                        (name.startsWith(expectedPrefix1) || name.startsWith(expectedPrefix2) || name.startsWith(expectedPrefix3));
                 return isTileToProcess && name.endsWith(expectedSuffix) &&
-                        (name.startsWith(expectedPrefix1) || name.startsWith(expectedPrefix2) || name.startsWith(expectedPrefix3));
+                        name.startsWith(expectedPrefix1) && name.contains("albedo");
             }
         };
 
