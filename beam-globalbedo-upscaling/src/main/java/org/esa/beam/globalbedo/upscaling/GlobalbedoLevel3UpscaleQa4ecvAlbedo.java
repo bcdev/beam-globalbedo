@@ -302,7 +302,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                 // e.g. GlobAlbedo.albedo.2006335.h18v04.nc
                 String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
 //                String expectedFilename;
-                final String expectedPrefix1 = "Qa4ecv.albedo.";
+                final String expectedPrefix1 = "Qa4ecv.";
 //                final String expectedPrefix2 = "Qa4ecv.avhrrgeo.albedo.";
 //                final String expectedPrefix3 = "Qa4ecv.merisvgt.albedo.";
                 String expectedSuffix;
