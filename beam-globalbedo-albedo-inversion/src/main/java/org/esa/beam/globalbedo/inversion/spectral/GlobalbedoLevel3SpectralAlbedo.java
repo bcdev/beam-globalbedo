@@ -61,9 +61,12 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
+        final String subTileString = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
         final String brdfDir = inversionRootDir + File.separator;
-        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile;
-        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile;
+        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile +
+                File.separator + subTileString;
+        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile +
+                File.separator + subTileString;
 
         logger.log(Level.INFO, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
         logger.log(Level.INFO, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
