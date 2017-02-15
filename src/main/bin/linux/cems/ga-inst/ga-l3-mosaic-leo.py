@@ -27,6 +27,8 @@ tileSize='1200' # LEO classic
 #years = ['2014']    #test  
 years = ['2012']    #test  
 
+sensorID = '' # later
+
 #snowModes = ['Snow', 'NoSnow', 'Merge']
 snowModes = ['Merge']  # usually for LEO
 #snowModes = ['NoSnow'] # usually for AVHRRGEO
@@ -77,9 +79,9 @@ for year in years:
 
                     if mosaicMode == 'simple':
                         ### the simplified way: Albedo tiles --> Albedo mosaic, no alpha/sigma output
-                        albedoTileDir = gaRootDir + '/Albedo/' + year
+                        albedoTileDir = gaRootDir + '/Albedo/' + sensorID + '/' + year
                         albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + resolution
-                        m.execute('ga-l3-albedomosaic-simple-leo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
+                        m.execute('ga-l3-albedomosaic-simple-leo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[sensorID,year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
                     else:
                         ### the Alex Loew energy conservation way (as requested in GA and more precise, but slower: double number of jobs)                
                         # BRDF tiles --> BRDF mosaic:

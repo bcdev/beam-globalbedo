@@ -101,21 +101,35 @@ submit_job() {
     # NEW queue, 201611:
     #bsubmit="bsub -q short-serial -W 120 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     # hopefully enough time and memory if we have just 2 test output bands (BHR_SW, WNS):
-    bsubmit="bsub -q short-serial -W 120 -R rusage[mem=16000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -q short-serial -W 120 -R rusage[mem=16000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     # stress test:
-    bsubmit="bsub -q short-serial -W 180 -R rusage[mem=40000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -q short-serial -W 180 -R rusage[mem=40000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # for PC, we are fine with 24GB
+    bsubmit="bsub -q short-serial -W 180 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
+    #### THIS IS FOR PRIORITY TEST 20170103! REMOVE AFTER THAT DAY!
+    #bsubmit="bsub -U root#2 -q short-serial -W 180 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    ####
 
     echo "bsubmit: $bsubmit"
 
-    if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #then
+    #    echo "${bsubmit}"
+    #    line=`${bsubmit}`
+    #else
+    #    echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
+    #    line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+    #fi
+
+    if hostname | grep -qF 'cems-sci1.cems.rl.ac.uk'
     then
         echo "${bsubmit}"
         line=`${bsubmit}`
     else
-        echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
-        line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+        echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
+        line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
     fi
 
     echo ${line}

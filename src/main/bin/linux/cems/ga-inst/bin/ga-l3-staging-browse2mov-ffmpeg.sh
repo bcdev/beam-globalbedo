@@ -57,7 +57,8 @@ mkdir -p $OUTDIR
 #launch ffmpeg
 #echo $ffmpeg -y -r 3 -f image2 -pattern_type glob -i "$indir/png/*.png" -vcodec mpeg4 $moviefile
 
-$ffmpeg -y -r 3 -f image2 -pattern_type glob -i  "$INDIR/*.$INEXT" -s $size  -vcodec mpeg4 $outfile
+#$ffmpeg -y -r 3 -f image2 -pattern_type glob -i  "$INDIR/*.$INEXT" -s $size  -vcodec mpeg4 $outfile
+$ffmpeg -y -r 3 -f image2 -pattern_type glob -i  "$INDIR/*.$INEXT" -s $size -b 4M -vcodec mpeg4 $outfile
 ################################################################################################
 
 echo 'End.'

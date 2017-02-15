@@ -27,11 +27,15 @@ submit_job() {
     #bsubmit="bsub -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     #bsubmit="bsub -q short-serial -R rusage[mem=12000] -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
     # standard memory should be ok?!
-    bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     #### THIS IS FOR THE PRIORITY TEST 20170103! REMOVE AFTER PROCESSING:
     #bsubmit="bsub -U root#2 -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    #bsubmit="bsub -U root#2 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    ## RETRY 20170112:
+    #bsubmit="bsub -U root#6 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    ## RETRY 20170120:
+    bsubmit="bsub -U root#8 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+
     ####
 
     echo "bsubmit: $bsubmit"

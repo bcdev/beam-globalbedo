@@ -6,9 +6,9 @@ priorDir=/group_workspaces/cems2/qa4ecv/vol3/newPrior_broadband/1km
 beamDir=/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1
 
 brdfDir=$gaRootDir/Inversion_single/2006/h18v03/NoSnow
-brdfProduct=$brdfDir/GlobAlbedo.brdf.single.2006.121.h18v03.0756.0787.NoSnow.csv
+brdfProduct=$brdfDir/Qa4ecv.brdf.single.2006.121.h18v03.0756.0787.NoSnow.csv
 targetDir=$gaRootDir/Albedo_single/2006/h18v03/NoSnow
-targetProduct=$targetDir/GlobAlbedo.albedo.single.2006.121.h18v03.0756.0787.NoSnow.csv
+targetProduct=$targetDir/Qa4ecv.albedo.single.2006.121.h18v03.0756.0787.NoSnow.csv
 
 if [ ! -e "$targetDir" ]
 then

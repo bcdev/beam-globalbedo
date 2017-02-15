@@ -99,13 +99,22 @@ submit_job() {
 
     echo "bsubmit: $bsubmit"
 
-    if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #then
+    #    echo "${bsubmit}"
+    #    line=`${bsubmit}`
+    #else
+    #    echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
+    #    line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+    #fi
+
+    if hostname | grep -qF 'cems-sci1.cems.rl.ac.uk'
     then
         echo "${bsubmit}"
         line=`${bsubmit}`
     else
-        echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
-        line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+        echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
+        line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
     fi
 
     echo ${line}

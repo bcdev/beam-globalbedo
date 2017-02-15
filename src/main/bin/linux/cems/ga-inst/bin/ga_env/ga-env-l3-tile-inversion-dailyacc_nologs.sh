@@ -28,15 +28,29 @@ submit_job() {
     #bsubmit="bsub -q short-serial -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
     bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
+    #### THIS IS FOR THE PRIORITY TEST 20170103! REMOVE AFTER PROCESSING:
+    #bsubmit="bsub -U root#2 -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -U root#2 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    ####
+
     echo "bsubmit: $bsubmit"
 
-    if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #if hostname | grep -qF 'lotus.jc.rl.ac.uk'
+    #then
+    #    echo "${bsubmit}"
+    #    line=`${bsubmit}`
+    #else
+    #    echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
+    #    line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+    #fi
+
+    if hostname | grep -qF 'cems-sci1.cems.rl.ac.uk'
     then
         echo "${bsubmit}"
         line=`${bsubmit}`
     else
-        echo "ssh -A lotus.jc.rl.ac.uk ${bsubmit}"
-        line=`ssh -A lotus.jc.rl.ac.uk ${bsubmit}`
+        echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
+        line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
     fi
 
     echo ${line}

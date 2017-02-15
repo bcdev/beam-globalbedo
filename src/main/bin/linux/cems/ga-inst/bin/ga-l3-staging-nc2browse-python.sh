@@ -30,13 +30,15 @@ HOME=$GA_INST/bin/staging_said
 #if not existing, create output directory
 mkdir -p $OUTDIR
 
-idxDate=4
+#idxDate=4
+idxDate=5
 SIZE05='720x360'
 SIZE005='7200x3600'
 
 COLORTXT='white'
 
-PYTHON1=$HOME/python/ncalbedo2png_od.py
+#PYTHON1=$HOME/python/ncalbedo2png_od.py
+PYTHON1=$HOME/python/ncalbedo2png_od_newcmap.py
 BANDS1=BHR_NIR,BHR_VIS,BHR_SW,DHR_NIR,DHR_VIS,DHR_SW
 MINMAX1=0:1,0:1,0:1,0:1,0:1,0:1
 LUT1=$HOME/params/color_lut.txt

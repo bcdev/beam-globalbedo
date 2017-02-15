@@ -29,13 +29,22 @@ spectralAlbedoRootDir = gaRootDir + '/Albedo_spectral'
 
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
-tiles = ['h25v06'] # test
+#######
+sensorID = 'mer' # must be one of: 'mer', 'vgt', 'mer_vgt'
+#######
+
+#tiles = ['h20v06','h25v06'] # test
+#tiles = ['h19v07'] # test
+#tiles = ['h20v06'] # test
+tiles = ['h20v06','h25v06'] # test
 
 startYear = 2005  # test
 endYear = 2005
 
-subStartX = ['0', '300', '600', '900']
-subStartY = ['0', '300', '600', '900']
+subStartX = ['0','300']
+#subStartX = ['0', '300', '600', '900']
+subStartY = ['600','900']
+#subStartY = ['0', '300', '600', '900']
 
 inputs = ['sdrs']
 
@@ -54,6 +63,18 @@ for tile in tiles:
 
             ### daily accumulation for all years:
             allDailyAccPostConds = []
+
+            # left wing
+            year = str(startYear-1)
+            startDoy = '273'
+            endDoy = '361'
+            postCond = 'daily_accs_' + year + '_' + tile + '_' + startX + '_' + startY
+            allDailyAccPostConds.append(postCond)
+            m.execute('ga-l3-tile-inversion-dailyacc-spectral-step.sh',
+                         ['sdrs'],
+                         [postCond],
+                         parameters=[tile,year,startDoy,endDoy,'8',startX,startY,gaRootDir,spectralSdrRootDir,beamDir])
+
             for iyear in range(startYear, endYear+1):
                 year = str(iyear)
                 startDoy = '000'
@@ -62,14 +83,25 @@ for tile in tiles:
                 allDailyAccPostConds.append(postCond)
                 m.execute('ga-l3-tile-inversion-dailyacc-spectral-step.sh', 
                          ['sdrs'], 
-		         [postCond], 
-                         parameters=[tile,rightyear,startDoy,endDoy,'8',startX,startY,gaRootDir,spectralSdrRootDir,beamDir])			     
+                         [postCond], 
+                         parameters=[tile,year,startDoy,endDoy,'8',startX,startY,gaRootDir,spectralSdrRootDir,beamDir])			     
+
+            # right wing
+            year = str(endYear+1)
+            startDoy = '001'
+            endDoy = '089'
+            postCond = 'daily_accs_' + year + '_' + tile
+            allDailyAccPostConds.append(postCond)
+            m.execute('ga-l3-tile-inversion-dailyacc-spectral-step.sh',
+                         ['sdrs'],
+                         [postCond],
+                         parameters=[tile,year,startDoy,endDoy,'8',startX,startY,gaRootDir,spectralSdrRootDir,beamDir])
 
             ### now full accumulation, inversion and albedo:
             allAlbedoPostConds = []
             for iyear in range(startYear, endYear+1):
                 year = str(iyear)
-                spectraAlbedoDir = spectraAlbedoRootDir + '/' + year + '/' + tile + '_' + startX + '_' + startY
+                spectralAlbedoDir = spectralAlbedoRootDir + '/' + sensorID + '/' + year + '/' + tile + '/SUB_' + startX + '_' + startY
                 startDoy = '001'
                 endDoy = '365'
 
@@ -83,7 +115,7 @@ for tile in tiles:
                 m.execute('ga-l3-tile-inversion-albedo-spectral-step.sh', 
                          allDailyAccPostConds, 
 		         [postCond], 
-                         parameters=[tile,year,startDoy,endDoy,startX,startY,gaRootDir,spectralSdrRootDir,spectralInversionRootDir,beamDir,spectralAlbedoDir])
+                         parameters=[sensorID,tile,year,startDoy,endDoy,startX,startY,gaRootDir,spectralSdrRootDir,spectralInversionRootDir,beamDir,spectralAlbedoDir])
 
             ### cleanup:
             # do this manually for the moment

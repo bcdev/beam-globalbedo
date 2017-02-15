@@ -1,12 +1,11 @@
 #!/bin/bash
 
 #. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc.sh
-. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc_nologs.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc_nologs_priotest.sh
 
 # test script to set up one LSF job per single 8-day-interval accumulation, but invoked
 # from just one PMonitor execution for whole time window (i.e. one year or the wings) instead of
 # one PMonitor execution per single 8-day-interval (old setup).
-# test 20170120: one PMonitor execution per 24-day-interval.
 # --> many bsubs are supervised by one PMonitor
 # --> should allow to feed many more jobs into the LSF queue for same PMonitor limit (e.g. 192)
 
@@ -21,15 +20,14 @@ bbdrRootDir=$8
 beamDir=$9
 
 
-# e.g. we have startdoy='000', enddoy='361'. Doy interval is always 8.
+# e.g. we have startdoy='000', enddoy='361'. Doy interval is not 8, but 24 for priority test.
 # we want to submit one job for each doy
 
 for iStartDoy in $(seq -w $startdoy $step $enddoy); do   # -w takes care for leading zeros
     #iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 7))"`
-    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 23))"`  # for step=24
+    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 23))"`
 
-    #task="ga-l3-tile-inversion-dailyacc-avhrrgeo"
-    task="ga-l3-tile-inversion-dailyacc-avhrrgeo_test"
+    task="ga-l3-tile-inversion-dailyacc-avhrrgeo_priotest"
     jobname="${task}-${tile}-${year}-${iStartDoy}-dailyacc"
     command="./bin/${task}-beam.sh ${tile} ${year} ${iStartDoy} ${iEndDoy} ${modisTileScaleFactor} ${gaRootDir} ${bbdrRootDir} ${beamDir}"
 

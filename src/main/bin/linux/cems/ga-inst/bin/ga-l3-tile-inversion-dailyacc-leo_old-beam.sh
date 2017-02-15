@@ -37,12 +37,12 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         #     MERIS, VGT, AATSR, PROBAV
 
         # MERIS, VGT (the GlobAlbedo default):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="MERIS","VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="MERIS","VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # VGT only (test purposes):
-        echo "time $gpt  ga.l3.dailyacc -Psensors="VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        #echo "time $gpt  ga.l3.dailyacc -Psensors="VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # MERIS, VGT and AATSR (test purposes):
         #echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT","AATSR" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
@@ -69,12 +69,12 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         #     MERIS, VGT, AATSR, PROBAV
 
         # MERIS, VGT (the GlobAlbedo default):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="MERIS","VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="MERIS","VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # VGT only (test purposes):
-        echo "time $gpt  ga.l3.dailyacc -Psensors="VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        #echo "time $gpt  ga.l3.dailyacc -Psensors="VGT" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        #time $gpt ga.l3.dailyacc -Ptile=$tile -Psensors="VGT" -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # MERIS, VGT and AATSR (test purposes):
         #echo "time $gpt  ga.l3.dailyacc -Psensors="MERIS","VGT","AATSR" -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
@@ -93,7 +93,7 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
 
 done
 
-# create marker files that all daily accs for given tile/DoY were processed
+# create marker file for PMonitor that all daily accs for given tile/DoY were processed
 touch $dailyAccNosnowDir/PROCESSED_ALL_$start
 touch $dailyAccSnowDir/PROCESSED_ALL_$start
 

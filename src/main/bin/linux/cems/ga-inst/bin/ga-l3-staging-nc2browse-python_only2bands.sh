@@ -34,7 +34,10 @@ HOME=$GA_INST/bin/staging_said
 #if not existing, create output directory
 mkdir -p $OUTDIR
 
-idxDate=4
+# for product name like 'GlobAlbedo.albedo.NoSnow.005.2007365.PC.nc' the date appears after the 4th dot --> idxdate=4
+#idxDate=4
+# for product name like 'Qa4ecv.albedo.avhrrgeo.NoSnow.005.2007365.PC.nc' the date appears after the 5th dot --> idxdate=5
+idxDate=5
 SIZE05='720x360'
 SIZE005='7200x3600'
 

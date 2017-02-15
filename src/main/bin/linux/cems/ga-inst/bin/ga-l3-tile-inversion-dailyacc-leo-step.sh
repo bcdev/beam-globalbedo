@@ -1,35 +1,56 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc.sh
+#. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-dailyacc_nologs.sh
+
+# test script to set up one LSF job per single 8-day-interval accumulation, but invoked
+# from just one PMonitor execution for whole time window (i.e. one year or the wings) instead of
+# one PMonitor execution per single 8-day-interval (old setup).
+# --> many bsubs are supervised by one PMonitor
+# --> should allow to feed many more jobs into the LSF queue for same PMonitor limit (e.g. 192)
 
 tile=$1
 year=$2
 startdoy=$3
-modisTileScaleFactor=$4
-gaRootDir=$5
-bbdrRootDir=$6
-beamDir=$7
+enddoy=$4
+step=$5
+modisTileScaleFactor=$6
+gaRootDir=$7
+bbdrRootDir=$8
+beamDir=$9
 
-enddoy=`printf '%03d\n' "$((10#$startdoy + 7))"`
 
-task="ga-l3-tile-inversion-dailyacc-leo"
-jobname="${task}-${tile}-${year}-${startdoy}-dailyacc-leo"
-command="./bin/${task}-beam.sh ${tile} ${year} ${startdoy} ${enddoy} ${modisTileScaleFactor} ${gaRootDir} ${bbdrRootDir} ${beamDir}"
+# e.g. we have startdoy='000', enddoy='361'. Doy interval is always 8.
+# we want to submit one job for each doy
 
-echo "jobname: $jobname"
-echo "command: $command"
+for iStartDoy in $(seq -w $startdoy $step $enddoy); do   # -w takes care for leading zeros
+    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 7))"`
 
-echo "`date -u +%Y%m%d-%H%M%S` submitting job '${jobname}' for task ${task}"
+    task="ga-l3-tile-inversion-dailyacc-leo"
+    jobname="${task}-${tile}-${year}-${iStartDoy}-dailyacc"
+    command="./bin/${task}-beam.sh ${tile} ${year} ${iStartDoy} ${iEndDoy} ${modisTileScaleFactor} ${gaRootDir} ${bbdrRootDir} ${beamDir}"
 
-echo "calling read_task_jobs..."
-read_task_jobs ${jobname}
+    echo "jobname: $jobname"
+    echo "command: $command"
 
-if [ -z ${jobs} ]; then
-    echo "calling submit_job..."
-    submit_job ${jobname} ${command}
-fi
+    echo "`date -u +%Y%m%d-%H%M%S` submitting job '${jobname}' for task ${task}"
 
-echo "calling wait_for_task_jobs_completion..." 
-wait_for_task_jobs_completion ${jobname}
+    echo "calling read_task_jobs..."
+    read_task_jobs ${jobname}
 
-echo "all calls done from ga-env-l3-tile-inversion-dailyacc-step.sh." 
+    if [ -z ${jobs} ]; then
+        echo "calling submit_job..."
+        submit_job ${jobname} ${command}
+    fi
+
+done
+
+#for iStartDoy in $(seq -w $startdoy $step $enddoy); do
+#    task="ga-l3-tile-inversion-dailyacc-leo"
+#    jobname="${task}-${tile}-${year}-${iStartDoy}-dailyacc"
+#    
+#    echo "calling wait_for_task_jobs_completion: $jobname"
+#    wait_for_task_jobs_completion ${jobname}
+#done
+
+echo "all calls done from ga-env-l3-tile-inversion-dailyacc-leo_test-step.sh." 

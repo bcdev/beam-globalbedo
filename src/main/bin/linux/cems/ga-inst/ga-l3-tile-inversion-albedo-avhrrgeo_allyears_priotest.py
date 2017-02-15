@@ -32,7 +32,8 @@ modisTileScaleFactor = '6.0'   # for AVHRR+GEO
 #######
 usePrior = 'true'
 #######
-step = '8'  # always!
+#step = '8'  # always!
+step = '24'  # make jobs taking more time as requested by CEMS
 #######
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011

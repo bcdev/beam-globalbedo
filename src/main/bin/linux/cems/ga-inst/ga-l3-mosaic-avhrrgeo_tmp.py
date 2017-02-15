@@ -22,9 +22,10 @@ tileSize='200' # AVHRR/GEO
 ###########################
 
 #######
-#sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
-sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
+sensorID = 'avh_geo' # must be one of: '', 'avh', 'geo', 'avh_geo'
+#sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #######
+
 
 #years = ['2011']    #test  
 #years = ['2010']    #test  
@@ -33,12 +34,12 @@ sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #years = ['1998']    #test  
 #years = ['1993']    #test  
 
-#years = ['1981']    #test  
-#years = ['2001']    #test  
+#years = ['1998']    #test  
+#years = ['2009','2010','2011','2012']    #test  
 #years = ['2014']    #test  
-years = ['2005']    #test  
+#years = ['2005']    #test  
 #years = ['2007','2001','2002','1990','1987']    #test  
-#years = ['1984','1985','1986','1987','1988']  
+years = ['1982','1983']  
 #years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
 #         '1991','1992','1993','1994','1995','1996','1997','1998','1999','2000',
 #         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
@@ -46,8 +47,8 @@ years = ['2005']    #test
 
 snowModes = ['NoSnow'] # usually for AVHRRGEO
 
-resolutions = ['05', '005']
-#resolutions = ['005']
+#resolutions = ['05', '005']
+resolutions = ['005']
 #resolutions = ['05']
 
 #projections = ['SIN', 'PC']
@@ -60,7 +61,6 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 inputs = []
 for year in years:
     if mosaicMode == 'simple':
-        #inputs.append(gaRootDir + '/Albedo/' + year)
         inputs.append(gaRootDir + '/Albedo/' + sensorID + '/' + year)
     else:
         for snowMode in snowModes:
@@ -75,7 +75,7 @@ for year in years:
 #### Upscaling/Mosaicing ####
 
 m = PMonitor(inputs, 
-             request='ga-l3-mosaic-avhrrgeo', 
+             request='ga-l3-mosaic-avhrrgeo_tmp', 
              logdir='log',
              hosts=[('localhost',16)], # test 20161230
 	     types=[('ga-l3-brdfmosaic-avhrrgeo-step.sh', 16), ('ga-l3-albedomosaic-avhrrgeo-step.sh',16), ('ga-l3-albedomosaic-simple-avhrrgeo-step.sh',16)])
@@ -84,9 +84,8 @@ for year in years:
     for snowMode in snowModes:
 
         #for idoy in range(0,365):    
-        #for idoy in range(121,243):    
-        #for idoy in range(120,121):    
-        for idoy in range(213,214):    
+        #for idoy in range(0,5):    
+        for idoy in range(120,121):    
         #for idoy in range(0,1):    
         #for idoy in range(139,365):    
         #for idoy in range(364,365):    
@@ -96,10 +95,9 @@ for year in years:
                 for proj in projections:
 
                     if mosaicMode == 'simple':
-                        ### the simplified way: Albedo tiles --> Albedo mosaic
-                        #albedoTileDir = gaRootDir + '/Albedo/' + year
+                        ### the simplified way: Albedo tiles --> Albedo mosaic, no alpha/sigma output
                         albedoTileDir = gaRootDir + '/Albedo/' + sensorID + '/' + year
-                        #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
+                        #albedoMosaicDir = gaRootDir + '/Mosaic_tmp/albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
                         albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
                         m.execute('ga-l3-albedomosaic-simple-avhrrgeo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[sensorID,year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
                     else:

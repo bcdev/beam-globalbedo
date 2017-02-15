@@ -26,12 +26,12 @@ else
     fi
 fi
 
-targetDir=$gaRootDir/Mosaic/brdf/$snowMode/$deg
+targetDir=$gaRootDir/Mosaic/brdf/$snowMode/$year/$deg
 if [ ! -d "$targetDir" ]
 then
    mkdir -p $targetDir
 fi
-target=$targetDir/GlobAlbedo.brdf.$snowMode.$deg.$year$doy.$proj.nc
+target=$targetDir/Qa4ecv.brdf.$snowMode.$deg.$year$doy.$proj.nc
 echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $target"
 time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.brdf -c 3000M -PinputType=$snowMode -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-BRDF -t $target
 

@@ -1,13 +1,14 @@
 #!/bin/bash
 
-year=$1
-doy=$2
-snowMode=$3
-deg=$4
-proj=$5
-tileSize=$6
-gaRootDir=$7
-beamRootDir=$8
+sensorID=$1
+year=$2
+doy=$3
+snowMode=$4
+deg=$5
+proj=$6
+tileSize=$7
+gaRootDir=$8
+beamRootDir=$9
 
 if [ "$deg" == "005" ]
 then
@@ -26,18 +27,25 @@ else
     fi
 fi
 
-targetDir=$gaRootDir/Mosaic/albedo/$snowMode/$deg
+albedoSrcSubdirName=Albedo/$sensorID
+
+#targetDir=$gaRootDir/Mosaic/albedo/$snowMode/$year/$deg
+targetDir=$gaRootDir/Mosaic/Albedo/$sensorID/$snowMode/$year/$deg
 if [ ! -d "$targetDir" ]
 then
    mkdir -p $targetDir
 fi
-target=$targetDir/GlobAlbedo.albedo.$snowMode.$deg.$year$doy.$proj.nc
+#target=$targetDir/Qa4ecv.albedo.avhrrgeo.$snowMode.$deg.$year$doy.$proj.nc
+if [ "$sensorID"="/" ]
+then
+   sensorID="avh_geo" # the default
+fi
+target=$targetDir/Qa4ecv.albedo.$sensorID.$snowMode.$deg.$year$doy.$proj.nc
 #echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PbandsToWrite="BHR_SW","Weighted_Number_of_Samples" -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
 #time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PbandsToWrite="BHR_SW","Weighted_Number_of_Samples" -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
 
-echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
-time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
-
+echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
 
 status=$?
 echo "Status: $status"

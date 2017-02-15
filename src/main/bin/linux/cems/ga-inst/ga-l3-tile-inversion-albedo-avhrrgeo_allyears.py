@@ -30,7 +30,10 @@ modisTileScaleFactor = '6.0'   # for AVHRR+GEO
 #######
 usePrior = 'true'
 #######
-step = '8'  # always!
+#step = '8'  # always!
+step = '24'  # check this!
+#######
+sensorID = 'avh_geo' # must be one of: 'avh', 'geo', 'avh_geo'
 #######
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011
@@ -42,18 +45,35 @@ tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and n
 #tiles = glob.glob1(priorDir, 'h3?v??') # we have same number (326) of snow and noSnow prior directories
 tiles.sort()
 
-#tiles = ['h17v03']
-#tiles = ['h22v03']
-#tiles = ['h18v07']
+#tiles = ['h11v08','h11v09','h12v08','h12v09']
+#tiles = ['h17v17']
+#tiles = ['h19v04']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
-#tiles = glob.glob1(priorDir, 'h??v05') # we have same number (326) of snow and noSnow prior directories
-#tiles = ['h21v02','h21v03']
+
+# Antarctica:
+#tiles =          ['h15v16','h19v16','h20v16','h21v16','h22v16',
+#         'h14v17','h15v17','h16v17','h17v17','h18v17','h19v17','h20v17','h21v17','h22v17','h23v17',
+#                  'h15v18','h16v18','h17v18','h18v18','h19v18','h20v18'
+#]
+
+# Africa:
+#tiles =          ['h17v06','h18v06','h19v06','h20v06','h21v06',
+#                  'h17v07','h18v07','h19v07','h20v07','h21v07',
+#                  'h17v08','h18v08','h19v08','h20v08','h21v08',
+#                                    'h19v09','h20v09','h21v09',
+#                                    'h19v10','h20v10','h21v10'
+#]
+
+# parts of South America, Canada, Greenland (2004 bad data fix, 20170210):
+#tiles =          ['h12v08','h12v09','h13v09','h12v10','h13v10',
+#                  'h12v02','h13v02','h12v03',
+#                  'h16v01','h16v02']
 
 #startYear = 1998
 #endYear = 2014
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
-startYear = 2013
-endYear = 2014
+startYear = 1982
+endYear = 1983
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
@@ -70,20 +90,38 @@ for tile in tiles:
 
     ### daily accumulation for all years:
     allDailyAccPostConds = []
+
+    # left wing
+    year = str(startYear-1)
+    startDoy = '273'
+    endDoy = '361'
+    postCond = 'daily_accs_' + year + '_' + tile
+    allDailyAccPostConds.append(postCond)
+    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+
+    # years to process
     for iyear in range(startYear, endYear+1):
         year = str(iyear)
         startDoy = '000'
         endDoy = '361'
         postCond = 'daily_accs_' + year + '_' + tile 
-        #postCond = 'daily_accs_' + year 
         allDailyAccPostConds.append(postCond)
         m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+
+    # right wing
+    year = str(endYear+1)
+    startDoy = '001'
+    endDoy = '089'
+    postCond = 'daily_accs_' + year + '_' + tile
+    allDailyAccPostConds.append(postCond)
+    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+
 
     ### now full accumulation, inversion and albedo:
     allAlbedoPostConds = []
     for iyear in range(startYear, endYear+1):
         year = str(iyear)
-        albedoDir = gaRootDir + '/Albedo/' + year + '/' + tile
+        albedoDir = gaRootDir + '/Albedo/' + sensorID + '/' + year + '/' + tile
         startDoy = '001'
         endDoy = '365'
 
@@ -94,7 +132,7 @@ for tile in tiles:
 
         postCond = 'albedo_' + year + '_' + tile
         allAlbedoPostConds.append(postCond)
-        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo_test-step.sh', allDailyAccPostConds, [postCond], parameters=[tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor,albedoDir])
+        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo_test-step.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor,albedoDir])
 
         #########################################################################################################################
 

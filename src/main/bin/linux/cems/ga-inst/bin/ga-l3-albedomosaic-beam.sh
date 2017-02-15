@@ -8,13 +8,13 @@ proj=$5
 gaRootDir=$6
 beamRootDir=$7
 
-brdfMosaicProduct=$gaRootDir/Mosaic/brdf/$snowMode/$deg/GlobAlbedo.brdf.$snowMode.$deg.$year$doy.$proj.nc
-targetDir=$gaRootDir/Mosaic/albedo/$snowMode/$deg
+brdfMosaicProduct=$gaRootDir/Mosaic/brdf/$snowMode/$deg/Qa4ecv.brdf.$snowMode.$deg.$year$doy.$proj.nc
+targetDir=$gaRootDir/Mosaic/albedo/$snowMode/$year/$deg
 if [ ! -d "$targetDir" ]
 then
    mkdir -p $targetDir
 fi
-target=$targetDir/GlobAlbedo.albedo.$snowMode.$deg.${year}${doy}.$proj.nc
+target=$targetDir/Qa4ecv.albedo.$snowMode.$deg.${year}${doy}.$proj.nc
 if [ -f $brdfMosaicProduct ]
 then
     echo "time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.albedo -Pdoy=$doy -SbrdfMergedProduct=$brdfMosaicProduct -e -f NetCDF4-GA-ALBEDO -t $target"

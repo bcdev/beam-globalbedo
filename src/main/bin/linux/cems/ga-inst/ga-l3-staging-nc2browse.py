@@ -10,15 +10,17 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-#years=['2011']
-#years=['2010']
-#years=['2009']
-#years=['2012']
-#years=['1998']
-years=['1993']
+#years=['1993']
 
-#years=['2004','2005']
-#years=['2004']
+years=['1982','1983']
+#years=['1982','1983','2004','2013']
+#years=['1998','2004','2009','2010','2011','2012']
+
+#years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
+#         '1991','1992','1993','1994','1995','1996','1997','1998','1999','2000',
+#         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
+#         '2011','2012','2013','2014']
+
 #snowModes=['Merge']
 snowModes=['NoSnow']
 #resolutions=['005','05']
@@ -26,6 +28,11 @@ resolutions=['005']
 #projections=['PC','SIN']
 #projections=['SIN']
 projections=['PC']
+
+#######
+sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
+#sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
+#######
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 stagingListsRootDir = gaRootDir + '/staging/lists'
@@ -42,15 +49,20 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
         for res in resolutions:
-            albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic_tmp/albedo/' + snowMode + '/' + year + '/' + res
+            albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + res
             for proj in projections:
                 #for idoy in range(180,365):
-                for idoy in range(0,365):
-                #for idoy in range(83,84):
+                #for idoy in range(0,365):
+                for idoy in range(120,121):
+                #for idoy in range(121,122):
+                #for idoy in range(364,365):
+                #for idoy in range(0,1):
                     doy = str(idoy+1).zfill(3)             
                     stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
                     #stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
-                    stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.avhrrgeo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+                    stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.' + sensorID + '.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
 
                     m.execute('ga-l3-staging-nc2browse-step.sh', ['dummy'], [stagingNc2browseResultDir], 
                           parameters=[year,doy,snowMode,res,proj,stagingNc2browseFile, stagingNc2browseResultDir])

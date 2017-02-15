@@ -41,7 +41,7 @@ echo "BRDF computation for prior: '$priorRootDir', tile: '$tile' , year $year, D
 if [ -d "$priorRootDir/$tile" ] 
 then
     echo "Compute NOSNOW BRDF for tile $tile, year $year, DoY $doy, ..."
-    TARGET=${inversionNosnowTargetDir}/GlobAlbedo.brdf.$year$doy.$tile.NoSnow.nc
+    TARGET=${inversionNosnowTargetDir}/Qa4ecv.brdf.$year$doy.$tile.NoSnow.nc
     echo "time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
     time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
     status=$?
@@ -49,7 +49,7 @@ then
 
     if [ "$status" -eq 0 ]; then
         echo "Compute SNOW BRDF for tile $tile, year $year, DoY $doy, ..."
-        TARGET=${inversionSnowTargetDir}/GlobAlbedo.brdf.$year$doy.$tile.Snow.nc
+        TARGET=${inversionSnowTargetDir}/Qa4ecv.brdf.$year$doy.$tile.Snow.nc
         echo "time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
         time $gpt ga.l3.inversion -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=true -PbbdrRootDir=$bbdrRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
         status=$?
@@ -58,7 +58,7 @@ then
 
     if [ "$status" -eq 0 ]; then
         echo "Compute MERGED BRDF for tile $tile, year $year, DoY $doy ..."
-        TARGET=${inversionMergeTargetDir}/GlobAlbedo.brdf.merge.$year$doy.$tile.nc
+        TARGET=${inversionMergeTargetDir}/Qa4ecv.brdf.merge.$year$doy.$tile.nc
         echo "time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET"
         time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PmergedProductOnly=true -PinversionRootDir=$inversionRootDir -PusePrior=$usePrior -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-BRDF -t $TARGET
         status=$?
@@ -67,7 +67,7 @@ then
 
     if [ "$status" -eq 0 ]; then
         echo "Compute ALBEDO for tile $tile, year $year, DoY $doy ..."
-        TARGET=$albedoTargetDir/GlobAlbedo.albedo.$year$doy.$tile.nc
+        TARGET=$albedoTargetDir/Qa4ecv.albedo.$year$doy.$tile.nc
         echo "time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PinversionRootDir=$inversionRootDir -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-ALBEDO -t $TARGET"
         time $gpt ga.l3.albedo -Ptile=$tile -Pyear=$year -Pdoy=$doy -PinversionRootDir=$inversionRootDir -PpriorRootDir=$priorRootDir -PmodisTileScaleFactor=$modisTileScaleFactor -e -f NetCDF4-GA-ALBEDO -t $TARGET
         status=$?

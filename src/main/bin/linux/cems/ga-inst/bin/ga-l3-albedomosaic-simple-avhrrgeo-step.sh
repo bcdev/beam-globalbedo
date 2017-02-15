@@ -1,23 +1,25 @@
 #!/bin/bash
 
 . ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic-avhrrgeo.sh
+#. ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic-avhrrgeo_nologs.sh
 
 echo "entered ga-l3-albedomosaic-simple-step..."
 
-year=$1
-doy=$2
-snowMode=$3
-deg=$4
-proj=$5
-tileSize=$6
-gaRootDir=$7
-beamDir=$8
+sensorID=$1
+year=$2
+doy=$3
+snowMode=$4
+deg=$5
+proj=$6
+tileSize=$7
+gaRootDir=$8
+beamDir=$9
 
 doy=`printf '%03d\n' "$((10#$doy))"`
 
 task="ga-l3-albedomosaic-simple"
 jobname="${task}-${year}-${doy}-${snowMode}-${deg}-${proj}-${tileSize}"
-command="./bin/${task}-beam.sh ${year} ${doy} ${snowMode} ${deg} ${proj} ${tileSize} ${gaRootDir} ${beamDir}"
+command="./bin/${task}-beam.sh ${sensorID} ${year} ${doy} ${snowMode} ${deg} ${proj} ${tileSize} ${gaRootDir} ${beamDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

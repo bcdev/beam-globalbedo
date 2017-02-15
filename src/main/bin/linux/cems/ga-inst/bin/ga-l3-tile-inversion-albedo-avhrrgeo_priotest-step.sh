@@ -1,21 +1,20 @@
 #!/bin/bash
 
 #. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo.sh
-. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo_nologs.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo_nologs_priotest.sh
 
-sensorID=$1
-tile=$2
-year=$3
-startdoy=$4
-enddoy=$5
-gaRootDir=$6
-bbdrRootDir=$7
-inversionRootDir=$8
-usePrior=$9
-priorDir=${10}
-beamDir=${11}
-modisTileScaleFactor=${12}
-albedoTargetDir=${13}  # remind the brackets if >= 10!!
+tile=$1
+year=$2
+startdoy=$3
+enddoy=$4
+gaRootDir=$5
+bbdrRootDir=$6
+inversionRootDir=$7
+usePrior=$8
+priorDir=$9
+beamDir=${10}
+modisTileScaleFactor=${11}
+albedoTargetDir=${12}  # remind the brackets if >= 10!!
 
 # TODO: to be safe, add a wait loop (60 sec) here and check for completion of writing binary accumulator files in ../DailyAccs/$year/(No)Snow
 # This is indicated by presence of marker files 'PROCESSED_ALL'
@@ -46,7 +45,7 @@ fi
 for iDoy in $(seq -w $startdoy $enddoy); do   # -w takes care for leading zeros
     task="ga-l3-tile-inversion-albedo-avhrrgeo"
     jobname="${task}-${tile}-${year}-${iDoy}"
-    command="./bin/${task}-beam.sh ${sensorID} ${tile} ${year} ${iDoy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${usePrior} ${priorDir} ${beamDir} ${modisTileScaleFactor} ${albedoTargetDir}"
+    command="./bin/${task}-beam.sh ${tile} ${year} ${iDoy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${usePrior} ${priorDir} ${beamDir} ${modisTileScaleFactor} ${albedoTargetDir}"
 
     echo "jobname: $jobname"
     echo "command: $command"
