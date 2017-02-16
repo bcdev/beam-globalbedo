@@ -72,6 +72,18 @@ public class DailyAccumulationUtils {
         return false;
     }
 
+    public static boolean areKernelsInvalid(Matrix kernels) {
+        for (int i = 0; i < kernels.getRowDimension(); i++) {
+            for (int j = 0; j < kernels.getColumnDimension(); j++) {
+                final double elem = kernels.get(i, j);
+                if (elem == AlbedoInversionConstants.NO_DATA_VALUE || Double.isNaN(elem)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     private static boolean isSDInvalid(double[] stdevArr) {
         for (double stdev : stdevArr) {
             if (stdev <= 0.0 | Double.isNaN(stdev)) {    // stdev must not be zero (algorithm would fail)
@@ -85,18 +97,6 @@ public class DailyAccumulationUtils {
         for (double correl : correlArr) {
             if (correl < 0.0 | Double.isNaN(correl)) {    // correlation might be zero
                 return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean areKernelsInvalid(Matrix kernels) {
-        for (int i = 0; i < kernels.getRowDimension(); i++) {
-            for (int j = 0; j < kernels.getColumnDimension(); j++) {
-                final double elem = kernels.get(i, j);
-                if (elem == AlbedoInversionConstants.NO_DATA_VALUE || Double.isNaN(elem)) {
-                    return true;
-                }
             }
         }
         return false;

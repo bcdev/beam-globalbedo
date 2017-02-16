@@ -114,6 +114,10 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         final double SZAdeg = AlbedoInversionUtils.computeSza(latLon, doy);
         final double SZA = SZAdeg * MathUtils.DTOR;
 
+        if (x == 40 && y == 160)  {
+            System.out.println("x = " + x);
+        }
+
         final Matrix C = getCMatrixFromSpectralInversionProduct(sourceSamples);
 
         Matrix[] sigmaBHR = new Matrix[numSdrBands];
@@ -147,6 +151,39 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         for (int i = 0; i < numSdrBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 uWsa[i].set(0, 3 * i + j, uWsaArray[j]);
+            }
+        }
+
+
+        // Calculate Black-Sky Albedo...
+        final int numParams = numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
+        double[] fParams = new double[numParams];
+        for (int i = 0; i < numParams; i++) {
+            fParams[i] = sourceSamples[i].getDouble();
+        }
+
+        double[] DHR = new double[numSdrBands];
+        for (int i = 0; i < DHR.length; i++) {
+            if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
+                    AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
+                DHR[i] = fParams[3 * i] +
+                        fParams[1 + 3 * i] * uBsa[i].get(0, 3 * i + 1) +
+                        fParams[2 + 3 * i] * uBsa[i].get(0, 3 * i + 2);
+            } else {
+                DHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
+            }
+        }
+
+        // # Calculate White-Sky Albedo...
+        double[] BHR = new double[numSdrBands];
+        for (int i = 0; i < BHR.length; i++) {
+            if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
+                    AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
+                BHR[i] = fParams[3 * i] +
+                        fParams[1 + 3 * i] * uWsa[i].get(0, 3 * i + 1) +
+                        fParams[2 + 3 * i] * uWsa[i].get(0, 3 * i + 2);
+            } else {
+                BHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
             }
         }
 
@@ -195,44 +232,14 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
                 }
             } else {
                 for (int i = 0; i < numSdrBands; i++) {
-                    sigmaBHR[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
-                    sigmaDHR[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
+//                    sigmaBHR[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
+//                    sigmaDHR[i].set(0, 0, AlbedoInversionConstants.NO_DATA_VALUE);
+                    // better set to 3% rather than zero:
+                    sigmaBHR[i].set(0, 0, Math.abs(0.03*BHR[i]));
+                    sigmaDHR[i].set(0, 0, Math.abs(0.03*DHR[i]));
                 }
             }
         }
-
-        // Calculate Black-Sky Albedo...
-        final int numParams = numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
-        double[] fParams = new double[numParams];
-        for (int i = 0; i < numParams; i++) {
-            fParams[i] = sourceSamples[i].getDouble();
-        }
-
-        double[] DHR = new double[numSdrBands];
-        for (int i = 0; i < DHR.length; i++) {
-            if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
-                    AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
-                DHR[i] = fParams[3 * i] +
-                        fParams[1 + 3 * i] * uBsa[i].get(0, 3 * i + 1) +
-                        fParams[2 + 3 * i] * uBsa[i].get(0, 3 * i + 2);
-            } else {
-                DHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
-            }
-        }
-
-        // # Calculate White-Sky Albedo...
-        double[] BHR = new double[numSdrBands];
-        for (int i = 0; i < BHR.length; i++) {
-            if (AlbedoInversionUtils.isValid(fParams[3 * i]) && AlbedoInversionUtils.isValid(fParams[1 + 3 * i]) &&
-                    AlbedoInversionUtils.isValid(fParams[2 + 3 * i])) {
-                BHR[i] = fParams[3 * i] +
-                        fParams[1 + 3 * i] * uWsa[i].get(0, 3 * i + 1) +
-                        fParams[2 + 3 * i] * uWsa[i].get(0, 3 * i + 2);
-            } else {
-                BHR[i] = AlbedoInversionConstants.NO_DATA_VALUE;
-            }
-        }
-
 
         double relEntropy = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_REL_ENTROPY].getDouble();
         if (AlbedoInversionUtils.isValid(relEntropy)) {
