@@ -10,9 +10,9 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-#years=['1993']
+years=['2001']
 
-years=['1982','1983']
+#years=['1982','1983']
 #years=['1982','1983','2004','2013']
 #years=['1998','2004','2009','2010','2011','2012']
 
@@ -50,19 +50,27 @@ for year in years:
     for snowMode in snowModes:
         for res in resolutions:
             #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
-            #albedoMosaicDir = gaRootDir + '/Mosaic_tmp/albedo/' + snowMode + '/' + year + '/' + res
-            albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '_avhrr/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + year + '_avhrr/' + res
+            albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + year + '/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + res
             for proj in projections:
                 #for idoy in range(180,365):
-                #for idoy in range(0,365):
-                for idoy in range(120,121):
+                for idoy in range(0,365):
+                #for idoy in range(120,121):
                 #for idoy in range(121,122):
                 #for idoy in range(364,365):
-                #for idoy in range(0,1):
+                #for idoy in range(0,3):
                     doy = str(idoy+1).zfill(3)             
                     stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
                     #stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
-                    stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.' + sensorID + '.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+                    
+                    # this is what is should be now, 20170216:
+                    # stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.' + sensorID + '.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
+                    
+                    # test:
+                    # Qa4ecv.albedo.avhrrgeo.NoSnow.005.2001345.PC.nc
+                    stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.avh_geo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
 
                     m.execute('ga-l3-staging-nc2browse-step.sh', ['dummy'], [stagingNc2browseResultDir], 
                           parameters=[year,doy,snowMode,res,proj,stagingNc2browseFile, stagingNc2browseResultDir])

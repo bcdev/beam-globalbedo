@@ -36,7 +36,7 @@ sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #years = ['1981']    #test  
 #years = ['2001']    #test  
 #years = ['2014']    #test  
-years = ['2005']    #test  
+years = ['2001']    #test  
 #years = ['2007','2001','2002','1990','1987']    #test  
 #years = ['1984','1985','1986','1987','1988']  
 #years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
@@ -46,8 +46,8 @@ years = ['2005']    #test
 
 snowModes = ['NoSnow'] # usually for AVHRRGEO
 
-resolutions = ['05', '005']
-#resolutions = ['005']
+#resolutions = ['05', '005']
+resolutions = ['005']
 #resolutions = ['05']
 
 #projections = ['SIN', 'PC']
@@ -60,8 +60,8 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 inputs = []
 for year in years:
     if mosaicMode == 'simple':
-        #inputs.append(gaRootDir + '/Albedo/' + year)
-        inputs.append(gaRootDir + '/Albedo/' + sensorID + '/' + year)
+        inputs.append(gaRootDir + '/Albedo/' + year)
+        #inputs.append(gaRootDir + '/Albedo/' + sensorID + '/' + year)
     else:
         for snowMode in snowModes:
             inputs.append(gaRootDir + '/Inversion/' + snowMode + '/' + year)
@@ -85,8 +85,10 @@ for year in years:
 
         #for idoy in range(0,365):    
         #for idoy in range(121,243):    
+        #for idoy in range(242,365):    
+        for idoy in range(0,122):    
         #for idoy in range(120,121):    
-        for idoy in range(213,214):    
+        #for idoy in range(213,214):    
         #for idoy in range(0,1):    
         #for idoy in range(139,365):    
         #for idoy in range(364,365):    
@@ -97,10 +99,11 @@ for year in years:
 
                     if mosaicMode == 'simple':
                         ### the simplified way: Albedo tiles --> Albedo mosaic
-                        #albedoTileDir = gaRootDir + '/Albedo/' + year
-                        albedoTileDir = gaRootDir + '/Albedo/' + sensorID + '/' + year
-                        #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
-                        albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
+                        albedoTileDir = gaRootDir + '/Albedo/' + year
+                        # new Feb 2017: 
+                        #albedoTileDir = gaRootDir + '/Albedo/' + sensorID + '/' + year
+                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
+                        #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
                         m.execute('ga-l3-albedomosaic-simple-avhrrgeo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[sensorID,year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
                     else:
                         ### the Alex Loew energy conservation way (as requested in GA and more precise, but slower: double number of jobs)                

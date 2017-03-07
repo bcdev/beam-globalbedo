@@ -10,10 +10,10 @@ __author__ = 'olafd'
 ###    - staging 'browse2mov' --> 1-year movies from png browse files for each band + BHR RGB from Albedo mosaic netcdf files
 #############################################################################################################################
 
-#years=['2005']
+years=['2001']
 #years=['2001','2002']
 
-years=['1981']
+#years=['1981']
 #years=['2010']
 #years=['2009']
 #years=['2012']

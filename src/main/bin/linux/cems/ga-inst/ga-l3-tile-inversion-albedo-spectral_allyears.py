@@ -36,15 +36,16 @@ sensorID = 'mer' # must be one of: 'mer', 'vgt', 'mer_vgt'
 #tiles = ['h20v06','h25v06'] # test
 #tiles = ['h19v07'] # test
 #tiles = ['h20v06'] # test
-tiles = ['h20v06','h25v06'] # test
+tiles = ['h18v04'] # test
+#tiles = ['h20v06','h25v06'] # test
 
 startYear = 2005  # test
 endYear = 2005
 
-subStartX = ['0','300']
-#subStartX = ['0', '300', '600', '900']
-subStartY = ['600','900']
-#subStartY = ['0', '300', '600', '900']
+#subStartX = ['0','300']
+subStartX = ['0', '300', '600', '900']
+#subStartY = ['600','900']
+subStartY = ['0', '300', '600', '900']
 
 inputs = ['sdrs']
 
