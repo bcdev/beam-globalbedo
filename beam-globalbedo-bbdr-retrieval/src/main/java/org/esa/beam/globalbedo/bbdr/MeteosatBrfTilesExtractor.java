@@ -58,7 +58,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
     @SourceProduct
     private Product latlonProduct;    // make sure externally that the correct matching latlon product is submitted
 
-    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI"}, defaultValue = "MVIRI")
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
     @Parameter
@@ -105,7 +105,9 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
     private boolean isMeteosatLatLonProductMatching() {
         return sensor == MeteosatSensor.MVIRI && isMviriLatlonProductMatching() ||
-                sensor == MeteosatSensor.SEVIRI && isSeviriLatlonProductMatching();
+                sensor == MeteosatSensor.SEVIRI && isSeviriLatlonProductMatching() ||
+                sensor == MeteosatSensor.GMS && isGmsLatlonProductMatching() ||
+                sensor == MeteosatSensor.GOES && isGoesLatlonProductMatching();
     }
 
     private boolean isMviriLatlonProductMatching() {
@@ -151,11 +153,45 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         return matchesSeviri000Disk || matchesSeviri057Disk || matchesSeviri063Disk;
     }
 
+    private boolean isGmsLatlonProductMatching() {
+        // checks if given source product and latlon product are on the same disk (140)
+
+        // we have product filenames:
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GMS5+VISSR_VIS02_140_C_BRF_EUMP_20030108000000.nc
+
+        // and the latlon products:
+        // GMS_140_VIS02_LatLon.nc
+
+        return sourceProduct.getName().contains("GMS5+VISSR_VIS02_140_C_BRF") &&
+                latlonProduct.getName().equals("GMS_140_VIS02_LatLon");
+    }
+
+    private boolean isGoesLatlonProductMatching() {
+        // checks if given source product and latlon product are on the same disk (-75 or -135)
+
+        // we have product filenames:
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BRF_EUMP_20030113000000.nc
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO10+IMAGER_VIS02_-135_C_BRF_EUMP_20030628000000.nc
+
+        // and the latlon products:
+        // GOES_075_VIS02_LatLon.nc
+        // GOES_135_VIS02_LatLon.nc
+        final boolean matchesGoes075Disk = sourceProduct.getName().contains("IMAGER_VIS02_-75_C_BRF") &&
+                latlonProduct.getName().equals("GOES_075_VIS02_LatLon");
+        final boolean matchesGoes135Disk = sourceProduct.getName().contains("IMAGER_VIS02_-135_C_BRF") &&
+                latlonProduct.getName().equals("GOES_135_VIS02_LatLon");
+
+        return matchesGoes075Disk || matchesGoes135Disk;
+    }
+
     private String getDiskId() {
         // MET_000_VIS01_LatLon.nc
         // MET_057_VIS01_LatLon.nc
         // MET_063_VIS01_LatLon.nc
-        return latlonProduct.getName().substring(4, 7);
+        // GMS_140_VIS02_LatLon.nc
+        // GOES_075_VIS02_LatLon.nc
+        final int start = latlonProduct.getName().indexOf("_");
+        return latlonProduct.getName().substring(start+1, start+4);
     }
 
     private boolean checkIfModisTileIntersectsMeteosatDisk(String tile) {
@@ -246,6 +282,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                         toBbdrOp.setParameter("sensor", sensor);
                         toBbdrOp.setSourceProduct(tileProduct.getProduct());
                         productToWrite = toBbdrOp.getTargetProduct();
+                        productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
                     } else {
                         productToWrite = tileProduct.getProduct();
                     }
@@ -282,11 +319,12 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         String writeFormat;
         if (convertToBbdr) {
             file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
-            writeFormat = "NetCDF4-BEAM";
+//            writeFormat = "NetCDF4-GA-BBDR";
         } else {
             file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
-            writeFormat = "NetCDF4-GA-BBDR";
+//            writeFormat = "NetCDF4-BEAM";
         }
+        writeFormat = "NetCDF4-BEAM";
         WriteOp writeOp = new WriteOp(product, file, writeFormat);
         writeOp.writeProduct(ProgressMonitor.NULL);
     }

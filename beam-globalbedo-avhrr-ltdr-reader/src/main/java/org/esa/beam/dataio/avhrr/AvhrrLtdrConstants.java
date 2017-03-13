@@ -11,6 +11,7 @@ public class AvhrrLtdrConstants {
 
     public static final float[] WAVELENGTHS = {630.0f, 865.0f};
     public static final float[] BANDWIDTHS = {100.0f, 275.0f};
+    public static final float[] BRIGHTNESS_TEMP_WAVELENGTHS = {3750.0f, 11000.0f, 12000.0f};
 
     public static final String AVHRR_LTDR_DATE_FORMAT_PATTERN = "yyyy-MM-dd HH:mm:ss";
 

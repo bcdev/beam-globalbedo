@@ -42,7 +42,8 @@ public class MeteosatNetcdfReadOp extends Operator {
                description = "Region ID for setup of Meteosat geocoding (only one so far)")
     private String regionID;
 
-    private static final String MSG_EURO_REF_FILE_NAME = "MSG_Euro_WGS84_latlon_reference.dim";
+//    private static final String MSG_EURO_REF_FILE_NAME = "MSG_Euro_WGS84_latlon_reference.dim";
+    private static final String MSG_EURO_REF_FILE_NAME = "WGS84_latlon_reference.dim";
 
     @Override
     public void initialize() throws OperatorException {

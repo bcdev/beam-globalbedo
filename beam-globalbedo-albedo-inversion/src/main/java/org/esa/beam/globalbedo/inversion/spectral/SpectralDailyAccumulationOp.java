@@ -100,7 +100,7 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         // we have:
         // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
-        final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
+        final int resultArrayElements =  (3*numSdrBands) * (3*numSdrBands) + 3*numSdrBands + 1 + 1;
         resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
 
         for (int k = 0; k < sourceProducts.length; k++) {

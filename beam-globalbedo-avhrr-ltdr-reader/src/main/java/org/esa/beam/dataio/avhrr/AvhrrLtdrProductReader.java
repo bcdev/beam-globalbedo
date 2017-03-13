@@ -79,7 +79,7 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
             geoCoding = new CrsGeoCoding(crs, productWidth, productHeight, easting, northing, pixelSizeX, pixelSizeY);
             product.setGeoCoding(geoCoding);
 
-            product.setAutoGrouping("TOA_REFL");
+            product.setAutoGrouping("TOA_REFL:BT");
 
             final TreeNode gridNode = inputFileRootNode.getChildAt(0);        // 'Grid'
 
@@ -107,16 +107,16 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
                 if (dataFieldsChildNodeName.contains("REFL_CH") || dataFieldsChildNodeName.equals("QA") ||
                         dataFieldIsAngle(dataFieldsChildNodeName)) {
                     final Band ltdrBand = createTargetBand(product,
-                                                          childMetadata,
-                                                          dataFieldsChildNodeName,
-                                                          ProductData.TYPE_INT16);
+                                                           childMetadata,
+                                                           dataFieldsChildNodeName,
+                                                           ProductData.TYPE_INT16);
 
                     final ProductData productData = ProductData.createInstance(new short[productWidth * productHeight]);
                     productData.setElems(dataset.read());
 
                     final RenderedImage ltdrImage = ImageUtils.createRenderedImage(productWidth,
-                                                                                         productHeight,
-                                                                                         productData);
+                                                                                   productHeight,
+                                                                                   productData);
                     ltdrBand.setSourceImage(ltdrImage);
 
                     if (dataFieldsChildNodeName.contains("REFL_CH")) {
@@ -145,6 +145,31 @@ public class AvhrrLtdrProductReader extends AbstractProductReader {
                         ltdrBand.setSampleCoding(ltdrQaFlagCoding);
                     }
                 }
+            }
+
+            final TreeNode[] btNodes = new TreeNode[3];        // 'BT_CH3', 'BT_CH4', 'BT_CH5' are stored at root level
+            for (int i = 0; i < 3; i++) {
+                btNodes[i] = inputFileRootNode.getChildAt(i + 1);
+                final String btNodeName = btNodes[i].toString();
+                final HObject btNodeGroupMember = rootGroup.getMemberList().get(i+1);
+                final List btMetadata = btNodeGroupMember.getMetadata();
+                Dataset dataset = (Dataset) btNodeGroupMember;
+                final Band btBand = createTargetBand(product,
+                                                       btMetadata,
+                                                       btNodeName,
+                                                       ProductData.TYPE_INT16);
+
+                final ProductData productData = ProductData.createInstance(new short[productWidth * productHeight]);
+                productData.setElems(dataset.read());
+
+                final RenderedImage btImage = ImageUtils.createRenderedImage(productWidth,
+                                                                               productHeight,
+                                                                               productData);
+                btBand.setSourceImage(btImage);
+
+                btBand.setDescription("AVHRR Brightness Temperature at " +
+                                                AvhrrLtdrConstants.BRIGHTNESS_TEMP_WAVELENGTHS[i] + " nm");
+                btBand.setUnit("K");
             }
         }
         return product;

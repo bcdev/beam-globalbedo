@@ -40,7 +40,7 @@ import static java.lang.StrictMath.toRadians;
  * @author Olaf Danne
  */
 @OperatorMetadata(alias = "ga.bbdr.meteosat",
-                  description = "Computes BBDRs for Meteosat MVIRI/SEVIRI",
+                  description = "Computes BBDRs for Meteosat MVIRI/SEVIRI/GMS/GOES",
                   authors = "Olaf Danne",
                   version = "1.0",
                   copyright = "(C) 2011 by Brockmann Consult")
@@ -71,7 +71,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     public static final double METEOSAT_DEG_LAT = 0.0;
 
-    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI"}, defaultValue = "MVIRI")
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
     @SourceProduct
@@ -86,7 +86,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        final double[] inputParmsFromFilename = extractInputParmsFromFilename(sourceProduct.getName());
+        final double[] inputParmsFromFilename = extractInputParmsFromFilename(sourceProduct.getName(), sensor);
         satDegLon = inputParmsFromFilename[0];
         doy = (int) inputParmsFromFilename[1];
         year = (int) inputParmsFromFilename[2];
@@ -239,9 +239,10 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
      *
      * @param sourceProductName - source product name
      *
+     * @param sensor
      * @return double[] input parameters
      */
-    static double[] extractInputParmsFromFilename(String sourceProductName) {
+    static double[] extractInputParmsFromFilename(String sourceProductName, MeteosatSensor sensor) {
         // filenames are like: W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04
         // or W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000_h18v06
         double satDegLon;
@@ -257,6 +258,13 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         } else if (sourceProductName.contains("VIRI_063_C_BRF") || sourceProductName.contains("VIRI_HRVIS_063_C_BRF")) {
             satDegLon = 63.0;
             scanTime = 8.0;   // should be ok?!
+        } else if (sensor == MeteosatSensor.GMS) {
+            satDegLon = 140.0;
+            scanTime = 12.0;   // should be ok?!
+        } else if (sensor == MeteosatSensor.GOES) {
+//            satDegLon = -75.0;  // not supported in angle computations
+            satDegLon = 0.0;
+            scanTime = 12.0;   // should be ok?!
         } else {
             throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
         }

@@ -7,7 +7,9 @@ package org.esa.beam.globalbedo.bbdr;
  */
 public enum MeteosatSensor {
     MVIRI("MVIRI"),
-    SEVIRI("MVIRI");
+    SEVIRI("MVIRI"),
+    GMS("GMS"),
+    GOES("GOES");
 
     private final String name;
 
