@@ -13,8 +13,7 @@ import java.util.Calendar;
  */
 public class MeteosatGeometry {
 
-//    private static final double GEO_MAXANGLEIN = 85.0;
-    private static final double GEO_MAXANGLEIN = 180.0;
+    private static final double GEO_MAXANGLEIN = 85.0;
     private static final double GEO_DOUBLE_EPSILON = 1.0E-10;
     private static final double GEO_EQTIME1 = 229.18;
     private static final double GEO_EQTIME2 = 0.000075;
@@ -66,7 +65,7 @@ public class MeteosatGeometry {
                                                   int iYear,
                                                   double flScanningTime) {
 
-        /* Chack input parameters */
+        /* Check input parameters */
         if (Math.abs(flDegLat) > GEO_MAXANGLEIN) {
             throw new OperatorException("computeSunAngles: pixel latitude" + flDegLat +
                                                 " out of range - must be <= " + GEO_MAXANGLEIN);
@@ -174,7 +173,8 @@ public class MeteosatGeometry {
         if (sensor == MeteosatSensor.MVIRI) {
             earthPolarRadiusMeter = EARTH_POLAR_RADIUS_METER_MVIRI;
             earthRadiusMeter = EARTH_RADIUS_METER_MVIRI;
-        } else if (sensor == MeteosatSensor.SEVIRI || sensor == MeteosatSensor.GMS || sensor == MeteosatSensor.GOES) {
+        } else if (sensor == MeteosatSensor.SEVIRI || sensor == MeteosatSensor.GMS
+                || sensor == MeteosatSensor.GOES_W || sensor == MeteosatSensor.GOES_E) {
             // todo: no values for GMS/GOES, check with AL. Take the ones from SEVIRI for the moment.
             earthPolarRadiusMeter = EARTH_POLAR_RADIUS_METER_SEVIRI;
             earthRadiusMeter = EARTH_RADIUS_METER_SEVIRI;

@@ -48,6 +48,7 @@ import java.util.concurrent.*;
         version = "1.0",
         copyright = "(c) 2016 by Brockmann Consult")
 public class MeteosatBrfTilesExtractor extends Operator implements Output {
+//public class MeteosatBrfTilesExtractor extends Operator {
 
     private static final String METEOSAT_LAT_BAND_NAME = "lat";
     private static final String METEOSAT_LON_BAND_NAME = "lon";
@@ -58,7 +59,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
     @SourceProduct
     private Product latlonProduct;    // make sure externally that the correct matching latlon product is submitted
 
-    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES"}, defaultValue = "MVIRI")
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_W", "GOES_E"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
     @Parameter
@@ -107,7 +108,8 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         return sensor == MeteosatSensor.MVIRI && isMviriLatlonProductMatching() ||
                 sensor == MeteosatSensor.SEVIRI && isSeviriLatlonProductMatching() ||
                 sensor == MeteosatSensor.GMS && isGmsLatlonProductMatching() ||
-                sensor == MeteosatSensor.GOES && isGoesLatlonProductMatching();
+                sensor == MeteosatSensor.GOES_W && isGoesWLatlonProductMatching() ||
+                sensor == MeteosatSensor.GOES_E && isGoesELatlonProductMatching();
     }
 
     private boolean isMviriLatlonProductMatching() {
@@ -166,22 +168,32 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                 latlonProduct.getName().equals("GMS_140_VIS02_LatLon");
     }
 
-    private boolean isGoesLatlonProductMatching() {
-        // checks if given source product and latlon product are on the same disk (-75 or -135)
+    private boolean isGoesELatlonProductMatching() {
+        // checks if given source product and latlon product are on the same disk (-75 deg)
 
         // we have product filenames:
         // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BRF_EUMP_20030113000000.nc
-        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO10+IMAGER_VIS02_-135_C_BRF_EUMP_20030628000000.nc
 
         // and the latlon products:
         // GOES_075_VIS02_LatLon.nc
-        // GOES_135_VIS02_LatLon.nc
         final boolean matchesGoes075Disk = sourceProduct.getName().contains("IMAGER_VIS02_-75_C_BRF") &&
                 latlonProduct.getName().equals("GOES_075_VIS02_LatLon");
+
+        return matchesGoes075Disk;
+    }
+
+    private boolean isGoesWLatlonProductMatching() {
+        // checks if given source product and latlon product are on the same disk (-135 deg)
+
+        // we have product filenames:
+        // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO10+IMAGER_VIS02_-135_C_BRF_EUMP_20030628000000.nc
+
+        // and the latlon products:
+        // GOES_135_VIS02_LatLon.nc
         final boolean matchesGoes135Disk = sourceProduct.getName().contains("IMAGER_VIS02_-135_C_BRF") &&
                 latlonProduct.getName().equals("GOES_135_VIS02_LatLon");
 
-        return matchesGoes075Disk || matchesGoes135Disk;
+        return matchesGoes135Disk;
     }
 
     private String getDiskId() {
@@ -190,6 +202,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
         // MET_063_VIS01_LatLon.nc
         // GMS_140_VIS02_LatLon.nc
         // GOES_075_VIS02_LatLon.nc
+        // GOES_135_VIS02_LatLon.nc
         final int start = latlonProduct.getName().indexOf("_");
         return latlonProduct.getName().substring(start+1, start+4);
     }

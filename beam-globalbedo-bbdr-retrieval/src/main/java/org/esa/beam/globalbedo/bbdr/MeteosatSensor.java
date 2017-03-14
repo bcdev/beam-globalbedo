@@ -9,7 +9,8 @@ public enum MeteosatSensor {
     MVIRI("MVIRI"),
     SEVIRI("MVIRI"),
     GMS("GMS"),
-    GOES("GOES");
+    GOES_W("GOES_W"),
+    GOES_E("GOES_E");
 
     private final String name;
 

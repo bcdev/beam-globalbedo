@@ -71,7 +71,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     public static final double METEOSAT_DEG_LAT = 0.0;
 
-    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES"}, defaultValue = "MVIRI")
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_E", "GOES_W"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
     @SourceProduct
@@ -119,7 +119,15 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         }
 
         final double degLat = sourceSamples[SRC_LAT].getDouble();
-        final double degLon = sourceSamples[SRC_LON].getDouble();
+        double degLon = sourceSamples[SRC_LON].getDouble();
+        if (sensor == MeteosatSensor.GOES_E) {
+            // shift longitude according to shift of satDegLon from -75 to 0 for angle computation
+            degLon += 75.0;
+        }
+        if (sensor == MeteosatSensor.GOES_W) {
+            // shift longitude according to shift of satDegLon from -135 to 0 for angle computation
+            degLon += 135.0;
+        }
 
         final double sza = MeteosatGeometry.computeSunAngles(degLat, degLon, satDegLon, doy, year, scanTime).getZenith();
         final double vza = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, satDegLon, degLat, degLon, sensor).getZenith();
@@ -261,8 +269,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         } else if (sensor == MeteosatSensor.GMS) {
             satDegLon = 140.0;
             scanTime = 12.0;   // should be ok?!
-        } else if (sensor == MeteosatSensor.GOES) {
-//            satDegLon = -75.0;  // not supported in angle computations
+        } else if (sensor == MeteosatSensor.GOES_W || sensor == MeteosatSensor.GOES_E) {
             satDegLon = 0.0;
             scanTime = 12.0;   // should be ok?!
         } else {
