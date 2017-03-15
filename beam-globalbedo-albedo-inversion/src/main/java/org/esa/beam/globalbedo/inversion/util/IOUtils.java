@@ -78,15 +78,32 @@ public class IOUtils {
 
         final FilenameFilter filenameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
+                // for AVHRR+GEO we expect the following filenames:
+                //
+                // MVIRI:
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BBDR_EUMP_20050629000000_h19v02.nc
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET5+MVIRI_063_C_BBDR_EUMP_20050629000000_h19v02.nc
+                // SEVIRI:
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET9+SEVIRI_HRVIS_000_C_BBDR_EUMP_20080629000000_h19v02.nc
+                // AVHRR:
+                //    AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+                // GOES_E:
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20000222000000_h19v02.nc
+                // GOES_W:
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO10+IMAGER_VIS02_-135_C_BBDR_EUMP_20030628000000_h19v02.nc
+                // GMS:
+                //    W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GMS5+VISSR_VIS02_140_C_BBDR_EUMP_20030108000000_h19v02.nc
+
+                // exclusions:
                 if (!meteosatUseAllLongitudes && (name.contains("_057_C_") || (name.contains("_063_C_")))) {
                     return false;
                 }
-
-                if (name.contains("AVH_") && isBadAvhrrProduct(name)) {
+                if (name.contains("AVH") && isBlacklistedAvhrrProduct(name)) {
                     return false;
                 }
 
-                return (name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
+                return  (name.contains("BRF") || name.contains("BBDR")) &&
+                        (name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
                         (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd));
 
             }
@@ -119,7 +136,7 @@ public class IOUtils {
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
     }
 
-    public static boolean isBadAvhrrProduct(String name) {
+    public static boolean isBlacklistedAvhrrProduct(String name) {
         AvhrrBrfBlacklist brfBlacklist = AvhrrBrfBlacklist.getInstance();
         for (int i = 0; i < brfBlacklist.getBrfBadDatesNumber(); i++) {
             // AVH_20051230_...
