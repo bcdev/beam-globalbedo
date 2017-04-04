@@ -71,6 +71,9 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     public static final double METEOSAT_DEG_LAT = 0.0;
 
+    private static final double SAT_DEG_LON = 0.0;
+    private static final double SCAN_TIME = 12.0;
+
     @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_E", "GOES_W"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
@@ -79,18 +82,14 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
     private int year;
     private int doy;
-    private double satDegLon;
-    double scanTime;
 
     private Product waterMaskProduct;
 
     @Override
     protected void prepareInputs() throws OperatorException {
-        final double[] inputParmsFromFilename = extractInputParmsFromFilename(sourceProduct.getName(), sensor);
-        satDegLon = inputParmsFromFilename[0];
-        doy = (int) inputParmsFromFilename[1];
-        year = (int) inputParmsFromFilename[2];
-        scanTime = inputParmsFromFilename[3];
+        final double[] inputParmsFromFilename = extractDoyYearFromFilename(sourceProduct.getName());
+        doy = (int) inputParmsFromFilename[0];
+        year = (int) inputParmsFromFilename[1];
 
         HashMap<String, Object> waterParameters = new HashMap<>();
         waterParameters.put("resolution", 150);
@@ -119,20 +118,12 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         }
 
         final double degLat = sourceSamples[SRC_LAT].getDouble();
-        double degLon = sourceSamples[SRC_LON].getDouble();
-        if (sensor == MeteosatSensor.GOES_E) {
-            // shift longitude according to shift of satDegLon from -75 to 0 for angle computation
-            degLon += 75.0;
-        }
-        if (sensor == MeteosatSensor.GOES_W) {
-            // shift longitude according to shift of satDegLon from -135 to 0 for angle computation
-            degLon += 135.0;
-        }
+        final double degLon = getDegLon(sourceSamples[SRC_LON]);
 
-        final double sza = MeteosatGeometry.computeSunAngles(degLat, degLon, satDegLon, doy, year, scanTime).getZenith();
-        final double vza = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, satDegLon, degLat, degLon, sensor).getZenith();
-        final double saa = MeteosatGeometry.computeSunAngles(degLat, degLon, satDegLon, doy, year, scanTime).getAzimuth();
-        final double vaa = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, satDegLon, degLat, degLon, sensor).getAzimuth();
+        final double sza = MeteosatGeometry.computeSunAngles(degLat, degLon, SAT_DEG_LON, doy, year, SCAN_TIME).getZenith();
+        final double vza = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, SAT_DEG_LON, degLat, degLon, sensor).getZenith();
+        final double saa = MeteosatGeometry.computeSunAngles(degLat, degLon, SAT_DEG_LON, doy, year, SCAN_TIME).getAzimuth();
+        final double vaa = MeteosatGeometry.computeViewAngles(METEOSAT_DEG_LAT, SAT_DEG_LON, degLat, degLon, sensor).getAzimuth();
         final double phi = Math.abs(saa - vaa);
 
         // todo: clarify if it is correct to just set all VIS and NIR to 0.0
@@ -247,35 +238,14 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
      *
      * @param sourceProductName - source product name
      *
-     * @param sensor
      * @return double[] input parameters
      */
-    static double[] extractInputParmsFromFilename(String sourceProductName, MeteosatSensor sensor) {
+    static double[] extractDoyYearFromFilename(String sourceProductName) {
         // filenames are like: W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000_h18v04
         // or W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET8+SEVIRI_HRVIS_000_C_BRF_EUMP_20060701000000_h18v06
-        double satDegLon;
+
         int year;
         int doy;
-        double scanTime;
-        if (sourceProductName.contains("VIRI_C_BRF") || sourceProductName.contains("VIRI_HRVIS_000_C_BRF")) {
-            satDegLon = 0.0;
-            scanTime = 12.0;
-        } else if (sourceProductName.contains("VIRI_057_C_BRF") || sourceProductName.contains("VIRI_HRVIS_057_C_BRF")) {
-            satDegLon = 57.0;
-            scanTime = 8.0;   // should be ok?!
-        } else if (sourceProductName.contains("VIRI_063_C_BRF") || sourceProductName.contains("VIRI_HRVIS_063_C_BRF")) {
-            satDegLon = 63.0;
-            scanTime = 8.0;   // should be ok?!
-        } else if (sensor == MeteosatSensor.GMS) {
-            satDegLon = 140.0;
-            scanTime = 12.0;   // should be ok?!
-        } else if (sensor == MeteosatSensor.GOES_W || sensor == MeteosatSensor.GOES_E) {
-            satDegLon = 0.0;
-            scanTime = 12.0;   // should be ok?!
-        } else {
-            throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
-        }
-
         if (sourceProductName.contains("BRF_EUMP_")) {
             // e.g. BRF_EUMP_20050501
             final int dateSubstringStart = sourceProductName.indexOf("BRF_EUMP_") + 9;
@@ -287,7 +257,33 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
             throw  new OperatorException("Source product '" + sourceProductName + "' not supported - invalid name.");
         }
 
-        return new double[]{satDegLon, doy, year, scanTime};
+        return new double[]{doy, year};
+    }
+
+    private double getDegLon(Sample sourceSample) {
+        double degLon = sourceSample.getDouble();
+
+        if (sourceProduct.getName().contains("VIRI_057_C_BRF") || sourceProduct.getName().contains("VIRI_HRVIS_057_C_BRF")) {
+            // shift longitude according to shift of satDegLon from 57 to 0 for angle computation
+            degLon -= 57.0;
+        }
+        if (sourceProduct.getName().contains("VIRI_063_C_BRF") || sourceProduct.getName().contains("VIRI_HRVIS_063_C_BRF")) {
+            // shift longitude according to shift of satDegLon from 63 to 0 for angle computation
+            degLon -= 63.0;
+        }
+        if (sensor == MeteosatSensor.GOES_E) {
+            // shift longitude according to shift of satDegLon from -75 to 0 for angle computation
+            degLon += 75.0;
+        }
+        if (sensor == MeteosatSensor.GOES_W) {
+            // shift longitude according to shift of satDegLon from -135 to 0 for angle computation
+            degLon += 135.0;
+        }
+        if (sensor == MeteosatSensor.GMS) {
+            // shift longitude according to shift of satDegLon from 140 to 0 for angle computation
+            degLon -= 140.0;
+        }
+        return degLon;
     }
 
     public static class Spi extends OperatorSpi {
