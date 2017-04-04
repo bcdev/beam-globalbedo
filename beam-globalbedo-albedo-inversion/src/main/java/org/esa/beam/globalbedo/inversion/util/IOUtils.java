@@ -102,7 +102,7 @@ public class IOUtils {
                     return false;
                 }
 
-                return  (name.contains("BRF") || name.contains("BBDR")) &&
+                return  (name.contains("BRF") || name.contains("BBDR") || (name.contains("AVH") && name.contains("BRDF"))) &&
                         (name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
                         (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd));
 
