@@ -23,6 +23,7 @@ import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.geom.Polygon;
 import com.vividsolutions.jts.simplify.DouglasPeuckerSimplifier;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -37,6 +38,9 @@ import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
 import org.esa.beam.util.ImageUtils;
 import org.esa.beam.util.ProductUtils;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.FactoryException;
+import org.opengis.referencing.operation.TransformException;
 
 import javax.media.jai.JAI;
 import java.awt.geom.GeneralPath;
@@ -98,15 +102,15 @@ public class TileExtractor extends Operator implements Output {
         setTargetProduct(new Product("n", "d", 1, 1));
     }
 
-    public static Product reprojectToModisTile(Product bbdrProduct, String tileName) {
-        return reprojectToModisTile(bbdrProduct, tileName, "Nearest");
+    public static Product reprojectToModisTile(Product sourceProduct, String tileName) {
+        return reprojectToModisTile(sourceProduct, tileName, "Nearest");
     }
 
-    public static Product reprojectToModisTile(Product bbdrProduct, String tileName, double scaleFactor) {
-        return reprojectToModisTile(bbdrProduct, tileName, "Nearest", scaleFactor);
+    public static Product reprojectToModisTile(Product sourceProduct, String tileName, double scaleFactor) {
+        return reprojectToModisTile(sourceProduct, tileName, "Nearest", scaleFactor);
     }
 
-    public static Product reprojectToModisTile(Product bbdrProduct, String tileName, String resampling) {
+    public static Product reprojectToModisTile(Product sourceProduct, String tileName, String resampling) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tileName);
         if (tileIndex == -1) {
@@ -132,11 +136,11 @@ public class TileExtractor extends Operator implements Output {
 
         repro.setParameter("orthorectify", true);
         repro.setParameter("noDataValue", 0.0);
-        repro.setSourceProduct(bbdrProduct);
+        repro.setSourceProduct(sourceProduct);
         return repro.getTargetProduct();
     }
 
-    public static Product reprojectToModisTile(Product bbdrProduct, String tileName, String resampling, double scaleFactor) {
+    public static Product reprojectToModisTile(Product sourceProduct, String tileName, String resampling, double scaleFactor) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tileName);
         if (tileIndex == -1) {
@@ -169,7 +173,7 @@ public class TileExtractor extends Operator implements Output {
 
         repro.setParameter("orthorectify", true);
         repro.setParameter("noDataValue", 0.0);
-        repro.setSourceProduct(bbdrProduct);
+        repro.setSourceProduct(sourceProduct);
         return repro.getTargetProduct();
     }
 
@@ -226,7 +230,8 @@ public class TileExtractor extends Operator implements Output {
             Band referenceBand = null;
             if (sdrOnly) {
                 for (String bandname : reproject.getBandNames()) {
-                    if (bandname.startsWith("sdr") || isMfgBand(bandname) || isAvhrrLtdrBand(bandname)) {
+                    if (bandname.startsWith("sdr") || isMfgBand(bandname) ||
+                            isAvhrrLtdrBand(bandname) || isMsslFlagBand(bandname)) {
                         referenceBand = reproject.getBand(bandname);
                     }
                 }
@@ -252,6 +257,10 @@ public class TileExtractor extends Operator implements Output {
     private static boolean isAvhrrLtdrBand(String bandname) {
         return bandname.toLowerCase().startsWith("srefl") || bandname.toLowerCase().equals("szen") ||
                 bandname.toLowerCase().equals("vzen") || bandname.toLowerCase().equals("relaz");
+    }
+
+    private static boolean isMsslFlagBand(String bandname) {
+        return bandname.toLowerCase().equals("mask") || bandname.toLowerCase().equals("probability");
     }
 
     private static boolean containsFloatData(Band band, double noDataValue) {
