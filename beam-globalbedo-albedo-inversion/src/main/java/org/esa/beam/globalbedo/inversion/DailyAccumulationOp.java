@@ -35,8 +35,23 @@ public class DailyAccumulationOp extends Operator {
     @SourceProducts(description = "BBDR source product")
     private Product[] sourceProducts;
 
+    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
+    private String avhrrMaskRootDir;
+
+    @Parameter(description = "MODIS tile")
+    private String tile;
+
+    @Parameter(description = "Year")
+    private int year;
+
+    @Parameter(description = "Day of Year", interval = "[1,366]")
+    private int doy;
+
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
+
+    @Parameter(description = "The processing mode (LEO or AVHRRGEO).")
+    protected ProcessingMode processingMode;
 
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
@@ -75,7 +90,10 @@ public class DailyAccumulationOp extends Operator {
     private Tile[] kgeoVisTile;
     private Tile[] kgeoNirTile;
     private Tile[] kgeoSwTile;
-    private Tile[] snowMaskTile;
+    private Tile[] bbdrSnowMaskTile;
+
+    private Product[] avhrrMaskProducts;
+    private Tile[] avhrrMaskTile;
 
     private int currentSourceProductIndex;
 
@@ -102,12 +120,14 @@ public class DailyAccumulationOp extends Operator {
         kgeoVisTile = new Tile[sourceProducts.length];
         kgeoNirTile = new Tile[sourceProducts.length];
         kgeoSwTile = new Tile[sourceProducts.length];
-        snowMaskTile = new Tile[sourceProducts.length];
+        bbdrSnowMaskTile = new Tile[sourceProducts.length];
+        avhrrMaskTile = new Tile[sourceProducts.length];
 
         resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
                 [sourceProductWidth]
                 [sourceProductHeight];
 
+        avhrrMaskProducts = new Product[sourceProducts.length];
         for (int k = 0; k < sourceProducts.length; k++) {
             bbVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_VIS_NAME), sourceRect);
             bbNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_NIR_NAME), sourceRect);
@@ -126,7 +146,20 @@ public class DailyAccumulationOp extends Operator {
             kgeoVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_VIS_NAME), sourceRect);
             kgeoNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_NIR_NAME), sourceRect);
             kgeoSwTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_KGEO_BRDF_SW_NAME), sourceRect);
-            snowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
+
+//            BeamLogManager.getSystemLogger().log
+//                    (Level.INFO, "getAvhrrMaskProduct: " +
+//                            tile + " / " + year + " / " + avhrrMaskRootDir + " / " + sourceProducts[k].getName());
+            avhrrMaskProducts[k] = IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProducts[k].getName(), year, tile);
+
+            if (processingMode == ProcessingMode.AVHRRGEO) {
+                if (avhrrMaskProducts[k] != null) {
+                    avhrrMaskTile[k] = getSourceTile(avhrrMaskProducts[k].getBand(AlbedoInversionConstants.MSSL_AVHRR_MASK_NAME), sourceRect);
+                }
+            } else {
+                bbdrSnowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
+            }
+
         }
 
         // per pixel, accumulate the matrices from the single products...
@@ -156,11 +189,13 @@ public class DailyAccumulationOp extends Operator {
 
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
-            final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
-            M.plusEquals(accumulator.getM());
-            V.plusEquals(accumulator.getV());
-            E.plusEquals(accumulator.getE());
-            mask += accumulator.getMask();
+            if (processingMode == ProcessingMode.LEO || avhrrMaskProducts[k] != null) {
+                final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
+                M.plusEquals(accumulator.getM());
+                V.plusEquals(accumulator.getV());
+                E.plusEquals(accumulator.getE());
+                mask += accumulator.getMask();
+            }
         }
 
         Accumulator finalAccumulator = new Accumulator(M, V, E, mask);
@@ -170,12 +205,16 @@ public class DailyAccumulationOp extends Operator {
 
     private Accumulator getMatricesPerBBDRDataset(int x, int y) {
 
+        // first check if we have an AVHRR mask for year/tile/doy of given source product
+        // if not, we
+
         // check validity of ALL inputs used:
         final Matrix bbdr = getBBDR(x, y);
         final double[] stdev = getSD(x, y);
         final double[] correlation = getCorrelation(x, y);
         final Matrix kernels = getKernels(x, y);
-        if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(bbdr, stdev, correlation, kernels)) {
+        if (isSnowFilter(x, y) || isAvhrrMaskCloudFilter(x, y) ||
+                DailyAccumulationUtils.isAccumulatorInputInvalid(bbdr, stdev, correlation, kernels)) {
             return getZeroAccumulator();
         }
 
@@ -285,9 +324,23 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private boolean isSnowFilter(int x, int y) {
-        return ((computeSnow && !(snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
-                (!computeSnow && (snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
+        if (processingMode == ProcessingMode.AVHRRGEO) {
+            return ((computeSnow && !(avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)) ||
+                    (!computeSnow && (avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)));
+        } else {
+            return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
+                    (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
+        }
+
     }
+
+    private boolean isAvhrrMaskCloudFilter(int x, int y) {
+        if (processingMode == ProcessingMode.AVHRRGEO) {
+            return avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 2;
+        }
+        return false;
+    }
+
 
     public static class Spi extends OperatorSpi {
 

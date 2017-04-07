@@ -32,12 +32,15 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
 
+    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
+    private String avhrrMaskRootDir;
+
     @Parameter(label = "Sensors to ingest in BRDF retrieval", defaultValue = "MERIS,VGT")
     private String[] sensors;
 
     @Parameter(label = "If true for a Meteosat sensor, ingest all longitudes (000, 057 and 063) in BRDF retrieval." +
             " Otherwise 000 only",
-            defaultValue = "false")
+            defaultValue = "true")
     private boolean meteosatUseAllLongitudes;
 
     @Parameter(description = "MODIS tile")
@@ -79,6 +82,8 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             throw new OperatorException("Daily Accumulator: Cannot get list of input products: " + e.getMessage());
         }
 
+        final ProcessingMode processingMode = getProcessingModeFromSensors();
+
         if (inputProducts.length > 0) {
             String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
                     + File.separator + year + File.separator + tile;
@@ -99,6 +104,11 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
+            accumulationOp.setParameter("avhrrMaskRootDir", avhrrMaskRootDir);
+            accumulationOp.setParameter("year", year);
+            accumulationOp.setParameter("tile", tile);
+            accumulationOp.setParameter("doy", doy);
+            accumulationOp.setParameter("processingMode", processingMode);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("computeSeaice", computeSeaice);
             accumulationOp.setParameter("debug", debug);
@@ -120,6 +130,14 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
 
         logger.log(Level.INFO, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
+    }
+
+    private ProcessingMode getProcessingModeFromSensors() {
+        if (sensors[0].equals("MERIS") || sensors[0].equals("VGT")) {
+            return ProcessingMode.LEO;
+        }  else {
+            return ProcessingMode.AVHRRGEO;
+        }
     }
 
     public static class Spi extends OperatorSpi {

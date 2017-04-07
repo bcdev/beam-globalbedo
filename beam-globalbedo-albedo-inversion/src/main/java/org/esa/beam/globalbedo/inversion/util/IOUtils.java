@@ -148,6 +148,46 @@ public class IOUtils {
         return false;
     }
 
+    public static Product getAvhrrMaskProduct(String avhrrMaskRootDir, String productName, int year, final String tile) {
+        // AVHRR:
+        //    AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+        // others:
+        // end with '_20030108000000_h19v02.nc'
+
+        final String daystring;
+        if (productName.startsWith("AVH_")) {
+            daystring = productName.substring(4, 12);
+        } else {
+            daystring = productName.substring(productName.length()-21, productName.length()-13);
+        }
+
+        final FilenameFilter filenameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // for the AVHRRmask we expect the following filenames:
+                //    msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-16_20010321_c20140417135624_h03v07.nc
+                return  (name.contains("msslFlag_") && name.contains(daystring) && name.contains(tile) && (name.endsWith(".nc")));
+            }
+        };
+
+        // now search for mask product which contains this date
+        final String maskDirName = avhrrMaskRootDir + File.separator + year + File.separator + tile;
+        final File maskDir = new File(maskDirName);
+        if (maskDir.exists()) {
+            final String[] maskFiles = maskDir.list(filenameFilter);
+            if (maskFiles != null && maskFiles.length > 0) {
+                final String maskFileName = maskDirName + File.separator + maskFiles[0];
+                try {
+                    return ProductIO.readProduct(maskFileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
                                                                         String tile,
                                                                         int year,
