@@ -316,7 +316,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 //                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." +
 //                            dir.getName() + expectedFilenameExt;
                     expectedSuffix = year + IOUtils.getDoyString(doy) + "." +
-                            dir.getName() + expectedFilenameExt;
+                            dir.getName();
                 }
 
                 final boolean isTileToProcess =
@@ -326,8 +326,13 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 //                return isTileToProcess && name.equals(expectedFilename);
 //                return isTileToProcess && name.endsWith(expectedSuffix) &&
 //                        (name.startsWith(expectedPrefix1) || name.startsWith(expectedPrefix2) || name.startsWith(expectedPrefix3));
-                return isTileToProcess && name.endsWith(expectedSuffix) &&
-                        name.startsWith(expectedPrefix1) && name.contains("albedo");
+                // Qa4ecv.albedo.avh_geo.2001016.h20v06.NoSnow.nc
+                // Qa4ecv.albedo.avh_geo.2001016.h20v06.Snow.nc
+                return isTileToProcess &&
+                        name.contains(expectedSuffix) &&
+                        name.endsWith(expectedFilenameExt) &&
+                        name.startsWith(expectedPrefix1) &&
+                        name.contains("albedo");
             }
         };
 
