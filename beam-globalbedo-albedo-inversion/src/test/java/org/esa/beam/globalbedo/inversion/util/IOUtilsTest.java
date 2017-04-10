@@ -121,6 +121,7 @@ public class IOUtilsTest extends TestCase {
         String[] priorDirContent = new String[]{
                 "prior.modis.c6.121.h18v04.snownosnow.stage2.nc",
                 "prior.modis.c6.121.h18v04.snownosnow.stage2.dim",
+                "prior.modis.c6.121.h18v04.nosnow.stage2.nc",
                 "prior.modis.c6.121.h18v04.snow.stage2.nc",
                 "Kernels.105.005.h18v04.backGround.NoSnow.hdr",
                 "blubb.txt",
@@ -131,7 +132,7 @@ public class IOUtilsTest extends TestCase {
         List<String> priorProductNames = IOUtils.getPriorProductNames(priorVersion, priorDirContent, false);
         assertNotNull(priorProductNames);
         assertEquals(1, priorProductNames.size());
-        assertEquals("prior.modis.c6.121.h18v04.snownosnow.stage2.nc", priorProductNames.get(0));
+        assertEquals("prior.modis.c6.121.h18v04.nosnow.stage2.nc", priorProductNames.get(0));
     }
 
 

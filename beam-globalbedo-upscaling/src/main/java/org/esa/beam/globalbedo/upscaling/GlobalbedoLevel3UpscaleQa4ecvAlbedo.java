@@ -63,6 +63,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     @Parameter(defaultValue = "NETCDF", valueSet = {"DIMAP", "NETCDF"}, description = "Input format, either DIMAP or NETCDF.")
     private String inputFormat;
 
+    @Parameter(defaultValue = "Merge", valueSet = {"Merge", "Snow", "NoSnow"},
+            description = "Input BRDF type, either Merge, Snow or NoSnow.")
+    private String snowMode;
+
     @Parameter(defaultValue = "Albedo", description = "Name of albedo subdirectory.")
     private String albedoSubdirName;
 
@@ -299,39 +303,30 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         final FilenameFilter albedoFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
-                // e.g. GlobAlbedo.albedo.2006335.h18v04.nc
-                String expectedFilenameExt = inputFormat.equals("DIMAP") ? ".dim" : ".nc";
-//                String expectedFilename;
-                final String expectedPrefix1 = "Qa4ecv.";
-//                final String expectedPrefix2 = "Qa4ecv.avhrrgeo.albedo.";
-//                final String expectedPrefix3 = "Qa4ecv.merisvgt.albedo.";
-                String expectedSuffix;
+                // e.g.:
+                // Qa4ecv.albedo.avh_geo.2001016.h20v06.NoSnow.nc
+                // Qa4ecv.albedo.avh_geo.2001016.h20v06.Snow.nc
+                final String expectedPrefix = "Qa4ecv.";
+                String expectedNamepart;
+                final String expectedFilenameExt = ".nc";
+                final String expectedSnowpart = "." + snowMode + ".";
 
                 if (isMonthlyAlbedo) {
-//                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getMonthString(monthIndex) + "." +
-//                            dir.getName() + expectedFilenameExt;
-                    expectedSuffix = year + IOUtils.getMonthString(monthIndex) + "." +
-                            dir.getName() + expectedFilenameExt;
+                    expectedNamepart = year + IOUtils.getMonthString(monthIndex) + "." + dir.getName();
                 } else {
-//                    expectedFilename = "GlobAlbedo.albedo." + year + IOUtils.getDoyString(doy) + "." +
-//                            dir.getName() + expectedFilenameExt;
-                    expectedSuffix = year + IOUtils.getDoyString(doy) + "." +
-                            dir.getName();
+                    expectedNamepart = year + IOUtils.getDoyString(doy) + "." + dir.getName();
                 }
 
                 final boolean isTileToProcess =
                         GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
                                                                             hStartIndex, hEndIndex,
                                                                             vStartIndex, vEndIndex);
-//                return isTileToProcess && name.equals(expectedFilename);
-//                return isTileToProcess && name.endsWith(expectedSuffix) &&
-//                        (name.startsWith(expectedPrefix1) || name.startsWith(expectedPrefix2) || name.startsWith(expectedPrefix3));
-                // Qa4ecv.albedo.avh_geo.2001016.h20v06.NoSnow.nc
-                // Qa4ecv.albedo.avh_geo.2001016.h20v06.Snow.nc
+
                 return isTileToProcess &&
-                        name.contains(expectedSuffix) &&
+                        name.startsWith(expectedPrefix) &&
+                        name.contains(expectedNamepart) &&
+                        name.contains(expectedSnowpart) &&
                         name.endsWith(expectedFilenameExt) &&
-                        name.startsWith(expectedPrefix1) &&
                         name.contains("albedo");
             }
         };
