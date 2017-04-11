@@ -21,6 +21,7 @@ import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.Tile;
@@ -292,7 +293,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
         boolean skipBand = reducedOutput && (srcBand.getName().contains("alpha") || srcBand.getName().contains("sigma"));
         if (!skipBand) {
             if (!upscaledProduct.containsBand(srcBand.getName())) {
-                Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
+//                Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
+                Band band = upscaledProduct.addBand(srcBand.getName(), ProductData.TYPE_FLOAT32);
                 ProductUtils.copyRasterDataNodeProperties(srcBand, band);
             }
         }
