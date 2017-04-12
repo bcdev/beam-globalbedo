@@ -473,39 +473,39 @@ public class IOUtilsTest extends TestCase {
         assertTrue(IOUtils.isBlacklistedAvhrrProduct("AVH_19951008_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04.nc"));
     }
 
-    public void testGetAvhrrMaskProduct() {
-        String productName_1 = "AVH_20010321_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04";
-        final int year = 2001;
-        final String tile = "h18v04";
-        final String maskProductDir = IOUtils.class.getResource("avhrr_mask").getPath();
-        Product avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_1, year, tile);
-        assertNotNull(avhrrMaskProduct);
-        avhrrMaskProduct.getBands();
-        assertEquals(200, avhrrMaskProduct.getSceneRasterWidth());
-        assertEquals(200, avhrrMaskProduct.getSceneRasterHeight());
-        assertEquals(4, avhrrMaskProduct.getNumBands());
-        assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
-        assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
-
-        String productName_2 = "AVH_20040513_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04";
-        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_2, year, tile);
-        assertNull(avhrrMaskProduct);
-
-        String productName_3 =
-                "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20010321000000_h18v04";
-        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_3, year, tile);
-        assertNotNull(avhrrMaskProduct);
-        avhrrMaskProduct.getBands();
-        assertEquals(200, avhrrMaskProduct.getSceneRasterWidth());
-        assertEquals(200, avhrrMaskProduct.getSceneRasterHeight());
-        assertEquals(4, avhrrMaskProduct.getNumBands());
-        assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
-        assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
-
-        String productName_4 = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20040718000000_h18v04";
-        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_4, year, tile);
-        assertNull(avhrrMaskProduct);
-    }
+//    public void testGetAvhrrMaskProduct() {
+//        String productName_1 = "AVH_20010321_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04";
+//        final int year = 2001;
+//        final String tile = "h18v04";
+//        final String maskProductDir = IOUtils.class.getResource("avhrr_mask").getPath();
+//        Product avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_1, year, tile);
+//        assertNotNull(avhrrMaskProduct);
+//        avhrrMaskProduct.getBands();
+//        assertEquals(200, avhrrMaskProduct.getSceneRasterWidth());
+//        assertEquals(200, avhrrMaskProduct.getSceneRasterHeight());
+//        assertEquals(4, avhrrMaskProduct.getNumBands());
+//        assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
+//        assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
+//
+//        String productName_2 = "AVH_20040513_001D_900S900N1800W1800E_0005D_BBDR_N16_h18v04";
+//        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_2, year, tile);
+//        assertNull(avhrrMaskProduct);
+//
+//        String productName_3 =
+//                "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20010321000000_h18v04";
+//        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_3, year, tile);
+//        assertNotNull(avhrrMaskProduct);
+//        avhrrMaskProduct.getBands();
+//        assertEquals(200, avhrrMaskProduct.getSceneRasterWidth());
+//        assertEquals(200, avhrrMaskProduct.getSceneRasterHeight());
+//        assertEquals(4, avhrrMaskProduct.getNumBands());
+//        assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
+//        assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
+//
+//        String productName_4 = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20040718000000_h18v04";
+//        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_4, year, tile);
+//        assertNull(avhrrMaskProduct);
+//    }
 
     public void testSomething()  {
         new Color(220, 230, 240);
