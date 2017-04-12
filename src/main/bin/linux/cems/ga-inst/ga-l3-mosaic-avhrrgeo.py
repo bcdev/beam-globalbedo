@@ -22,8 +22,8 @@ tileSize='200' # AVHRR/GEO
 ###########################
 
 #######
-#sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
-sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
+sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
+#sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #######
 
 #years = ['2011']    #test  
@@ -44,7 +44,8 @@ years = ['2001']    #test
 #         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
 #         '2011','2012','2013','2014']  
 
-snowModes = ['NoSnow'] # usually for AVHRRGEO
+#snowModes = ['NoSnow'] # usually for AVHRRGEO
+snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
 
 #resolutions = ['05', '005']
 resolutions = ['005']
@@ -86,9 +87,10 @@ for year in years:
         #for idoy in range(0,365):    
         #for idoy in range(121,243):    
         #for idoy in range(242,365):    
-        for idoy in range(0,122):    
-        #for idoy in range(120,121):    
-        #for idoy in range(213,214):    
+        #for idoy in range(0,122):    
+        for idoy in range(172,173):    
+        #for idoy in range(36,37):    
+        #for idoy in range(16,17):    
         #for idoy in range(0,1):    
         #for idoy in range(139,365):    
         #for idoy in range(364,365):    

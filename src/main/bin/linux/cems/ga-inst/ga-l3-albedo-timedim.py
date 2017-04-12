@@ -17,7 +17,7 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 albedoRootDir = gaRootDir + '/Albedo'
 
 #######
-sensorID = 'avh_geo' # must be one of: 'avh', 'geo', 'avh_geo'
+sensorID = 'avh_geo' # must be one of: 'avh', 'geo', 'avh_geo'  # actually we have this for 1982, 1983 only, 20170308
 #sensorID = 'avhrrgeo'  # old
 #######
 
@@ -27,7 +27,7 @@ tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and n
 #tiles = glob.glob1(priorDir, 'h3?v??') # we have same number (326) of snow and noSnow prior directories
 tiles.sort()
 
-tiles = ['h18v04']
+#tiles = ['h18v04']
 
 #startYear = 1998
 #endYear = 2014

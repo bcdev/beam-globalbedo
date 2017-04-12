@@ -11,6 +11,8 @@ beamRootDir=$8
 
 gpt=$beamRootDir/bin/gpt-d-l2.sh
 
+avhrrMaskRootDir=$gaRootDir/MsslAvhrrMask
+
 dailyAccNosnowDir=$gaRootDir/BBDR/DailyAcc/$year/$tile/NoSnow
 if [ ! -d "$dailyAccNosnowDir" ]
 then 
@@ -29,11 +31,15 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         echo "Create NOSNOW daily accumulators for tile $tile, year $year, DoY $doy..."
 
         # we have the possible sensors (set manually below):
-        #     AVHRR + GEO (MVIRI, SEVIRI)
+        #     AVHRR + GEO (MVIRI, SEVIRI, GOES_E, GOES_W, GMS)
 
-        # MVIRI, SEVIRI and AVHRR (the AVHRR+GEO default):
-        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        # MVIRI, SEVIRI, GOES_E, GOES_W, GMS and AVHRR (the new AVHRR+GEO default, 20170315):
+        echo "time $gpt  ga.l3.dailyacc -PavhrrMaskRootDir=$avhrrMaskRootDir -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        time $gpt  ga.l3.dailyacc -PavhrrMaskRootDir=$avhrrMaskRootDir -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+
+        # MVIRI, SEVIRI and AVHRR (the former AVHRR+GEO default):
+        #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # MVIRI and SEVIRI (test purposes):
         #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
@@ -44,8 +50,8 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
         #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","AVHRR" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # AVHRR only (test purposes):
-        echo "time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
-        time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
+        #echo "time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET"
+        #time $gpt  ga.l3.dailyacc -Psensors="AVHRR" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e -t $TARGET
 
         # MVIRI only (test purposes):
         #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI" -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -e"

@@ -27,10 +27,9 @@ else
     fi
 fi
 
-albedoSrcSubdirName=Albedo/$sensorID
+albedoSrcSubdirName=Albedo/$snowMode/$sensorID
 
-#targetDir=$gaRootDir/Mosaic/albedo/$snowMode/$year/$deg
-targetDir=$gaRootDir/Mosaic/Albedo/$sensorID/$snowMode/$year/$deg
+targetDir=$gaRootDir/Mosaic/Albedo/$snowMode/$sensorID/$year/$deg
 if [ ! -d "$targetDir" ]
 then
    mkdir -p $targetDir
@@ -44,8 +43,8 @@ target=$targetDir/Qa4ecv.albedo.$sensorID.$snowMode.$deg.$year$doy.$proj.nc
 #echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PbandsToWrite="BHR_SW","Weighted_Number_of_Samples" -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
 #time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PbandsToWrite="BHR_SW","Weighted_Number_of_Samples" -PinputFormat=NETCDF -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
 
-echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
-time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
+echo "time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -PsnowMode=$snowMode -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target"
+time $beamRootDir/bin/gpt-d-l3.sh ga.l3.upscale.albedo.qa4ecv -c 3000M -PinputFormat=NETCDF -PalbedoSubdirName=$albedoSrcSubdirName -PsnowMode=$snowMode -Pscaling=$scaling -PinputProductTileSize=$tileSize -Preprojection=$proj -Pyear=$year -Pdoy=$doy -PgaRootDir=$gaRootDir -e -f NetCDF4-GA-ALBEDO -t $target
 
 status=$?
 echo "Status: $status"

@@ -62,7 +62,7 @@ m = PMonitor(inputs,
              request='ga-l3-mosaic-leo', 
              logdir='log',
              hosts=[('localhost',16)],
-	     types=[('ga-l3-brdfmosaic-leo-step.sh', 16), ('ga-l3-albedomosaic-step.sh',16), ('ga-l3-albedomosaic-simple-step.sh',16)])
+	     types=[('ga-l3-brdfmosaic-leo-step.sh', 16), ('ga-l3-albedomosaic-step.sh',16), ('ga-l3-albedomosaic-simple-leo-step.sh',16)])
      
 for year in years:
     for snowMode in snowModes:

@@ -25,6 +25,7 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 bbdrRootDir = gaRootDir + '/BBDR'
 inversionRootDir = gaRootDir + '/Inversion'
 
+
 #######
 modisTileScaleFactor = '6.0'   # for AVHRR+GEO
 #######
@@ -47,13 +48,14 @@ tiles.sort()
 
 #tiles = ['h11v08','h11v09','h12v08','h12v09']
 #tiles = ['h17v17']
-#tiles = ['h19v04']
+tiles = ['h18v04']
+#tiles = ['h09v05','h10v05']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 
 # Antarctica:
-#tiles =          ['h15v16','h19v16','h20v16','h21v16','h22v16',
-#         'h14v17','h15v17','h16v17','h17v17','h18v17','h19v17','h20v17','h21v17','h22v17','h23v17',
-#                  'h15v18','h16v18','h17v18','h18v18','h19v18','h20v18'
+#tiles =          ['h15v15','h19v15','h20v15','h21v15','h22v15',
+#         'h14v16','h15v16','h16v16','h17v16','h18v16','h19v16','h20v16','h21v16','h22v16','h23v16',
+#                  'h15v17','h16v17','h17v17','h18v17','h19v17','h20v17'
 #]
 
 # Africa:
@@ -72,16 +74,16 @@ tiles.sort()
 #startYear = 1998
 #endYear = 2014
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
-startYear = 1982
-endYear = 1983
+startYear = 2000
+endYear = 2000
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
              request='ga-l3-tile-inversion-albedo-avhrrgeo_allyears',
              logdir='log',
              hosts=[('localhost',128)], # let's try this number...
-             types=[ ('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh',64),
-                     ('ga-l3-tile-inversion-albedo-avhrrgeo_test-step.sh',64),
+             types=[ ('ga-l3-tile-inversion-dailyacc-avhrrgeo-step.sh',64),
+                     ('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh',64),
                      ('ga-l3-tile-inversion-cleanup-step.sh',2) ] )
 
 
@@ -97,7 +99,7 @@ for tile in tiles:
     endDoy = '361'
     postCond = 'daily_accs_' + year + '_' + tile
     allDailyAccPostConds.append(postCond)
-    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
 
     # years to process
     for iyear in range(startYear, endYear+1):
@@ -106,7 +108,7 @@ for tile in tiles:
         endDoy = '361'
         postCond = 'daily_accs_' + year + '_' + tile 
         allDailyAccPostConds.append(postCond)
-        m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+        m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
 
     # right wing
     year = str(endYear+1)
@@ -114,25 +116,25 @@ for tile in tiles:
     endDoy = '089'
     postCond = 'daily_accs_' + year + '_' + tile
     allDailyAccPostConds.append(postCond)
-    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo_test-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
+    m.execute('ga-l3-tile-inversion-dailyacc-avhrrgeo-step.sh', ['bbdrs'], [postCond], parameters=[tile,year,startDoy,endDoy,step,modisTileScaleFactor,gaRootDir,bbdrRootDir,beamDir])
 
 
     ### now full accumulation, inversion and albedo:
     allAlbedoPostConds = []
     for iyear in range(startYear, endYear+1):
         year = str(iyear)
-        albedoDir = gaRootDir + '/Albedo/' + sensorID + '/' + year + '/' + tile
+        #albedoDir = gaRootDir + '/Albedo/' + sensorID + '/' + year + '/' + tile
         startDoy = '001'
         endDoy = '365'
 
         # this will be executed when all accumulation jobs completed successfully.
         # However, as one of those PMonitor jobs initiates several LSF accumulation jobs, it is not guaranteed with the current
         # setup that all of those LSB jobs are finished at this time, i.e. that all binariy accumulator files have been written.
-        # This must be checked in a waiting loop in ga-l3-tile-inversion-albedo-avhrrgeo_test-step.sh before inversion/albedo jobs are started.
+        # This must be checked in a waiting loop in ga-l3-tile-inversion-albedo-avhrrgeo-step.sh before inversion/albedo jobs are started.
 
         postCond = 'albedo_' + year + '_' + tile
         allAlbedoPostConds.append(postCond)
-        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo_test-step.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor,albedoDir])
+        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor])
 
         #########################################################################################################################
 
