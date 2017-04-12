@@ -102,7 +102,7 @@ public class IOUtils {
                     return false;
                 }
 
-                return  (name.contains("BRF") || name.contains("BBDR") || (name.contains("AVH") && name.contains("BRDF"))) &&
+                return (name.contains("BRF") || name.contains("BBDR") || (name.contains("AVH") && name.contains("BRDF"))) &&
                         (name.endsWith(".nc") || name.endsWith(".nc.gz") || name.endsWith(".dim")) &&
                         (name.contains(daystring_yyyymmdd) || name.contains(daystring_yyyy_mm_dd));
 
@@ -148,6 +148,46 @@ public class IOUtils {
         return false;
     }
 
+    public static Product getAvhrrMaskProduct(String avhrrMaskRootDir, String productName, int year, final String tile) {
+        // AVHRR:
+        //    AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+        // others:
+        // end with '_20030108000000_h19v02.nc'
+
+        final String daystring;
+        if (productName.startsWith("AVH_")) {
+            daystring = productName.substring(4, 12);
+        } else {
+            daystring = productName.substring(productName.length() - 21, productName.length() - 13);
+        }
+
+        final FilenameFilter filenameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                // for the AVHRRmask we expect the following filenames:
+                //    msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-16_20010321_c20140417135624_h03v07.nc
+                return (name.contains("msslFlag_") && name.contains(daystring) && name.contains(tile) && (name.endsWith(".nc")));
+            }
+        };
+
+        // now search for mask product which contains this date
+        final String maskDirName = avhrrMaskRootDir + File.separator + year + File.separator + tile;
+        final File maskDir = new File(maskDirName);
+        if (maskDir.exists()) {
+            final String[] maskFiles = maskDir.list(filenameFilter);
+            if (maskFiles != null && maskFiles.length > 0) {
+                final String maskFileName = maskDirName + File.separator + maskFiles[0];
+                try {
+                    return ProductIO.readProduct(maskFileName);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    return null;
+                }
+            }
+        }
+
+        return null;
+    }
+
     public static List<Product> getAccumulationSinglePixelInputProducts(String bbdrRootDir,
                                                                         String tile,
                                                                         int year,
@@ -158,12 +198,12 @@ public class IOUtils {
         final String merisBbdrDir = bbdrRootDir + File.separator + "MERIS" + File.separator + year + File.separator + tile;
         final String[] merisBbdrFiles = (new File(merisBbdrDir)).list();
         final List<String> merisBbdrFileList = getDailyBBDRFilenamesSinglePixel(merisBbdrFiles, year, day,
-                                                                                pixelX, pixelY, versionString);
+                pixelX, pixelY, versionString);
 
         final String vgtBbdrDir = bbdrRootDir + File.separator + "VGT" + File.separator + year + File.separator + tile;
         final String[] vgtBbdrFiles = (new File(vgtBbdrDir)).list();
         final List<String> vgtBbdrFileList = getDailyBBDRFilenamesSinglePixel(vgtBbdrFiles, year, day,
-                                                                              pixelX, pixelY, versionString);
+                pixelX, pixelY, versionString);
 
         List<Product> accInputProductList = new ArrayList<>();
         for (String merisBBDRFileName : merisBbdrFileList) {
@@ -248,7 +288,7 @@ public class IOUtils {
             }
         }
         BeamLogManager.getSystemLogger().log(Level.WARNING,
-                                             "Warning: No prior file found. Searched in priorDir: '" + priorDir + "'.");
+                "Warning: No prior file found. Searched in priorDir: '" + priorDir + "'.");
 
         return null;
     }
@@ -361,7 +401,8 @@ public class IOUtils {
                         snowFilteredPriorList.add(s);
                     }
                 } else if (priorVersion == 6) {
-                    if (s.endsWith("snownosnow.stage2.nc")) {
+                    // if (s.endsWith("snownosnow.stage2.nc")) {
+                    if (computeSnow && s.endsWith(".snow.stage2.nc") || (!computeSnow && s.endsWith(".nosnow.stage2.nc"))) {
                         snowFilteredPriorList.add(s);
                     }
                 } else {
@@ -382,10 +423,10 @@ public class IOUtils {
         AccumulatorHolder accumulatorHolder = null;
 
         final List<String> albedoInputProductBinaryFileList = getDailyAccumulatorBinaryFileNames(accumulatorRootDir,
-                                                                                                 doy, year, tile,
-                                                                                                 wings,
-                                                                                                 computeSnow,
-                                                                                                 computeSeaice);
+                doy, year, tile,
+                wings,
+                computeSnow,
+                computeSeaice);
         if (albedoInputProductBinaryFileList.size() > 0) {
             accumulatorHolder = new AccumulatorHolder();
             accumulatorHolder.setReferenceYear(year);
@@ -501,7 +542,7 @@ public class IOUtils {
             String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + ".bin";
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                     AlbedoInversionUtils.getWeight(refDoy - doyMinus) > weightThresh &&
-                            accumulatorNameSortedList.size() < maxAccs) {
+                    accumulatorNameSortedList.size() < maxAccs) {
                 accumulatorNameSortedList.add(accName);
             }
             doyMinus--;
@@ -509,7 +550,7 @@ public class IOUtils {
             accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + ".bin";
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                     AlbedoInversionUtils.getWeight(doyPlus - refDoy) > weightThresh &&
-                            accumulatorNameSortedList.size() < maxAccs) {
+                    accumulatorNameSortedList.size() < maxAccs) {
                 accumulatorNameSortedList.add(accName);
             }
             doyPlus++;
@@ -522,7 +563,7 @@ public class IOUtils {
                     String accName = "matrices_" + Integer.toString(refYear - 1) + String.format("%03d", doyMinus2) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             AlbedoInversionUtils.getWeight(refDoy + 365 - doyMinus2) > weightThresh &&
-                                    accumulatorNameSortedList.size() < maxAccs) {
+                            accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyMinus2--;
@@ -530,7 +571,7 @@ public class IOUtils {
                     accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             AlbedoInversionUtils.getWeight(doyPlus - refDoy) > weightThresh &&
-                                    accumulatorNameSortedList.size() < maxAccs) {
+                            accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyPlus++;
@@ -541,7 +582,7 @@ public class IOUtils {
                     String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             AlbedoInversionUtils.getWeight(refDoy - doyMinus) > weightThresh &&
-                                    accumulatorNameSortedList.size() < maxAccs) {
+                            accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyMinus--;
@@ -549,7 +590,7 @@ public class IOUtils {
                     accName = "matrices_" + Integer.toString(refYear + 1) + String.format("%03d", doyPlus2) + ".bin";
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             AlbedoInversionUtils.getWeight(doyPlus2 + 365 - refDoy) > weightThresh &&
-                                    accumulatorNameSortedList.size() < maxAccs) {
+                            accumulatorNameSortedList.size() < maxAccs) {
                         accumulatorNameSortedList.add(accName);
                     }
                     doyPlus2++;
@@ -598,7 +639,7 @@ public class IOUtils {
             }
         } catch (NumberFormatException e) {
             BeamLogManager.getSystemLogger().log(Level.WARNING,
-                                                 "Cannot determine wings for accumulator '" + accName + "' - skipping.");
+                    "Cannot determine wings for accumulator '" + accName + "' - skipping.");
         }
         return isInWingsInterval;
     }
@@ -896,7 +937,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
                     }
                 }
             }
@@ -953,7 +994,7 @@ public class IOUtils {
                         productIndex++;
                     } catch (IOException e) {
                         throw new OperatorException("Cannot load Albedo 8-day product " + albedoProductFileName + ": "
-                                                            + e.getMessage());
+                                + e.getMessage());
                     }
                 }
             }

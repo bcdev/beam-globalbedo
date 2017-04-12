@@ -54,6 +54,12 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "", description = "Globalbedo root directory") // e.g., /data/Globalbedo
     private String inversionRootDir;
 
+    @Parameter(description = "The processing mode (LEO or AVHRRGEO).")
+    protected ProcessingMode processingMode;
+
+    @Parameter(defaultValue = "false", description = "Compute only snow pixels")
+    private boolean computeSnow;
+
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
@@ -178,17 +184,26 @@ public class GlobalbedoLevel3Albedo extends Operator {
             }
 
             if (brdfSnowProduct != null && brdfNoSnowProduct != null && (!usePrior || priorProduct != null)) {
-                // merge Snow/NoSnow products...
-                MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
-                mergeBrdfOp.setParameterDefaultValues();
-                mergeBrdfOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
-                mergeBrdfOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
-                mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
-                mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
-                if (priorProduct != null) {
-                    mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
+                if (processingMode == ProcessingMode.AVHRRGEO) {
+                    if (computeSnow) {
+                        brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
+                    } else {
+                        brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
+                    }
+                } else {
+
+                    // merge Snow/NoSnow products...
+                    MergeBrdfOp mergeBrdfOp = new MergeBrdfOp();
+                    mergeBrdfOp.setParameterDefaultValues();
+                    mergeBrdfOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
+                    mergeBrdfOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
+                    mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
+                    mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
+                    if (priorProduct != null) {
+                        mergeBrdfOp.setSourceProduct("priorProduct", priorProduct);
+                    }
+                    brdfMergedProduct = mergeBrdfOp.getTargetProduct();
                 }
-                brdfMergedProduct = mergeBrdfOp.getTargetProduct();
             } else if (brdfSnowProduct != null && brdfNoSnowProduct == null) {
                 logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
                         year + ", DoY: " + IOUtils.getDoyString(doy));

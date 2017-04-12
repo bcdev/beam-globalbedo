@@ -36,7 +36,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
-    private String snowFractionBandName;
+//    private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
 
@@ -90,7 +90,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         double monthlyNsamples = 0.0;
         double monthlyRelativeEntropy = 0.0;
         double monthlyGoodnessOfFit = 0.0;
-        double monthlySnowFraction = 0.0;
+//        double monthlySnowFraction = 0.0;
         double monthlyDataMask = 0.0;
         double monthlySza = 0.0;
 
@@ -137,9 +137,9 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
                 if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble())) {
                     monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
                 }
-                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble())) {
-                    monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
-                }
+//                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble())) {
+//                    monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
+//                }
                 monthlyDataMask = 1.0;
                 if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble())) {
                     monthlySza += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble();
@@ -161,13 +161,14 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             monthlyNsamples /= sumWeights;
             monthlyRelativeEntropy /= sumWeights;
             monthlyGoodnessOfFit /= sumWeights;
-            monthlySnowFraction /= sumWeights;
+//            monthlySnowFraction /= sumWeights;
             monthlySza /= sumWeights;
         }
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyDHRAlpha, monthlyDHRSigma,
                                                monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
-                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
+//                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
+                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, Double.NaN,
                                                monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
@@ -209,7 +210,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         targetSamples[index + TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
         targetSamples[index + TRG_REL_ENTROPY].set(result.getRelEntropy());
         targetSamples[index + TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
-        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
+//        targetSamples[index + TRG_SNOW_FRACTION].set(result.getSnowFraction());
         targetSamples[index + TRG_DATA_MASK].set(result.getDataMask());
         targetSamples[index + TRG_SZA].set(result.getSza());
     }
@@ -271,8 +272,8 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+//        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+//        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
@@ -323,7 +324,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY, relEntropyBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT, goodnessOfFitBandName, albedo8DayProduct[j]);
-            configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedo8DayProduct[j]);
+//            configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK, dataMaskBandName, albedo8DayProduct[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SZA, szaBandName, albedo8DayProduct[j]);
 
@@ -375,7 +376,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
-        configurator.defineSample(index++, snowFractionBandName);
+//        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index++, szaBandName);      // is not in breadboard monthly product
     }

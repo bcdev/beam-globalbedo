@@ -99,8 +99,9 @@ public class Prior {
             boolean processPixel = true;
             for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
                 for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
-                            priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
+//                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
+//                            priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
+                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0) {
                         processPixel = false;
                         break;
                     }

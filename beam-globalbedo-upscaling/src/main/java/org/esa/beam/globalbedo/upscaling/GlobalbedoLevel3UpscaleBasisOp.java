@@ -194,10 +194,10 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                 checkForCancellation();
                 for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
                     Rectangle pixelSrc = new Rectangle((int) (x * scaling), (int) (y * scaling), (int) scaling, (int) scaling);
-                    int max = -1;
+                    float max = -1;
                     for (int sy = pixelSrc.y; sy < pixelSrc.y + pixelSrc.height; sy++) {
                         for (int sx = pixelSrc.x; sx < pixelSrc.x + pixelSrc.width; sx++) {
-                            max = Math.max(max, src.getSampleInt(sx, sy));
+                            max = Math.max(max, src.getSampleFloat(sx, sy));
                         }
                     }
                     final float sampleMask = mask.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
