@@ -232,9 +232,9 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-            computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-                                 targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+//            computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
+//                                 targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
+//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));

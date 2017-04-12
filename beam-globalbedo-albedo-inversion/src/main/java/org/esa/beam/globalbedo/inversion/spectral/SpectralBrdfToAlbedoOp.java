@@ -61,7 +61,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
-    private String snowFractionBandName;
+//    private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
 
@@ -334,8 +334,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+//        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+//        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
@@ -429,7 +429,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
-        configurator.defineSample(index++, snowFractionBandName);
+//        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index, szaBandName);
 
@@ -504,7 +504,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         targetSamples[index++].set(result.getWeightedNumberOfSamples());
         targetSamples[index++].set(result.getRelEntropy());
         targetSamples[index++].set(result.getGoodnessOfFit());
-        targetSamples[index++].set(result.getSnowFraction());
+//        targetSamples[index++].set(result.getSnowFraction());
         targetSamples[index++].set(result.getDataMask());
         targetSamples[index].set(result.getSza());
     }

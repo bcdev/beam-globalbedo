@@ -61,7 +61,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
-    private String snowFractionBandName;
+//    private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
     private String latBandName;
@@ -285,9 +285,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
         final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
         double snowFraction = AlbedoInversionConstants.NO_DATA_VALUE;
-        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
-            snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
-        }
+//        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+//            snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
+//        }
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
                                                BHR, alphaBHR, sigmaBHR,
@@ -348,10 +348,10 @@ public class BrdfToAlbedoOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
-            snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-            targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
-        }
+//        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+//            snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+//            targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+//        }
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
@@ -475,9 +475,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
-        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
-            configurator.defineSample(index++, snowFractionBandName);
-        }
+//        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+//            configurator.defineSample(index++, snowFractionBandName);
+//        }
         configurator.defineSample(index++, dataMaskBandName);
         configurator.defineSample(index, szaBandName);
 
@@ -588,9 +588,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         targetSamples[index++].set(result.getWeightedNumberOfSamples());
         targetSamples[index++].set(result.getRelEntropy());
         targetSamples[index++].set(result.getGoodnessOfFit());
-        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
-            targetSamples[index++].set(result.getSnowFraction());
-        }
+//        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
+//            targetSamples[index++].set(result.getSnowFraction());
+//        }
         targetSamples[index++].set(result.getDataMask());
         targetSamples[index++].set(result.getSza());
         if (singlePixelMode) {
