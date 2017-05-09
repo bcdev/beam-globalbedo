@@ -59,6 +59,9 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    private int numSdrBands;
+
 
     @Override
     public void initialize() throws OperatorException {
@@ -105,6 +108,7 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
             accumulationOp.setParameter("subtileFactor", subtileFactor);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
+            accumulationOp.setParameter("numSdrBands", numSdrBands);
             accumulationProduct = accumulationOp.getTargetProduct();
 
             setTargetProduct(accumulationProduct);

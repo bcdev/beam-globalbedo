@@ -57,7 +57,7 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "7", valueSet = {"7"},
+    @Parameter(defaultValue = "7", interval = "[1,7]",
             description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
@@ -122,7 +122,7 @@ public class SpectralInversionOp extends PixelOperator {
         double maskAcc = 0.0;
         SpectralAccumulator accumulator = null;
         if (fullAccumulator != null) {
-            accumulator = SpectralAccumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y, 7);
+            accumulator = SpectralAccumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y, numSdrBands);
             maskAcc = accumulator.getMask();
         }
 

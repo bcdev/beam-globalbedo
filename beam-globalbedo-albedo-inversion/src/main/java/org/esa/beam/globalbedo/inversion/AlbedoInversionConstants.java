@@ -154,4 +154,8 @@ public class AlbedoInversionConstants {
     };
 
     public static final float NO_DATA_VALUE = -9999.0f;
+
+    public final static float[] MODIS_WAVELENGHTS = {
+            645.0f, 865.0f, 470.0f, 555.0f, 1240.0f, 1640.0f, 2130.0f
+    };
 }

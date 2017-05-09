@@ -45,6 +45,8 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     @Parameter(defaultValue = "7", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
     protected int numMappedSdrBands;
+    // todo: to allow 'spectral processing of only one band', add option to write only certain band to target product
+    // todo: SK to provide mapping for 440nm chemistry channel (not included in the MODIS bands!)
 
     private String[] sdrMappedBandNames;
     private String[] sigmaSdrMappedBandNames;
@@ -258,7 +260,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
             band.setSpectralBandIndex(i);
-            band.setSpectralWavelength(BbdrConstants.MODIS_WAVELENGHTS[i]);
+            band.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
         }
     }
 

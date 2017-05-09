@@ -32,12 +32,14 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoQa4ecvMosaicProductReader;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Reprojects and upscales horizontal subsets of GlobAlbedo tile products
@@ -134,6 +136,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
 
         Product mosaicProduct;
         try {
+            BeamLogManager.getSystemLogger().log(Level.INFO, "refTile: " + refTile);
             mosaicProduct = productReader.readProductNodes(refTile, null);    // this is a mosaic on SIN projection!!
         } catch (IOException e) {
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
@@ -327,7 +330,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                 return isTileToProcess &&
                         name.startsWith(expectedPrefix) &&
                         name.contains(expectedNamepart) &&
-                        name.contains(expectedSnowpart) &&
+//                        name.contains(expectedSnowpart) &&
                         name.endsWith(expectedFilenameExt) &&
                         name.contains("albedo");
             }

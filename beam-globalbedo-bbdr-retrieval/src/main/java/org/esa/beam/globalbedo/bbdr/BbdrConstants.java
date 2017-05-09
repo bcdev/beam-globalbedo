@@ -61,10 +61,6 @@ public class BbdrConstants {
 //            1.0f, 1.0f
 //    };
 
-    public final static float[] MODIS_WAVELENGHTS = {
-            645.0f, 865.0f, 470.0f, 555.0f, 1240.0f, 1640.0f, 2130.0f
-    };
-
 
     // MERIS has ozone, but no water vapour image
     // AATSR has neither ozone nor water vapour image

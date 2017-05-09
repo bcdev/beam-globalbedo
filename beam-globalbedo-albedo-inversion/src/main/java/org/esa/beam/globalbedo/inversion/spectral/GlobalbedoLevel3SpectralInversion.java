@@ -51,6 +51,10 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
     @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
     private int subStartY;
 
+    @Parameter(defaultValue = "7", interval = "[1,7]",
+            description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
+    private int numSdrBands;
+
     int subtileWidth;
     int subtileHeight;
 
@@ -73,6 +77,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
         inversionOp.setParameter("subStartX", subStartX);
         inversionOp.setParameter("subStartY", subStartY);
         inversionOp.setParameter("subtileFactor", subtileFactor);
+        inversionOp.setParameter("numSdrBands", numSdrBands);
         Product inversionProduct = inversionOp.getTargetProduct();
 
         inversionProduct.setGeoCoding(SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY));
