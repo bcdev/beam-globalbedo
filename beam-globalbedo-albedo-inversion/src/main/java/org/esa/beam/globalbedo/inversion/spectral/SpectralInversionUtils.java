@@ -73,11 +73,11 @@ public class SpectralInversionUtils {
 
     public static String[] getSigmaSdrBandNames(int numSigmaSdrBands) {
         // we do not need the cross terms...
-        String[] sdrBandNames = new String[numSigmaSdrBands];
+        String[] sigmaSdrBandNames = new String[numSigmaSdrBands];
         for (int i = 0; i < numSigmaSdrBands; i++) {
-            sdrBandNames[i] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + i;
+            sigmaSdrBandNames[i] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + i;
         }
-        return sdrBandNames;
+        return sigmaSdrBandNames;
     }
 
     public static String[] getSdrBandNames(int numSdrBands) {

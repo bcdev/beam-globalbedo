@@ -43,6 +43,9 @@ public class SpectralDailyAccumulationOp extends Operator {
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
+    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    private int singleBandIndex;    // todo: consider chemistry bands
+
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
@@ -88,11 +91,15 @@ public class SpectralDailyAccumulationOp extends Operator {
         numSigmaSdrBands = numSdrBands;
         sigmaSdrTiles = new Tile[sourceProducts.length][numSigmaSdrBands];
 
-        final String[] sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
-//        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSdrBands, numSigmaSdrBands);
-        final String[] sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
-//        sigmaSdrDiagonalIndices = SpectralInversionUtils.getSigmaSdrDiagonalIndices(numSdrBands);
-//        sigmaSdrURIndices = SpectralInversionUtils.getSigmaSdrURIndices(numSdrBands, numSigmaSdrBands);
+        String[] sdrBandNames = new String[numSdrBands];
+        String[] sigmaSdrBandNames = new String[numSdrBands];
+        if (numSdrBands == 1) {
+            sdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_NAME_PREFIX + singleBandIndex;
+            sigmaSdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + singleBandIndex;
+        } else {
+            sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
+            sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
+        }
 
         kvolTile = new Tile[sourceProducts.length];
         kgeoTile = new Tile[sourceProducts.length];

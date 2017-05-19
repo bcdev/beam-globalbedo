@@ -43,10 +43,13 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "7", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
+    @Parameter(defaultValue = "1", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
     protected int numMappedSdrBands;
     // todo: to allow 'spectral processing of only one band', add option to write only certain band to target product
     // todo: SK to provide mapping for 440nm chemistry channel (not included in the MODIS bands!)
+
+    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    private int singleBandIndex;    // todo: consider chemistry bands
 
     private String[] sdrMappedBandNames;
     private String[] sigmaSdrMappedBandNames;
@@ -61,6 +64,17 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         int numSigmaSdrBands = numMappedSdrBands;
 //        sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numMappedSdrBands, numSigmaSdrBands);
         sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
+
+        sdrMappedBandNames = new String[numMappedSdrBands];
+        sigmaSdrMappedBandNames = new String[numMappedSdrBands];
+        if (numMappedSdrBands == 1) {
+            sdrMappedBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_NAME_PREFIX + singleBandIndex;
+            sigmaSdrMappedBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + singleBandIndex;
+        } else {
+            sdrMappedBandNames = SpectralInversionUtils.getSdrBandNames(numMappedSdrBands);
+            sigmaSdrMappedBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
+        }
+
         kernelBandNames = AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES;
 
         sm = new MsslModisSpectralMapper();
@@ -178,10 +192,10 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         }
 
         final float[] sdrMapped =
-                getSpectralMappedSdr(numMappedSdrBands, sensor.name(), sdr, sinCoordinates, computeSnow);
+                getSpectralMappedSdr(numMappedSdrBands, singleBandIndex, sensor.name(), sdr, sinCoordinates, computeSnow);
 //        final float[] sdrSigmaMapped =
 //                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, computeSnow);
-        final float[] sdrSigmaMapped = getSpectralMappedSigmaSdr(numMappedSdrBands, sigmaSdr);
+        final float[] sdrSigmaMapped = getSpectralMappedSigmaSdr(numMappedSdrBands, singleBandIndex, sigmaSdr);
 
         // calculation of kernels (kvol, kgeo)
         final double sza = sourceSamples[SRC_SZA].getDouble();
@@ -211,12 +225,16 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         targetSamples[index].set(sourceSamples[SRC_SNOW_MASK].getInt());
     }
 
-    float[] getSpectralMappedSdr(int numMappedSdrBands, String sensorName, float[] sdr,
+    float[] getSpectralMappedSdr(int numMappedSdrBands, int singleBandIndex, String sensorName, float[] sdr,
                                  int[] sinCoordinates, boolean snow) {
 //        float[] sdrMapped = new float[numMappedSdrBands];   // the 7 MODIS channels
 //        return sdrMapped;
         // todo: this is preliminary. SK to explain how to address the other parameters?!
-        return sm.getSpectralMappedSdr(sdr);
+        if (numMappedSdrBands == 1) {
+            return new float[]{sm.getSpectralMappedSdr(sdr)[singleBandIndex]};
+        } else {
+            return sm.getSpectralMappedSdr(sdr);
+        }
     }
 
 //    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, String sensorName, float[] sdrErrors,
@@ -248,9 +266,13 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 //        return sdrSigmaMapped;
 //    }
 
-    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, float[] sdrErrors) {
+    float[] getSpectralMappedSigmaSdr(int numMappedSdrBands, int singleBandIndex, float[] sdrErrors) {
         // todo: clarify if this is what we want
-        return sm.getSpectralMappedSigmaSdr(sdrErrors);
+        if (numMappedSdrBands == 1) {
+            return new float[]{sm.getSpectralMappedSigmaSdr(sdrErrors)[singleBandIndex]};
+        } else {
+            return sm.getSpectralMappedSigmaSdr(sdrErrors);
+        }
     }
 
 

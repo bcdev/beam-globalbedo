@@ -45,21 +45,44 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
+    public static String[] getSpectralInversionParameterSingleBandNames(int singleBandIndex) {
+        String bandNames[] = new String[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        int index = 0;
+        for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+            bandNames[index] = "mean_b" + (singleBandIndex) + "_f" + j;
+            index++;
+        }
+        return bandNames;
+    }
+
     public static String[][] getSpectralInversionUncertaintyBandNames(int numSdrBands,
                                                                       Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
 
         for (int i = 0; i < 3 * numSdrBands; i++) {
             // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
-            for (int j = i; j < 3 *  numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i/3) + "_f" + (i % 3) + "_" +
-                        spectralWaveBandsMap.get(j/3) + "_f" + (j % 3);
+            for (int j = i; j < 3 * numSdrBands; j++) {
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
+                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
             }
         }
 
         return bandNames;
     }
 
+    public static String[][] getSpectralInversionUncertaintySingleBandNames(Map<Integer, String> spectralWaveBandsMap) {
+        String bandNames[][] = new String[3][3];
+
+        for (int i = 0; i < 3; i++) {
+            // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
+            for (int j = i; j < 3; j++) {
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f0_" +
+                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
+            }
+        }
+
+        return bandNames;
+    }
 
     public static Product[] getSpectralAccumulationInputProducts(String sdrRootDir, String[] sensors,
                                                                  int subStartX, int subStartY,
@@ -345,9 +368,9 @@ public class SpectralIOUtils {
         //                             b5_b6  b1_b7
         //                                    b6_b7
 
-        String bandNames[][] = new String[numSdrBands-1][numSdrBands-1];
-        for (int i = 0; i < numSdrBands-1; i++) {
-            for (int j = i; j < numSdrBands-1; j++) {
+        String bandNames[][] = new String[numSdrBands - 1][numSdrBands - 1];
+        for (int i = 0; i < numSdrBands - 1; i++) {
+            for (int j = i; j < numSdrBands - 1; j++) {
                 bandNames[i][j] = type + "_alpha_" + spectralWaveBandsMap.get(i) + "_" + spectralWaveBandsMap.get(j);
             }
         }

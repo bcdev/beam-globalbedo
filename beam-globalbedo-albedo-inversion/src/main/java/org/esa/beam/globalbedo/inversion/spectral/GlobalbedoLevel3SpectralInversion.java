@@ -55,6 +55,9 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
             description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
+    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    private int singleBandIndex;    // todo: consider chemistry bands
+
     int subtileWidth;
     int subtileHeight;
 
@@ -78,6 +81,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
         inversionOp.setParameter("subStartY", subStartY);
         inversionOp.setParameter("subtileFactor", subtileFactor);
         inversionOp.setParameter("numSdrBands", numSdrBands);
+        inversionOp.setParameter("singleBandIndex", singleBandIndex);
         Product inversionProduct = inversionOp.getTargetProduct();
 
         inversionProduct.setGeoCoding(SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY));

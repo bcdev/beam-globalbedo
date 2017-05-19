@@ -61,6 +61,9 @@ public class SpectralInversionOp extends PixelOperator {
             description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
+    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    private int singleBandIndex;    // todo: consider chemistry bands
+
     @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
     private int subtileFactor;
 
@@ -89,10 +92,15 @@ public class SpectralInversionOp extends PixelOperator {
     protected void prepareInputs() throws OperatorException {
         super.prepareInputs();
 
-        setupSpectralWaveBandsMap(numSdrBands);
-
-        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
-        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        if (numSdrBands == 1) {
+            spectralWaveBandsMap.put(0, "b" + (singleBandIndex));
+            parameterBandNames = SpectralIOUtils.getSpectralInversionParameterSingleBandNames(singleBandIndex);
+            uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintySingleBandNames(spectralWaveBandsMap);
+        } else {
+            setupSpectralWaveBandsMap(numSdrBands);
+            parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
+            uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        }
 
         numTargetParameters = 3 * numSdrBands;
 //        numTargetUncertainties = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
