@@ -67,9 +67,6 @@ public class GlobalbedoLevel2 extends Operator {
     @Parameter(defaultValue = "false", label = " If set, BBDR are computed from previously written SDR")
     private boolean computeBbdrFromSdr;
 
-    @Parameter(defaultValue = "false",
-            label = " If set, AATSR input will be subsetted to valid lat/lon range (recommended for coregistered input)")
-    private boolean subsetAatsr;
 
     @Parameter(defaultValue = "")
     private String tile;
@@ -81,14 +78,6 @@ public class GlobalbedoLevel2 extends Operator {
         if (sourceProduct.getPreferredTileSize() == null) {
             sourceProduct.setPreferredTileSize(sourceProduct.getSceneRasterWidth(), 45);
             System.out.println("adjusting tile size to: " + sourceProduct.getPreferredTileSize());
-        }
-
-        Product subsettedAatsrProduct = null;
-        if (subsetAatsr && (sensor == Sensor.AATSR_NADIR || sensor == Sensor.AATSR_FWARD)) {
-            subsettedAatsrProduct = subsetAatsrToDefinedRegion();
-            // test to check result:
-//            setTargetProduct(subsettedAatsrProduct);
-//            return;
         }
 
         if (sensor == Sensor.PROBAV) {
@@ -108,7 +97,7 @@ public class GlobalbedoLevel2 extends Operator {
             subsetOp.setSourceProduct(sourceProduct);
             productToProcess = subsetOp.getTargetProduct();
         } else {
-            productToProcess = subsettedAatsrProduct != null ? subsettedAatsrProduct : sourceProduct;
+            productToProcess = sourceProduct;
         }
 
         if (computeBbdrFromSdr) {
@@ -169,14 +158,6 @@ public class GlobalbedoLevel2 extends Operator {
                     bbdrOp = new BbdrProbavOp();
                     bbdrOp.setParameterDefaultValues();
                     break;
-                case "AATSR_NADIR":
-                case "AATSR_FWARD":
-                    computeSdr = false;   // todo: implement this option if AATSR is taken on-board
-                    computeBbdrFromSdr = false;  // todo: implement this option if AATSR is taken on-board
-                    bbdrOp = new BbdrAatsrOp();
-                    bbdrOp.setParameterDefaultValues();
-                    bbdrOp.setParameter("useAotClimatology", useAotClimatology);
-                    break;
                 default:
                     throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");
             }
@@ -193,52 +174,6 @@ public class GlobalbedoLevel2 extends Operator {
             getTargetProduct().setProductType(sourceProduct.getProductType() + "_BBDR");
         }
     }
-
-    private Product subsetAatsrToDefinedRegion() {
-        final Band latBand = sourceProduct.getBand("latitude");
-        final Band lonBand = sourceProduct.getBand("longitude");
-//        final int startY = sourceProduct.getSceneRasterHeight()/2;
-        final int startY = 2;
-        final Rectangle sourceRect = new Rectangle(0, startY, sourceProduct.getSceneRasterWidth()-1, 1);
-        final Tile latTile = getSourceTile(latBand, sourceRect);
-        final Tile lonTile = getSourceTile(lonBand, sourceRect);
-
-        int startX = sourceRect.width - 1;
-        for (int x = 0; x <sourceRect.width; x++) {
-            final boolean pixelValid = latTile.getSampleFloat(x, startY) != 0.0 && lonTile.getSampleFloat(x, startY) != 0.0;
-            if (pixelValid) {
-                startX = x;
-                break;
-            }
-        }
-        int endX = sourceProduct.getSceneRasterWidth()-1;
-        for (int x = startX; x <sourceRect.width; x++) {
-            final boolean pixelValid = latTile.getSampleFloat(x, startY) != 0.0 && lonTile.getSampleFloat(x, startY) != 0.0;
-            if (!pixelValid) {
-                endX = x-1;
-                break;
-            }
-        }
-        SubsetOp subsetOp = new SubsetOp();
-        subsetOp.setParameterDefaultValues();
-        // to be safe, cut two more pixels on each side
-        final int subsetX = startX + 2;
-        final int subsetY = startY;
-        final int subsetWidth = endX - startX + 1 - 4;
-        final int subsetHeight = sourceProduct.getSceneRasterHeight() - 1 - 4;
-        System.out.println("startX = " + startX);
-        System.out.println("endX = " + endX);
-        System.out.println("subsetX = " + subsetX);
-        System.out.println("subsetY = " + subsetY);
-        System.out.println("subsetWidth = " + subsetWidth);
-        System.out.println("subsetHeight = " + subsetHeight);
-
-        final Rectangle subsetRect = new Rectangle(subsetX, subsetY, subsetWidth, subsetHeight);
-        subsetOp.setRegion(subsetRect);
-        subsetOp.setSourceProduct(sourceProduct);
-        return subsetOp.getTargetProduct();
-    }
-
 
     public static class Spi extends OperatorSpi {
 

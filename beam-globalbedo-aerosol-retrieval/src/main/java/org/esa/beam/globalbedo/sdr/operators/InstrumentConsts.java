@@ -47,9 +47,9 @@ class InstrumentConsts {
 
     private InstrumentConsts() {
 
-        this.supportedInstruments = new String[]{"MERIS", "VGT", "AATSR", "PROBAV"};
+        this.supportedInstruments = new String[]{"MERIS", "VGT", "PROBAV"};
 
-        this.reflecNames = new HashMap<String, String[]>(supportedInstruments.length);
+        this.reflecNames = new HashMap<>(supportedInstruments.length);
         String[] merisReflectanceNames = {
                 "reflectance_1",
                 "reflectance_2",
@@ -73,24 +73,11 @@ class InstrumentConsts {
          */
         String[] vgtReflectanceNames = {"B0", "B2", "B3", "MIR"};
         reflecNames.put(supportedInstruments[1], vgtReflectanceNames);
-        /***************************************
-         AATSR
-         */String[] aatsrReflectanceNames = {
-                "reflec_nadir_0550",
-                "reflec_nadir_0670",
-                "reflec_nadir_0870",
-                "reflec_nadir_1600",
-                "reflec_fward_0550",
-                "reflec_fward_0670",
-                "reflec_fward_0870",
-                "reflec_fward_1600",
-        };
-        reflecNames.put(supportedInstruments[2], aatsrReflectanceNames);
 
         String[] probavReflectanceNames = {"TOA_REFL_BLUE", "TOA_REFL_RED", "TOA_REFL_NIR", "TOA_REFL_SWIR"};
-        reflecNames.put(supportedInstruments[3], probavReflectanceNames);
+        reflecNames.put(supportedInstruments[2], probavReflectanceNames);
 
-        this.geomNames = new HashMap<String, String[]>(supportedInstruments.length);
+        this.geomNames = new HashMap<>(supportedInstruments.length);
         String[] merisGeomNames = {
                 EnvisatConstants.MERIS_SUN_ZENITH_DS_NAME,
                 EnvisatConstants.MERIS_SUN_AZIMUTH_DS_NAME,
@@ -100,20 +87,9 @@ class InstrumentConsts {
         geomNames.put(supportedInstruments[0], merisGeomNames);
         String[] vgtGeomNames = {"SZA", "SAA", "VZA", "VAA"};
         geomNames.put(supportedInstruments[1], vgtGeomNames);
-        String[] aatsrGeomNames = {
-                EnvisatConstants.AATSR_SUN_ELEV_NADIR_DS_NAME,
-                EnvisatConstants.AATSR_SUN_AZIMUTH_NADIR_DS_NAME,
-                EnvisatConstants.AATSR_VIEW_ELEV_NADIR_DS_NAME,
-                EnvisatConstants.AATSR_VIEW_AZIMUTH_NADIR_DS_NAME,
-                EnvisatConstants.AATSR_SUN_ELEV_FWARD_DS_NAME,
-                EnvisatConstants.AATSR_SUN_AZIMUTH_FWARD_DS_NAME,
-                EnvisatConstants.AATSR_VIEW_ELEV_FWARD_DS_NAME,
-                EnvisatConstants.AATSR_VIEW_AZIMUTH_FWARD_DS_NAME
-        };
-        geomNames.put(supportedInstruments[2], aatsrGeomNames);
 
         String[] probavGeomNames = {"SZA", "SAA", "VZA_SWIR", "VAA_SWIR", "VZA_VNIR", "VAA_VNIR"};
-        geomNames.put(supportedInstruments[3], probavGeomNames);
+        geomNames.put(supportedInstruments[2], probavGeomNames);
 
         this.fitWeights = new HashMap<String, double[]>(supportedInstruments.length);
         double[] merisFitWeights = {1.0, 1.0, 1.0, 1.0, 0.2, 1.0, 1.0, 1.0,
@@ -121,13 +97,11 @@ class InstrumentConsts {
         fitWeights.put(supportedInstruments[0], merisFitWeights);
         double[] vgtFitWeights = {1.0, 1.0, 0.5, 0.1};
         fitWeights.put(supportedInstruments[1], vgtFitWeights);
-        double[] aatsrFitWeights = {1.5, 1.0, 1.0, 1.55};
-        fitWeights.put(supportedInstruments[2], aatsrFitWeights);
 
         double[] probavFitWeights = {1.0, 1.0, 0.5, 0.1};
-        fitWeights.put(supportedInstruments[3], probavFitWeights);
+        fitWeights.put(supportedInstruments[2], probavFitWeights);
 
-        this.validRetrievalExpr = new HashMap<String, String>(supportedInstruments.length);
+        this.validRetrievalExpr = new HashMap<>(supportedInstruments.length);
         String merisValidRetrievalExpr = "(!l1_flags.INVALID "
 //                + " &&  " + idepixFlagBandName + ".F_LAND "
                 + " &&  (" + idepixFlagBandName + ".F_LAND || " + idepixFlagBandName + ".F_SEAICE)"
@@ -141,28 +115,15 @@ class InstrumentConsts {
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "
                 + " && (SZA<70)) ";
         validRetrievalExpr.put(supportedInstruments[1], vgtValidRetrievaExpr);
-        String aatsrValidRetrievalExpr = "(" + idepixFlagBandName + ".F_LAND "
-                + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER"
-                + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW"
-                + " && (90-sun_elev_nadir) < 70"
-                + " && (90-sun_elev_fward) < 70"
-                + " && reflec_nadir_0550 >= 0"
-                + " && reflec_nadir_0670 >= 0"
-                + " && reflec_nadir_0870 >= 0"
-                + " && reflec_nadir_1600 >= 0"
-                + " && reflec_fward_0550 >= 0"
-                + " && reflec_fward_0670 >= 0"
-                + " && reflec_fward_0870 >= 0"
-                + " && reflec_fward_1600 >= 0 )";
-        validRetrievalExpr.put(supportedInstruments[2], aatsrValidRetrievalExpr);
+
         String probavValidRetrievaExpr = "(SM_FLAGS.GOOD_BLUE && SM_FLAGS.GOOD_RED && SM_FLAGS.GOOD_NIR && (SM_FLAGS.GOOD_SWIR or TOA_REFL_SWIR <= 0.65) "
                 + " &&  " + idepixFlagBandName + ".F_LAND "
                 + " && !" + idepixFlagBandName + ".F_CLEAR_SNOW "
                 + " && !" + idepixFlagBandName + ".F_CLOUD_BUFFER "
                 + " && (SZA<70)) ";
-        validRetrievalExpr.put(supportedInstruments[3], probavValidRetrievaExpr);
+        validRetrievalExpr.put(supportedInstruments[2], probavValidRetrievaExpr);
 
-        this.validAotOutExpr = new HashMap<String, String>(supportedInstruments.length);
+        this.validAotOutExpr = new HashMap<>(supportedInstruments.length);
         String merisValAotOutputExpr = "(!l1_flags.INVALID "
 //                + " &&  " + idepixFlagBandName + ".F_LAND "
                 + " &&  (" + idepixFlagBandName + ".F_LAND || " + idepixFlagBandName + ".F_SEAICE)"
@@ -174,65 +135,44 @@ class InstrumentConsts {
                 + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
                 + " && (SZA<70)) ";
         validAotOutExpr.put(supportedInstruments[1], vgtValAotOutputExpr);
-        String aatsrValAotOutputExpr = "(" + idepixFlagBandName + ".F_LAND "
-                + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
-                + " && (90-sun_elev_nadir) < 70"
-                + " && (90-sun_elev_fward) < 70"
-                + " && reflec_nadir_0550 >= 0"
-                + " && reflec_nadir_0670 >= 0"
-                + " && reflec_nadir_0870 >= 0"
-                + " && reflec_nadir_1600 >= 0"
-                + " && reflec_fward_0550 >= 0"
-                + " && reflec_fward_0670 >= 0"
-                + " && reflec_fward_0870 >= 0"
-                + " && reflec_fward_1600 >= 0 )";
-        validAotOutExpr.put(supportedInstruments[2], aatsrValAotOutputExpr);
         String probavValAotOutputExpr = "(SM_FLAGS.GOOD_BLUE && SM_FLAGS.GOOD_RED && SM_FLAGS.GOOD_NIR "
                 + " &&  " + idepixFlagBandName + ".F_LAND "
                 + " && (!" + idepixFlagBandName + ".F_CLOUD_BUFFER || " + idepixFlagBandName + ".F_CLEAR_SNOW)"
                 + " && (SZA<70)) ";
-        validAotOutExpr.put(supportedInstruments[3], probavValAotOutputExpr);
+        validAotOutExpr.put(supportedInstruments[2], probavValAotOutputExpr);
 
-        this.nLutBands = new HashMap<String, Integer>(supportedInstruments.length);
+        this.nLutBands = new HashMap<>(supportedInstruments.length);
         int merisNLutBands = 15;
         nLutBands.put(supportedInstruments[0], merisNLutBands);
         int vgtNLutBands = 4;
         nLutBands.put(supportedInstruments[1], vgtNLutBands);
-        int aatsrNLutBands = 4;
-        nLutBands.put(supportedInstruments[2], aatsrNLutBands);
         int probavNLutBands = 4;
-        nLutBands.put(supportedInstruments[3], probavNLutBands);
+        nLutBands.put(supportedInstruments[2], probavNLutBands);
 
-        this.surfPressureName = new HashMap<String, String>(supportedInstruments.length);
+        this.surfPressureName = new HashMap<>(supportedInstruments.length);
         String merisSurfPressureName = "surfPressEstimate";
         surfPressureName.put(supportedInstruments[0], merisSurfPressureName);
         String vgtSurfPressureName = "surfPressEstimate";
         surfPressureName.put(supportedInstruments[1], vgtSurfPressureName);
-        String aatsrSurfPressureName = "surfPressEstimate";
-        surfPressureName.put(supportedInstruments[2], aatsrSurfPressureName);
         String probavSurfPressureName = "surfPressEstimate";
-        surfPressureName.put(supportedInstruments[3], probavSurfPressureName);
+        surfPressureName.put(supportedInstruments[2], probavSurfPressureName);
 
-        this.ozoneName = new HashMap<String, String>(supportedInstruments.length);
+        this.ozoneName = new HashMap<>(supportedInstruments.length);
         String merisOzoneName = "ozone";
         ozoneName.put(supportedInstruments[0], merisOzoneName);
         String vgtOzoneName = "OG";
         ozoneName.put(supportedInstruments[1], vgtOzoneName);
-        String aatsrOzoneName = "ozoneConst";
-        ozoneName.put(supportedInstruments[2], aatsrOzoneName);
         String probavOzoneName = "NOT AVAILABLE";
-        ozoneName.put(supportedInstruments[3], probavOzoneName);
+        ozoneName.put(supportedInstruments[2], probavOzoneName);
 
         this.ndviName = "toaNdvi";
-        this.ndviExpression = new HashMap<String, String>(supportedInstruments.length);
+        this.ndviExpression = new HashMap<>(supportedInstruments.length);
         String merisNdviExp = "(reflectance_13 - reflectance_7) / (reflectance_13 + reflectance_7)";
         ndviExpression.put(supportedInstruments[0], merisNdviExp);
         String vgtNdviExp = "(B3-B2)/(B3+B2)";
         ndviExpression.put(supportedInstruments[1], vgtNdviExp);
-        String aatsrNdviExp = "(reflec_nadir_0870 - reflec_nadir_0670) / (reflec_nadir_0870 + reflec_nadir_0670)";
-        ndviExpression.put(supportedInstruments[2], aatsrNdviExp);
         String probavNdviExp = "NDVI";
-        ndviExpression.put(supportedInstruments[3], probavNdviExp);
+        ndviExpression.put(supportedInstruments[2], probavNdviExp);
     }
 
     public static InstrumentConsts getInstance() {
@@ -335,7 +275,6 @@ class InstrumentConsts {
     String getNirName(String instrument) {
         if (instrument.equals("MERIS")) return "reflectance_13";
         if (instrument.equals("VGT")) return "B3";
-        if (instrument.equals("AATSR")) return "reflec_nadir_0870";
         if (instrument.equals("PROBAV")) return "TOA_REFL_NIR";
         return "";
     }

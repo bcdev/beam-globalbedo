@@ -45,11 +45,10 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
     @Parameter(defaultValue = "1", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
     protected int numMappedSdrBands;
-    // todo: to allow 'spectral processing of only one band', add option to write only certain band to target product
     // todo: SK to provide mapping for 440nm chemistry channel (not included in the MODIS bands!)
 
     @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
-    private int singleBandIndex;    // todo: consider chemistry bands
+    private int singleBandIndex;    // todo: consider 440nm chemistry channel
 
     private String[] sdrMappedBandNames;
     private String[] sigmaSdrMappedBandNames;
@@ -77,7 +76,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
 
         kernelBandNames = AlbedoInversionConstants.CONSTANT_KERNEL_BAND_NAMES;
 
-        sm = new MsslModisSpectralMapper();
+        sm = new MsslModisSpectralMapper(sensor);
         // read coefficients from a text file
         // we have constants now, 20161118
 //        sm.readCoeff();
@@ -281,8 +280,13 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
             Band band = targetProduct.addBand(sdrMappedBandNames[i], ProductData.TYPE_FLOAT32);
             band.setNoDataValue(Float.NaN);
             band.setNoDataValueUsed(true);
-            band.setSpectralBandIndex(i);
-            band.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
+            if (numMappedSdrBands == 1) {
+                band.setSpectralBandIndex(singleBandIndex);
+                band.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[singleBandIndex-1]);
+            } else {
+                band.setSpectralBandIndex(i);
+                band.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
+            }
         }
     }
 

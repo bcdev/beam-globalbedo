@@ -26,15 +26,7 @@ public class AlbedoInversionConstants {
     public final static String BBDR_KGEO_BRDF_VIS_NAME = "Kgeo_BRDF_VIS";
     public final static String BBDR_KGEO_BRDF_NIR_NAME = "Kgeo_BRDF_NIR";
     public final static String BBDR_KGEO_BRDF_SW_NAME = "Kgeo_BRDF_SW";
-    public final static String BBDR_AOD550_NAME = "AOD550";
-    public final static String BBDR_NDVI_NAME = "NDVI";
-    public final static String BBDR_SIG_NDVI_NAME = "sig_NDVI";
-    public final static String BBDR_VZA_NAME = "VZA";
-    public final static String BBDR_SZA_NAME = "SZA";
-    public final static String BBDR_RAA_NAME = "RAA";
-    public final static String BBDR_DEM_NAME = "DEM";
     public final static String BBDR_SNOW_MASK_NAME = "snow_mask";
-    public final static String BBDR_VGT_SM_NAME = "SM"; // VGT only, should become a flag band!
 
     public final static String MSSL_AVHRR_MASK_NAME = "mask";
 
@@ -49,23 +41,16 @@ public class AlbedoInversionConstants {
     public static final String LAT_BAND_NAME = "latitude";
     public static final String LON_BAND_NAME = "longitude";
 
-    public static final String PRIOR_NSAMPLES_NAME = "N samples";
     public static final String PRIOR_MASK_NAME = "Mask";
 
     public static final String INV_ENTROPY_BAND_NAME = "Entropy";
     public static final String INV_REL_ENTROPY_BAND_NAME = "Relative_Entropy";
     public static final String INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME = "Weighted_Number_of_Samples";
     public static final String INV_GOODNESS_OF_FIT_BAND_NAME = "Goodness_of_Fit";
-    public static final String ALB_SNOW_FRACTION_BAND_NAME = "Snow_Fraction";
     public static final String ALB_DATA_MASK_BAND_NAME = "Data_Mask";
     public static final String ALB_SZA_BAND_NAME = "Solar_Zenith_Angle";
 
     public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
-
-    public static final String merisLandMaskExpression = "NOT l1_flags.INVALID AND l1_flags.LAND_OCEAN";
-    public static final String aatsrNadirLandMaskExpression = "cloud_flags_nadir.LAND";
-    public static final String aatsrFwardLandMaskExpression = "cloud_flags_fward.LAND";
-    public static final String seaiceMaskExpression = "cloud_classif_flags.F_SEAICE";
 
     public static final String SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION = "Weighted_Number_of_Samples > 0.0";
 
@@ -87,12 +72,6 @@ public class AlbedoInversionConstants {
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_X = 926.6254330558;
     public static final double MODIS_SIN_PROJECTION_PIXEL_SIZE_Y = 926.6254330558;
 
-    public static final double MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X = -20015109.354;
-    public static final double MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y = 10007554.677;
-
-    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
-    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
-
     public static final String MODIS_SIN_PROJECTION_CRS_STRING =
             "PROJCS[\"MODIS Sinusoidal\"," +
                     "GEOGCS[\"WGS 84\"," +
@@ -112,31 +91,7 @@ public class AlbedoInversionConstants {
                     "UNIT[\"m\",1.0]," +
                     "AUTHORITY[\"SR-ORG\",\"6974\"]]";
 
-    // MODIS tile size increment in (x,y)-coordinates: 10 degrees in metres
-    public static double modisSinusoidalProjectionTileSizeIncrement = 1111950.519667000044137;
-
     public static final double HALFLIFE = 11.54;
-
-    public static final String POLAR_STEREOGRAPHIC_PROJECTION_CRS_STRING =
-            "PROJCS[\"Polar_Stereographic / World Geodetic System 1984\"," +
-                    "GEOGCS[\"World Geodetic System 1984\"," +
-                    " DATUM[\"World Geodetic System 1984\"," +
-                    "  SPHEROID[\"WGS 84\",6378137.0, 298.257223563, AUTHORITY[\"EPSG\",\"7030\"]]," +
-                    "   AUTHORITY[\"EPSG\",\"6326\"]]," +
-                    "  PRIMEM[\"Greenwich\",0.0, AUTHORITY[\"EPSG\",\"8901\"]]," +
-                    "  UNIT[\"degree\",0.01745329251994328]," +
-                    "   AXIS[\"Geodetic longitude\", EAST]," +
-                    "   AXIS[\"Geodetic latitude\", NORTH]]," +
-                    "PROJECTION[\"Polar_Stereographic\"]," +
-                    "PARAMETER[\"semi_minor\",6378137.0]," +
-                    "PARAMETER[\"central_meridian\",0.0]," +
-                    "PARAMETER[\"latitude_of_origin\",90.0]," +
-                    "PARAMETER[\"scale_factor\",1.0]," +
-                    "PARAMETER[\"false_easting\",0.0]," +
-                    "PARAMETER[\"false_northing\",0.0]," +
-                    "UNIT[\"m\",1.0]," +
-                    "AXIS[\"Easting\", EAST]," +
-                    "AXIS[\"Northing\", NORTH]]";
 
     public static final String[][] doysOfMonth = {
             {"001", "009", "017", "025"},    // Jan
