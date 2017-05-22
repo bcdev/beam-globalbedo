@@ -55,7 +55,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
             description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
-    @Parameter(defaultValue = "3", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
     int subtileWidth;
