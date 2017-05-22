@@ -40,9 +40,9 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    // for the moment we only accept division into 4x4 subtiles
+    // for the moment we only accept original size (no division) or division into 4x4 subtiles
     @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
-            defaultValue = "4", valueSet = {"4"})
+            defaultValue = "4", valueSet = {"1", "4"})
     private int subtileFactor;
 
     @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
