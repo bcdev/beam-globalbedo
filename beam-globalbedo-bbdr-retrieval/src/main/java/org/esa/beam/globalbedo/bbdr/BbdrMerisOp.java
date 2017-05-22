@@ -92,7 +92,6 @@ public class BbdrMerisOp extends BbdrMasterOp {
 
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
 //      MERIS: OZO per-pixel, CWV as constant value
-//      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
         ozo = 0.001 * sourceSamples[SRC_OZO].getDouble();
         cwv = BbdrConstants.CWV_CONSTANT_VALUE;  // constant mean value of 1.5

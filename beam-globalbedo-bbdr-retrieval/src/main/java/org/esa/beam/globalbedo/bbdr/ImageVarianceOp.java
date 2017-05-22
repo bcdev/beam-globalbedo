@@ -17,7 +17,10 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import com.bc.ceres.core.ProgressMonitor;
-import org.esa.beam.framework.datamodel.*;
+import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.datamodel.ProductData;
+import org.esa.beam.framework.datamodel.RasterDataNode;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -27,10 +30,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.BorderExtender;
-import java.awt.Rectangle;
-
-import static java.lang.Math.cos;
-import static java.lang.StrictMath.toRadians;
+import java.awt.*;
 
 /**
  * This function calculates the local-neighbourhood statistical variance.
@@ -50,9 +50,9 @@ public class ImageVarianceOp extends Operator {
     public void initialize() throws OperatorException {
         Product sourceProduct = getSourceProduct();
         Product targetProduct = new Product(getId(),
-                getClass().getName(),
-                sourceProduct.getSceneRasterWidth(),
-                sourceProduct.getSceneRasterHeight());
+                                            getClass().getName(),
+                                            sourceProduct.getSceneRasterWidth(),
+                                            sourceProduct.getSceneRasterHeight());
         targetProduct.setStartTime(sourceProduct.getStartTime());
         targetProduct.setEndTime(sourceProduct.getEndTime());
         ProductUtils.copyTiePointGrids(sourceProduct, targetProduct);
@@ -62,21 +62,6 @@ public class ImageVarianceOp extends Operator {
         for (Band band : bands) {
             if (sensor == Sensor.MERIS) {
                 if (band.getName().startsWith("reflectance")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
-            } else if (sensor == Sensor.AATSR_NADIR) {
-                if (band.getName().startsWith("reflec_nadir")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
-                if (band.getName().startsWith("reflec_fward")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
-            } else if (sensor == Sensor.AATSR_NADIR) {
-                if (band.getName().startsWith("reflec_nadir")) {
-                    targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
-                }
-            } else if (sensor == Sensor.AATSR_FWARD) {
-                if (band.getName().startsWith("reflec_fward")) {
                     targetProduct.addBand(band.getName(), ProductData.TYPE_FLOAT32);
                 }
             } else if (sensor == Sensor.VGT) {
@@ -98,60 +83,10 @@ public class ImageVarianceOp extends Operator {
         Rectangle rectangle = targetTile.getRectangle();
         rectangle.grow(1, 1);
         Tile sourceTile = getSourceTile(sourceRaster, rectangle, BorderExtender.createInstance(BorderExtender.BORDER_COPY));
-        if (sensor == Sensor.AATSR_NADIR) {
-            double cal2MerisCoeff = getAatsrCal2MerisCoeffByBandName(targetBand.getName());
-            RasterDataNode sunElevTpg;
-            if (sourceProduct.getTiePointGrid("sun_elev_nadir") != null) {
-                sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_nadir");
-            } else if (sourceProduct.getBand("sun_elev_nadir") != null) {
-                sunElevTpg = sourceProduct.getBand("sun_elev_nadir");
-            } else {
-                throw new OperatorException("Band or TPG 'sun_elev_nadir' missing");
-            }
-            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
-                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    final float sza;
-                    try {
-                        sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
-                        final double sza_r = toRadians(sza);
-                        final double mus = cos(sza_r);
-                        final double factor = 0.01 / (cal2MerisCoeff * mus);
-                        targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
-                    } catch (Exception e) {
-                        targetTile.setSample(x, y, variance(sourceTile, x, y, 0.0));
-                    }
 
-                }
-            }
-        } else if (sensor == Sensor.AATSR_FWARD) {
-            double cal2MerisCoeff = getAatsrCal2MerisCoeffByBandName(targetBand.getName());
-            RasterDataNode sunElevTpg;
-            if (sourceProduct.getTiePointGrid("sun_elev_fward") != null) {
-                sunElevTpg = sourceProduct.getTiePointGrid("sun_elev_fward");
-            } else if (sourceProduct.getBand("sun_elev_fward") != null) {
-                sunElevTpg = sourceProduct.getBand("sun_elev_fward");
-            } else {
-                throw new OperatorException("Band or TPG 'sun_elev_fward' missing");
-            }
-            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
-                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    final float sza;
-                    try {
-                        sza = 90.0f - sunElevTpg.getPixelFloat(x, y);
-                        final double sza_r = toRadians(sza);
-                        final double mus = cos(sza_r);
-                        final double factor = 0.01 / (cal2MerisCoeff * mus);
-                        targetTile.setSample(x, y, variance(sourceTile, x, y, factor));
-                    } catch (Exception e) {
-                        targetTile.setSample(x, y, variance(sourceTile, x, y, 0.0));
-                    }
-                }
-            }
-        } else {
-            for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
-                for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
-                    targetTile.setSample(x, y, variance(sourceTile, x, y, 1.0));
-                }
+        for (int y = targetTile.getMinY(); y <= targetTile.getMaxY(); y++) {
+            for (int x = targetTile.getMinX(); x <= targetTile.getMaxX(); x++) {
+                targetTile.setSample(x, y, variance(sourceTile, x, y, 1.0));
             }
         }
     }
@@ -167,19 +102,6 @@ public class ImageVarianceOp extends Operator {
             }
         }
         return Math.sqrt((sumSq / 9) - (sum * sum / 81));
-    }
-
-    private double getAatsrCal2MerisCoeffByBandName(String bandName) {
-        if (bandName.endsWith("550")) {
-           return sensor.getCal2Meris()[0];
-        } else if (bandName.endsWith("670")) {
-           return sensor.getCal2Meris()[1];
-        } else if (bandName.endsWith("870")) {
-           return sensor.getCal2Meris()[2];
-        } else if (bandName.endsWith("1600")) {
-           return sensor.getCal2Meris()[3];
-        }
-        return 1.0;
     }
 
     public static class Spi extends OperatorSpi {

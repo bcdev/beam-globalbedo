@@ -74,8 +74,6 @@ public class GasLookupTable {
         String instrument;
         if (sensor.getInstrument().equals("PROBAV")) {
             instrument = "VGT";
-        } else if (sensor.getInstrument().startsWith("AATSR")) {
-            instrument = "AATSR";
         } else {
             instrument = sensor.getInstrument();
         }
@@ -136,8 +134,6 @@ public class GasLookupTable {
         String instrument;
         if (sensor.getInstrument().equals("PROBAV")) {
             instrument = "VGT";
-        } else if (sensor.getInstrument().startsWith("AATSR")) {
-            instrument = "AATSR";
         } else {
             instrument = sensor.getInstrument();
         }

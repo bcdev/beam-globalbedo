@@ -20,14 +20,6 @@ public class BbdrConstants {
             1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f
     };
 
-    public final static float[] AATSR_WAVELENGHTS = {
-            550.0f, 670.0f, 870.0f, 1600.0f
-    };
-
-    public final static float[] AATSR_CALIBRATION_COEFFS = {
-            1.0253f, 1.0093f, 1.0265f, 1.0f
-    };
-
     public final static float[] VGT_WAVELENGHTS = {
             450.0f, 645.0f, 835.0f, 1665.0f
     };
@@ -66,7 +58,7 @@ public class BbdrConstants {
     // AATSR has neither ozone nor water vapour image
     // VGT has ozone and water vapour image
     // --> use constants if images are not available
-    public static float CWV_CONSTANT_VALUE = 1.5f; // used for MERIS and AATSR only
+    public static float CWV_CONSTANT_VALUE = 1.5f; // used for MERIS
     public static float OZO_CONSTANT_VALUE = 0.32f; // used for AATSR only
 
     public final static String MERIS_VZA_TP_NAME = "view_zenith";
@@ -103,46 +95,11 @@ public class BbdrConstants {
             "sdr_error_11", "sdr_error_12", "sdr_error_13", "sdr_error_14", "sdr_error_15"
     };
 
-    public final static String[] MERIS_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
-            "latitude", "longitude", "dem_alt", "dem_rough", "lat_corr", "lon_corr",
-            "sun_zenith", "sun_azimuth", "view_zenith", "view_azimuth", "zonal_wind", "merid_wind",
-            "atm_press", "ozone", "rel_hum"
-    };
-
-//    public final static String[] AATSR_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
-//            "latitude", "longitude", "altitude",
-//            "lat_corr_nadir", "lon_corr_nadir", "sun_elev_nadir", "view_elev_nadir", "sun_azimuth_nadir", "view_azimuth_nadir",
-//            "lat_corr_fward", "lon_corr_fward", "sun_elev_fward", "view_elev_fward", "sun_azimuth_fward", "view_azimuth_fward"
+//    public final static String[] MERIS_TIE_POINT_GRID_NAMES = new String[]{     // would be useful in EnvisatConstants...
+//            "latitude", "longitude", "dem_alt", "dem_rough", "lat_corr", "lon_corr",
+//            "sun_zenith", "sun_azimuth", "view_zenith", "view_azimuth", "zonal_wind", "merid_wind",
+//            "atm_press", "ozone", "rel_hum"
 //    };
-
-
-    public final static String[] AATSR_TOA_BAND_NAMES_NADIR = new String[]{
-            "reflec_nadir_0550", "reflec_nadir_0670", "reflec_nadir_0870", "reflec_nadir_1600"};
-
-    public final static String[] AATSR_NADIR_ANCILLARY_BAND_NAMES = new String[]{
-            "view_elev_nadir", "view_azimuth_nadir", "sun_elev_nadir", "sun_azimuth_nadir",
-            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME
-    };
-
-    public final static String[] AATSR_FWARD_ANCILLARY_BAND_NAMES = new String[]{
-            "view_elev_fward", "view_azimuth_fward", "sun_elev_fward", "sun_azimuth_fward",
-            DEM_BAND_NAME, AOT_BAND_NAME, AOTERR_BAND_NAME
-    };
-
-    public final static String[] AATSR_SDR_BAND_NAMES_NADIR = new String[]{
-            "sdr_nadir_0550", "sdr_nadir_0670", "sdr_nadir_0870", "sdr_nadir_1600"};
-
-    public final static String[] AATSR_SDR_ERROR_BAND_NAMES_NADIR = new String[]{
-            "sdr_error_nadir_0550", "sdr_error_nadir_0670", "sdr_error_nadir_0870", "sdr_error_nadir_1600"};
-
-    public final static String[] AATSR_TOA_BAND_NAMES_FWARD = new String[]{
-            "reflec_fward_0550", "reflec_fward_0670", "reflec_fward_0870", "reflec_fward_1600"};
-
-    public final static String[] AATSR_SDR_BAND_NAMES_FWARD = new String[]{
-            "sdr_fward_0550", "sdr_fward_0670", "sdr_fward_0870", "sdr_fward_1600"};
-
-    public final static String[] AATSR_SDR_ERROR_BAND_NAMES_FWARD = new String[]{
-            "sdr_error_fward_0550", "sdr_error_fward_0670", "sdr_error_fward_0870", "sdr_error_fward_1600"};
 
     public final static String[] VGT_TOA_BAND_NAMES = new String[]{
             "B0", "B2", "B3", "MIR"};
@@ -187,12 +144,7 @@ public class BbdrConstants {
     public static final int MODIS_TILE_WIDTH = 1200;
     public static final int MODIS_TILE_HEIGHT = 1200;
 
-    public static final int SEAICE_PST_QUADRANT_PRODUCT_WIDTH = 2250;
-    public static final int SEAICE_PST_QUADRANT_PRODUCT_HEIGHT = 2250;
-    public static final double SEAICE_PST_PIXEL_SIZE_X = 1000.0;
-    public static final double SEAICE_PST_PIXEL_SIZE_Y = 1000.0;
-
-    public static final float NO_DATA_VALUE = -9999.0f;
+    public static final int MODIS_NUM_SPECTRAL_BANDS = 7;
 
     //    public static final String COMMON_LAND_EXPR = "cloud_classif_flags.F_CLEAR_LAND OR cloud_classif_flags.F_CLEAR_SNOW";
     public static final String COMMON_LAND_EXPR =
@@ -202,15 +154,14 @@ public class BbdrConstants {
 
     public static final String LAND_EXPR_MERIS =
             "NOT l1_flags.INVALID AND NOT l1_flags.COSMETIC AND (" + COMMON_LAND_EXPR + ")";
-    public static final String LAND_EXPR_AATSR = COMMON_LAND_EXPR;
     public static final String LAND_EXPR_PROBAV =
             "SM_FLAGS.GOOD_BLUE AND SM_FLAGS.GOOD_RED AND SM_FLAGS.GOOD_NIR AND (" + COMMON_LAND_EXPR + ")";
     public static final String LAND_EXPR_VGT = "SM.B0_GOOD AND SM.B2_GOOD AND SM.B3_GOOD AND (" + COMMON_LAND_EXPR + ")";
 
-    public static final String L1_INVALID_EXPR_MERIS = "l1_flags.INVALID OR l1_flags.COSMETIC OR cloud_classif_flags.F_INVALID";
-    public static final String L1_INVALID_EXPR_VGT = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
-    public static final String L1_INVALID_EXPR_PROBAV =
-            "!SM_FLAGS.GOOD_BLUE OR !SM_FLAGS.GOOD_RED OR !SM_FLAGS.GOOD_NIR OR (!SM_FLAGS.GOOD_SWIR AND TOA_REFL_SWIR > 0.65)";
+//    public static final String L1_INVALID_EXPR_MERIS = "l1_flags.INVALID OR l1_flags.COSMETIC OR cloud_classif_flags.F_INVALID";
+//    public static final String L1_INVALID_EXPR_VGT = "!SM.B0_GOOD OR !SM.B2_GOOD OR !SM.B3_GOOD OR (!SM.MIR_GOOD AND MIR > 0.65)";
+//    public static final String L1_INVALID_EXPR_PROBAV =
+//            "!SM_FLAGS.GOOD_BLUE OR !SM_FLAGS.GOOD_RED OR !SM_FLAGS.GOOD_NIR OR (!SM_FLAGS.GOOD_SWIR AND TOA_REFL_SWIR > 0.65)";
 
     public static final String AEROSOL_CLIMATOLOGY_MONTHLY_BAND_GROUP_NAME = "AOD550_aer_mo_time";
     public static final float AOT_CONST_VALUE = 0.15f;
@@ -219,5 +170,34 @@ public class BbdrConstants {
     public static final double[][] AVHRR_LIANG_COEFFS = {{0.441, 0.0, 0.0, 0.591, 0.0, 0.0074},
             {-1.4759, -0.6536, 1.8591, 0.0, 1.063, 0.0},
             {-0.337, -0.2707, 0.7074, 0.2915, 0.5256, 0.0035}};
+
+    public static final double[][] MERIS_SPECTRAL_MAPPING_COEFFS = new double[][] {
+            {0.0, 0.0, 0.0, 0.0381683132278, 0.0, 0.0706581570918, 0.727938603627, 0.16365834236, 0.0,
+                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0} ,
+            {0.0108626196304, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0269109404428, 0.0, 0.0, 0.0,
+                    0.11219885911, 0.399278981479, 0.463244499785, 0.0},
+            {0.0, 0.0, 0.52091545188, 0.298259211541, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0},
+            {0.0, 0.0, 0.0, 0.138467743664, 0.867733708452, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0,
+                    0.0, 0.0, 0.0, 0.0},
+            {0.42274348004, 0.0, 0.0, -1.05933169333, 0.0, 0.0, 0.0, 0.0, 0.914892566036, -0.605256825945,
+                    0.0, 0.0, 1.35086894047, -0.19698419591, -0.19698419591},
+            {0.540254921442, 0.0, 0.0, -1.20929374247, 0.0, 0.0, 0.0, 0.164593497983, 1.95758407036, -1.48558749155,
+                    0.0, 0.0, 1.48228762628, -0.491304016928, -0.491304016928},
+            {0.866623679649, 0.0, -1.1550246423, -0.263974311816, 0.0, 0.0, 0.0, 1.56754833459, 0.12039074206,
+                    -0.137673885865, 0.0, 0.0, 0.0, 0.0552984349493, 0.0552984349493}
+    };
+
+    public static final double[][] VGT_SPECTRAL_MAPPING_COEFFS = new double[][] {
+            {0.0860828518334, 0.828921553716, 0.0330779825538, 0.0133288486504} ,
+            {0.0417849338323, 0.0, 1.06278243332, 0.0},
+            {0.984817497715, 0.0, 0.0137553829395, 0.0},
+            {0.977250012143, 0.215288693766, 0.0774531877644, 0.0},
+            {0.0, 0.0, 0.469467034072,	0.571825060878},
+            {0.0557421498118, 0.0, 0.054100993273, 1.02414199042},
+            {0.0, 0.359791016158,	0.0, 0.782006347696}
+    };
+
+
 }
 

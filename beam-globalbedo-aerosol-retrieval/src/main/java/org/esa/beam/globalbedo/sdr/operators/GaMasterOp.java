@@ -129,12 +129,10 @@ public class GaMasterOp extends Operator {
         final String productType = sourceProduct.getProductType();
         final String productName = sourceProduct.getName();
         boolean isMerisProduct = EnvisatConstants.MERIS_L1_TYPE_PATTERN.matcher(productType).matches();
-        final boolean isAatsrProduct = productType.startsWith(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME) ||
-                productName.contains(EnvisatConstants.AATSR_L1B_TOA_PRODUCT_TYPE_NAME);
         final boolean isVgtProduct = productType.startsWith("VGT PRODUCT FORMAT V1.");
         final boolean isProbavProduct = productType.startsWith("PROBA-V SYNTHESIS");
 
-        Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isAatsrProduct ^ isVgtProduct ^ isProbavProduct));
+        Guardian.assertTrue("not a valid source product", (isMerisProduct ^ isVgtProduct ^ isProbavProduct));
 
         Product reflProduct = null;
         if (isMerisProduct) {
@@ -149,9 +147,6 @@ public class GaMasterOp extends Operator {
             params.put("gaComputeCloudBuffer", gaComputeCloudBuffer);
             params.put("gaCopyCTP", gaCopyCTP);
             reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(MerisPrepOp.class), params, sourceProduct);
-        } else if (isAatsrProduct) {
-            instrument = "AATSR";
-            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(AatsrPrepOp.class), GPF.NO_PARAMS, sourceProduct);
         } else if (isVgtProduct) {
             instrument = "VGT";
 //            reflProduct = GPF.createProduct(OperatorSpi.getOperatorAlias(VgtPrepOp.class), GPF.NO_PARAMS, sourceProduct);

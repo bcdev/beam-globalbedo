@@ -105,7 +105,6 @@ public class SdrProbavOp extends BbdrMasterOp {
 
 //      CWV & OZO - provided as a constant value and the other as pixel-based, depending on the sensor
 //      MERIS: OZO per-pixel, CWV as constant value
-//      AATSR: OZO and CWV as constant value
 //      VGT: CWV per-pixel, OZO as constant value
 //      PROBA-V: CWV as constant value, OZO as constant value --> now from era interim (GK/MB, 20160111)
 //        ozo = BbdrConstants.OZO_CONSTANT_VALUE;  // constant mean value of 0.32

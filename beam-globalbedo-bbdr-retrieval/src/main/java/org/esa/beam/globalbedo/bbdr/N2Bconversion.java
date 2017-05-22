@@ -55,8 +55,6 @@ public class N2Bconversion {
         String instrument;
         if (sensor.getInstrument().equals("PROBAV")) {
             instrument = "VGT";
-        } else if (sensor.getInstrument().startsWith("AATSR")) {
-            instrument = "AATSR";
         } else {
             instrument = sensor.getInstrument();
         }

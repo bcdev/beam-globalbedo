@@ -136,8 +136,6 @@ public class LandcoverLevel2 extends Operator {
                     sdrOp.setSourceProduct("eraInterimProduct", eraInterimProduct);
                 }
                 break;
-            case "AATSR":
-            case "AATSR_FWARD":
             case "AVHRR":
                 // todo
                 throw new OperatorException("Sensor " + sensor.getInstrument() + " not supported.");  // remove later
