@@ -57,20 +57,21 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "7", interval = "[1,7]",
+    @Parameter(defaultValue = "1", interval = "[1,7]",
             description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
-    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(defaultValue = "3", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
+            defaultValue = "1", valueSet = {"1", "4"})
     private int subtileFactor;
 
-    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
+    @Parameter(description = "Sub tile start X", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
     private int subStartX;
 
-    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
+    @Parameter(description = "Sub tile start Y", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
     private int subStartY;
 
     private static final int TRG_REL_ENTROPY = 1;

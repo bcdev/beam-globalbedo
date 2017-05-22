@@ -45,24 +45,24 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
     private int doy;
 
     // for the moment we only accept original size (no division) or division into 4x4 subtiles
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
-            defaultValue = "4", valueSet = {"1", "4"})
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size)",
+            defaultValue = "1", valueSet = {"1", "4"})
     private int subtileFactor;
 
-    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
+    @Parameter(description = "Sub tile start X", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
     private int subStartX;
 
-    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
+    @Parameter(description = "Sub tile start Y", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
     private int subStartY;
 
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    @Parameter(defaultValue = "1", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
-    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(defaultValue = "3", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
 
@@ -75,7 +75,7 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
         // STEP 1: get SDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = SpectralIOUtils.getSpectralAccumulationInputProducts(sdrRootDir, sensors,
+            inputProducts = SpectralIOUtils.getSpectralAccumulationInputProducts(sdrRootDir, sensors, numSdrBands,
                                                                                  subStartX, subStartY,
                                                                                  tile, year, doy);
         } catch (IOException e) {
@@ -90,7 +90,9 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
             } else {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
             }
-            dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + subTileDir + File.separator);
+            if (numSdrBands > 1) {
+                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + subTileDir + File.separator);
+            }
             if (!new File(dailyAccumulatorDir).exists()) {
                 final boolean madeDir = new File(dailyAccumulatorDir).mkdirs();
                 if (!madeDir) {
@@ -102,8 +104,14 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
             Product accumulationProduct;
             // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-            String dailyAccumulatorBinaryFilename =
-                    "matrices_" + year + IOUtils.getDoyString(doy) + "_" + subTileDir + ".bin";
+            String dailyAccumulatorBinaryFilename;
+            if (numSdrBands > 1) {
+                dailyAccumulatorBinaryFilename =
+                        "matrices_" + year + IOUtils.getDoyString(doy) + "_" + subTileDir + ".bin";
+            } else {
+                dailyAccumulatorBinaryFilename =
+                        "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
+            }
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
             SpectralDailyAccumulationOp accumulationOp = new SpectralDailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
