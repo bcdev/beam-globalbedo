@@ -47,7 +47,7 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     protected int numMappedSdrBands;
     // todo: SK to provide mapping for 440nm chemistry channel (not included in the MODIS bands!)
 
-    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider 440nm chemistry channel
 
     private String[] sdrMappedBandNames;
