@@ -11,7 +11,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProducts;
 import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.DailyAccumulationUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.util.logging.BeamLogManager;
@@ -37,7 +36,8 @@ public class SpectralDailyAccumulationOp extends Operator {
     @SourceProducts(description = "SDR source products")
     private Product[] sourceProducts;
 
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size")
+    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
+            defaultValue = "1", valueSet = {"1", "4"})
     private int subtileFactor;
 
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
@@ -79,8 +79,8 @@ public class SpectralDailyAccumulationOp extends Operator {
     @Override
     public void initialize() throws OperatorException {
 
-        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor;
-        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor;
+        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor;
+        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor;
 
         final Rectangle sourceRect = new Rectangle(0, 0, subtileWidth, subtileHeight);
 
@@ -107,7 +107,7 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         // we have:
         // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
-        final int resultArrayElements =  (3*numSdrBands) * (3*numSdrBands) + 3*numSdrBands + 1 + 1;
+        final int resultArrayElements = (3 * numSdrBands) * (3 * numSdrBands) + 3 * numSdrBands + 1 + 1;
         resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
 
         for (int k = 0; k < sourceProducts.length; k++) {
@@ -127,8 +127,8 @@ public class SpectralDailyAccumulationOp extends Operator {
         // per pixel, accumulate the matrices from the single products...
         // Since we loop over all source products, we need a sequential and thread-safe approach, so we do not
         // implement computeTile.
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor; y++) {
+        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor; x++) {
+            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor; y++) {
                 accumulate(x, y);
             }
         }
@@ -308,11 +308,11 @@ public class SpectralDailyAccumulationOp extends Operator {
 
         for (int i = 0; i < numSdrBands; i++) {
             for (int j = 0; j < 3 * numSdrBands; j++) {
-                if (j % 3 == 0 && j/3 == i) {
+                if (j % 3 == 0 && j / 3 == i) {
                     kernels.set(i, j, 1.0);
-                } else if ((j-1) % 3==0 && (j-1)/3 == i) {
+                } else if ((j - 1) % 3 == 0 && (j - 1) / 3 == i) {
                     kernels.set(i, j, kvolTile[currentSourceProductIndex].getSampleDouble(x, y));
-                } else if ((j-2) % 3 == 0 && (j-2)/3 == i) {
+                } else if ((j - 2) % 3 == 0 && (j - 2) / 3 == i) {
                     kernels.set(i, j, kgeoTile[currentSourceProductIndex].getSampleDouble(x, y));
                 }
             }

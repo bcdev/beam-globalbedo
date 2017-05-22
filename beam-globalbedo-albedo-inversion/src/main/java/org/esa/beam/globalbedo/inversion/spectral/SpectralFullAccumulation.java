@@ -76,7 +76,8 @@ public class SpectralFullAccumulation {
         // STEP 1: get Daily Accumulator input files...
         final String dailyAccDir = sdrRootDir + File.separator + "DailyAcc";
 
-        AccumulatorHolder dailyAccumulators = SpectralIOUtils.getDailyAccumulator(dailyAccDir, doy, year, tile,
+        AccumulatorHolder dailyAccumulators = SpectralIOUtils.getDailyAccumulator(dailyAccDir, numSdrBands,
+                                                                                  doy, year, tile,
                                                                                   subStartX, subStartY,
                                                                           wings,
                                                                           computeSnow, false);

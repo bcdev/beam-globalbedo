@@ -85,7 +85,7 @@ public class SpectralIOUtils {
     }
 
     public static Product[] getSpectralAccumulationInputProducts(String sdrRootDir, String[] sensors,
-                                                                 int subStartX, int subStartY,
+                                                                 int numSdrBands, int subStartX, int subStartY,
                                                                  String tile, int year, int doy) throws IOException {
         final String daystring_yyyymmdd = AlbedoInversionUtils.getDateFromDoy(year, doy);
         final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd");  // for AVHRR products
@@ -94,16 +94,19 @@ public class SpectralIOUtils {
         if (StringUtils.isNotNullAndNotEmpty(daystring_yyyymmdd)) {
             for (String sensor : sensors) {
                 int numProducts = 0;
-                final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-                final String sensorBbdrDirName =
-                        sdrRootDir + File.separator + sensor + File.separator + year + File.separator +
-                                tile + File.separator + subTileDir;
+                String sensorBbdrDirName =
+                        sdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
+                String subTileDir = null;
+                if (numSdrBands > 1) {
+                    subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
+                    sensorBbdrDirName = sensorBbdrDirName.concat(subTileDir);
+                }
                 final File sensorBbdrDir = new File(sensorBbdrDirName);
                 if (sensorBbdrDir.exists()) {
                     final String[] sensorBbdrFiles = sensorBbdrDir.list();
                     for (String sensorBbdrFile : sensorBbdrFiles) {
                         if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz")) &&
-                                sensorBbdrFile.contains(subTileDir) &&
+                                (subTileDir == null || sensorBbdrFile.contains(subTileDir)) &&
                                 (sensorBbdrFile.contains(daystring_yyyymmdd) || sensorBbdrFile.contains(daystring_yyyy_mm_dd))) {
                             final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
                             Product product = ProductIO.readProduct(sourceProductFileName);
@@ -124,6 +127,7 @@ public class SpectralIOUtils {
     }
 
     public static AccumulatorHolder getDailyAccumulator(String accumulatorRootDir,
+                                                        int numSdrBands,
                                                         int doy, int year, String tile,
                                                         int subStartX, int subStartY,
                                                         int wings,
@@ -133,6 +137,7 @@ public class SpectralIOUtils {
         AccumulatorHolder accumulatorHolder = null;
 
         final List<String> albedoInputProductBinaryFileList = getDailyAccumulatorBinaryFileNames(accumulatorRootDir,
+                                                                                                 numSdrBands,
                                                                                                  doy, year, tile,
                                                                                                  subStartX, subStartY,
                                                                                                  wings,
@@ -160,7 +165,9 @@ public class SpectralIOUtils {
                     productYearRootDir = accumulatorRootDir.concat(
                             File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
                 }
-                productYearRootDir = productYearRootDir.concat(File.separator + subTileDir);
+                if (numSdrBands > 1) {
+                    productYearRootDir = productYearRootDir.concat(File.separator + subTileDir);
+                }
 
                 String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
                 albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
@@ -172,7 +179,9 @@ public class SpectralIOUtils {
         return accumulatorHolder;
     }
 
-    static List<String> getDailyAccumulatorBinaryFileNames(String accumulatorRootDir, final int doy,
+    static List<String> getDailyAccumulatorBinaryFileNames(String accumulatorRootDir,
+                                                           int numSdrBands,
+                                                           final int doy,
                                                            final int year, String tile,
                                                            final int subStartX, final int subStartY,
                                                            int wings,
@@ -218,7 +227,9 @@ public class SpectralIOUtils {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + accProductYear + File.separator + tile + File.separator + "NoSnow");
             }
-            thisYearsRootDir = thisYearsRootDir.concat(File.separator + subTileDir);
+            if (numSdrBands > 1) {
+                thisYearsRootDir = thisYearsRootDir.concat(File.separator + subTileDir);
+            }
             final String[] thisYearAccumulatorFiles = (new File(thisYearsRootDir)).list(accumulatorNameFilter);
 
             // matrices_2004273_SUB_300_600.bin, matrices_2004365_SUB_300_600.bin,
@@ -235,11 +246,11 @@ public class SpectralIOUtils {
             }
         }
 
-        return sortAccumulatorFileList(accumulatorNameList, year, doy, subTileDir);
+        return sortAccumulatorFileList(accumulatorNameList, year, doy, numSdrBands, subTileDir);
     }
 
     static List<String> sortAccumulatorFileList(List<String> accumulatorNameList, int refYear, int refDoy,
-                                                String subTileDir) {
+                                                int numSdrBands, String subTileDir) {
         // we want to sort from center:
         // e.g. reference date: 2005121
         // -->  matrices_2005121.bin, matrices_2005122.bin, matrices_2005120.bin, matrices_2005123.bin, , matrices_2005119.bin...
@@ -250,8 +261,10 @@ public class SpectralIOUtils {
         int doyPlus = refDoy;
         int doyMinus = refDoy;
 
+        final String accExt = numSdrBands > 1 ? "_" + subTileDir + ".bin" : ".bin";
+
         while (doyMinus > 0 && doyPlus < 366) {
-            String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + "_" + subTileDir + ".bin";
+            String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + accExt;
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                     (AlbedoInversionUtils.getWeight(refDoy - doyMinus) > 0.05 ||
                             accumulatorNameSortedList.size() < 60)) {
@@ -259,7 +272,7 @@ public class SpectralIOUtils {
             }
             doyMinus--;
 
-            accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + "_" + subTileDir + ".bin";
+            accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + accExt;
             if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                     (AlbedoInversionUtils.getWeight(doyPlus - refDoy) > 0.05 ||
                             accumulatorNameSortedList.size() < 60)) {
@@ -272,7 +285,7 @@ public class SpectralIOUtils {
             if (doyMinus == 0) {
                 int doyMinus2 = 365;
                 while (doyMinus2 > 180 && doyPlus < 366) {
-                    String accName = "matrices_" + Integer.toString(refYear - 1) + String.format("%03d", doyMinus2) + "_" + subTileDir + ".bin";
+                    String accName = "matrices_" + Integer.toString(refYear - 1) + String.format("%03d", doyMinus2) + accExt;
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             (AlbedoInversionUtils.getWeight(refDoy + 365 - doyMinus2) > 0.05 ||
                                     accumulatorNameSortedList.size() < 60)) {
@@ -280,7 +293,7 @@ public class SpectralIOUtils {
                     }
                     doyMinus2--;
 
-                    accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + "_" + subTileDir + ".bin";
+                    accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyPlus) + accExt;
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             (AlbedoInversionUtils.getWeight(doyPlus - refDoy) > 0.05 ||
                                     accumulatorNameSortedList.size() < 60)) {
@@ -291,7 +304,7 @@ public class SpectralIOUtils {
             } else if (doyPlus == 366) {
                 int doyPlus2 = 0;
                 while (doyPlus2 < 180 && doyMinus > 0) {
-                    String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + "_" + subTileDir + ".bin";
+                    String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + accExt;
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             (AlbedoInversionUtils.getWeight(refDoy - doyMinus) > 0.05 ||
                                     accumulatorNameSortedList.size() < 60)) {
@@ -299,7 +312,7 @@ public class SpectralIOUtils {
                     }
                     doyMinus--;
 
-                    accName = "matrices_" + Integer.toString(refYear + 1) + String.format("%03d", doyPlus2) + "_" + subTileDir + ".bin";
+                    accName = "matrices_" + Integer.toString(refYear + 1) + String.format("%03d", doyPlus2) + accExt;
                     if (accumulatorNameList.contains(accName) && !accumulatorNameSortedList.contains(accName) &&
                             (AlbedoInversionUtils.getWeight(doyPlus2 + 365 - refDoy) > 0.05 ||
                                     accumulatorNameSortedList.size() < 60)) {
