@@ -269,21 +269,23 @@ public class IOUtils {
             final String[] priorFiles = priorPath.list();
             final List<String> snowFilteredPriorList = getPriorProductNames(priorVersion, priorFiles, computeSnow);
 
-            // allow all days within 8-day prior period:
-//            final int refDoy = 8 * ((doy - 1) / 8) + 1;
-//            String doyString = getDoyString(refDoy);
-            final String doyString = getDoyString(doy);
-
+            // 20170531: just in case, if prior for doy is not available, check for priors +- 8 days around...
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
-            for (String priorFileName : snowFilteredPriorList) {
-                BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
-                if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
-                    String sourceProductFileName = priorDir + File.separator + priorFileName;
-                    BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
-                    return ProductIO.readProduct(sourceProductFileName);
+            for (int iDoy=0; iDoy <=8; iDoy++) {
+                for (int sgn=-1; sgn<=1; sgn+=2) {
+                    final int offset = sgn * iDoy;
+                    final String doyString = getDoyString(doy + offset);
+                    BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
+                    for (String priorFileName : snowFilteredPriorList) {
+                        BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileName: " + priorFileName);
+                        if (priorFileName.startsWith(priorFileNamePrefix + "." + doyString)) {
+                            String sourceProductFileName = priorDir + File.separator + priorFileName;
+                            BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProductFileName: " + sourceProductFileName);
+                            return ProductIO.readProduct(sourceProductFileName);
+                        }
+                    }
                 }
             }
         }
