@@ -40,14 +40,14 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     private static final int SRC_STATUS = 70;
 
 
-    @Parameter(defaultValue = "false", description = "Compute only snow pixels")
-    private boolean computeSnow;
+//    @Parameter(defaultValue = "false", description = "Compute only snow pixels")
+//    private boolean computeSnow;
 
     @Parameter(defaultValue = "1", description = "Spectral mapped SDR bands (usually the 7 MODIS channels)")
     protected int numMappedSdrBands;
     // todo: SK to provide mapping for 440nm chemistry channel (not included in the MODIS bands!)
 
-    @Parameter(defaultValue = "0", interval = "[0,6]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider 440nm chemistry channel
 
     private String[] sdrMappedBandNames;
@@ -169,8 +169,8 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         final int status = sourceSamples[SRC_STATUS].getInt();
 
+        // only compute over clear land (1) or snow (3):
         if (status != 1 && status != 3) {
-            // only compute over clear land or snow
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
@@ -191,9 +191,9 @@ public class SdrSpectralMappingToModisOp extends BbdrMasterOp {
         }
 
         final float[] sdrMapped =
-                getSpectralMappedSdr(numMappedSdrBands, singleBandIndex, sensor.name(), sdr, sinCoordinates, computeSnow);
+                getSpectralMappedSdr(numMappedSdrBands, singleBandIndex, sensor.name(), sdr, sinCoordinates, false);
 //        final float[] sdrSigmaMapped =
-//                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, computeSnow);
+//                getSpectralMappedSigmaSdr(numMappedSdrBands, sensor.name(), sigmaSdr, sinCoordinates, false);
         final float[] sdrSigmaMapped = getSpectralMappedSigmaSdr(numMappedSdrBands, singleBandIndex, sigmaSdr);
 
         // calculation of kernels (kvol, kgeo)
