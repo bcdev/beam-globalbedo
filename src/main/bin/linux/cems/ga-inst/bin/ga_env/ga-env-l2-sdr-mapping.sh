@@ -97,8 +97,8 @@ submit_job() {
     echo "command: ${command}"
 
     # L2 BBDR:
-    #bsubmit="bsub -W 00:15 -R "rusage[mem=4000]" -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    bsubmit="bsub -q short-serial -W 00:15 -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -W 180 -n 8 -R "rusage[mem=16384]" -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     echo "bsubmit: $bsubmit"
 
@@ -113,11 +113,11 @@ submit_job() {
 
     if hostname | grep -qF 'cems-sci1.cems.rl.ac.uk'
     then
-        echo "${bsubmit}"
-        line=`${bsubmit}`
+	echo "${bsubmit}"
+	line=`${bsubmit}`
     else
-        echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
-        line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
+	echo "ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}"
+	line=`ssh -A cems-sci1.cems.rl.ac.uk ${bsubmit}`
     fi
 
     echo ${line}

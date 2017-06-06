@@ -1,6 +1,6 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l2-sdr-tiles.sh
+. ${GA_INST}/bin/ga_env/ga-env-l2-sdr-mapping.sh
 
 sdrPath=$1
 sdrFile=$2
