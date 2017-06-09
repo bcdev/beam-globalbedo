@@ -272,7 +272,7 @@ public class InversionOp extends PixelOperator {
         double maskPrior = 1.0;
         Prior prior = null;
         if (usePrior) {
-            prior = Prior.createForInversion(sourceSamples, priorScaleFactor);
+            prior = Prior.createForInversion(sourceSamples, priorScaleFactor, computeSnow);
             maskPrior = prior.getMask();
         }
 

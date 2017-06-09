@@ -31,9 +31,10 @@ public class Prior {
      *
      * @param sourceSamples    - the source samples as defined in {@link InversionOp}}.
      * @param priorScaleFactor - the prior scale factor
+     * @param computeSnow
      * @return Prior
      */
-    public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor) {
+    public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor, boolean computeSnow) {
 
         Matrix C = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                               3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);              // 9x9
@@ -44,6 +45,8 @@ public class Prior {
         final int priorIndexNsamples = InversionOp.SRC_PRIOR_NSAMPLES;
         double nSamplesValue = sourceSamples[priorIndexNsamples].getDouble();
         double nSamples = AlbedoInversionUtils.isValid(nSamplesValue) ? nSamplesValue : 0.0;
+        final int priorIndexSnowFraction = InversionOp.SRC_PRIOR_MASK;
+        double priorSnowFraction = sourceSamples[priorIndexSnowFraction].getDouble();
 
         Matrix priorMean = new Matrix(
                 AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS, 1);
@@ -101,7 +104,10 @@ public class Prior {
                 for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
 //                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
 //                            priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
-                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0) {
+                    final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+                    final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
+                            (!computeSnow && priorSnowFraction >= 0.93);
+                    if (priorMeanNotOk || priorSnowFractionNotOk) {
                         processPixel = false;
                         break;
                     }
