@@ -1,17 +1,13 @@
 #!/bin/bash
 
-## we want this:
-#index = -1
-#while (index < 3 and index < 6) do
-#    print 'increasing ' + index
-#    index++
-#
-#print 'done: index = ' + index
-
 index=-1
-while [ $index -lt 3 ] && [ $index -lt 6 ]
+index2=-1
+while [ $index -lt 5 ] && [ $index2 -lt 2 ]
 do
   echo "increasing: index = $index"
+  echo "increasing: index2 = $index2"
   index=$(($index+1))
+  index2=$(($index2+1))
 done
 echo "done: index = $index"
+echo "done: index2 = $index2"

@@ -36,7 +36,7 @@ sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #years = ['1981']    #test  
 #years = ['2001']    #test  
 #years = ['2014']    #test  
-years = ['2001']    #test  
+years = ['1999']    #test  
 #years = ['2007','2001','2002','1990','1987']    #test  
 #years = ['1984','1985','1986','1987','1988']  
 #years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
@@ -51,9 +51,9 @@ snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
 resolutions = ['005']
 #resolutions = ['05']
 
-#projections = ['SIN', 'PC']
+projections = ['SIN', 'PC']
 #projections = ['SIN']
-projections = ['PC']
+#projections = ['PC']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
@@ -88,10 +88,10 @@ for year in years:
         #for idoy in range(121,243):    
         #for idoy in range(242,365):    
         #for idoy in range(0,122):    
-        for idoy in range(172,173):    
+        #for idoy in range(172,173):    
         #for idoy in range(36,37):    
         #for idoy in range(16,17):    
-        #for idoy in range(0,1):    
+        for idoy in range(0,1):    
         #for idoy in range(139,365):    
         #for idoy in range(364,365):    
             doy = str(idoy+1).zfill(3) # daily

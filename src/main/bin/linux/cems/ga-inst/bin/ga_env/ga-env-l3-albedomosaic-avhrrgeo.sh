@@ -106,10 +106,12 @@ submit_job() {
     # stress test:
     #bsubmit="bsub -q short-serial -W 180 -R rusage[mem=40000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     # for PC, we are fine with 24GB
-    bsubmit="bsub -q short-serial -W 180 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -q short-serial -W 180 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # add NEW -M option (helpdesk advice, 20170424)!!
+    bsubmit="bsub -q short-serial -W 180 -R rusage[mem=32000] -M 32000000 -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
-    #### THIS IS FOR PRIORITY TEST 20170103! REMOVE AFTER THAT DAY!
-    #bsubmit="bsub -U root#2 -q short-serial -W 180 -R rusage[mem=24000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #### THIS IS FOR PRIORITY TEST 20170421! REMOVE AFTER THAT DAY!
+    #bsubmit="bsub -U QA4ECV001 -q short-serial -W 180 -R rusage[mem=24000] -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     ####
 
     echo "bsubmit: $bsubmit"

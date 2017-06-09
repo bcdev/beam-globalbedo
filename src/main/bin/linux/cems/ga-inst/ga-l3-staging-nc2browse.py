@@ -22,12 +22,13 @@ years=['2001']
 #         '2011','2012','2013','2014']
 
 #snowModes=['Merge']
-snowModes=['NoSnow']
+#snowModes=['NoSnow']
+snowModes=['NoSnow','Snow']
 #resolutions=['005','05']
 resolutions=['005']
 #projections=['PC','SIN']
-#projections=['SIN']
-projections=['PC']
+projections=['SIN']
+#projections=['PC']
 
 #######
 sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
@@ -52,8 +53,9 @@ for year in years:
             #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
             #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '_avhrr/' + res
             #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + year + '_avhrr/' + res
-            albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + year + '/' + res
+            #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + year + '/' + res
             #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + res
+            albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + sensorID + '/' + year + '/' + res
             for proj in projections:
                 #for idoy in range(180,365):
                 for idoy in range(0,365):

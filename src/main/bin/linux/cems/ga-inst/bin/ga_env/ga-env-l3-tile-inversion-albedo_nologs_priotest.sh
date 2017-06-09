@@ -34,7 +34,9 @@ submit_job() {
     ## RETRY 20170112:
     #bsubmit="bsub -U root#6 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
     ## RETRY 20170120:
-    bsubmit="bsub -U root#8 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -U root#8 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    ## NEW PRIO PHASE 20170421:
+    bsubmit="bsub -U QA4ECV001 -q short-serial -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     ####
 

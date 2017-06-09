@@ -23,13 +23,18 @@ years = ['2005']
 sensors = ['MERIS'] # start with
 #sensors = ['MERIS','VGT'] # final
 
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115. NO LONGER EXISTING, 20170522
+priorDir = '/group_workspaces/cems2/qa4ecv/vol3/500m' # this is preliminary, 20170522
+# all 326 tiles we have:
+tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories
+
 #tiles = ['h20v06'] # start with
-tiles = ['h18v04'] # start with
+#tiles = ['h18v04'] # start with
 #tiles = ['h25v06'] # start with
 #tiles = ['h18v04','h22v02','h19v08','h25v06'] # final
 
-subtileStartX = ['0','300','600','900']
-subtileStartY = ['0','300','600','900']
+#subtileStartX = ['0','300','600','900']
+#subtileStartY = ['0','300','600','900']
 
 ######################## SDR MERIS --> MODIS: ###########################
 
@@ -37,12 +42,18 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 inputs = ['dummy']
-m = PMonitor(inputs, 
+#m = PMonitor(inputs, 
+#             request='ga-l2-sdr-mapping-meris-to-modis-tiles',
+#             logdir='log', 
+#             hosts=[('localhost',192)],
+#             types=[('ga-l2-sdr-mapping-meris-to-modis-tiles-step.sh',64),
+#                    ('ga-l2-sdr-modis-tiles-to-subtiles-step.sh',128)])
+m = PMonitor(inputs,
              request='ga-l2-sdr-mapping-meris-to-modis-tiles',
-             logdir='log', 
-             hosts=[('localhost',192)],
-             types=[('ga-l2-sdr-mapping-meris-to-modis-tiles-step.sh',64),
-                    ('ga-l2-sdr-modis-tiles-to-subtiles-step.sh',128)])
+             logdir='log',
+             hosts=[('localhost',128)],
+             types=[('ga-l2-sdr-mapping-meris-to-modis-tiles-step.sh',128)])
+
 
 for year in years:
     for sensor in sensors:
@@ -61,11 +72,11 @@ for year in years:
                             m.execute('ga-l2-sdr-mapping-meris-to-modis-tiles-step.sh', ['dummy'], [mappingPostCond], 
                                                                                 parameters=[sdrPath,sdrFiles[index],sdrModisTileDir,sensor,gaRootDir,beamDir])
 
-                            sdrModisFilename = os.path.splitext(sdrFiles[index])[0] + '_mapped.nc'
-                            sdrModisPath = sdrModisTileDir + '/' + sdrModisFilename
-                            m.execute('ga-l2-sdr-modis-tiles-to-subtiles-step.sh',
-                                              [mappingPostCond], ['dummy2'],
-                                              parameters=[sdrModisPath,sdrModisFilename,sdrModisTileDir,sensor,gaRootDir,beamDir])
+                            #sdrModisFilename = os.path.splitext(sdrFiles[index])[0] + '_mapped.nc'
+                            #sdrModisPath = sdrModisTileDir + '/' + sdrModisFilename
+                            #m.execute('ga-l2-sdr-modis-tiles-to-subtiles-step.sh',
+                            #                  [mappingPostCond], ['dummy2'],
+                            #                  parameters=[sdrModisPath,sdrModisFilename,sdrModisTileDir,sensor,gaRootDir,beamDir])
 
 m.wait_for_completion()
 

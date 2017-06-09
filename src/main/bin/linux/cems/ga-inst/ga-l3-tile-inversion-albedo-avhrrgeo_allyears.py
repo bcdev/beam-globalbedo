@@ -38,7 +38,9 @@ sensorID = 'avh_geo' # must be one of: 'avh', 'geo', 'avh_geo'
 #######
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011
-priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115
+priorDir = '/group_workspaces/cems2/qa4ecv/vol1/prior.c6/stage2/1km' # next version provided by SK, 20170531
+
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 # all 326 tiles we have:
@@ -48,7 +50,7 @@ tiles.sort()
 
 #tiles = ['h11v08','h11v09','h12v08','h12v09']
 #tiles = ['h17v17']
-tiles = ['h18v04']
+#tiles = ['h18v04']
 #tiles = ['h09v05','h10v05']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 
@@ -74,8 +76,9 @@ tiles = ['h18v04']
 #startYear = 1998
 #endYear = 2014
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
-startYear = 2000
-endYear = 2000
+### processed 2017/04: 2000-2010
+startYear = 1997
+endYear = 1997
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
