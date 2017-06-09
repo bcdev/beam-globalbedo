@@ -357,7 +357,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     private void computeNearestAlbedo(Tile src, Tile target, Tile mask) {
         if (src != null && target != null && mask != null) {
             computeNearest(src, target, mask, scaling);
-            applySouthPoleCorrection(src, target, mask);
+            // todo: dirty implementation problems with coarse 0.5deg resolution - do we still need this with latest Priors?
+//            applySouthPoleCorrection(src, target, mask);
         }
     }
 
