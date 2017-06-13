@@ -10,7 +10,7 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-years=['2001']
+years=['2003']
 
 #years=['1982','1983']
 #years=['1982','1983','2004','2013']
@@ -21,14 +21,17 @@ years=['2001']
 #         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
 #         '2011','2012','2013','2014']
 
+doys=['017','181']  # test!!
+
 #snowModes=['Merge']
 #snowModes=['NoSnow']
 snowModes=['NoSnow','Snow']
 #resolutions=['005','05']
-resolutions=['005']
+#resolutions=['005']
+resolutions=['05']
 #projections=['PC','SIN']
-projections=['SIN']
-#projections=['PC']
+#projections=['SIN']
+projections=['PC']
 
 #######
 sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
@@ -58,12 +61,13 @@ for year in years:
             albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + snowMode + '/' + sensorID + '/' + year + '/' + res
             for proj in projections:
                 #for idoy in range(180,365):
-                for idoy in range(0,365):
+                #for idoy in range(0,365):
+                for doy in doys:
                 #for idoy in range(120,121):
                 #for idoy in range(121,122):
                 #for idoy in range(364,365):
                 #for idoy in range(0,3):
-                    doy = str(idoy+1).zfill(3)             
+                    #doy = str(idoy+1).zfill(3)             
                     stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo/' + snowMode + '/' + year + '/' + res + '/' + proj
                     #stagingNc2browseFile = albedoMosaicDir + '/GlobAlbedo.albedo.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 
                     

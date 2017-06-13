@@ -51,7 +51,7 @@ tiles.sort()
 #tiles = ['h11v08','h11v09','h12v08','h12v09']
 #tiles = ['h17v17']
 #tiles = ['h18v04']
-#tiles = ['h09v05','h10v05']
+#tiles = ['h16v00','h17v00']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 
 # Antarctica:
@@ -77,8 +77,9 @@ tiles.sort()
 #endYear = 2014
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
 ### processed 2017/04: 2000-2010
-startYear = 1997
-endYear = 1997
+### processed 2017/06: 2001, 2002, 2003, 2004, 2006 
+startYear = 2006
+endYear = 2006
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,

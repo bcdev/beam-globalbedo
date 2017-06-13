@@ -26,17 +26,10 @@ sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #######
 
-#years = ['2011']    #test  
-#years = ['2010']    #test  
-#years = ['2009']    #test  
-#years = ['2012']    #test  
-#years = ['1998']    #test  
-#years = ['1993']    #test  
-
 #years = ['1981']    #test  
 #years = ['2001']    #test  
 #years = ['2014']    #test  
-years = ['1999']    #test  
+years = ['2002']    #test  
 #years = ['2007','2001','2002','1990','1987']    #test  
 #years = ['1984','1985','1986','1987','1988']  
 #years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
@@ -44,16 +37,16 @@ years = ['1999']    #test
 #         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
 #         '2011','2012','2013','2014']  
 
-#snowModes = ['NoSnow'] # usually for AVHRRGEO
-snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
+snowModes = ['NoSnow'] # usually for AVHRRGEO
+#snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
 
 #resolutions = ['05', '005']
-resolutions = ['005']
-#resolutions = ['05']
+#resolutions = ['005']
+resolutions = ['05']
 
-projections = ['SIN', 'PC']
+#projections = ['SIN', 'PC']
 #projections = ['SIN']
-#projections = ['PC']
+projections = ['PC']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
@@ -84,18 +77,12 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
 
-        #for idoy in range(0,365):    
-        #for idoy in range(121,243):    
-        #for idoy in range(242,365):    
-        #for idoy in range(0,122):    
-        #for idoy in range(172,173):    
-        #for idoy in range(36,37):    
+        for idoy in range(0,365):    
         #for idoy in range(16,17):    
-        for idoy in range(0,1):    
-        #for idoy in range(139,365):    
+        #for idoy in range(180,181):    
         #for idoy in range(364,365):    
             doy = str(idoy+1).zfill(3) # daily
-            #doy = str(8*idoy+1).zfill(3)   # 8-day
+            #####doy = str(8*idoy+1).zfill(3)   # 8-day
             for resolution in resolutions:
                 for proj in projections:
 
@@ -104,11 +91,12 @@ for year in years:
                         albedoTileDir = gaRootDir + '/Albedo/' + year
                         # new Feb 2017: 
                         #albedoTileDir = gaRootDir + '/Albedo/' + sensorID + '/' + year
-                        albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
-                        #albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
+                        #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + resolution
+                        albedoMosaicDir = gaRootDir + '/Mosaic/Albedo/' + sensorID + '/' + snowMode + '/' + year + '/' + resolution
                         m.execute('ga-l3-albedomosaic-simple-avhrrgeo-step.sh', [albedoTileDir], [albedoMosaicDir], parameters=[sensorID,year,doy,snowMode,resolution,proj,tileSize,gaRootDir,beamDir])
                     else:
-                        ### the Alex Loew energy conservation way (as requested in GA and more precise, but slower: double number of jobs)                
+                        ### the Alex Loew energy conservation way (as requested in GA and reported to be more precise, but slower: double number of jobs)
+                        ### --> in fact this produces more or less the same as the simple mode in case of mosaicing 200x200 tiles                
                         # BRDF tiles --> BRDF mosaic:
                         brdfTileDir = gaRootDir + '/Inversion/' + snowMode + '/' + year
                         brdfMosaicDir = gaRootDir + '/Mosaic/brdf/' + snowMode + '/' + year + '/' + resolution

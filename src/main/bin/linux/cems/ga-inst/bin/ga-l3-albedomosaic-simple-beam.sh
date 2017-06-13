@@ -28,6 +28,8 @@ else
 fi
 
 albedoSrcSubdirName=Albedo/$snowMode/$sensorID
+#albedoSrcSubdirName=Albedo/v2/$snowMode/$sensorID   # TEST!!!
+#albedoSrcSubdirName=Albedo/v1   # TEST!!!
 
 targetDir=$gaRootDir/Mosaic/Albedo/$snowMode/$sensorID/$year/$deg
 if [ ! -d "$targetDir" ]

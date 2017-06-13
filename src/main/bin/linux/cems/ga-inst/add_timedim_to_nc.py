@@ -1,6 +1,7 @@
 __author__ = 'olafd'
 
 # Adds 'time' as 3rd dimension in 2D NetCDF input raster file. On request of AL, 20170215
+# Works on CEMS with python2.7 only!
 
 import os
 import sys
@@ -11,7 +12,7 @@ from netCDF4 import Dataset
 
 if len(sys.argv) != 4:
     print 'Usage:  python add_timedim_to_nc.py <nc_input> <nc_result> <timestring>'
-    print 'example call:  python add_timedim_to_nc.py Qa4ecv.albedo.avhrrgeo.NoSnow.005.2001327.PC.nc 2001327'
+    print 'example call:  python2.7 add_timedim_to_nc.py Qa4ecv.albedo.avhrrgeo.NoSnow.005.2001327.PC.nc 2001327'
     sys.exit(-1)
 
 infile = sys.argv[1]

@@ -82,29 +82,28 @@ then
         echo "Status: $status"
     fi
 
-    # create marker file that albedo for given tile/DoY was processed
-    touch $albedoNosnowTargetDir/PROCESSED_ALL_$doy
-
-    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
-    numAlbedoFiles=`ls -1 $albedoNosnowTargetDir/PROCESSED_ALL_* |wc -l`
-    echo "numAlbedoFiles nosnow: $numAlbedoFiles"
-    if [ $numAlbedoFiles -eq 365 ]
-    then
-	echo "All albedo nosnow products for year $year, tile $tile done."
-	touch $albedoNosnowTargetDir/PROCESSED_ALL
-    fi
-
-    touch $albedoNosnowTargetDir/PROCESSED_ALL_$doy
-
-    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
-    numAlbedoFiles=`ls -1 $albedoSnowTargetDir/PROCESSED_ALL_* |wc -l`
-    echo "numAlbedoFiles snow: $numAlbedoFiles"
-    if [ $numAlbedoFiles -eq 365 ]
-    then
-        echo "All albedo snow products for year $year, tile $tile done."
-        touch $albedoSnowTargetDir/PROCESSED_ALL
-    fi
-
+#    # create marker file that albedo for given tile/DoY was processed
+#    touch $albedoNosnowTargetDir/PROCESSED_ALL_$doy
+#
+#    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
+#    numAlbedoFiles=`ls -1 $albedoNosnowTargetDir/PROCESSED_ALL_* |wc -l`
+#    echo "numAlbedoFiles nosnow: $numAlbedoFiles"
+#    if [ $numAlbedoFiles -eq 365 ]
+#    then
+#	echo "All albedo nosnow products for year $year, tile $tile done."
+#	touch $albedoNosnowTargetDir/PROCESSED_ALL
+#    fi
+#
+#    touch $albedoNosnowTargetDir/PROCESSED_ALL_$doy
+#
+#    # count existing marker files and create final marker file if we are done for all DoYs of given year (we assume daily processing):
+#    numAlbedoFiles=`ls -1 $albedoSnowTargetDir/PROCESSED_ALL_* |wc -l`
+#    echo "numAlbedoFiles snow: $numAlbedoFiles"
+#    if [ $numAlbedoFiles -eq 365 ]
+#    then
+#        echo "All albedo snow products for year $year, tile $tile done."
+#        touch $albedoSnowTargetDir/PROCESSED_ALL
+#    fi
 
 else
     echo "Directory '$priorRootDir/$tile' does not exist - no BRDF computed for tile $tile, year $year, DoY $doy."
