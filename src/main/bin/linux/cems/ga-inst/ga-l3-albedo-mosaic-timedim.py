@@ -22,8 +22,10 @@ endYear = 2001
 
 version = 'v0.9'
 sensorID = 'avh_geo'
-snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
+#snowModes = ['NoSnow','Snow']
+snowModes = ['NoSnow']
 resolutions = ['05']
+#resolutions = ['005']
 
 inputs = ['albedos']
 m = PMonitor(inputs,

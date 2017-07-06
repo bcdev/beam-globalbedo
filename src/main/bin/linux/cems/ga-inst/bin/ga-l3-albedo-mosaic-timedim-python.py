@@ -51,8 +51,8 @@ print 'timeval: ', timeval
 with Dataset(infile) as src, Dataset(outfile, 'w', format='NETCDF4') as dst:
 
     # set new time dimension:
-    #time = 1
-    #dst.createDimension('time', None)
+    time = 1
+    dst.createDimension('time', None)
 
     # set dimensions from src:
     for name, dimension in src.dimensions.iteritems():
@@ -74,10 +74,10 @@ with Dataset(infile) as src, Dataset(outfile, 'w', format='NETCDF4') as dst:
         dst.variables[variable][:,:] = src.variables[variable][:,:]
 
     # set time data
-    #time = dst.createVariable('time', 'i4', ('time'))
-    #time.setncattr('long_name', 'Product dataset time given as yyyyDOY')
-    #time.setncattr('standard_name', 'time')
-    #time.setncattr('units', 'days since 1970-01-01')
-    #time[:] = int(timeval)
+    time = dst.createVariable('time', 'i4', ('time'), zlib=True)
+    time.setncattr('long_name', 'Product dataset time given as days since 1970-01-01')
+    time.setncattr('standard_name', 'time')
+    time.setncattr('units', 'days since 1970-01-01')
+    time[:] = int(timeval)
 
 print 'done'

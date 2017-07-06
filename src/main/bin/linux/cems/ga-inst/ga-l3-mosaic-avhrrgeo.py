@@ -29,7 +29,7 @@ sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #years = ['1981']    #test  
 #years = ['2001']    #test  
 #years = ['2014']    #test  
-years = ['2002']    #test  
+years = ['2001']    #test  
 #years = ['2007','2001','2002','1990','1987']    #test  
 #years = ['1984','1985','1986','1987','1988']  
 #years = ['1981','1982','1983','1984','1985','1986','1987','1988','1989','1990',
@@ -37,8 +37,9 @@ years = ['2002']    #test
 #         '2001','2002','2003','2004','2005','2006','2007','2008','2009','2010',
 #         '2011','2012','2013','2014']  
 
-snowModes = ['NoSnow'] # usually for AVHRRGEO
-#snowModes = ['NoSnow','Snow'] # usually for AVHRRGEO
+#snowModes = ['NoSnow']
+snowModes = ['Snow']
+#snowModes = ['NoSnow','Snow']
 
 #resolutions = ['05', '005']
 #resolutions = ['005']
