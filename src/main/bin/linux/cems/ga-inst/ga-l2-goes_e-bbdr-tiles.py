@@ -16,7 +16,7 @@ __author__ = 'olafd'
 sensor = 'GOES_E'
 
 #years = ['2000','2001','2002','2003']     
-years = ['2000']
+years = ['2004']
 
 hIndices = ['02', '03', '04', '05', '06', '07', '08', '09', '10',
             '11', '12', '13', '14', '15', '16', '17']
@@ -45,6 +45,7 @@ for year in years:
         brfFiles = os.listdir(brfOrbitDir)
         if len(brfFiles) > 0:
             for index in range(0, len(brfFiles)):
+            #for index in range(0, 2):  # test
                 if diskIdString in brfFiles[index]:
                     brfOrbitFilePath = brfOrbitDir + '/' + brfFiles[index]
                     #print 'index, brfOrbitFilePath', index, ', ', brfOrbitFilePath

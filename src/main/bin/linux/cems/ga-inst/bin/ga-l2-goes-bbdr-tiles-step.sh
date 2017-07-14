@@ -13,6 +13,10 @@ beamDir=$8
 
 bbdrBaseName=`basename $bbdrFile .nc`
 
+# BEAM netcdf reader has problems with the new 'granule_name' global attribute (201707 deilvery) with value null, so remove it:
+echo "ncatted -h -a granule_name,global,d,, $bbdrPath"
+ncatted -h -a granule_name,global,d,, $bbdrPath
+
 task="ga-l2-gms-bbdr-tiles"
 jobname="${task}-${sensor}-${diskId}-${hIndex}-${bbdrBaseName}"
 command="./bin/${task}-beam.sh ${bbdrPath} ${bbdrTileDir} ${diskId} ${hIndex} ${sensor} ${gaRootDir} ${beamDir}"
