@@ -89,46 +89,30 @@ public class Prior {
             C.set(i, i, priorSD.get(i, 0) * priorSD.get(i, 0));
         }
 
-        // # Calculate C inverse
-        // simplified condition (GL, 20110407)
-        // do it always?! (to fix Antarctica issue, Dec 2016):
-//        if (nSamples > 0.0) {
         mask = 1.0;
         LUDecomposition lud = new LUDecomposition(C);
-        if (lud.isNonsingular()) {
-            inverseC = C.inverse();
-        } else {
-            index = 0;
-            boolean processPixel = true;
-            for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-//                    if (priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0 ||
-//                            priorSD.get(index, 0) <= 0.0 || priorSD.get(index, 0) > 1.0) {
-                    final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
-                    final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
-                            (!computeSnow && priorSnowFraction >= 0.93);
-                    if (priorMeanNotOk || priorSnowFractionNotOk) {
-                        processPixel = false;
-                        break;
-                    }
-                    index++;
-                }
-            }
-            if (processPixel) {
+        // first check if pixel is regarded as valid
+        boolean isValidPixel = validatePixel(computeSnow, priorSnowFraction, priorMean);
+        if (isValidPixel) {
+            // # Calculate C inverse
+            // simplified condition (GL, 20110407)
+            if (lud.isNonsingular()) {
+                inverseC = C.inverse();
+            } else {
                 final Matrix cIdentity = Matrix.identity(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                                                          3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);    // 9x9
                 inverseC = cIdentity.inverse();
-                index = 0;
-                for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-                    for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                        inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(index, 0));
-                        index++;
-                    }
-                }
-            } else {
-                mask = 0.0;
             }
+            setInverseC_F(inverseC, inverseC_F, priorMean);
+        } else {
+            mask = 0.0;
         }
+
+        return new Prior(inverseC, inverseC_F, mask, priorMean);
+    }
+
+    private static void setInverseC_F(Matrix inverseC, Matrix inverseC_F, Matrix priorMean) {
+        int index;
         index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
@@ -136,9 +120,24 @@ public class Prior {
                 index++;
             }
         }
-//        }
+    }
 
-        return new Prior(inverseC, inverseC_F, mask, priorMean);
+    private static boolean validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
+        boolean processPixel = true;
+        int index = 0;
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+                final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
+                        (!computeSnow && priorSnowFraction >= 0.93);
+                if (priorMeanNotOk || priorSnowFractionNotOk) {
+                    processPixel = false;
+                    break;
+                }
+                index++;
+            }
+        }
+        return processPixel;
     }
 
     public Matrix getM() {

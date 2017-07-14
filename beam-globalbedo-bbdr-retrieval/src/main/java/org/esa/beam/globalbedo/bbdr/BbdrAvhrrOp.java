@@ -105,6 +105,15 @@ public class BbdrAvhrrOp extends PixelOperator {
     @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
     private String priorDataMaskBandName;
 
+    // two new parameters to ensure support for both new AVHRR BRF v5 (201707)as well as previous version
+    @Parameter(defaultValue = "REL_PHI", valueSet = {"REL_PHI", "PHI"},
+            description = "Name of relative sensor azimuth angle (was changed from 'PHI' to 'REL_PHI' in v5, 201707)")
+    private String avhrrBrfPhiBandName;
+
+    @Parameter(defaultValue = "LTDR_FLAG", valueSet = {"LTDR_FLAG", "LDTR_FLAG"},
+            description = "Name of LTDR flag band (typo in band name was corrected in v5, 201707)")
+    private String avhrrLtdrFlagBandName;
+
 
     @SourceProduct
     protected Product sourceProduct;
@@ -160,20 +169,6 @@ public class BbdrAvhrrOp extends PixelOperator {
         final double[] kernels = BbdrUtils.computeConstantKernels(vzaRad, szaRad, phiRad);
         final double kvol = kernels[0];
         final double kgeo = kernels[1];
-
-        // todo: new outlier detection from PL
-//        final double
-//
-//        if (isOutlierFilter(x, y, brf1, priorParms, priorSd, kvol, kgeo) ||
-//                isOutlierFilter(x, y, brf2, priorParms, priorSd, kvol, kgeo)) {
-//            // not meaningful values
-//            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-//            computeLtdrSnapFlag(ldtrFlag, targetSamples);
-//            return;
-//        }
-
-
-
 
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
         double[] bb = new double[BbdrConstants.N_SPC];
@@ -262,10 +257,9 @@ public class BbdrAvhrrOp extends PixelOperator {
         configurator.defineSample(SRC_SIGMA_BRF_2, "SIGMA_BRF_BAND_2", sourceProduct);
         configurator.defineSample(SRC_TS, "TS", sourceProduct);
         configurator.defineSample(SRC_TV, "TV", sourceProduct);
-        configurator.defineSample(SRC_PHI, "PHI", sourceProduct);
+        configurator.defineSample(SRC_PHI, avhrrBrfPhiBandName, sourceProduct);
 //        configurator.defineSample(SRC_QA, "QA", sourceProduct);
-        // new AVHRR BRF products from JRC, Oct 2016 (note the misspelling LDTR instead of LTDR!!):
-        configurator.defineSample(SRC_LDTR_FLAG, "LDTR_FLAG", sourceProduct);
+        configurator.defineSample(SRC_LDTR_FLAG, avhrrLtdrFlagBandName, sourceProduct);
 
         // prior product:
         // we have:
@@ -301,78 +295,6 @@ public class BbdrAvhrrOp extends PixelOperator {
 
         configurator.defineSample(TRG_LTDR_SNAP, "LTDR_FLAG_snap");
 
-    }
-
-    /**
-     * New outlier detection for AVHRR as proposed by PL (Jan 2017)
-     *
-     * @param x - pixel x
-     * @param y - pixel y
-     * @param obs - BB value in either VIS, NIR or SW
-     * @param priorParms - [f0, f1, f2] in either VIS, NIR or SW
-     * @param priorSd - [sd0, sd1, sd2] in either VIS, NIR or SW
-     * @param kvol - kvol kernel
-     * @param kgeo - kgeo kernel
-     *
-     * @return boolean
-     */
-    boolean isOutlierFilter(int x, int y, double obs, double[] priorParms, double[] priorSd, double kvol, double kgeo) {
-//        ==================
-//        outlier pseudocode
-//        ==================
-//
-//
-//        cloud filtering
-//        ------------------
-//                assume we have obs avhrr
-//
-//        prior params = [f0,f1,f2]
-//        prior sd        = [sd0,sd1,sd2]
-//
-//
-//        fwd kernels = [1, k1, k2]
-//        for the AVHRR angles
-//
-//        operations:
-//        =========
-//
-//        # dot product -> scalar output
-//        obs prediction = (prior params) dot (fwd kernels)
-//
-//
-//        # scaled difference
-//        delta = (  (obs prediction) - (obs avhrr)) / (prior sd)
-//
-//
-//        We can decide how many SD to use for filtering, e.g. zthresh = 4? to
-//        be conservative
-//
-//
-//        comments
-//                -----------------
-//                so you will have a delta for each channel.
-//
-//
-//        If |delta| > zthresh:
-//
-//        its probably an outlier ....
-//
-//        if sgn(delta) +ve in both channels, its probably a cloud
-//        if sgn(delta) -ve in both channels, its probably a cloud shadow
-//        if sgn(delta) are different ... probably its an outlier but I don't
-//        know what it is ...
-//
-//
-//        ==================
-//        alternative outlier pseudocode
-//                ==================
-//        use a huber norm, which will be more robust to outliers ...
-
-        final double obsPrediction = priorParms[0] + priorParms[1]*kvol + priorParms[2]*kgeo;
-        final double sdMean = (priorSd[0] + priorSd[1] + priorSd[2])/3.0;   // todo: clarify with PL
-        final double delta = (obsPrediction - obs)/sdMean;
-
-        return false;
     }
 
     private void computeLtdrSnapFlag(int srcValue, WritableSample[] targetSamples) {
