@@ -27,6 +27,11 @@ for tile in `ls $albedoNoSnowRootDir`; do
                     echo "Next file $nextNoSnowFile does not exist either..."
                 fi
             done
+            if [ $nextDoy -gt 365 ]; then
+                prevDoy=$((10#$iDoy-1))
+                prevDoy=$(printf "%03d" $prevDoy)
+            	nextNoSnowFile=$albedoNoSnowRootDir/$tile/Qa4ecv.albedo.avh_geo.$year$prevDoy.$tile.NoSnow.nc
+            fi
             echo "cp -p $nextNoSnowFile $noSnowFile"
             cp -p $nextNoSnowFile $noSnowFile
         fi
@@ -53,6 +58,11 @@ for tile in `ls $albedoSnowRootDir`; do
                     echo "Next file $nextSnowFile does not exist either..."
                 fi
             done
+            if [ $nextDoy -gt 365 ]; then
+                prevDoy=$((10#$iDoy-1))
+                prevDoy=$(printf "%03d" $prevDoy)
+                nextSnowFile=$albedoSnowRootDir/$tile/Qa4ecv.albedo.avh_geo.$year$prevDoy.$tile.Snow.nc
+            fi
             echo "cp -p $nextSnowFile $snowFile"
             cp -p $nextSnowFile $snowFile
         fi
