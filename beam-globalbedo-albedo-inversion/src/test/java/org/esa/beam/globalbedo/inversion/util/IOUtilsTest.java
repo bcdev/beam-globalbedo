@@ -491,6 +491,16 @@ public class IOUtilsTest extends TestCase {
         avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_2, year, tile);
         assertNull(avhrrMaskProduct);
 
+        String productName_2a = "AVHRR3_NOAA16_20010321_20010321_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04";
+        avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_2a, year, tile);
+        assertNotNull(avhrrMaskProduct);
+        avhrrMaskProduct.getBands();
+        assertEquals(200, avhrrMaskProduct.getSceneRasterWidth());
+        assertEquals(200, avhrrMaskProduct.getSceneRasterHeight());
+        assertEquals(4, avhrrMaskProduct.getNumBands());
+        assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
+        assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
+
         String productName_3 =
                 "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20010321000000_h18v04";
         avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_3, year, tile);

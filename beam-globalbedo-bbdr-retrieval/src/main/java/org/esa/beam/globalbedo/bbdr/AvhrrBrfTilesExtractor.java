@@ -18,6 +18,7 @@ package org.esa.beam.globalbedo.bbdr;
 
 import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -26,10 +27,13 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 
 import javax.media.jai.JAI;
 import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -46,6 +50,12 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
 
     @SourceProduct
     private Product sourceProduct;
+
+    @Parameter(description = "Year")
+    private int year;
+
+    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
+    private String avhrrMaskRootDir;
 
     @Parameter
     private String bbdrDir;
@@ -99,27 +109,43 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
             };
             ecs.submit(callable);
         }
-        for (int i = 0; i < tileCoordinates.getTileCount(); i++) {
+        for (int i = 0; i < tileCoordinates.getTileCount(); i++)
             try {
                 Future<TileExtractor.TileProduct> future = ecs.take();
                 TileExtractor.TileProduct tileProduct = future.get();
                 if (tileProduct != null && tileProduct.getProduct() != null && isTileToProcess(tileProduct.getTileName())) {
-                    Product productToWrite;
+                    Product productToWrite = null;
                     if (convertToBbdr) {
                         // will save computation time and disk space in case of mass production...
-                        BbdrAvhrrOp toBbdrOp = new BbdrAvhrrOp();
-                        toBbdrOp.setParameterDefaultValues();
-                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
-                        productToWrite = toBbdrOp.getTargetProduct();
+                        Map<String, Product> avhrrBbdrInputProducts = new HashMap<>();
+                        avhrrBbdrInputProducts.put("brf", tileProduct.getProduct());
+                        final Product avhrrMaskProduct =
+                                IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
+                        if (avhrrMaskProduct != null) {
+                            avhrrBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);
+                            productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAvhrrOp.class),
+                                                               GPF.NO_PARAMS, avhrrBbdrInputProducts);
+                        }
+
+//                        BbdrAvhrrOp toBbdrOp = new BbdrAvhrrOp();
+//                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
+//                        final Product avhrrMaskProduct =
+//                                IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
+//                        if (avhrrMaskProduct != null) {
+//                            toBbdrOp.setSourceProduct("avhrrmask", avhrrMaskProduct);
+//                        }
+//                        toBbdrOp.setParameterDefaultValues();
+//                        productToWrite = avhrrBbdrTileProduct;
                     } else {
                         productToWrite = tileProduct.getProduct();
                     }
-                    writeTileProduct(productToWrite, tileProduct.getTileName());
+                    if (productToWrite != null) {
+                        writeTileProduct(productToWrite, tileProduct.getTileName());
+                    }
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);
             }
-        }
         executorService.shutdown();
     }
 

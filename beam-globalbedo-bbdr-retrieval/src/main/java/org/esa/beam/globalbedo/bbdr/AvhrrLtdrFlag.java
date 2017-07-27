@@ -8,10 +8,7 @@ import org.esa.beam.util.BitSetter;
 import java.awt.*;
 
 /**
- * todo: add comment
- * To change this template use File | Settings | File Templates.
- * Date: 21.11.2016
- * Time: 15:10
+ * Class representing BEAM/SNAP flag band for AVHRR LTDR flag.
  *
  * @author olafd
  */

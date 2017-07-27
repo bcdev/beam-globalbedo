@@ -150,13 +150,27 @@ public class IOUtils {
 
     public static Product getAvhrrMaskProduct(String avhrrMaskRootDir, String productName, int year, final String tile) {
         // AVHRR:
-        //    AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+        //             AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+        // new 201707: AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
+        //
         // others:
         // end with '_20030108000000_h19v02.nc'
 
         final String daystring;
-        if (productName.startsWith("AVH_")) {
-            daystring = productName.substring(4, 12);
+//        if (productName.startsWith("AVH_")) {
+//            daystring = productName.substring(4, 12);
+//        } else {
+//            daystring = productName.substring(productName.length() - 21, productName.length() - 13);
+//        }
+        if (productName.startsWith("AVH")) {
+            if (productName.contains("NOAA")) {
+                // new, e.g. AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc,
+                //           AVHRR2_NOAA11_19890101_19890101_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
+                daystring = productName.substring(14, 22);
+            } else {
+                // old, e.g. AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+                daystring = productName.substring(4, 12);
+            }
         } else {
             daystring = productName.substring(productName.length() - 21, productName.length() - 13);
         }
@@ -164,7 +178,8 @@ public class IOUtils {
         final FilenameFilter filenameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // for the AVHRRmask we expect the following filenames:
-                //    msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-16_20010321_c20140417135624_h03v07.nc
+                //             msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-16_20010321_c20140417135624_h03v07.nc
+                // new 201707: msslFlag_v2__AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
                 return (name.contains("msslFlag_") && name.contains(daystring) && name.contains(tile) && (name.endsWith(".nc")));
             }
         };
