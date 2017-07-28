@@ -126,16 +126,6 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
                             productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAvhrrOp.class),
                                                                GPF.NO_PARAMS, avhrrBbdrInputProducts);
                         }
-
-//                        BbdrAvhrrOp toBbdrOp = new BbdrAvhrrOp();
-//                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
-//                        final Product avhrrMaskProduct =
-//                                IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
-//                        if (avhrrMaskProduct != null) {
-//                            toBbdrOp.setSourceProduct("avhrrmask", avhrrMaskProduct);
-//                        }
-//                        toBbdrOp.setParameterDefaultValues();
-//                        productToWrite = avhrrBbdrTileProduct;
                     } else {
                         productToWrite = tileProduct.getProduct();
                     }
@@ -165,12 +155,9 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
         File file;
         String writeFormat;
         if (convertToBbdr) {
-//            file = new File(dir, sourceProduct.getName().replace("_BRF_", "_BBDR_") + "_" + tileName + ".nc");
-            // new file version:
             file = new File(dir, sourceProduct.getName().replace("_BRDF_", "_BBDR_") + "_" + tileName + ".nc");
             writeFormat = "NetCDF4-BEAM";
         } else {
-//            file = new File(dir, sourceProduct.getName() + "_" + tileName + ".nc");
             file = new File(dir, sourceProduct.getName().replace("_BRDF_", "_BRF_") + "_" + tileName + ".nc");
 //            writeFormat = "NetCDF4-GA-BBDR";
             writeFormat = "NetCDF4-BEAM";

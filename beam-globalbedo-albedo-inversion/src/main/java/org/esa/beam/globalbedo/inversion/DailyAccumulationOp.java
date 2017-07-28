@@ -92,8 +92,8 @@ public class DailyAccumulationOp extends Operator {
     private Tile[] kgeoSwTile;
     private Tile[] bbdrSnowMaskTile;
 
-    private Product[] avhrrMaskProducts;
-    private Tile[] avhrrMaskTile;
+//    private Product[] avhrrMaskProducts;
+//    private Tile[] avhrrMaskTile;
 
     private int currentSourceProductIndex;
 
@@ -121,13 +121,13 @@ public class DailyAccumulationOp extends Operator {
         kgeoNirTile = new Tile[sourceProducts.length];
         kgeoSwTile = new Tile[sourceProducts.length];
         bbdrSnowMaskTile = new Tile[sourceProducts.length];
-        avhrrMaskTile = new Tile[sourceProducts.length];
+//        avhrrMaskTile = new Tile[sourceProducts.length];
 
         resultArray = new float[AlbedoInversionConstants.NUM_ACCUMULATOR_BANDS]
                 [sourceProductWidth]
                 [sourceProductHeight];
 
-        avhrrMaskProducts = new Product[sourceProducts.length];
+//        avhrrMaskProducts = new Product[sourceProducts.length];
         for (int k = 0; k < sourceProducts.length; k++) {
             bbVisTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_VIS_NAME), sourceRect);
             bbNirTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_BB_NIR_NAME), sourceRect);
@@ -150,15 +150,16 @@ public class DailyAccumulationOp extends Operator {
 //            BeamLogManager.getSystemLogger().log
 //                    (Level.INFO, "getAvhrrMaskProduct: " +
 //                            tile + " / " + year + " / " + avhrrMaskRootDir + " / " + sourceProducts[k].getName());
-            avhrrMaskProducts[k] = IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProducts[k].getName(), year, tile);
+//            avhrrMaskProducts[k] = IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProducts[k].getName(), year, tile);
 
-            if (processingMode == ProcessingMode.AVHRRGEO) {
-                if (avhrrMaskProducts[k] != null) {
-                    avhrrMaskTile[k] = getSourceTile(avhrrMaskProducts[k].getBand(AlbedoInversionConstants.MSSL_AVHRR_MASK_NAME), sourceRect);
-                }
-            } else {
-                bbdrSnowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
-            }
+//            if (processingMode == ProcessingMode.AVHRRGEO) {
+//                if (avhrrMaskProducts[k] != null) {
+//                    avhrrMaskTile[k] = getSourceTile(avhrrMaskProducts[k].getBand(AlbedoInversionConstants.MSSL_AVHRR_MASK_NAME), sourceRect);
+//                }
+//            } else {
+//                bbdrSnowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
+//            }
+            bbdrSnowMaskTile[k] = getSourceTile(sourceProducts[k].getBand(AlbedoInversionConstants.BBDR_SNOW_MASK_NAME), sourceRect);
 
         }
 
@@ -189,7 +190,8 @@ public class DailyAccumulationOp extends Operator {
 
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
-            if (processingMode == ProcessingMode.LEO || avhrrMaskProducts[k] != null) {
+//            if (processingMode == ProcessingMode.LEO || avhrrMaskProducts[k] != null) {
+            if (processingMode == ProcessingMode.LEO) {
                 final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
                 M.plusEquals(accumulator.getM());
                 V.plusEquals(accumulator.getV());
@@ -324,20 +326,21 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private boolean isSnowFilter(int x, int y) {
-        if (processingMode == ProcessingMode.AVHRRGEO) {
-            return ((computeSnow && !(avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)) ||
-                    (!computeSnow && (avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)));
-        } else {
-            return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
-                    (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
-        }
-
+//        if (processingMode == ProcessingMode.AVHRRGEO) {
+//            return ((computeSnow && !(avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)) ||
+//                    (!computeSnow && (avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)));
+//        } else {
+//            return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
+//                    (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
+//        }
+        return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
+                (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
 
     private boolean isAvhrrMaskCloudFilter(int x, int y) {
-        if (processingMode == ProcessingMode.AVHRRGEO) {
-            return avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 2;
-        }
+//        if (processingMode == ProcessingMode.AVHRRGEO) {
+//            return avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 2;
+//        }
         return false;
     }
 

@@ -20,6 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.dataio.MeteosatGeoCoding;
 import org.esa.beam.framework.datamodel.Band;
 import org.esa.beam.framework.datamodel.Product;
+import org.esa.beam.framework.gpf.GPF;
 import org.esa.beam.framework.gpf.Operator;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
@@ -29,12 +30,15 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.experimental.Output;
 import org.esa.beam.globalbedo.auxdata.MVIRI.MeteosatDiskTiles;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.ProductUtils;
 
 import javax.media.jai.JAI;
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.*;
 
 /**
@@ -55,6 +59,12 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
     @SourceProduct
     private Product sourceProduct;
+
+    @Parameter(description = "Year")
+    private int year;
+
+    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
+    private String avhrrMaskRootDir;
 
     @SourceProduct
     private Product latlonProduct;    // make sure externally that the correct matching latlon product is submitted
@@ -287,19 +297,33 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                 Future<TileExtractor.TileProduct> future = ecs.take();
                 TileExtractor.TileProduct tileProduct = future.get();
                 if (tileProduct != null && tileProduct.getProduct() != null && isTileToProcess(tileProduct.getTileName())) {
-                    Product productToWrite;
+                    Product productToWrite = null;
                     if (convertToBbdr) {
+
+                        Map<String, Product> meteosatBbdrInputProducts = new HashMap<>();
+                        meteosatBbdrInputProducts.put("brf", tileProduct.getProduct());
+                        final Product avhrrMaskProduct =
+                                IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
+                        if (avhrrMaskProduct != null) {
+                            meteosatBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);
+                            productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(MeteosatBbdrFromBrfOp.class),
+                                                               GPF.NO_PARAMS, meteosatBbdrInputProducts);
+                            productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
+                        }
+
                         // will save computation time and disk space in case of mass production...
-                        MeteosatBbdrFromBrfOp toBbdrOp = new MeteosatBbdrFromBrfOp();
-                        toBbdrOp.setParameterDefaultValues();
-                        toBbdrOp.setParameter("sensor", sensor);
-                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
-                        productToWrite = toBbdrOp.getTargetProduct();
-                        productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
+//                        MeteosatBbdrFromBrfOp toBbdrOp = new MeteosatBbdrFromBrfOp();
+//                        toBbdrOp.setParameterDefaultValues();
+//                        toBbdrOp.setParameter("sensor", sensor);
+//                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
+//                        productToWrite = toBbdrOp.getTargetProduct();
+//                        productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
                     } else {
                         productToWrite = tileProduct.getProduct();
                     }
-                    writeTileProduct(productToWrite, tileProduct.getTileName());
+                    if (productToWrite != null) {
+                        writeTileProduct(productToWrite, tileProduct.getTileName());
+                    }
                 }
             } catch (Exception e) {
                 throw new OperatorException(e);

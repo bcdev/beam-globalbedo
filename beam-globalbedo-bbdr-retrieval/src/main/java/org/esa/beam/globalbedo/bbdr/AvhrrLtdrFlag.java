@@ -94,73 +94,72 @@ public class AvhrrLtdrFlag {
         return flagCoding;
     }
 
-    public static int setupLtdrBitmasks(Product cloudProduct) {
+    public static int setupLtdrBitmasks(int index, Product cloudProduct) {
 
-        int index = 0;
         int w = cloudProduct.getSceneRasterWidth();
         int h = cloudProduct.getSceneRasterHeight();
         Mask mask;
 
-        mask = Mask.BandMathsType.create("spare",
-                                         "SPARE_FLAG", w, h,
+        mask = Mask.BandMathsType.create("spare_ltdr",
+                                         "SPARE_FLAG_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_SPARE",
                                          Color.darkGray, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("cloud",
-                                         "CLOUD", w, h,
+        mask = Mask.BandMathsType.create("cloud_ltdr",
+                                         "CLOUD_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_CLOUD",
                                          Color.yellow, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("cloud_shadow",
-                                         "CLOUD_SHADOW", w, h,
+        mask = Mask.BandMathsType.create("cloud_shadow_ltdr",
+                                         "CLOUD_SHADOW_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_CLOUD_SHADOW",
                                          Color.orange, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("water",
-                                         "WATER", w, h,
+        mask = Mask.BandMathsType.create("water_ltdr",
+                                         "WATER_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_WATER",
                                          Color.blue, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("sun_glint",
-                                         "SUN_GLINT", w, h,
+        mask = Mask.BandMathsType.create("sun_glint_ltdr",
+                                         "SUN_GLINT_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_SUN_GLINT",
                                          Color.pink, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("dark_vegetation",
-                                         "DARK_VEGETATION", w, h,
+        mask = Mask.BandMathsType.create("dark_vegetation_ltdr",
+                                         "DARK_VEGETATION_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_DARK_VEGETATION",
                                          Color.green.darker(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("night",
-                                         "NIGHT", w, h,
+        mask = Mask.BandMathsType.create("night_ltdr",
+                                         "NIGHT_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_NIGHT",
                                          Color.black, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("unknown",
-                                         "unknown (not described)", w, h,
+        mask = Mask.BandMathsType.create("unknown_ltdr",
+                                         "unknown_ltdr (not described)", w, h,
                                          "LTDR_FLAG_snap.F_UNKNOWN",
                                          Color.magenta, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("channel_1_invalid",
-                                         "CHANNEL_1_INVALID", w, h,
+        mask = Mask.BandMathsType.create("channel_1_invalid_ltdr",
+                                         "CHANNEL_1_INVALID_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_CHANNEL_1_INVALID",
                                          Color.red, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("channel_2_invalid",
-                                         "CHANNEL_2_INVALID", w, h,
+        mask = Mask.BandMathsType.create("channel_2_invalid_ltdr",
+                                         "CHANNEL_2_INVALID_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_CHANNEL_2_INVALID",
                                          Color.red, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("brdf_corr_issues",
-                                         "BRDF_CORR_ISSUES", w, h,
+        mask = Mask.BandMathsType.create("brdf_corr_issues_ltdr",
+                                         "BRDF_CORR_ISSUES_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_BRDF_CORR",
                                          Color.green.brighter(), 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("polar",
-                                         "POLAR", w, h,
+        mask = Mask.BandMathsType.create("polar_ltdr",
+                                         "POLAR_ltdr", w, h,
                                          "LTDR_FLAG_snap.F_POLAR",
                                          Color.cyan, 0.5f);
-        cloudProduct.getMaskGroup().add(index, mask);
+        cloudProduct.getMaskGroup().add(index++, mask);
 
         return index;
     }

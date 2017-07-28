@@ -64,9 +64,10 @@ public class BbdrAvhrrOp extends PixelOperator {
     protected static final int TRG_VZA = 9;
     protected static final int TRG_SZA = 10;
     protected static final int TRG_RAA = 11;
-    protected static final int TRG_KERN = 12;
-    protected static final int TRG_LTDR_SNAP = 18;
-    protected static final int TRG_AVHRR_MSSL_SNAP = 19;
+    protected static final int TRG_SNOW = 12;
+    protected static final int TRG_KERN = 13;
+    protected static final int TRG_LTDR_SNAP = 19;
+    protected static final int TRG_AVHRR_MSSL_SNAP = 20;
 
     // two new parameters to ensure support for both new AVHRR BRF v5 (201707)as well as previous version
     @Parameter(defaultValue = "REL_PHI", valueSet = {"REL_PHI", "PHI"},
@@ -111,7 +112,7 @@ public class BbdrAvhrrOp extends PixelOperator {
         final boolean isCloud = AvhrrMsslFlag.isCloud(avhrrMsslFlag);
         final boolean isCloudShadow = BitSetter.isFlagSet(ldtrFlag, 2);
         final boolean isSnow = AvhrrMsslFlag.isSnow(avhrrMsslFlag);
-        final boolean isClearLand = AvhrrMsslFlag.isSnow(avhrrMsslFlag);
+        final boolean isClearLand = AvhrrMsslFlag.isClearLand(avhrrMsslFlag);
 //        final boolean isSea = BitSetter.isFlagSet(ldtrFlag, 3);
         final boolean isSea = !isClearLand && !isCloud && !isSnow;
         final boolean isBrf1Invalid = BitSetter.isFlagSet(ldtrFlag, 8);    // NG/MM, Nov 2016
@@ -184,6 +185,7 @@ public class BbdrAvhrrOp extends PixelOperator {
         targetSamples[TRG_VZA].set(vza);
         targetSamples[TRG_SZA].set(sza);
         targetSamples[TRG_RAA].set(phi);
+        targetSamples[TRG_SNOW].set(isSnow ? 1 : 0);
 
         for (int i_bb = 0; i_bb < BbdrConstants.N_SPC; i_bb++) {
             // for AVHRR, neglect Nsky, coupling terms and weighting (PL, 20160520)
@@ -226,14 +228,14 @@ public class BbdrAvhrrOp extends PixelOperator {
         FlagCoding ltdrFlagCoding = AvhrrLtdrFlag.createLtdrFlagCoding("LTDR_FLAG_snap_flag");
         ltdrFlagSnapBand.setSampleCoding(ltdrFlagCoding);
         targetProduct.getFlagCodingGroup().add(ltdrFlagCoding);
-        AvhrrLtdrFlag.setupLtdrBitmasks(targetProduct);
+        int bitmaskIndex = AvhrrLtdrFlag.setupLtdrBitmasks(0, targetProduct);
 
         // set up also an AVHRR MSSL mask flag band
         final Band avhrrMsslMaskFlagBand = targetProduct.addBand("AVHRR_MSSL_FLAG_snap", ProductData.TYPE_INT8);
         FlagCoding avhrrMsslMaskFlagCoding = AvhrrMsslFlag.createAvhrrMsslMaskFlagCoding("AVHRR_MSSL_FLAG_snap_flag");
         avhrrMsslMaskFlagBand.setSampleCoding(avhrrMsslMaskFlagCoding);
         targetProduct.getFlagCodingGroup().add(avhrrMsslMaskFlagCoding);
-//        AvhrrMsslFlag.setupAvhrrMsslBitmasks(targetProduct);    // todo: why does this fail??
+        AvhrrMsslFlag.setupAvhrrMsslBitmasks(bitmaskIndex, targetProduct);
     }
 
     @Override
@@ -276,6 +278,8 @@ public class BbdrAvhrrOp extends PixelOperator {
 
         configurator.defineSample(TRG_LTDR_SNAP, "LTDR_FLAG_snap");
         configurator.defineSample(TRG_AVHRR_MSSL_SNAP, "AVHRR_MSSL_FLAG_snap");
+
+        configurator.defineSample(TRG_SNOW, "snow_mask");
 
     }
 

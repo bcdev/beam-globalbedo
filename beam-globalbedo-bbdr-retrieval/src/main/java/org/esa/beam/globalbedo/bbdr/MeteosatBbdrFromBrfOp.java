@@ -17,6 +17,7 @@
 package org.esa.beam.globalbedo.bbdr;
 
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.FlagCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.GPF;
@@ -53,6 +54,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     protected static final int SRC_LAT = 4;
     protected static final int SRC_LON = 5;
     protected static final int SRC_WATERMASK = 6;
+    protected static final int SRC_AVHRR_MSSL_FLAG = 7;
 
     protected static final int TRG_BB_VIS = 0;
     protected static final int TRG_BB_NIR = 1;
@@ -66,8 +68,9 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     protected static final int TRG_VZA = 9;
     protected static final int TRG_SZA = 10;
     protected static final int TRG_RAA = 11;
-    protected static final int TRG_KERN = 12;
-    protected static final int TRG_SNOW_MASK = 18;
+    protected static final int TRG_SNOW = 12;
+    protected static final int TRG_KERN = 13;
+    protected static final int TRG_AVHRR_MSSL_SNAP = 19;
 
     public static final double METEOSAT_DEG_LAT = 0.0;
 
@@ -77,8 +80,12 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_E", "GOES_W"}, defaultValue = "MVIRI")
     protected MeteosatSensor sensor;
 
-    @SourceProduct
+    @SourceProduct(alias = "brf", description = "The BRF source product")
     protected Product sourceProduct;
+
+    @SourceProduct(alias = "avhrrmask", description = "AVHRR mask product provided by SK")
+    private Product avhrrMaskProduct;
+
 
     private int year;
     private int doy;
@@ -111,11 +118,27 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         double broadbandBrf = sourceSamples[SRC_BROADBAND_BRF].getDouble();
         double sigmaBroadbandBrf = sourceSamples[SRC_SIGMA_BROADBAND_BRF].getDouble();
 
+        final int avhrrMsslFlag = sourceSamples[SRC_AVHRR_MSSL_FLAG].getInt();
+
         if (BbdrUtils.isBrfInputInvalid(broadbandBrf, sigmaBroadbandBrf)) {
             // not meaningful values
+            computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             return;
         }
+
+        final boolean isCloud = AvhrrMsslFlag.isCloud(avhrrMsslFlag);
+        final boolean isSnow = AvhrrMsslFlag.isSnow(avhrrMsslFlag);
+        final boolean isClearLand = AvhrrMsslFlag.isClearLand(avhrrMsslFlag);
+        final boolean isSea = !isClearLand && !isCloud && !isSnow;
+        if (isSea || isCloud) {
+            // only compute over clear land
+            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
+            return;
+        }
+
+        computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
 
         final double degLat = sourceSamples[SRC_LAT].getDouble();
         final double degLon = getDegLon(sourceSamples[SRC_LON]);
@@ -165,8 +188,8 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
             targetSamples[TRG_KERN + (i_bb * 2) + 1].set(kgeo);
         }
 
-        // ignore snow, we have no classification
-        targetSamples[TRG_SNOW_MASK].set(0);
+        // we take snow from MSSL AVHRR mask
+        targetSamples[TRG_SNOW].set(isSnow ? 1 : 0);
     }
 
     @Override
@@ -194,6 +217,13 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         }
 
         targetProduct.addBand("snow_mask", ProductData.TYPE_INT8);
+
+        // set up also an AVHRR MSSL mask flag band
+        final Band avhrrMsslMaskFlagBand = targetProduct.addBand("AVHRR_MSSL_FLAG_snap", ProductData.TYPE_INT8);
+        FlagCoding avhrrMsslMaskFlagCoding = AvhrrMsslFlag.createAvhrrMsslMaskFlagCoding("AVHRR_MSSL_FLAG_snap_flag");
+        avhrrMsslMaskFlagBand.setSampleCoding(avhrrMsslMaskFlagCoding);
+        targetProduct.getFlagCodingGroup().add(avhrrMsslMaskFlagCoding);
+        AvhrrMsslFlag.setupAvhrrMsslBitmasks(0, targetProduct);
     }
 
     @Override
@@ -205,6 +235,8 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         configurator.defineSample(SRC_LAT, "lat", sourceProduct);
         configurator.defineSample(SRC_LON, "lon", sourceProduct);
         configurator.defineSample(SRC_WATERMASK, "land_water_fraction", waterMaskProduct);
+
+        configurator.defineSample(SRC_AVHRR_MSSL_FLAG, "mask", avhrrMaskProduct);
     }
 
     @Override
@@ -223,6 +255,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         configurator.defineSample(TRG_VZA, "VZA");
         configurator.defineSample(TRG_SZA, "SZA");
         configurator.defineSample(TRG_RAA, "RAA");
+        configurator.defineSample(TRG_SNOW, "snow_mask");
 
         configurator.defineSample(TRG_KERN, "Kvol_BRDF_VIS");
         configurator.defineSample(TRG_KERN + 1, "Kgeo_BRDF_VIS");
@@ -230,8 +263,16 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         configurator.defineSample(TRG_KERN + 3, "Kgeo_BRDF_NIR");
         configurator.defineSample(TRG_KERN + 4, "Kvol_BRDF_SW");
         configurator.defineSample(TRG_KERN + 5, "Kgeo_BRDF_SW");
-        configurator.defineSample(TRG_SNOW_MASK, "snow_mask");
+
+        configurator.defineSample(TRG_AVHRR_MSSL_SNAP, "AVHRR_MSSL_FLAG_snap");
     }
+
+    private void computeAvhrrMsslSnapFlag(int srcValue, WritableSample[] targetSamples) {
+        targetSamples[TRG_AVHRR_MSSL_SNAP].set(AvhrrMsslFlag.CLEAR_LAND_BIT_INDEX, AvhrrMsslFlag.isClearLand(srcValue));
+        targetSamples[TRG_AVHRR_MSSL_SNAP].set(AvhrrMsslFlag.CLOUD_BIT_INDEX, AvhrrMsslFlag.isCloud(srcValue));
+        targetSamples[TRG_AVHRR_MSSL_SNAP].set(AvhrrMsslFlag.SNOW_BIT_INDEX, AvhrrMsslFlag.isSnow(srcValue));
+    }
+
 
     /**
      * Extracts parameters from source product name which are required for BRF --> BBDR conversion

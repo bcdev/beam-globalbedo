@@ -150,29 +150,40 @@ public class IOUtils {
 
     public static Product getAvhrrMaskProduct(String avhrrMaskRootDir, String productName, int year, final String tile) {
         // AVHRR:
-        //             AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
-        // new 201707: AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
+        //      AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16.nc
+        //      new 201707: AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.nc
         //
-        // others:
-        // end with '_20030108000000_h19v02.nc'
+        // others (all GEO):
+        // GEO product name patterns:
+        // MVIRI:
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000.nc
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET5+MVIRI_063_C_BRF_EUMP_20050501000000.nc
+        //
+        // SEVIRI:
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET9+SEVIRI_HRVIS_000_C_BRF_EUMP_20070501000000.nc
+        //
+        // GOES-E:
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO12+IMAGER_VIS02_-75_C_BRF_EUMP_20050501000000.nc
+        // GOES-W:
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO10+IMAGER_VIS02_-135_C_BRF_EUMP_20050501000000.nc
+        //
+        //  GMS:
+        //      W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GMS5+VISSR_VIS02_140_C_BRF_EUMP_20030501000000.nc
+        //      end with '_20030108000000_h19v02.nc'
 
         final String daystring;
-//        if (productName.startsWith("AVH_")) {
-//            daystring = productName.substring(4, 12);
-//        } else {
-//            daystring = productName.substring(productName.length() - 21, productName.length() - 13);
-//        }
         if (productName.startsWith("AVH")) {
             if (productName.contains("NOAA")) {
-                // new, e.g. AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc,
-                //           AVHRR2_NOAA11_19890101_19890101_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
+                // new, e.g. AVHRR3_NOAA16_20010501_20010501_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.nc,
+                //           AVHRR2_NOAA11_19890101_19890101_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.nc
                 daystring = productName.substring(14, 22);
             } else {
-                // old, e.g. AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16_h19v02.nc
+                // old, e.g. AVH_20050629_001D_900S900N1800W1800E_0005D_BBDR_N16.nc
                 daystring = productName.substring(4, 12);
             }
         } else {
-            daystring = productName.substring(productName.length() - 21, productName.length() - 13);
+            // all GEO
+            daystring = productName.substring(productName.length() - 14, productName.length() - 6);
         }
 
         final FilenameFilter filenameFilter = new FilenameFilter() {

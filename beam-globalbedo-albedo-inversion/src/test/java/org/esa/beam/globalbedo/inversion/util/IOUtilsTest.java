@@ -2,14 +2,9 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.Product;
-import org.junit.Ignore;
 
 import java.awt.*;
 import java.io.File;
-import java.io.FileOutputStream;
-import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -502,7 +497,7 @@ public class IOUtilsTest extends TestCase {
         assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
 
         String productName_3 =
-                "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20010321000000_h18v04";
+                "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20010321000000";
         avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_3, year, tile);
         assertNotNull(avhrrMaskProduct);
         avhrrMaskProduct.getBands();
@@ -512,7 +507,7 @@ public class IOUtilsTest extends TestCase {
         assertEquals("probability", avhrrMaskProduct.getBandAt(0).getName());
         assertEquals("mask", avhrrMaskProduct.getBandAt(1).getName());
 
-        String productName_4 = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20040718000000_h18v04";
+        String productName_4 = "W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,GO08+IMAGER_VIS02_-75_C_BBDR_EUMP_20040718000000";
         avhrrMaskProduct = IOUtils.getAvhrrMaskProduct(maskProductDir, productName_4, year, tile);
         assertNull(avhrrMaskProduct);
     }

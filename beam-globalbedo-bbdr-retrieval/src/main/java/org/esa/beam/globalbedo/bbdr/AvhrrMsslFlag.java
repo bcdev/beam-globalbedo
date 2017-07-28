@@ -40,27 +40,26 @@ public class AvhrrMsslFlag {
         return flagCoding;
     }
 
-    public static int setupAvhrrMsslBitmasks(Product cloudProduct) {
+    public static int setupAvhrrMsslBitmasks(int index, Product cloudProduct) {
 
-        int index = 0;
         int w = cloudProduct.getSceneRasterWidth();
         int h = cloudProduct.getSceneRasterHeight();
         Mask mask;
 
-        mask = Mask.BandMathsType.create("clear_land",
-                                         "CLEAR_LAND", w, h,
+        mask = Mask.BandMathsType.create("clear_land_mssl",
+                                         "CLEAR_LAND_mssl", w, h,
                                          "AVHRR_MSSL_FLAG_snap.F_CLEAR_LAND",
                                          Color.green, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("cloud",
-                                         "CLOUD", w, h,
+        mask = Mask.BandMathsType.create("cloud_mssl",
+                                         "CLOUD_mssl", w, h,
                                          "AVHRR_MSSL_FLAG_snap.F_CLOUD",
                                          Color.yellow, 0.5f);
         cloudProduct.getMaskGroup().add(index++, mask);
-        mask = Mask.BandMathsType.create("snow",
-                                         "SNOW", w, h,
+        mask = Mask.BandMathsType.create("snow_mssl",
+                                         "SNOW_mssl", w, h,
                                          "AVHRR_MSSL_FLAG_snap.F_SNOW",
-                                         Color.lightGray.brighter(), 0.5f);
+                                         Color.cyan, 0.5f);
         cloudProduct.getMaskGroup().add(index, mask);
 
         return index;
