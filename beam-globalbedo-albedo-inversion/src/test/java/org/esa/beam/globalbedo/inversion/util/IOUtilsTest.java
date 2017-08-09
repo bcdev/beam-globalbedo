@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.inversion.util;
 
 import junit.framework.TestCase;
 import org.esa.beam.framework.datamodel.Product;
+import org.junit.Ignore;
 
 import java.awt.*;
 import java.io.File;
@@ -305,21 +306,21 @@ public class IOUtilsTest extends TestCase {
 
         List<String> result = IOUtils.sortAccumulatorFileList(inputList, 2005, 121);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005091.bin", result.get(0));
-        assertEquals("matrices_2005150.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005106.bin", result.get(0));
+        assertEquals("matrices_2005135.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputList, 2005, 9);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2004344.bin", result.get(0));
-        assertEquals("matrices_2005038.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2004359.bin", result.get(0));
+        assertEquals("matrices_2005023.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputList, 2005, 353);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005323.bin", result.get(0));
-        assertEquals("matrices_2006016.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005338.bin", result.get(0));
+        assertEquals("matrices_2006001.bin", result.get(29));
         System.out.println();
 
         List<String> inputListWinter = new ArrayList<>();
@@ -331,21 +332,21 @@ public class IOUtilsTest extends TestCase {
         }
         result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 121);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005091.bin", result.get(0));
-        assertEquals("matrices_2005150.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005106.bin", result.get(0));
+        assertEquals("matrices_2005135.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 9);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2004252.bin", result.get(0));
-        assertEquals("matrices_2005130.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2004267.bin", result.get(0));
+        assertEquals("matrices_2005115.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 353);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005211.bin", result.get(0));
-        assertEquals("matrices_2005270.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005241.bin", result.get(0));
+        assertEquals("matrices_2005270.bin", result.get(29));
         System.out.println();
 
         List<String> inputListSummer = new ArrayList<>();
@@ -364,27 +365,123 @@ public class IOUtilsTest extends TestCase {
 
         result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 121);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005031.bin", result.get(0));
-        assertEquals("matrices_2005090.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005061.bin", result.get(0));
+        assertEquals("matrices_2005090.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 9);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2004344.bin", result.get(0));
-        assertEquals("matrices_2005038.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2004359.bin", result.get(0));
+        assertEquals("matrices_2005023.bin", result.get(29));
 
         result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 353);
         assertNotNull(result);
-        assertEquals(60, result.size());
-        assertEquals("matrices_2005323.bin", result.get(0));
-        assertEquals("matrices_2006016.bin", result.get(59));
+        assertEquals(30, result.size());
+        assertEquals("matrices_2005338.bin", result.get(0));
+        assertEquals("matrices_2006001.bin", result.get(29));
         System.out.println();
 
         for (int i=0; i<180; i+=2) {
             System.out.println("i, weight = " + i + ", " + AlbedoInversionUtils.getWeight(i));
         }
     }
+
+//    public void testSortAccumulatorFileList_old() {
+//        List<String> inputList = new ArrayList<>();
+//        for (int doy=275; doy<=365; doy++) {
+//            inputList.add("matrices_2004" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=0; doy<=365; doy++) {
+//            inputList.add("matrices_2005" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=0; doy<=90; doy++) {
+//            inputList.add("matrices_2006" + String.format("%03d", doy) + ".bin");
+//        }
+//
+//        List<String> result = IOUtils.sortAccumulatorFileList(inputList, 2005, 121);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005091.bin", result.get(0));
+//        assertEquals("matrices_2005150.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputList, 2005, 9);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2004344.bin", result.get(0));
+//        assertEquals("matrices_2005038.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputList, 2005, 353);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005323.bin", result.get(0));
+//        assertEquals("matrices_2006016.bin", result.get(59));
+//        System.out.println();
+//
+//        List<String> inputListWinter = new ArrayList<>();
+//        for (int doy=150; doy<=270; doy++) {
+//            inputListWinter.add("matrices_2004" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=90; doy<=270; doy++) {
+//            inputListWinter.add("matrices_2005" + String.format("%03d", doy) + ".bin");
+//        }
+//        result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 121);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005091.bin", result.get(0));
+//        assertEquals("matrices_2005150.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 9);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2004252.bin", result.get(0));
+//        assertEquals("matrices_2005130.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputListWinter, 2005, 353);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005211.bin", result.get(0));
+//        assertEquals("matrices_2005270.bin", result.get(59));
+//        System.out.println();
+//
+//        List<String> inputListSummer = new ArrayList<>();
+//        for (int doy=275; doy<=365; doy++) {
+//            inputListSummer.add("matrices_2004" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=0; doy<=90; doy++) {
+//            inputListSummer.add("matrices_2005" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=270; doy<=365; doy++) {
+//            inputListSummer.add("matrices_2005" + String.format("%03d", doy) + ".bin");
+//        }
+//        for (int doy=0; doy<=90; doy++) {
+//            inputListSummer.add("matrices_2006" + String.format("%03d", doy) + ".bin");
+//        }
+//
+//        result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 121);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005031.bin", result.get(0));
+//        assertEquals("matrices_2005090.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 9);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2004344.bin", result.get(0));
+//        assertEquals("matrices_2005038.bin", result.get(59));
+//
+//        result = IOUtils.sortAccumulatorFileList(inputListSummer, 2005, 353);
+//        assertNotNull(result);
+//        assertEquals(60, result.size());
+//        assertEquals("matrices_2005323.bin", result.get(0));
+//        assertEquals("matrices_2006016.bin", result.get(59));
+//        System.out.println();
+//
+//        for (int i=0; i<180; i+=2) {
+//            System.out.println("i, weight = " + i + ", " + AlbedoInversionUtils.getWeight(i));
+//        }
+//    }
+
 
 //    public void testWriteFloatArray1() throws Exception {
 //        float[][] fArray = new float[dim1][dim2];

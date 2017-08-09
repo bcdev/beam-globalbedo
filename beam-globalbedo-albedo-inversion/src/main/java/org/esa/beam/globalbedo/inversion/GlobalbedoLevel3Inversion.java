@@ -27,9 +27,6 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l3.inversion")
 public class GlobalbedoLevel3Inversion extends Operator {
 
-    @SourceProduct(optional = true)
-    private Product seaiceGeocodingProduct;
-
     @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo/BBDR
     private String bbdrRootDir;
 
