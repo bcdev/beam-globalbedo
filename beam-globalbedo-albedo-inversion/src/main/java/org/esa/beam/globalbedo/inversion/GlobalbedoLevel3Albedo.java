@@ -60,6 +60,10 @@ public class GlobalbedoLevel3Albedo extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
+    @Parameter(defaultValue = "true",
+            description = "Computation for AVHRR and/or Meteosat (tiles usually have coarser resolution)")
+    private boolean computeAvhrrGeo;
+
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
@@ -155,11 +159,15 @@ public class GlobalbedoLevel3Albedo extends Operator {
 //                    priorProduct = IOUtils.getPriorProduct(priorDir, priorFileNamePrefix, doy, true);
                     final Product tmpPriorProduct = IOUtils.getPriorProduct(priorVersion, priorDir, priorFileNamePrefix, doy, true);
                     if (tmpPriorProduct != null) {
-                        tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-                        if (modisTileScaleFactor != 1.0) {
-                            priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
-                        } else {
+                        if (computeAvhrrGeo) {
                             priorProduct = tmpPriorProduct;
+                        } else {
+                            tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                            if (modisTileScaleFactor != 1.0) {
+                                priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                            } else {
+                                priorProduct = tmpPriorProduct;
+                            }
                         }
                     } else {
                         // if not available, continue without MODIS prior
