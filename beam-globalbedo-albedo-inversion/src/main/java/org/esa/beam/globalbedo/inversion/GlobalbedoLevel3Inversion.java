@@ -27,9 +27,6 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l3.inversion")
 public class GlobalbedoLevel3Inversion extends Operator {
 
-    @SourceProduct(optional = true)
-    private Product seaiceGeocodingProduct;
-
     @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo/BBDR
     private String bbdrRootDir;
 
@@ -93,7 +90,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
     private boolean computeSeaice;
 
-    @Parameter(defaultValue = "false",
+    @Parameter(defaultValue = "true",
             description = "Computation for AVHRR and/or Meteosat (tiles usually have coarser resolution)")
     private boolean computeAvhrrGeo;
 
@@ -150,11 +147,15 @@ public class GlobalbedoLevel3Inversion extends Operator {
             try {
                 final Product tmpPriorProduct = IOUtils.getPriorProduct(priorVersion, priorDir, priorFileNamePrefix, doy, computeSnow);
                 if (tmpPriorProduct != null) {
-                    tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
-                    if (modisTileScaleFactor != 1.0) {
-                        priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
-                    } else {
+                    if (computeAvhrrGeo) {
                         priorProduct = tmpPriorProduct;
+                    } else {
+                        tmpPriorProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile));
+                        if (modisTileScaleFactor != 1.0) {
+                            priorProduct = AlbedoInversionUtils.reprojectToModisTile(tmpPriorProduct, tile, "Nearest", modisTileScaleFactor);
+                        } else {
+                            priorProduct = tmpPriorProduct;
+                        }
                     }
                 } else {
                     // if not available, continue without MODIS prior

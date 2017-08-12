@@ -276,11 +276,16 @@ public class InversionOp extends PixelOperator {
             maskPrior = prior.getMask();
         }
 
-//        if (x == 199 && y == 150) {
+//        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
 //            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
 //            if (accumulator != null) {
 //                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
 //            }
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "trustAccumulation = " + trustAccumulation);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
 //        }
 
         double goodnessOfFit = 0.0;
@@ -520,7 +525,7 @@ public class InversionOp extends PixelOperator {
                     // BRDF_Albedo_Parameters_shortwave_f0_avr <--> MEAN_SW_f0
                     // same for f1, f2
                     final String meanBandName = priorMeanBandNamePrefix +
-                            AlbedoInversionConstants.PRIOR_6_WAVE_BANDS[i] + "_f" + j + "_avr";
+                            AlbedoInversionConstants.PRIOR_6_BB_BANDS[i] + "_f" + j + "_avr";
                     final int meanIndex = SRC_PRIOR_MEAN[i][j];
                     configurator.defineSample(meanIndex, meanBandName, priorProduct);
 
@@ -528,10 +533,10 @@ public class InversionOp extends PixelOperator {
                     // BRDF_Albedo_Parameters_nir_f0_sd <--> sqrt (Cov_NIR_f0_NIR_f0)
                     // BRDF_Albedo_Parameters_shortwave_f0_sd <--> sqrt (Cov_SW_f0_SW_f0)
                     // same for f1, f2
-                     final String sdMeanBandName = priorMeanBandNamePrefix +
-                            AlbedoInversionConstants.PRIOR_6_WAVE_BANDS[i] + "_f" + j + "_sd";
+                     final String sdBandName = priorMeanBandNamePrefix +
+                            AlbedoInversionConstants.PRIOR_6_BB_BANDS[i] + "_f" + j + "_sd";
                     final int sdIndex = SRC_PRIOR_SD[i][j];
-                    configurator.defineSample(sdIndex, sdMeanBandName, priorProduct);
+                    configurator.defineSample(sdIndex, sdBandName, priorProduct);
                 }
                 configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
                 configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);

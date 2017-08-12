@@ -24,3 +24,4 @@ org.esa.beam.globalbedo.inversion.util.AccToDimapOp$Spi
 org.esa.beam.globalbedo.inversion.util.ModisTileAttachGeocodingOp$Spi
 org.esa.beam.globalbedo.inversion.util.GaAdaptTileGeocodingOp$Spi
 org.esa.beam.globalbedo.inversion.util.MergeTestOp$Spi
+org.esa.beam.globalbedo.inversion.util.ModisPriorPreprocessOp$Spi

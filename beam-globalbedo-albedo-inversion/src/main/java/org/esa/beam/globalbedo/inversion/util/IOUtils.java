@@ -564,6 +564,7 @@ public class IOUtils {
         int doyMinus = refDoy;
 
         final int maxAccs = 60;
+//        final int maxAccs = 30;
         final double weightThresh = 1.E-7; // day difference ~180
 
         while (doyMinus > 0 && doyPlus < 366) {

@@ -53,7 +53,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     protected static final int SRC_SIGMA_BROADBAND_BRF = 3;
     protected static final int SRC_LAT = 4;
     protected static final int SRC_LON = 5;
-    protected static final int SRC_WATERMASK = 6;
+//    protected static final int SRC_WATERMASK = 6;
     protected static final int SRC_AVHRR_MSSL_FLAG = 7;
 
     protected static final int TRG_BB_VIS = 0;
@@ -90,7 +90,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
     private int year;
     private int doy;
 
-    private Product waterMaskProduct;
+//    private Product waterMaskProduct;
 
     @Override
     protected void prepareInputs() throws OperatorException {
@@ -98,22 +98,22 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         doy = (int) inputParmsFromFilename[0];
         year = (int) inputParmsFromFilename[1];
 
-        HashMap<String, Object> waterParameters = new HashMap<>();
-        waterParameters.put("resolution", 150);
-        waterParameters.put("subSamplingFactorX", 1);
-        waterParameters.put("subSamplingFactorY", 1);
-        waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
+//        HashMap<String, Object> waterParameters = new HashMap<>();
+//        waterParameters.put("resolution", 150);
+//        waterParameters.put("subSamplingFactorX", 1);
+//        waterParameters.put("subSamplingFactorY", 1);
+//        waterMaskProduct = GPF.createProduct("LandWaterMask", waterParameters, sourceProduct);
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
 
-        final int waterFraction = sourceSamples[SRC_WATERMASK].getInt();
-        if (waterFraction > 0) {
-            // Only compute over land. Ignore clouds.
-            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
-            return;
-        }
+//        final int waterFraction = sourceSamples[SRC_WATERMASK].getInt();
+//        if (waterFraction > 0) {
+//              // Only compute over land. Ignore clouds.
+//            BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+//            return;
+//        }
 
         double broadbandBrf = sourceSamples[SRC_BROADBAND_BRF].getDouble();
         double sigmaBroadbandBrf = sourceSamples[SRC_SIGMA_BROADBAND_BRF].getDouble();
@@ -122,8 +122,8 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
 
         if (BbdrUtils.isBrfInputInvalid(broadbandBrf, sigmaBroadbandBrf)) {
             // not meaningful values
-            computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
+            computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
             return;
         }
 
@@ -234,7 +234,7 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         configurator.defineSample(SRC_SIGMA_BROADBAND_BRF, "broadband_brf_err", sourceProduct);
         configurator.defineSample(SRC_LAT, "lat", sourceProduct);
         configurator.defineSample(SRC_LON, "lon", sourceProduct);
-        configurator.defineSample(SRC_WATERMASK, "land_water_fraction", waterMaskProduct);
+//        configurator.defineSample(SRC_WATERMASK, "land_water_fraction", waterMaskProduct);
 
         configurator.defineSample(SRC_AVHRR_MSSL_FLAG, "mask", avhrrMaskProduct);
     }

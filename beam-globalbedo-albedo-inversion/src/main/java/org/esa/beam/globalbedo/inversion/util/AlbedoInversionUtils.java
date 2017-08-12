@@ -9,13 +9,16 @@ import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
+import org.esa.beam.globalbedo.inversion.Accumulator;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.reproject.ReprojectionOp;
+import org.esa.beam.util.logging.BeamLogManager;
 import org.esa.beam.util.math.MathUtils;
 
 import java.awt.image.Raster;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.logging.Level;
 
 /**
  * Utility class for Albedo Inversion part
@@ -288,33 +291,33 @@ public class AlbedoInversionUtils {
     }
 
     // activate for debug purposes
-//    public static void printAccumulatorMatrices(Accumulator acc) {
-//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing M... ");
-//        for (int i = 0; i < acc.getM().getRowDimension(); i++) {
-//            for (int j = 0; j < acc.getM().getColumnDimension(); j++) {
-//                BeamLogManager.getSystemLogger().log(Level.INFO,
-//                                                     "i,j,M(i,j) = " + i + "," + j + "," + acc.getM().get(i, j));
-//            }
-//        }
-//
-//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing V... ");
-//        for (int i = 0; i < acc.getV().getRowDimension(); i++) {
-//            for (int j = 0; j < acc.getV().getColumnDimension(); j++) {
-//                BeamLogManager.getSystemLogger().log(Level.INFO,
-//                                                     "i,j,V(i,j) = " + i + "," + j + "," + acc.getV().get(i, j));
-//            }
-//        }
-//
-//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing E... ");
-//        for (int i = 0; i < acc.getE().getRowDimension(); i++) {
-//            for (int j = 0; j < acc.getE().getColumnDimension(); j++) {
-//                BeamLogManager.getSystemLogger().log(Level.INFO,
-//                                                     "i,j,E(i,j) = " + i + "," + j + "," + acc.getE().get(i, j));
-//            }
-//        }
-//
-//        BeamLogManager.getSystemLogger().log(Level.INFO, "printing mask... ");
-//        BeamLogManager.getSystemLogger().log(Level.INFO, "acc.getMask() = " + acc.getMask());
-//    }
+    public static void printAccumulatorMatrices(Accumulator acc) {
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing M... ");
+        for (int i = 0; i < acc.getM().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getM().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,M(i,j) = " + i + "," + j + "," + acc.getM().get(i, j));
+            }
+        }
+
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing V... ");
+        for (int i = 0; i < acc.getV().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getV().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,V(i,j) = " + i + "," + j + "," + acc.getV().get(i, j));
+            }
+        }
+
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing E... ");
+        for (int i = 0; i < acc.getE().getRowDimension(); i++) {
+            for (int j = 0; j < acc.getE().getColumnDimension(); j++) {
+                BeamLogManager.getSystemLogger().log(Level.INFO,
+                                                     "i,j,E(i,j) = " + i + "," + j + "," + acc.getE().get(i, j));
+            }
+        }
+
+        BeamLogManager.getSystemLogger().log(Level.INFO, "printing mask... ");
+        BeamLogManager.getSystemLogger().log(Level.INFO, "acc.getMask() = " + acc.getMask());
+    }
 
 }
