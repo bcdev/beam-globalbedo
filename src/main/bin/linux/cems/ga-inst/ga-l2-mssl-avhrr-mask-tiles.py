@@ -13,13 +13,14 @@ __author__ = 'olafd'
 #
 ################################################################################
 
-#years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008']     
+#years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010']     
 #years = ['2001']     
 
 ######################## BRF orbits --> tiles: ###########################
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
-msslAvhrrMaskRootDir = '/group_workspaces/cems2/qa4ecv/vol1/avhrr_mask'
+#msslAvhrrMaskRootDir = '/group_workspaces/cems2/qa4ecv/vol1/avhrr_mask'
+msslAvhrrMaskRootDir = '/group_workspaces/cems2/qa4ecv/vol3/avhrr_v5_mssl_mask' # new version provided by SK, 201707
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 inputs = ['dummy']
@@ -33,7 +34,8 @@ m = PMonitor(inputs,
 for iyear in range(1981,2017):
     year = str(iyear)
     msslAvhrrMaskTileDir = gaRootDir + '/MsslAvhrrMask/' + year 
-    msslAvhrrMaskOrbitDir = msslAvhrrMaskRootDir + '/' + year 
+    #msslAvhrrMaskOrbitDir = msslAvhrrMaskRootDir + '/' + year 
+    msslAvhrrMaskOrbitDir = msslAvhrrMaskRootDir + '/nc/' + year # new 201707 
     if os.path.exists(msslAvhrrMaskOrbitDir):
         msslAvhrrMaskFiles = os.listdir(msslAvhrrMaskOrbitDir)
         if len(msslAvhrrMaskFiles) > 0:

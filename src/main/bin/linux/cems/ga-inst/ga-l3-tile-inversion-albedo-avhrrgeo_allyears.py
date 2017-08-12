@@ -39,18 +39,26 @@ sensorID = 'avh_geo' # must be one of: 'avh', 'geo', 'avh_geo'
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/stage2/1km' # latest version by SK, 20161011
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115
-priorDir = '/group_workspaces/cems2/qa4ecv/vol1/prior.c6/stage2/1km' # next version provided by SK, 20170531
+#priorDir = '/group_workspaces/cems2/qa4ecv/vol1/prior.c6/stage2/1km' # next version provided by SK, 20170531
+
+###
+priorDir = gaRootDir + '/Priors/200x200' # own, preprocessed version (downscaled, band subset!) with Said's latest Priors as input
+###
 
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 # all 326 tiles we have:
 tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories
-#tiles = glob.glob1(priorDir, 'h3?v??') # we have same number (326) of snow and noSnow prior directories
+#tiles = glob.glob1(priorDir, 'h1?v0?') # test, 77 tiles, done
+#tiles = glob.glob1(priorDir, 'h1?v1?') # test, 38 tiles
+#tiles = glob.glob1(priorDir, 'h2?v1?') # test, 38 tiles, done
+#tiles = glob.glob1(priorDir, 'h3?v??') # test
 tiles.sort()
 
 #tiles = ['h11v08','h11v09','h12v08','h12v09']
 #tiles = ['h17v17']
 #tiles = ['h18v04']
+#tiles = ['h18v03']
 #tiles = ['h16v00','h17v00']
 #tiles = ['h18v04','h20v06','h22v05','h19v08']
 
@@ -78,8 +86,8 @@ tiles.sort()
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
 ### processed 2017/04: 2000-2010
 ### processed 2017/06: 2001, 2002, 2003, 2004, 2006 
-startYear = 2006
-endYear = 2006
+startYear = 1989
+endYear = 1989
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
@@ -87,7 +95,8 @@ m = PMonitor(inputs,
              logdir='log',
              hosts=[('localhost',128)], # let's try this number...
              types=[ ('ga-l3-tile-inversion-dailyacc-avhrrgeo-step.sh',64),
-                     ('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh',64),
+                     #('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh',64),
+                     ('ga-l3-tile-inversion-albedo-avhrrgeo-step_2.sh',64),
                      ('ga-l3-tile-inversion-cleanup-step.sh',2) ] )
 
 
@@ -138,7 +147,8 @@ for tile in tiles:
 
         postCond = 'albedo_' + year + '_' + tile
         allAlbedoPostConds.append(postCond)
-        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor])
+        #m.execute('ga-l3-tile-inversion-albedo-avhrrgeo-step.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor])
+        m.execute('ga-l3-tile-inversion-albedo-avhrrgeo-step_2.sh', allDailyAccPostConds, [postCond], parameters=[sensorID,tile,year,startDoy,endDoy,gaRootDir,bbdrRootDir,inversionRootDir,usePrior,priorDir,beamDir,modisTileScaleFactor])
 
         #########################################################################################################################
 

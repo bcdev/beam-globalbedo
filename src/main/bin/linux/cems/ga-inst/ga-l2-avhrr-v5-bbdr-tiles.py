@@ -15,25 +15,27 @@ __author__ = 'olafd'
 #
 ################################################################################
 
-#years = ['1989']    #test  
-#years = ['2000']    #test  
+years = ['1989']    #test  
+#years = ['2004','2009']    #test  
 #years = ['1981','1982','1983','1984','1986','1987','1988','1989','1990','2005']  
 #years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008']     
-years = ['2001','2002','2003','2004','2005']     
+#years = ['2001','2002','2003','2004','2005']     
+#years = ['2006','2007','2008','2009','2010']     
 #years = ['2004']     
 #years = ['2002','2003','2004','2005','2006']     
 #years = ['2005']     
 #years = ['1993']     
 #years = ['2013']     
 
-months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+#months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+months = ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 #months = ['01']
 
-#hStart = ['12']
-#hEnd = ['14']
+hStart = ['18']
+hEnd = ['20']
 
-hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
-hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
+#hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
+#hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
 
 ######################## BRF orbits --> tiles: ###########################
 
@@ -102,27 +104,31 @@ for year in years:
             if len(brfFiles) > 0:
                 for index in range(0, len(brfFiles)):
                 #for index in range(0, 3): # test
-                    brfOrbitFilePath = brfOrbitDir + '/' + brfFiles[index]
+                    if brfFiles[index].endswith(".NC"): 
+                    #if brfFiles[index].endswith(".zip"): 
+                        brfOrbitFilePath = brfOrbitDir + '/' + brfFiles[index]
 
-                    ## AVH_20050718_001D_900S900N1800W1800E_0005D_BRDF_N18.NC.bz2
-		    # new 201707:
-		    # AVHRR2_NOAA07_19820102_19820102_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.zip
+                        ## AVH_20050718_001D_900S900N1800W1800E_0005D_BRDF_N18.NC.bz2
+		        # new 201707:
+		        # AVHRR2_NOAA07_19820102_19820102_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.zip
 
-                    #brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.nc'
-                    #brfUnzippedFilePath = brfOrbitFilePath # files are now unzipped (by Said? 20161122)
-                    # 
-                    # new 201707: files are zipped again:
-                    brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.NC'
+                        #brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.nc'
+                        #brfUnzippedFilePath = brfOrbitFilePath # files are now unzipped (by Said? 20161122)
+                        # 
+                        # new 201707: files are zipped again:
+                        #brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.NC'
+                        # now unzipped, 20170727, e.g. AVHRR2_NOAA07_19820102_19820102_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.NC:
+                        brfUnzippedFilePath = brfOrbitFilePath
 
-                    m.execute('ga-l2-avhrr-v5-brf-unzip-step.sh', ['dummy'],
-                                                              [brfUnzippedFilePath],
-                                                              parameters=[brfOrbitFilePath,gaRootDir])
+                        #m.execute('ga-l2-avhrr-v5-brf-unzip-step.sh', ['dummy'],
+                        #                                      [brfUnzippedFilePath],
+                        #                                      parameters=[brfOrbitFilePath,gaRootDir])
 
-                    for subtilesIndex in range(0, len(hStart)):
-                        m.execute('ga-l2-avhrr-v5-bbdr-tiles-step.sh', [brfUnzippedFilePath],  # in case we had to unzip before
-                        #m.execute('ga-l2-avhrr-v5-bbdr-tiles-step.sh', ['dummy'],
+                        for subtilesIndex in range(0, len(hStart)):
+                            #m.execute('ga-l2-avhrr-v5-bbdr-tiles-step.sh', [brfUnzippedFilePath],  # in case we had to unzip before
+                            m.execute('ga-l2-avhrr-v5-bbdr-tiles-step.sh', ['dummy'],
                                                               [bbdrTileDir],
-                                                              parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
+                                                              parameters=[year,month,brfOrbitFilePath,brfFiles[index],bbdrTileDir,hStart[subtilesIndex],hEnd[subtilesIndex],gaRootDir,beamDir])
 
 m.wait_for_completion()
 

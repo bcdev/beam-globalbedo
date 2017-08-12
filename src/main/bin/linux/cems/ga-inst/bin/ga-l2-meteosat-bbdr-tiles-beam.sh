@@ -1,12 +1,15 @@
 #!/bin/bash
 
-bbdrPath=$1
-bbdrTileDir=$2
-diskId=$3
-hIndex=$4
-sensor=$5
-gaRootDir=$6
-beamRootDir=$7
+year=$1
+bbdrPath=$2
+bbdrTileDir=$3
+diskId=$4
+hIndex=$5
+sensor=$6
+gaRootDir=$7
+beamRootDir=$8
+
+avhrrMaskRootDir=$gaRootDir/MsslAvhrrMask
 
 if [ ! -e "$bbdrTileDir" ]
 then
@@ -22,8 +25,8 @@ fi
 
 echo "Create Meteosat BBDR spectral/broadband tile products from disk products..."
 
-echo "time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.meteosat -e -c 3000M -SsourceProduct=$bbdrPath -SlatlonProduct=$latlonPath -Psensor=$sensor -PconvertToBbdr=true -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hIndex -PhorizontalTileEndIndex=$hIndex"
-time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.meteosat -e -c 3000M -SsourceProduct=$bbdrPath -SlatlonProduct=$latlonPath -Psensor=$sensor -PconvertToBbdr=true -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hIndex -PhorizontalTileEndIndex=$hIndex
+echo "time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.meteosat -e -c 3000M -SsourceProduct=$bbdrPath -SlatlonProduct=$latlonPath -Pyear=$year -PavhrrMaskRootDir=$avhrrMaskRootDir -Psensor=$sensor -PconvertToBbdr=true -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hIndex -PhorizontalTileEndIndex=$hIndex"
+time  $beamRootDir/bin/gpt-d-l1b-bbdr.sh ga.tile.meteosat -e -c 3000M -SsourceProduct=$bbdrPath -SlatlonProduct=$latlonPath -Pyear=$year -PavhrrMaskRootDir=$avhrrMaskRootDir -Psensor=$sensor -PconvertToBbdr=true -PbbdrDir=$bbdrTileDir -PhorizontalTileStartIndex=$hIndex -PhorizontalTileEndIndex=$hIndex
 status=$?
 echo "Status: $status"
 

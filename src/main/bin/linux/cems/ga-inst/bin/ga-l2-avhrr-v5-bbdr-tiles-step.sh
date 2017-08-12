@@ -2,13 +2,15 @@
 
 . ${GA_INST}/bin/ga_env/ga-env-l2-avhrr-brf-tiles.sh
 
-bbdrPath=$1
-bbdrFile=$2
-bbdrTileDir=$3
-hStart=$4
-hEnd=$5
-gaRootDir=$6
-beamDir=$7
+year=$1
+month=$2
+bbdrPath=$3
+bbdrFile=$4
+bbdrTileDir=$5
+hStart=$6
+hEnd=$7
+gaRootDir=$8
+beamDir=$9
 
 # old products:
 # bbdrBaseName=`basename $bbdrFile .nc`
@@ -18,8 +20,8 @@ beamDir=$7
 bbdrBaseName=`basename $bbdrFile .zip`
 
 task="ga-l2-avhrr-v5-bbdr-tiles"
-jobname="${task}-AVHRR-${hStart}-${hEnd}-${bbdrBaseName}"
-command="./bin/${task}-beam.sh ${bbdrPath} ${bbdrTileDir} ${hStart} ${hEnd} ${gaRootDir} ${beamDir}"
+jobname="${task}-AVHRR-${year}-${month}-${hStart}-${hEnd}-${bbdrBaseName}"
+command="./bin/${task}-beam.sh ${year} ${bbdrPath} ${bbdrTileDir} ${hStart} ${hEnd} ${gaRootDir} ${beamDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

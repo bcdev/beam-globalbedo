@@ -42,11 +42,14 @@ if [ "$waitCount" -ge "15" ]; then
     echo "WARNING: Daily accs not complete but starting inversion anyway."
 fi
 
+for iStartDoy in $(seq -w $startdoy 4 $enddoy); do   # -w takes care for leading zeros
+    
+    # set up job with 4 days at once to make it longer (several minutes) for better scheduling
+    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 3))"`  # for step=4
 
-for iDoy in $(seq -w $startdoy $enddoy); do   # -w takes care for leading zeros
     task="ga-l3-tile-inversion-albedo-avhrrgeo"
-    jobname="${task}-${tile}-${year}-${iDoy}"
-    command="./bin/${task}-beam.sh ${sensorID} ${tile} ${year} ${iDoy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${usePrior} ${priorDir} ${beamDir} ${modisTileScaleFactor}"
+    jobname="${task}-${tile}-${year}-${iStartDoy}"
+    command="./bin/${task}-beam_2.sh ${sensorID} ${tile} ${year} ${iStartDoy} ${iEndDoy} ${gaRootDir} ${bbdrRootDir} ${inversionRootDir} ${usePrior} ${priorDir} ${beamDir} ${modisTileScaleFactor}"
 
     echo "jobname: $jobname"
     echo "command: $command"
@@ -56,15 +59,5 @@ for iDoy in $(seq -w $startdoy $enddoy); do   # -w takes care for leading zeros
     echo "calling read_task_jobs()..."
     read_task_jobs ${jobname}
 
-    #if [ -z ${jobs} ]; then
-    #    submit_job ${jobname} ${command}
-    #fi
     submit_job ${jobname} ${command}
 done
-
-#for iDoy in $(seq -w $startdoy $enddoy); do   # -w takes care for leading zeros
-#    task="ga-l3-tile-inversion-albedo-avhrrgeo"
-#    jobname="${task}-${tile}-${year}-${iDoy}"
-#    echo "calling wait_for_task_jobs_completion: $jobname"
-#    wait_for_task_jobs_completion ${jobname} 
-#done

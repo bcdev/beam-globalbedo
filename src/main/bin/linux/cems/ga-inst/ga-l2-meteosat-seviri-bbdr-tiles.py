@@ -18,15 +18,8 @@ __author__ = 'olafd'
 sensor = 'SEVIRI'
 
 #years = ['2006','2007','2008','2009']     
-#years = ['2008','2009']
-#years = ['2011']
-#years = ['2010']
-#years = ['2012']
-#years = ['2013']
 years = ['2014']
 
-allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-#allMonths = ['05']
 hIndices = ['09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', 
             '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31', '32']
 
@@ -59,7 +52,7 @@ for year in years:
                         m.execute('ga-l2-meteosat-bbdr-tiles-step.sh', 
                                   ['dummy'], 
                                   [bbdrTileDir], 
-                                  parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,diskId,hIndex,sensor,gaRootDir,beamDir])
+                                  parameters=[year,brfOrbitFilePath,brfFiles[index],bbdrTileDir,diskId,hIndex,sensor,gaRootDir,beamDir])
 
 m.wait_for_completion()
 

@@ -2,20 +2,21 @@
 
 . ${GA_INST}/bin/ga_env/ga-env-l2-meteosat-brf-tiles.sh
 
-bbdrPath=$1
-bbdrFile=$2
-bbdrTileDir=$3
-diskId=$4
-hIndex=$5
-sensor=$6
-gaRootDir=$7
-beamDir=$8
+year=$1
+bbdrPath=$2
+bbdrFile=$3
+bbdrTileDir=$4
+diskId=$5
+hIndex=$6
+sensor=$7
+gaRootDir=$8
+beamDir=$9
 
 bbdrBaseName=`basename $bbdrFile .nc`
 
 task="ga-l2-meteosat-bbdr-tiles"
-jobname="${task}-${sensor}-${diskId}-${hIndex}-${bbdrBaseName}"
-command="./bin/${task}-beam.sh ${bbdrPath} ${bbdrTileDir} ${diskId} ${hIndex} ${sensor} ${gaRootDir} ${beamDir}"
+jobname="${task}-${sensor}-${diskId}-${year}-${hIndex}-${bbdrBaseName}"
+command="./bin/${task}-beam.sh ${year} ${bbdrPath} ${bbdrTileDir} ${diskId} ${hIndex} ${sensor} ${gaRootDir} ${beamDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

@@ -26,7 +26,10 @@ submit_job() {
     # L3 daily acc:
     #bsubmit="bsub -W 180 -R rusage[mem=16000] -P ga_qa4ecv -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
     #bsubmit="bsub -q short-serial -R rusage[mem=8000] -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
-    bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    #bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    # 20170725: CEMS is extremely busy - try with more time:
+    bsubmit="bsub -q short-serial -W 720 -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+
 
     #### THIS IS FOR THE PRIORITY TEST 20170103! REMOVE AFTER PROCESSING:
     #bsubmit="bsub -U root#2 -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
