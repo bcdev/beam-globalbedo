@@ -191,7 +191,7 @@ public class DailyAccumulationOp extends Operator {
         for (int k = 0; k < sourceProducts.length; k++) {
             currentSourceProductIndex = k;
 //            if (processingMode == ProcessingMode.LEO || avhrrMaskProducts[k] != null) {
-            if (processingMode == ProcessingMode.LEO) {
+            if (processingMode == ProcessingMode.LEO || bbdrSnowMaskTile[k] != null) {
                 final Accumulator accumulator = getMatricesPerBBDRDataset(x, y);
                 M.plusEquals(accumulator.getM());
                 V.plusEquals(accumulator.getV());
@@ -215,8 +215,15 @@ public class DailyAccumulationOp extends Operator {
         final double[] stdev = getSD(x, y);
         final double[] correlation = getCorrelation(x, y);
         final Matrix kernels = getKernels(x, y);
-        if (isSnowFilter(x, y) || isAvhrrMaskCloudFilter(x, y) ||
-                DailyAccumulationUtils.isAccumulatorInputInvalid(bbdr, stdev, correlation, kernels)) {
+        boolean accumulatorInputInvalid = DailyAccumulationUtils.isAccumulatorInputInvalid(bbdr, stdev, correlation, kernels);
+//        if ((x == 50 && y == 50) || (x == 100 && y == 80)) {
+//            String productName = sourceProducts[currentSourceProductIndex].getName();
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "productName = " + productName);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "isSnowFilter(x, y) = " + isSnowFilter(x, y));
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulatorInputInvalid = " + accumulatorInputInvalid);
+//        }
+        if (isSnowFilter(x, y) || isAvhrrMaskCloudFilter(x, y) || accumulatorInputInvalid) {
             return getZeroAccumulator();
         }
 
