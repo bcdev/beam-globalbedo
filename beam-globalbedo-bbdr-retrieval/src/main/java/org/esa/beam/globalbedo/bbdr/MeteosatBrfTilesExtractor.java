@@ -304,6 +304,12 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                         meteosatBbdrInputProducts.put("brf", tileProduct.getProduct());
                         final Product avhrrMaskProduct =
                                 IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
+                        // todo: we will need the AVHRR BRF tile product instead
+                        // such as: ../GlobAlbedoTest/BBDR/AVHRR/1989/h18v04/
+                        //             AVHRR2_NOAA11_19891124_19891124_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
+                        // instead of
+                        //          ../GlobAlbedoTest/MsslAvhrrMask/1989/h18v04/
+                        //             msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-11_19891124_c20130905130918_h18v04.nc
                         if (avhrrMaskProduct != null) {
                             meteosatBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);
                             productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(MeteosatBbdrFromBrfOp.class),

@@ -167,9 +167,17 @@ public class BbdrConstants {
     public static final float AOT_CONST_VALUE = 0.15f;
 
     // Liang coeffs for AVHRR: bb := a*brf1^2 + b*brf2^2 + c*brf1*brf2 + d*brf1 + e*brf2 + f
-    public static final double[][] AVHRR_LIANG_COEFFS = {{0.441, 0.0, 0.0, 0.591, 0.0, 0.0074},
+    public static final double[][] AVHRR_LIANG_COEFFS = {
+            {0.441, 0.0, 0.0, 0.591, 0.0, 0.0074},
             {-1.4759, -0.6536, 1.8591, 0.0, 1.063, 0.0},
-            {-0.337, -0.2707, 0.7074, 0.2915, 0.5256, 0.0035}};
+            {-0.337, -0.2707, 0.7074, 0.2915, 0.5256, 0.0035}
+    };
+
+    public static final double[][] AVHRR_SAID_COEFFS = {
+            {0.946912, -0.627623, 0.0, 0.589152, 0.0, 0.038403},
+            {-0.897186, 0.0, 0.0, 0.575872, 0.94193, -0.01747},
+            {-0.119809, 0.0, 0.0, 0.528617, 0.333769, 0.042595}
+    };
 
     public static final double[][] MERIS_SPECTRAL_MAPPING_COEFFS = new double[][] {
             {0.0, 0.0, 0.0, 0.0381683132278, 0.0, 0.0706581570918, 0.727938603627, 0.16365834236, 0.0,

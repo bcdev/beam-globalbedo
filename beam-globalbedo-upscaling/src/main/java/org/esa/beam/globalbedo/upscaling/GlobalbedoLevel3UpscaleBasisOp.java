@@ -167,15 +167,8 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
 
     protected void computeNearest(Tile src, Tile target, Tile mask, double scaling) {
         Rectangle targetRectangle = target.getRectangle();
-        System.out.println("targetRectangle = " + targetRectangle);
-        if (targetRectangle.x == 200 && targetRectangle.y == 200)  {
-            System.out.println("x,y = " + targetRectangle.x + "," + targetRectangle.y);
-        }
         for (int y = targetRectangle.y; y < targetRectangle.y + targetRectangle.height; y++) {
             for (int x = targetRectangle.x; x < targetRectangle.x + targetRectangle.width; x++) {
-                if (x == 200 && y == 220)  {
-                    System.out.println("x,y = " + x + "," + y);
-                }
                 float sample = src.getSampleFloat((int) (x * scaling + scaling / 2), (int) (y * scaling + scaling / 2));
                 float sampleMask = 1.0f;
                 if (mask != null) {
