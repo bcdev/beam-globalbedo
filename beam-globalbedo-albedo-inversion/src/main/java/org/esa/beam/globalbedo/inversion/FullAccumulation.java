@@ -27,7 +27,7 @@ public class FullAccumulation {
     private int rasterWidth;
     private int rasterHeight;
 
-    private String bbdrRootDir;
+    private String dailyAccRootDir;
     private String tile;
     private int year;
     private int doy;
@@ -40,12 +40,12 @@ public class FullAccumulation {
     FullAccumulator result;
 
     public FullAccumulation(int rasterWidth, int rasterHeight,
-                            String bbdrRootDir, String tile,
+                            String dailyAccRootDir, String tile,
                             int year, int doy,
                             int wings, boolean computeSnow) {
         this.rasterWidth = rasterWidth;
         this.rasterHeight = rasterHeight;
-        this.bbdrRootDir = bbdrRootDir;
+        this.dailyAccRootDir = dailyAccRootDir;
         this.tile = tile;
         this.year = year;
         this.doy = doy;
@@ -63,9 +63,8 @@ public class FullAccumulation {
         logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get Daily Accumulator input files...
-        final String dailyAccDir = bbdrRootDir + File.separator + "DailyAcc";
-
-        AccumulatorHolder dailyAccumulators = IOUtils.getDailyAccumulator(dailyAccDir, doy, year, tile,
+//        final String dailyAccDir = dailyAccRootDir + File.separator + "DailyAcc";
+        AccumulatorHolder dailyAccumulators = IOUtils.getDailyAccumulator(dailyAccRootDir, doy, year, tile,
                                                                           wings,
                                                                           computeSnow, false);
 

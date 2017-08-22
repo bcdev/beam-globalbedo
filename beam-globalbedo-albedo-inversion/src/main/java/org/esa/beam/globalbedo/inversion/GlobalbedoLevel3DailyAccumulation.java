@@ -32,6 +32,14 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     @Parameter(defaultValue = "", description = "BBDR root directory")
     private String bbdrRootDir;
 
+    @Parameter(defaultValue = "", description = "Globalbedo BBDR daily accumulator root directory")
+    private String dailyAccRootDir;
+    // e.g. /group_workspaces/cems2/qa4ecv/vol3/olafd/GlobAlbedoTest/DailyAccumulators
+    // whereas BBDRs might still be in /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR/<sensor>
+    // --> we got rid of the coupling ../BBDR/Dailyacc to be more flexible with disk space
+    // subfolders are: $dailyAccRootDir/<year>/<tile>/<snowMode>
+
+
     @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
     private String avhrrMaskRootDir;
 
@@ -85,14 +93,14 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         final ProcessingMode processingMode = getProcessingModeFromSensors();
 
         if (inputProducts.length > 0) {
-            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
-                    + File.separator + year + File.separator + tile;
+//            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
+//                    + File.separator + year + File.separator + tile;
             if (computeSnow) {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+                dailyAccRootDir = dailyAccRootDir.concat(File.separator + "Snow" + File.separator);
             } else if (computeSeaice) {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator);
+                dailyAccRootDir = dailyAccRootDir.concat(File.separator);
             } else {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+                dailyAccRootDir = dailyAccRootDir.concat(File.separator + "NoSnow" + File.separator);
             }
 
             // STEP 2: do accumulation, write to binary file
@@ -100,7 +108,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
-            final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
+            final File dailyAccumulatorBinaryFile = new File(dailyAccRootDir + dailyAccumulatorBinaryFilename);
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);

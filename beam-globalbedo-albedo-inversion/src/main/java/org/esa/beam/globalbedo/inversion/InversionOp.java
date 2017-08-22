@@ -15,9 +15,6 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
-import org.esa.beam.util.logging.BeamLogManager;
-
-import java.util.logging.Level;
 
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
@@ -87,8 +84,8 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "180", description = "Wings")  // means 3 months wings on each side of the year
     private int wings;
 
-    @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo
-    private String bbdrRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo BBDR daily accumulator root directory")
+    private String dailyAccRootDir;
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -206,7 +203,7 @@ public class InversionOp extends PixelOperator {
         }
 
         FullAccumulation fullAccumulation = new FullAccumulation(rasterWidth, rasterHeight,
-                                                                 bbdrRootDir, tile, year, doy,
+                                                                 dailyAccRootDir, tile, year, doy,
                                                                  wings, computeSnow);
         fullAccumulator = fullAccumulation.getResult();
 
