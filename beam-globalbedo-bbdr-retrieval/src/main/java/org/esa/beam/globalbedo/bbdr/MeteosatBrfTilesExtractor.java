@@ -33,6 +33,7 @@ import org.esa.beam.globalbedo.auxdata.ModisTileCoordinates;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.gpf.operators.standard.WriteOp;
 import org.esa.beam.util.ProductUtils;
+import org.esa.beam.util.logging.BeamLogManager;
 
 import javax.media.jai.JAI;
 import java.io.File;
@@ -40,6 +41,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.*;
+import java.util.logging.Level;
 
 /**
  * Reads and reprojects a Meteosat MVIRI BRF product onto MODIS SIN tiles and optionally converts to BBDRs.
@@ -69,7 +71,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
     @SourceProduct
     private Product latlonProduct;    // make sure externally that the correct matching latlon product is submitted
 
-    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_W", "GOES_E"}, defaultValue = "MVIRI")
+    @Parameter(description = "Sensor", valueSet = {"MVIRI", "SEVIRI", "GMS", "GOES_W", "GOES_E"})
     protected MeteosatSensor sensor;
 
     @Parameter
@@ -300,35 +302,28 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                     Product productToWrite = null;
                     if (convertToBbdr) {
 
-                        Map<String, Product> meteosatBbdrInputProducts = new HashMap<>();
-                        meteosatBbdrInputProducts.put("brf", tileProduct.getProduct());
                         final Product avhrrMaskProduct =
                                 IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
-                        // todo: we will need the AVHRR BRF tile product instead
-                        // such as: ../GlobAlbedoTest/BBDR/AVHRR/1989/h18v04/
-                        //             AVHRR2_NOAA11_19891124_19891124_L1_BRF_900S900N1800W1800E_PLC_0005D_v03_h18v04.nc
-                        // instead of
-                        //          ../GlobAlbedoTest/MsslAvhrrMask/1989/h18v04/
-                        //             msslFlag_v2__AVHRR-Land_v004_AVH09C1_NOAA-11_19891124_c20130905130918_h18v04.nc
                         if (avhrrMaskProduct != null) {
+                            Map<String, Product> meteosatBbdrInputProducts = new HashMap<>();
+                            meteosatBbdrInputProducts.put("brf", tileProduct.getProduct());
                             meteosatBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);
+                            Map<String, Object> meteosatBbdrInputParms = new HashMap<>();
+                            meteosatBbdrInputParms.put("sensor", sensor);
                             productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(MeteosatBbdrFromBrfOp.class),
-                                                               GPF.NO_PARAMS, meteosatBbdrInputProducts);
+                                                               meteosatBbdrInputParms, meteosatBbdrInputProducts);
                             productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
                         }
-
-                        // will save computation time and disk space in case of mass production...
-//                        MeteosatBbdrFromBrfOp toBbdrOp = new MeteosatBbdrFromBrfOp();
-//                        toBbdrOp.setParameterDefaultValues();
-//                        toBbdrOp.setParameter("sensor", sensor);
-//                        toBbdrOp.setSourceProduct(tileProduct.getProduct());
-//                        productToWrite = toBbdrOp.getTargetProduct();
-//                        productToWrite.setGeoCoding(tileProduct.getProduct().getGeoCoding());
                     } else {
                         productToWrite = tileProduct.getProduct();
                     }
                     if (productToWrite != null) {
                         writeTileProduct(productToWrite, tileProduct.getTileName());
+                    } else {
+                        BeamLogManager.getSystemLogger().log(Level.WARNING,
+                                                             "No tile product written for BRF source product '" +
+                                                                     sourceProduct.getName() + "' / tile: " +
+                                                                     tileProduct.getTileName() + " - check!");
                     }
                 }
             } catch (Exception e) {

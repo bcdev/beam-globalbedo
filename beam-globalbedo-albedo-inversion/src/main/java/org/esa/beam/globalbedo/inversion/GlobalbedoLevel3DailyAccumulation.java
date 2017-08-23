@@ -33,15 +33,10 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     private String bbdrRootDir;
 
     @Parameter(defaultValue = "", description = "Globalbedo BBDR daily accumulator root directory")
-    private String dailyAccRootDir;
-    // e.g. /group_workspaces/cems2/qa4ecv/vol3/olafd/GlobAlbedoTest/DailyAccumulators
+    private String dailyAccDir;
+    // e.g. /group_workspaces/cems2/qa4ecv/vol3/olafd/GlobAlbedoTest/DailyAccumulators/<year>/<tile>/<snowMode>
     // whereas BBDRs might still be in /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR/<sensor>
     // --> we got rid of the coupling ../BBDR/Dailyacc to be more flexible with disk space
-    // subfolders are: $dailyAccRootDir/<year>/<tile>/<snowMode>
-
-
-    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
-    private String avhrrMaskRootDir;
 
     @Parameter(label = "Sensors to ingest in BRDF retrieval", defaultValue = "MERIS,VGT")
     private String[] sensors;
@@ -95,24 +90,24 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
         if (inputProducts.length > 0) {
 //            String dailyAccumulatorDir = bbdrRootDir + File.separator + "DailyAcc"
 //                    + File.separator + year + File.separator + tile;
-            if (computeSnow) {
-                dailyAccRootDir = dailyAccRootDir.concat(File.separator + "Snow" + File.separator);
-            } else if (computeSeaice) {
-                dailyAccRootDir = dailyAccRootDir.concat(File.separator);
-            } else {
-                dailyAccRootDir = dailyAccRootDir.concat(File.separator + "NoSnow" + File.separator);
-            }
+//            String dailyAccumulatorDir = dailyAccRootDir + File.separator + year + File.separator + tile;
+//            if (computeSnow) {
+//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
+//            } else if (computeSeaice) {
+//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator);
+//            } else {
+//                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
+//            }
 
             // STEP 2: do accumulation, write to binary file
             Product accumulationProduct;
             // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
             String dailyAccumulatorBinaryFilename = "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
-            final File dailyAccumulatorBinaryFile = new File(dailyAccRootDir + dailyAccumulatorBinaryFilename);
+            final File dailyAccumulatorBinaryFile = new File(dailyAccDir + File.separator + dailyAccumulatorBinaryFilename);
             DailyAccumulationOp accumulationOp = new DailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
-            accumulationOp.setParameter("avhrrMaskRootDir", avhrrMaskRootDir);
             accumulationOp.setParameter("year", year);
             accumulationOp.setParameter("tile", tile);
             accumulationOp.setParameter("doy", doy);
@@ -124,17 +119,13 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
             accumulationOp.setParameter("modisTileScaleFactor", modisTileScaleFactor);
             accumulationProduct = accumulationOp.getTargetProduct();
-
             setTargetProduct(accumulationProduct);
         } else {
             logger.log(Level.WARNING, "No input products found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
-            //  no BBDR input - just set a dummy target product
-            Product dummyProduct = new Product("dummy", "dummy", 1, 1);
+            Product dummyProduct = new Product("dailyacc_dummy_" + year + "_" + tile + "_" + doy, "dummy", 1, 1);
             setTargetProduct(dummyProduct);
         }
-
-        getTargetProduct().setName("SUCCESS_dailyacc_" + year + "_" + doy);
 
         logger.log(Level.INFO, "Finished daily accumulation process for tile: " + tile + ", year: " + year + ", DoY: " +
                 IOUtils.getDoyString(doy) + " , Snow = " + computeSnow);
@@ -143,7 +134,7 @@ public class GlobalbedoLevel3DailyAccumulation extends Operator {
     private ProcessingMode getProcessingModeFromSensors() {
         if (sensors[0].equals("MERIS") || sensors[0].equals("VGT")) {
             return ProcessingMode.LEO;
-        }  else {
+        } else {
             return ProcessingMode.AVHRRGEO;
         }
     }
