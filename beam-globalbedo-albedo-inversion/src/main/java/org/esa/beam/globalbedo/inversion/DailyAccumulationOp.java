@@ -35,9 +35,6 @@ public class DailyAccumulationOp extends Operator {
     @SourceProducts(description = "BBDR source product")
     private Product[] sourceProducts;
 
-    @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
-    private String avhrrMaskRootDir;
-
     @Parameter(description = "MODIS tile")
     private String tile;
 

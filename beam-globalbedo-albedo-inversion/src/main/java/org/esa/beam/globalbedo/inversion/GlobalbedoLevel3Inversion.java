@@ -6,7 +6,6 @@ import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
-import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
@@ -27,8 +26,12 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l3.inversion")
 public class GlobalbedoLevel3Inversion extends Operator {
 
-    @Parameter(defaultValue = "", description = "Globalbedo BBDR root directory") // e.g., /data/Globalbedo/BBDR
-    private String bbdrRootDir;
+    @Parameter(defaultValue = "", description = "Globalbedo BBDR daily accumulator root directory")
+    private String dailyAccRootDir;
+    // e.g. /group_workspaces/cems2/qa4ecv/vol3/olafd/GlobAlbedoTest/DailyAccumulators
+    // whereas BBDRs might still be in /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/BBDR/<sensor>
+    // --> we got rid of the coupling ../BBDR/Dailyacc to be more flexible with disk space
+    // subfolders are: $dailyAccRootDir/<year>/<tile>/<snowMode>
 
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
@@ -87,8 +90,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
-    private boolean computeSeaice;
+//    @Parameter(defaultValue = "false", description = "Computation for seaice mode (polar tiles)")
+//    private boolean computeSeaice;
+    private boolean computeSeaice = false;   // currently not used
 
     @Parameter(defaultValue = "true",
             description = "Computation for AVHRR and/or Meteosat (tiles usually have coarser resolution)")
@@ -122,9 +126,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
-
-        final String fullAccumulatorDir = bbdrRootDir + File.separator + "FullAcc"
-                + File.separator + year + File.separator + tile;
 
         Product priorProduct = null;
         if (usePrior) {
@@ -185,7 +186,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 }
                 inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
             }
-            inversionOp.setParameter("bbdrRootDir", bbdrRootDir);
+            inversionOp.setParameter("dailyAccRootDir", dailyAccRootDir);
             inversionOp.setParameter("year", year);
             inversionOp.setParameter("tile", tile);
             inversionOp.setParameter("doy", doy);
@@ -202,18 +203,23 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("modisTileScaleFactor", modisTileScaleFactor);
             Product inversionProduct = inversionOp.getTargetProduct();
 
-            if (computeSeaice) {
-                for (int i = doy; i < doy + 8; i++) {
-                    try {
-                        Product[] bbdrpstProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, i);
-                        if (bbdrpstProducts.length > 0) {
-                            inversionProduct.setGeoCoding(bbdrpstProducts[0].getGeoCoding());
-                        }
-                    } catch (IOException e) {
-                        throw new OperatorException("Cannot attach geocoding from BBDR PST product: ", e);
-                    }
-                }
-            } else if (priorProduct == null) {
+//            if (computeSeaice) {
+//                for (int i = doy; i < doy + 8; i++) {
+//                    try {
+//                        Product[] bbdrpstProducts = IOUtils.getAccumulationInputProducts(bbdrRootDir, tile, year, i);
+//                        if (bbdrpstProducts.length > 0) {
+//                            inversionProduct.setGeoCoding(bbdrpstProducts[0].getGeoCoding());
+//                        }
+//                    } catch (IOException e) {
+//                        throw new OperatorException("Cannot attach geocoding from BBDR PST product: ", e);
+//                    }
+//                }
+//            } else if (priorProduct == null) {
+//                // same in the standard mode without using priors...
+//                inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor));
+//            }
+
+            if (priorProduct == null) {
                 // same in the standard mode without using priors...
                 inversionProduct.setGeoCoding(IOUtils.getSinusoidalTileGeocoding(tile, modisTileScaleFactor));
             }
@@ -230,13 +236,6 @@ public class GlobalbedoLevel3Inversion extends Operator {
                 ProductUtils.copyMetadata(inversionProduct, southPoleCorrectedProduct);
                 setTargetProduct(southPoleCorrectedProduct);
             }
-
-            if (computeSeaice) {
-                // copy landmask into target product
-                // todo: improve if still needed
-                // IOUtils.copyLandmask(gaRootDir, tile, getTargetProduct());
-            }
-
         } else {
             logger.log(Level.WARNING, "No prior file found for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy) + " , Snow = " + computeSnow + " - no inversion performed.");
