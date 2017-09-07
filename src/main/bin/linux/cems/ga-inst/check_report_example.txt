@@ -1,0 +1,1 @@
+grep "ga-l2-sdr-orbits-step.sh /group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest/L1b/MERIS/2006" ga-l2-sdr-orbits.report |wc 	 5635

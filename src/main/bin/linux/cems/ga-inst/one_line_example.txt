@@ -1,0 +1,12 @@
+for i in {1..5}; do echo "Welcome $i times"; done
+or:
+for((i=1;i<=10;i+=2)); do echo "Welcome $i times"; done
+
+works for files:
+for i in /etc/*.conf; do cp $i /backup; done
+
+two commands:
+for i in (); do echo $i ; ls $i; done 
+
+nested for:
+for i in {0..3}; do for j in {0..9}; do echo -n \($i, $j\); echo Is today the $i$j \?; done; done

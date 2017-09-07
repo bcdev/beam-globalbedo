@@ -1,0 +1,35 @@
+# assume single mosaics are missing, e.g. QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ # --> take the data from the next product (doy 356), but adjust all metadata AND i.e. the 'time' value! 
+ 
+ 1284  cp -p ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003356.nc ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1285  ncatted -h -O -a id,global,o,c,"Qa4ecv.albedo.avh_geo.2003355_upscaled.nc" ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1286  ncatted -h -O -a tracking_id,global,o,c,"b006491b-054e-484c-8245-933fc8c35c5f" ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1287  ncdump -h ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1288  ncatted -h -O -a time_coverage_start,global,o,c,"20031221T000000Z" ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1289  ncatted -h -O -a time_coverage_end,global,o,c,"20031221T235959Z" ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1290  ncdump -v time ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1291  ncap2 -s 'time=12407' ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc muell.nc
+ 1292  mv muell.nc ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1293  ncatted -h -O -a NCO,global,d,, ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1294  ncatted -h -O -a nco_openmp_thread_number,global,d,, ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1295  ncdump -h ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1296  ncdump -v time ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003356.nc
+ 1297  ncdump -v time ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003355.nc
+ 1298  ncdump -v time ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2003/QA4ECV-L3-Mosaic-Albedo-NoSnow-05-2003354.nc
+ touch ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2005/*.nc
+ ll ../qa4ecv_archive/qa4ecv/albedo/L3_Mosaic_NoSnow/v0.9/2005/*.nc
+ 
+
+# UIDs generated with Java: 
+for (int i = 0; i < 10; i++) {
+	String uuid = UUID.randomUUID().toString();
+	System.out.println("uuid = " + uuid);
+}
+uuid = f481113d-369a-4dc7-a2bf-16154d01bd1d
+uuid = 319feb14-c2da-4883-b3a9-1870a62eb31e
+uuid = 9304b1d7-8b16-4cfd-a30d-5457a656314d
+uuid = 58eda729-79d4-4f53-aed6-409c37c4df6b
+uuid = e8063a78-08bb-49cb-806c-e85470827a08
+uuid = 7a211207-0898-4d38-8359-0c0e67f39a2e
+uuid = e1813bce-fa33-4460-b489-d6b65584176f
+uuid = ad0cf33d-4a20-459e-8815-766a296cef75

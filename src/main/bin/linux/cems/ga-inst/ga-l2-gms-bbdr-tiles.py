@@ -13,14 +13,15 @@ __author__ = 'olafd'
 #
 ################################################################################
 
-sensor = 'GMS'
-
-years = ['1997','1998','1999','2000','2001','2002','2003']     
+years = ['1997','1998','1999']     
+#years = ['2000','2001','2002','2003']     
 #years = ['2000']
 #years = ['2001']
 
 hIndices = ['00', '01', '02', '03', '04', '05', '06', '07', '08', '09', '10',
             '23', '24', '25', '26', '27', '28', '29', '30', '31', '32', '33', '34', '35'] # for GMS
+
+#hIndices = ['27']
 
 ######################## BRF orbits --> tiles: ###########################
 
@@ -31,8 +32,8 @@ inputs = ['dummy']
 m = PMonitor(inputs, 
              request='ga-l2-gms-bbdr-tiles',
              logdir='log', 
-             hosts=[('localhost',128)],
-             types=[('ga-l2-gms-bbdr-tiles-step.sh',128)])
+             hosts=[('localhost',192)],
+             types=[('ga-l2-gms-bbdr-tiles-step.sh',192)])
 
 diskId = '140'
 diskIdString = 'VIS02_140_C_BRF'
@@ -44,6 +45,7 @@ for year in years:
         brfFiles = os.listdir(brfOrbitDir)
         if len(brfFiles) > 0:
             for index in range(0, len(brfFiles)):
+            #for index in range(0, 3):  # test!!
                 if diskIdString in brfFiles[index]:
                     brfOrbitFilePath = brfOrbitDir + '/' + brfFiles[index]
                     #print 'index, brfOrbitFilePath', index, ', ', brfOrbitFilePath
@@ -51,7 +53,7 @@ for year in years:
                         m.execute('ga-l2-gms-bbdr-tiles-step.sh', 
                                   ['dummy'], 
                                   [bbdrTileDir], 
-                                  parameters=[brfOrbitFilePath,brfFiles[index],bbdrTileDir,diskId,hIndex,sensor,gaRootDir,beamDir])
+                                  parameters=[year,brfOrbitFilePath,brfFiles[index],bbdrTileDir,diskId,hIndex,gaRootDir,beamDir])
 
 m.wait_for_completion()
 

@@ -1,6 +1,7 @@
 #!/bin/bash
 
-. ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic-avhrrgeo.sh
+#. ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic-avhrrgeo.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-albedomosaic-avhrrgeo_nologs.sh
 
 echo "entered ga-l3-albedomosaic-step..."
 
@@ -30,4 +31,4 @@ if [ -z ${jobs} ]; then
     submit_job ${jobname} ${command}
 fi
 
-wait_for_task_jobs_completion ${jobname} 
+#wait_for_task_jobs_completion ${jobname} 

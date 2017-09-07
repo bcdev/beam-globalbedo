@@ -1,0 +1,22 @@
+HOW TO USE GITHUB FOR QA4ECV ON LOTUS
+
+only once:
+1. copy the key pair id_rsa and id_rsa.pub from F:\olafd\.ssh to ~/.ssh on lotus
+2. chmod 600 id_rsa 
+3. Test: type 'ssh -T git@github.com' --> you get 'Hi, dolaf! You've successfully...'
+
+always when you want to update or commit/push:
+4. cd workspace/git/beam-globalbedo/
+5. 'git status' : make sure you are on branch QA4ECV
+6. update: 'git pull -a'
+7. git add .
+8. git commit -a -m "my commit message"
+9. git push origin QA4ECV
+10. if the push fails, do first: 'git remote set-url origin git@github.com:bcdev/beam-globalbedo.git'
+
+- commit/push gainst scrripts:
+1. cd workspace/git/beam-globalbedo
+2. git pull -a
+3. git add src/main/bin/linux/cems/ga-inst
+4. git commit -m "updated gainst scripts"
+5. git push

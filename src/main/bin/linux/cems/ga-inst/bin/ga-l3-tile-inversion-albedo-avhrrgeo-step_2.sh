@@ -19,14 +19,14 @@ modisTileScaleFactor=${12}  # remind the brackets if >= 10!!
 
 # TODO: to be safe, add a wait loop (60 sec) here and check for completion of writing binary accumulator files in ../DailyAccs/$year/(No)Snow
 # This is indicated by presence of marker files 'PROCESSED_ALL'
-# continue when they are present or after 15min with a warning
+# continue when they are present or after 30min with a warning
 # (assume that wing years are ready as they were processed before the center year and have less daily accs)
 
 dailyAccNoSnowDir=$gaRootDir/BBDR/DailyAcc/$year/$tile/NoSnow
 dailyAccSnowDir=$gaRootDir/BBDR/DailyAcc/$year/$tile/Snow
 
 waitCount=0
-while [  "$waitCount" -lt "15" ]; do
+while [  "$waitCount" -lt "30" ]; do
     markerNoSnow=$dailyAccNoSnowDir/PROCESSED_ALL
     markerSnow=$dailyAccSnowDir/PROCESSED_ALL
     thedate=`date`
@@ -38,14 +38,18 @@ while [  "$waitCount" -lt "15" ]; do
     let waitCount=waitCount+1 
     sleep 60
 done
-if [ "$waitCount" -ge "15" ]; then
+if [ "$waitCount" -ge "30" ]; then
     echo "WARNING: Daily accs not complete but starting inversion anyway."
 fi
 
-for iStartDoy in $(seq -w $startdoy 4 $enddoy); do   # -w takes care for leading zeros
+#for iStartDoy in $(seq -w $startdoy 4 $enddoy); do   # -w takes care for leading zeros
+for iStartDoy in $(seq -w $startdoy 28 $enddoy); do   # -w takes care for leading zeros
     
     # set up job with 4 days at once to make it longer (several minutes) for better scheduling
-    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 3))"`  # for step=4
+    # iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 3))"`  # for step=4
+
+    # set up job with 28 days at once to make it longer (several minutes) for better scheduling
+    iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 27))"`  # for step=28 which covers whole period 1..365
 
     task="ga-l3-tile-inversion-albedo-avhrrgeo"
     jobname="${task}-${tile}-${year}-${iStartDoy}"

@@ -15,11 +15,11 @@ __author__ = 'olafd'
 #
 ################################################################################
 
-years = ['1989']    #test  
+#years = ['2000']    #test  
 #years = ['2004','2009']    #test  
 #years = ['1981','1982','1983','1984','1986','1987','1988','1989','1990','2005']  
 #years = ['1999','2000','2001','2002','2003','2004','2005','2006','2007','2008']     
-#years = ['2001','2002','2003','2004','2005']     
+years = ['2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011']     
 #years = ['2006','2007','2008','2009','2010']     
 #years = ['2004']     
 #years = ['2002','2003','2004','2005','2006']     
@@ -27,15 +27,15 @@ years = ['1989']    #test
 #years = ['1993']     
 #years = ['2013']     
 
-#months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
-months = ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+months = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+#months = ['02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 #months = ['01']
 
-hStart = ['18']
-hEnd = ['20']
+#hStart = ['18']
+#hEnd = ['20']
 
-#hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
-#hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
+hStart = ['00', '03', '06', '09', '12', '15', '18', '21', '24', '27', '30', '33']
+hEnd   = ['02', '05', '08', '11', '14', '17', '20', '23', '26', '29', '32', '35']
 
 ######################## BRF orbits --> tiles: ###########################
 
@@ -97,7 +97,9 @@ for year in years:
         # brfOrbitDir = gaRootDir + '/../../avhrr_jrc/h05-ftp.jrc.it/fapar/BRF/' + year + '/' + month 
 	# new 201707:
         # /group_workspaces/cems2/qa4ecv/vol3/avhrr_v5_jrc/h05-ftp.jrc.it/fapar/BRF/1982/01
-	brfOrbitDir = '/group_workspaces/cems2/qa4ecv/vol3/avhrr_v5_jrc/h05-ftp.jrc.it/fapar/BRF/' + year + '/' + month
+	#brfOrbitDir = '/group_workspaces/cems2/qa4ecv/vol3/avhrr_v5_jrc/h05-ftp.jrc.it/fapar/BRF/' + year + '/' + month
+	# new 20170817:
+        brfOrbitDir = '/group_workspaces/cems2/qa4ecv/vol3/avhrr_v5_jrc/avhrr_corrected/h05-ftp.jrc.it/fapar/BRF/' + year + '/' + month
 
         if os.path.exists(brfOrbitDir):
             brfFiles = os.listdir(brfOrbitDir)
@@ -118,8 +120,6 @@ for year in years:
                         # new 201707: files are zipped again:
                         #brfUnzippedFilePath = gaRootDir + '/tmp/' + splitext(splitext(brfFiles[index])[0])[0] + '.NC'
                         # now unzipped, 20170727, e.g. AVHRR2_NOAA07_19820102_19820102_L1_BRF_900S900N1800W1800E_PLC_0005D_v03.NC:
-                        brfUnzippedFilePath = brfOrbitFilePath
-
                         #m.execute('ga-l2-avhrr-v5-brf-unzip-step.sh', ['dummy'],
                         #                                      [brfUnzippedFilePath],
                         #                                      parameters=[brfOrbitFilePath,gaRootDir])

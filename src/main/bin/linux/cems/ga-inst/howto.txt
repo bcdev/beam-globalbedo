@@ -1,0 +1,13 @@
+number of current processes of all users:
+[17.04.2015 16:55:56] Olaf Danne: ps haux Ou | cut '-d ' -f1 | uniq -c
+[17.04.2015 16:56:10] Olaf Danne: und:
+[17.04.2015 16:56:20] Olaf Danne: ulimit -a
+[17.04.2015 16:56:33] Olaf Danne: --> max user processes 1024
+
+You can check the free space by "pan_df -h" (there is no quota by user over vol*):
+        pan_df -h /group_workspaces/cems2/qa4ecv/vol1    
+
+How do I install Python packages myself:
+- http://www.jasmin.ac.uk/faq/#python
+- at every login or if needed: source $PATH_TO_VENV_DIRECTORY/bin/activate
+- here:  source ga_python_env/bin/activate

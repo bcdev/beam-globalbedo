@@ -1,0 +1,4 @@
+- 20170318: check why AVHRR samples were not found in latest BBDR--> albedo run with GOES!
+--> fixed but recompile SW!
+- check why mosaic from latest BBDR--> albedo run with GOES is partially empty
+--> because AVHRR samples were not found and not all BRDF tiles available from GOES?!
