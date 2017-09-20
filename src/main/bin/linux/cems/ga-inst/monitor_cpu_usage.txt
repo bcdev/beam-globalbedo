@@ -1,0 +1,7922 @@
+Mon Aug 29 14:58:05 BST 2016 : tblock01 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 14:59:06 BST 2016 : dazghent 0
+jluo003 0
+tblock01 0
+ecarboni 0
+hchristensen 0
+root 11.4
+odanne 23.1
+-----------------------------
+Mon Aug 29 15:00:07 BST 2016 : dazghent 0
+jluo003 0
+root 9.5
+tblock01 0
+ecarboni 0
+hchristensen 0
+odanne 43.3
+-----------------------------
+Mon Aug 29 15:01:08 BST 2016 : dazghent 0
+tblock01 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 17.8
+-----------------------------
+Mon Aug 29 15:02:09 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+tblock01 0
+dazghent 0
+root 9.5
+odanne 15.8
+-----------------------------
+Mon Aug 29 15:03:10 BST 2016 : tblock01 0
+root 7.6
+hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+odanne 21.6
+-----------------------------
+Mon Aug 29 15:04:11 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+tblock01 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:05:12 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+tblock01 0
+hchristensen 0
+root 12
+odanne 6
+-----------------------------
+Mon Aug 29 15:06:13 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 14
+tblock01 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 15:07:15 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+tblock01 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:08:16 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:09:17 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:10:18 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:11:19 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 7.9
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:12:20 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:13:21 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 4
+hchristensen 0
+odanne 13.3
+-----------------------------
+Mon Aug 29 15:14:22 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 6
+odanne 8
+-----------------------------
+Mon Aug 29 15:15:23 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:16:24 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 15:17:26 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 4
+odanne 17.9
+-----------------------------
+Mon Aug 29 15:18:27 BST 2016 : dazghent 0
+ecarboni 0
+root 9.5
+hchristensen 0
+jluo003 0
+odanne 10
+-----------------------------
+Mon Aug 29 15:19:28 BST 2016 : dazghent 0
+root 5.9
+hchristensen 0
+ecarboni 0
+jluo003 0
+odanne 8
+-----------------------------
+Mon Aug 29 15:20:29 BST 2016 : jluo003 0
+ecarboni 0
+root 7.9
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 15:21:30 BST 2016 : dazghent 0
+ecarboni 0
+root 4
+hchristensen 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:22:31 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 4
+odanne 0
+-----------------------------
+Mon Aug 29 15:23:32 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:24:33 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:25:34 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:26:35 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 12
+odanne 6
+-----------------------------
+Mon Aug 29 15:27:36 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:28:38 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:29:39 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 6
+odanne 0
+-----------------------------
+Mon Aug 29 15:30:40 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:31:41 BST 2016 : root 5.9
+hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+odanne 101.9
+-----------------------------
+Mon Aug 29 15:32:42 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:33:43 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 15:34:44 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:35:45 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 1.9
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:36:46 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:37:47 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 15:38:49 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:39:50 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 15.9
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:40:51 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:41:52 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 15:42:53 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:43:54 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:44:55 BST 2016 : dazghent 0
+jluo003 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 15:45:56 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 4
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:46:57 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 15:47:59 BST 2016 : dazghent 0
+jluo003 0
+root 6
+ecarboni 0
+hchristensen 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 15:49:00 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 4
+ecarboni 0
+odanne 7.6
+-----------------------------
+Mon Aug 29 15:50:01 BST 2016 : dazghent 0
+root 4
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 15:51:02 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 9.5
+ecarboni 0
+odanne 17.7
+-----------------------------
+Mon Aug 29 15:52:03 BST 2016 : ecarboni 0
+dazghent 0
+root 5.7
+hchristensen 0
+jluo003 0
+odanne 25.8
+-----------------------------
+Mon Aug 29 15:53:04 BST 2016 : root 0
+hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 15:54:05 BST 2016 : dazghent 0
+ecarboni 0
+root 6
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:55:06 BST 2016 : dazghent 0
+ecarboni 0
+root 4
+jluo003 0
+hchristensen 0
+odanne 6
+-----------------------------
+Mon Aug 29 15:56:07 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 8
+odanne 9.5
+-----------------------------
+Mon Aug 29 15:57:09 BST 2016 : dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 15:58:10 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 11.9
+-----------------------------
+Mon Aug 29 15:59:11 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 16:00:12 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 5.9
+hchristensen 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 16:01:13 BST 2016 : dazghent 0
+root 10
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 41.5
+-----------------------------
+Mon Aug 29 16:02:14 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 5.9
+-----------------------------
+Mon Aug 29 16:03:15 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 11.9
+odanne 15.9
+-----------------------------
+Mon Aug 29 16:04:16 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 9.5
+odanne 42.5
+-----------------------------
+Mon Aug 29 16:05:17 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 16:06:19 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 3.8
+odanne 9.8
+-----------------------------
+Mon Aug 29 16:07:20 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 4
+odanne 0
+-----------------------------
+Mon Aug 29 16:08:21 BST 2016 : dazghent 0
+hchristensen 0
+root 8
+ecarboni 0
+jluo003 0
+odanne 5.9
+-----------------------------
+Mon Aug 29 16:09:22 BST 2016 : jluo003 0
+root 7.9
+hchristensen 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 16:10:23 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 19.1
+hchristensen 0
+odanne 21.7
+-----------------------------
+Mon Aug 29 16:11:24 BST 2016 : jluo003 0
+hchristensen 0
+root 4
+ecarboni 0
+dazghent 0
+odanne 23.7
+-----------------------------
+Mon Aug 29 16:12:25 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 6
+odanne 5.9
+-----------------------------
+Mon Aug 29 16:13:26 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 7.6
+jluo003 0
+odanne 17.8
+-----------------------------
+Mon Aug 29 16:14:28 BST 2016 : hchristensen 0
+root 2
+ecarboni 0
+dazghent 0
+jluo003 0
+odanne 31.5
+-----------------------------
+Mon Aug 29 16:15:29 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 16:16:30 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+root 8
+dazghent 0
+odanne 33.5
+-----------------------------
+Mon Aug 29 16:17:31 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 2
+odanne 7.9
+-----------------------------
+Mon Aug 29 16:18:32 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 5.7
+odanne 21.7
+-----------------------------
+Mon Aug 29 16:19:33 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 13.9
+odanne 27.6
+-----------------------------
+Mon Aug 29 16:20:34 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+odanne 39.5
+-----------------------------
+Mon Aug 29 16:21:35 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 6
+odanne 15.8
+-----------------------------
+Mon Aug 29 16:22:37 BST 2016 : ecarboni 0
+jluo003 0
+root 5.7
+dazghent 0
+hchristensen 0
+odanne 47.1
+-----------------------------
+Mon Aug 29 16:23:38 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+odanne 39.4
+-----------------------------
+Mon Aug 29 16:24:39 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 5.7
+ecarboni 0
+odanne 4
+-----------------------------
+Mon Aug 29 16:25:40 BST 2016 : jluo003 0
+root 4
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 37.3
+-----------------------------
+Mon Aug 29 16:26:41 BST 2016 : jluo003 0
+dazghent 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 8
+-----------------------------
+Mon Aug 29 16:27:42 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 1.9
+odanne 38.7
+-----------------------------
+Mon Aug 29 16:28:43 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 16:29:44 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 4
+-----------------------------
+Mon Aug 29 16:30:45 BST 2016 : ecarboni 0
+jluo003 0
+root 5.9
+dazghent 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 16:31:47 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 11.4
+odanne 6
+-----------------------------
+Mon Aug 29 16:32:48 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 16:33:49 BST 2016 : ecarboni 0
+root 5.7
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 16:34:50 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 6
+odanne 6
+-----------------------------
+Mon Aug 29 16:35:51 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 3.8
+odanne 25.8
+-----------------------------
+Mon Aug 29 16:36:52 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 10
+odanne 57
+-----------------------------
+Mon Aug 29 16:37:53 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 58.7
+-----------------------------
+Mon Aug 29 16:38:54 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 37.2
+-----------------------------
+Mon Aug 29 16:39:56 BST 2016 : hchristensen 0
+jluo003 0
+root 7.6
+dazghent 0
+ecarboni 0
+odanne 41.4
+-----------------------------
+Mon Aug 29 16:40:57 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 19.3
+odanne 68.8
+-----------------------------
+Mon Aug 29 16:41:58 BST 2016 : jluo003 0
+dazghent 0
+root 3.8
+ecarboni 0
+hchristensen 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 16:42:59 BST 2016 : root 11.9
+ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 16:44:00 BST 2016 : dazghent 0
+root 8
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 27.4
+-----------------------------
+Mon Aug 29 16:45:01 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 9.5
+odanne 15.8
+-----------------------------
+Mon Aug 29 16:46:02 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 5.7
+odanne 33.5
+-----------------------------
+Mon Aug 29 16:47:03 BST 2016 : dazghent 0
+ecarboni 0
+root 9.9
+jluo003 0
+hchristensen 0
+odanne 63.9
+-----------------------------
+Mon Aug 29 16:48:05 BST 2016 : jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 16:49:06 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 2
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 16:50:07 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 23.7
+-----------------------------
+Mon Aug 29 16:51:08 BST 2016 : dazghent 0
+jluo003 0
+root 6
+hchristensen 0
+ecarboni 0
+odanne 54.9
+-----------------------------
+Mon Aug 29 16:52:09 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 2
+odanne 13.8
+-----------------------------
+Mon Aug 29 16:53:10 BST 2016 : root 6
+hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 16:54:11 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 7.6
+hchristensen 0
+odanne 80.7
+-----------------------------
+Mon Aug 29 16:55:12 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 5.7
+hchristensen 0
+odanne 70.9
+-----------------------------
+Mon Aug 29 16:56:14 BST 2016 : dazghent 0
+hchristensen 0
+root 8
+ecarboni 0
+jluo003 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 16:57:15 BST 2016 : ecarboni 0
+root 4
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 19.7
+-----------------------------
+Mon Aug 29 16:58:16 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 6
+-----------------------------
+Mon Aug 29 16:59:17 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:00:18 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 6
+odanne 102.2
+-----------------------------
+Mon Aug 29 17:01:19 BST 2016 : dazghent 0
+hchristensen 0
+root 31.4
+ecarboni 0
+jluo003 94.9
+odanne 15.7
+-----------------------------
+Mon Aug 29 17:02:20 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 7.6
+odanne 60.9
+-----------------------------
+Mon Aug 29 17:03:21 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 7.6
+odanne 17.8
+-----------------------------
+Mon Aug 29 17:04:23 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:05:24 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 6
+hchristensen 0
+odanne 74.7
+-----------------------------
+Mon Aug 29 17:06:25 BST 2016 : root 0
+hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+odanne 52.9
+-----------------------------
+Mon Aug 29 17:07:26 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 7.6
+hchristensen 0
+odanne 78.4
+-----------------------------
+Mon Aug 29 17:08:27 BST 2016 : hchristensen 0
+root 9.5
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 111.4
+-----------------------------
+Mon Aug 29 17:09:28 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 9.9
+odanne 50.9
+-----------------------------
+Mon Aug 29 17:10:29 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 15.9
+jluo003 0
+odanne 60.8
+-----------------------------
+Mon Aug 29 17:11:30 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:12:32 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 9.6
+odanne 80.3
+-----------------------------
+Mon Aug 29 17:13:33 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 2
+jluo003 0
+odanne 76.4
+-----------------------------
+Mon Aug 29 17:14:34 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 17:15:35 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+root 11.9
+dazghent 0
+odanne 92.6
+-----------------------------
+Mon Aug 29 17:16:36 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 8
+odanne 93.9
+-----------------------------
+Mon Aug 29 17:17:37 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 7.6
+odanne 88.4
+-----------------------------
+Mon Aug 29 17:18:38 BST 2016 : ecarboni 0
+hchristensen 0
+root 11.4
+dazghent 0
+jluo003 0
+odanne 60.8
+-----------------------------
+Mon Aug 29 17:19:39 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 5.7
+odanne 82.2
+-----------------------------
+Mon Aug 29 17:20:41 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 17:21:42 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 17:22:43 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 4
+odanne 64.7
+-----------------------------
+Mon Aug 29 17:23:44 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 7.6
+hchristensen 0
+odanne 82.2
+-----------------------------
+Mon Aug 29 17:24:45 BST 2016 : hchristensen 0
+root 6
+dazghent 0
+ecarboni 0
+jluo003 0
+odanne 60.9
+-----------------------------
+Mon Aug 29 17:25:46 BST 2016 : root 4
+dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+odanne 86
+-----------------------------
+Mon Aug 29 17:26:47 BST 2016 : dazghent 0
+ecarboni 0
+root 10
+hchristensen 0
+jluo003 0
+odanne 72.5
+-----------------------------
+Mon Aug 29 17:27:48 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:28:50 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 13.3
+odanne 70.8
+-----------------------------
+Mon Aug 29 17:29:51 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 13.3
+odanne 31
+-----------------------------
+Mon Aug 29 17:30:52 BST 2016 : root 5.7
+dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 62.8
+-----------------------------
+Mon Aug 29 17:31:53 BST 2016 : root 8
+jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 111.9
+-----------------------------
+Mon Aug 29 17:32:54 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 7.6
+odanne 110.2
+-----------------------------
+Mon Aug 29 17:33:55 BST 2016 : dazghent 0
+jluo003 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 80.7
+-----------------------------
+Mon Aug 29 17:34:56 BST 2016 : jluo003 0
+root 13.9
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 54.9
+-----------------------------
+Mon Aug 29 17:35:57 BST 2016 : root 6
+ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+odanne 55
+-----------------------------
+Mon Aug 29 17:36:59 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 4
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:38:00 BST 2016 : jluo003 0
+ecarboni 0
+root 11.9
+hchristensen 0
+dazghent 0
+odanne 75.6
+-----------------------------
+Mon Aug 29 17:39:01 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 9.5
+hchristensen 0
+odanne 81.4
+-----------------------------
+Mon Aug 29 17:40:02 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 6
+odanne 53
+-----------------------------
+Mon Aug 29 17:41:03 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+root 13.8
+dazghent 0
+odanne 109.7
+-----------------------------
+Mon Aug 29 17:42:04 BST 2016 : ecarboni 0
+dazghent 0
+root 8
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 17:43:05 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+root 9.5
+dazghent 0
+odanne 68.6
+-----------------------------
+Mon Aug 29 17:44:06 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 7.6
+ecarboni 0
+odanne 64.9
+-----------------------------
+Mon Aug 29 17:45:08 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 5.7
+jluo003 23.2
+odanne 1.9
+-----------------------------
+Mon Aug 29 17:46:09 BST 2016 : jluo003 0
+dazghent 0
+root 15.2
+hchristensen 0
+ecarboni 0
+odanne 78.3
+-----------------------------
+Mon Aug 29 17:47:10 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 17:48:11 BST 2016 : ecarboni 0
+root 5.7
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 19.7
+-----------------------------
+Mon Aug 29 17:49:12 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 105.4
+root 23.6
+odanne 52.2
+-----------------------------
+Mon Aug 29 17:50:13 BST 2016 : root 8
+dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 78.5
+-----------------------------
+Mon Aug 29 17:51:14 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 8
+odanne 90.3
+-----------------------------
+Mon Aug 29 17:52:15 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+hchristensen 0
+jluo003 0
+odanne 51
+-----------------------------
+Mon Aug 29 17:53:17 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 113.8
+-----------------------------
+Mon Aug 29 17:54:18 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 62.7
+-----------------------------
+Mon Aug 29 17:55:19 BST 2016 : dazghent 0
+jluo003 0
+root 6
+hchristensen 0
+ecarboni 0
+odanne 96.1
+-----------------------------
+Mon Aug 29 17:56:20 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 8
+odanne 86.2
+-----------------------------
+Mon Aug 29 17:57:21 BST 2016 : dazghent 0
+jluo003 11.5
+hchristensen 0
+ecarboni 0
+root 1.9
+odanne 74.2
+-----------------------------
+Mon Aug 29 17:58:22 BST 2016 : ecarboni 0
+root 6
+hchristensen 0
+jluo003 0
+dazghent 0
+odanne 62.8
+-----------------------------
+Mon Aug 29 17:59:23 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 17.3
+odanne 72.4
+-----------------------------
+Mon Aug 29 18:00:24 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 7.6
+odanne 52.3
+-----------------------------
+Mon Aug 29 18:01:26 BST 2016 : jluo003 0
+root 4
+hchristensen 0
+ecarboni 0
+dazghent 0
+odanne 70.7
+-----------------------------
+Mon Aug 29 18:02:27 BST 2016 : ecarboni 0
+root 7.6
+jluo003 0
+hchristensen 0
+dazghent 0
+odanne 76.6
+-----------------------------
+Mon Aug 29 18:03:28 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 2
+odanne 39.3
+-----------------------------
+Mon Aug 29 18:04:29 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:05:30 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 80.4
+-----------------------------
+Mon Aug 29 18:06:31 BST 2016 : dazghent 0
+ecarboni 0
+root 4
+hchristensen 0
+jluo003 0
+odanne 57.2
+-----------------------------
+Mon Aug 29 18:07:32 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 18:08:33 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+ecarboni 0
+odanne 6
+-----------------------------
+Mon Aug 29 18:09:35 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 6
+odanne 29.6
+-----------------------------
+Mon Aug 29 18:10:36 BST 2016 : dazghent 0
+hchristensen 0
+root 7.7
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:11:37 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 2
+jluo003 0
+odanne 72.4
+-----------------------------
+Mon Aug 29 18:12:38 BST 2016 : root 1.9
+jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:13:39 BST 2016 : root 7.6
+hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+odanne 70.6
+-----------------------------
+Mon Aug 29 18:14:40 BST 2016 : root 27.3
+hchristensen 0
+ecarboni 0
+jluo003 105.6
+dazghent 0
+odanne 72.4
+-----------------------------
+Mon Aug 29 18:15:41 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:16:42 BST 2016 : root 6
+ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 105.9
+-----------------------------
+Mon Aug 29 18:17:44 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 3.8
+odanne 105.8
+-----------------------------
+Mon Aug 29 18:18:45 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 2
+hchristensen 0
+odanne 29.6
+-----------------------------
+Mon Aug 29 18:19:46 BST 2016 : ecarboni 0
+dazghent 0
+root 9.9
+hchristensen 0
+jluo003 0
+odanne 60.2
+-----------------------------
+Mon Aug 29 18:20:47 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 5.9
+odanne 2
+-----------------------------
+Mon Aug 29 18:21:48 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:22:49 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 3.9
+odanne 51
+-----------------------------
+Mon Aug 29 18:23:50 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 4
+odanne 29.5
+-----------------------------
+Mon Aug 29 18:24:51 BST 2016 : ecarboni 0
+root 5.7
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 78.4
+-----------------------------
+Mon Aug 29 18:25:52 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 6
+odanne 106.1
+-----------------------------
+Mon Aug 29 18:26:54 BST 2016 : dazghent 0
+jluo003 84
+root 3.8
+ecarboni 0
+hchristensen 0
+odanne 50.9
+-----------------------------
+Mon Aug 29 18:27:55 BST 2016 : root 6
+jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+odanne 91.2
+-----------------------------
+Mon Aug 29 18:28:56 BST 2016 : jluo003 0
+root 17
+hchristensen 0
+dazghent 0
+ecarboni 0
+odanne 82.4
+-----------------------------
+Mon Aug 29 18:29:57 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+odanne 78.3
+-----------------------------
+Mon Aug 29 18:30:58 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 7.9
+ecarboni 0
+odanne 58.8
+-----------------------------
+Mon Aug 29 18:31:59 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 7.6
+odanne 84.3
+-----------------------------
+Mon Aug 29 18:33:00 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 85.4
+root 61.2
+odanne 66.7
+-----------------------------
+Mon Aug 29 18:34:02 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 2
+hchristensen 0
+odanne 94
+-----------------------------
+Mon Aug 29 18:35:03 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 2
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:36:04 BST 2016 : ecarboni 0
+jluo003 9.8
+dazghent 0
+hchristensen 0
+root 2
+odanne 92.2
+-----------------------------
+Mon Aug 29 18:37:05 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 7.6
+odanne 107.9
+-----------------------------
+Mon Aug 29 18:38:06 BST 2016 : ecarboni 0
+jluo003 0
+root 4
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:39:07 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 62.7
+-----------------------------
+Mon Aug 29 18:40:08 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 3.9
+odanne 2
+-----------------------------
+Mon Aug 29 18:41:10 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+root 7.7
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:42:11 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:43:12 BST 2016 : dazghent 0
+root 9.9
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 84.1
+-----------------------------
+Mon Aug 29 18:44:13 BST 2016 : ecarboni 0
+hchristensen 0
+root 19.6
+dazghent 0
+jluo003 0
+odanne 10
+-----------------------------
+Mon Aug 29 18:45:14 BST 2016 : dazghent 0
+root 5.9
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:46:15 BST 2016 : ecarboni 0
+root 0
+hchristensen 0
+dazghent 0
+jluo003 0
+odanne 35.3
+-----------------------------
+Mon Aug 29 18:47:16 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:48:17 BST 2016 : root 8
+dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 82.3
+-----------------------------
+Mon Aug 29 18:49:18 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:50:20 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 18:51:21 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 18:52:22 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:53:23 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 18:54:24 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:55:25 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 18:56:26 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:57:27 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 18:58:28 BST 2016 : jluo003 0
+root 2
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 64.7
+-----------------------------
+Mon Aug 29 18:59:30 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:00:31 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:01:32 BST 2016 : jluo003 0
+dazghent 0
+root 5.9
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:02:33 BST 2016 : dazghent 0
+ecarboni 0
+root 5.9
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:03:34 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:04:35 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:05:36 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:06:37 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:07:38 BST 2016 : dazghent 0
+root 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+odanne 70.6
+-----------------------------
+Mon Aug 29 19:08:40 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 62.7
+-----------------------------
+Mon Aug 29 19:09:41 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 7.9
+ecarboni 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:10:42 BST 2016 : root 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 7.9
+odanne 0
+-----------------------------
+Mon Aug 29 19:11:43 BST 2016 : jluo003 0
+root 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:12:44 BST 2016 : dazghent 0
+hchristensen 0
+root 4
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:13:45 BST 2016 : hchristensen 0
+dazghent 0
+root 13.3
+ecarboni 0
+jluo003 0
+odanne 50.9
+-----------------------------
+Mon Aug 29 19:14:46 BST 2016 : jluo003 0
+root 6
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:15:47 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:16:48 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:17:50 BST 2016 : dazghent 0
+root 8
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 59.1
+-----------------------------
+Mon Aug 29 19:18:51 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 17.8
+-----------------------------
+Mon Aug 29 19:19:52 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 23.2
+hchristensen 0
+odanne 103.8
+-----------------------------
+Mon Aug 29 19:20:53 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:21:54 BST 2016 : dazghent 0
+jluo003 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 101.8
+-----------------------------
+Mon Aug 29 19:22:55 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:23:56 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+root 15.6
+odanne 99.9
+-----------------------------
+Mon Aug 29 19:24:57 BST 2016 : dazghent 0
+ecarboni 0
+root 6
+hchristensen 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:25:58 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 9.9
+odanne 96
+-----------------------------
+Mon Aug 29 19:27:00 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:28:01 BST 2016 : dazghent 0
+root 8
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 102.3
+-----------------------------
+Mon Aug 29 19:29:02 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 19:30:03 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+root 5.8
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:31:04 BST 2016 : ecarboni 0
+root 8
+hchristensen 0
+dazghent 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:32:05 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:33:06 BST 2016 : hchristensen 0
+jluo003 0
+root 4
+dazghent 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:34:07 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+odanne 4
+-----------------------------
+Mon Aug 29 19:35:08 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:36:09 BST 2016 : jluo003 0
+hchristensen 0
+root 2
+ecarboni 0
+dazghent 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 19:37:11 BST 2016 : root 4
+ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:38:12 BST 2016 : ecarboni 0
+jluo003 91.8
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:39:13 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:40:14 BST 2016 : jluo003 0
+ecarboni 0
+root 5.9
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:41:15 BST 2016 : dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 54.9
+-----------------------------
+Mon Aug 29 19:42:16 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 2
+odanne 98
+-----------------------------
+Mon Aug 29 19:43:17 BST 2016 : dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 19:44:18 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 10
+odanne 4
+-----------------------------
+Mon Aug 29 19:45:19 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 15.5
+jluo003 108.9
+odanne 1.9
+-----------------------------
+Mon Aug 29 19:46:21 BST 2016 : jluo003 0
+hchristensen 0
+root 19.6
+ecarboni 0
+dazghent 0
+odanne 103.8
+-----------------------------
+Mon Aug 29 19:47:22 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:48:23 BST 2016 : hchristensen 0
+ecarboni 0
+root 8
+dazghent 0
+jluo003 0
+odanne 51.1
+-----------------------------
+Mon Aug 29 19:49:24 BST 2016 : dazghent 0
+root 9.9
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 62.9
+-----------------------------
+Mon Aug 29 19:50:25 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 4
+odanne 2
+-----------------------------
+Mon Aug 29 19:51:26 BST 2016 : jluo003 0
+root 4
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:52:27 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:53:28 BST 2016 : jluo003 0
+root 10
+hchristensen 0
+dazghent 0
+ecarboni 0
+odanne 17.7
+-----------------------------
+Mon Aug 29 19:54:29 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 19:55:30 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 6
+odanne 39.3
+-----------------------------
+Mon Aug 29 19:56:32 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+root 8
+dazghent 0
+odanne 103.8
+-----------------------------
+Mon Aug 29 19:57:33 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 80.3
+-----------------------------
+Mon Aug 29 19:58:34 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 5.9
+odanne 2
+-----------------------------
+Mon Aug 29 19:59:35 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:00:36 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 7.9
+jluo003 0
+odanne 35.3
+-----------------------------
+Mon Aug 29 20:01:37 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 5.7
+odanne 2
+-----------------------------
+Mon Aug 29 20:02:38 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 4
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:03:39 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 17.6
+-----------------------------
+Mon Aug 29 20:04:40 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:05:42 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 1.9
+odanne 2
+-----------------------------
+Mon Aug 29 20:06:43 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 4
+-----------------------------
+Mon Aug 29 20:07:44 BST 2016 : jluo003 0
+dazghent 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:08:45 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:09:46 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 5.9
+odanne 0
+-----------------------------
+Mon Aug 29 20:10:47 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 20:11:48 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 6
+odanne 58.9
+-----------------------------
+Mon Aug 29 20:12:49 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:13:50 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 19.8
+-----------------------------
+Mon Aug 29 20:14:51 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:15:53 BST 2016 : jluo003 0
+hchristensen 0
+root 10
+ecarboni 0
+dazghent 0
+odanne 62.8
+-----------------------------
+Mon Aug 29 20:16:54 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:17:55 BST 2016 : root 9.6
+dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 82.4
+-----------------------------
+Mon Aug 29 20:18:56 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 1.9
+odanne 2
+-----------------------------
+Mon Aug 29 20:19:57 BST 2016 : jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:20:58 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 4
+odanne 105.7
+-----------------------------
+Mon Aug 29 20:21:59 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+dazghent 0
+odanne 4
+-----------------------------
+Mon Aug 29 20:23:00 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 11.9
+odanne 19.7
+-----------------------------
+Mon Aug 29 20:24:01 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:25:02 BST 2016 : root 5.7
+ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 96
+-----------------------------
+Mon Aug 29 20:26:04 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:27:05 BST 2016 : hchristensen 0
+root 11.5
+jluo003 0
+ecarboni 0
+dazghent 0
+odanne 39.3
+-----------------------------
+Mon Aug 29 20:28:06 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:29:07 BST 2016 : ecarboni 0
+root 4
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:30:08 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 72.4
+ecarboni 0
+root 4
+odanne 2
+-----------------------------
+Mon Aug 29 20:31:10 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 20:32:11 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 23.6
+-----------------------------
+Mon Aug 29 20:33:13 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 20:34:14 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 4
+hchristensen 0
+odanne 7.8
+-----------------------------
+Mon Aug 29 20:35:15 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 20:36:16 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 20:37:17 BST 2016 : dazghent 0
+root 13.7
+hchristensen 0
+ecarboni 0
+jluo003 0
+odanne 84.2
+-----------------------------
+Mon Aug 29 20:38:18 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:39:19 BST 2016 : dazghent 0
+root 7.6
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 23.6
+-----------------------------
+Mon Aug 29 20:40:20 BST 2016 : dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 37.3
+-----------------------------
+Mon Aug 29 20:41:21 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:42:22 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:43:24 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+odanne 4
+-----------------------------
+Mon Aug 29 20:44:25 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 11.8
+hchristensen 0
+odanne 17.6
+-----------------------------
+Mon Aug 29 20:45:26 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:46:27 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:47:28 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 20:48:29 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:49:30 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 53
+ecarboni 0
+odanne 72.6
+-----------------------------
+Mon Aug 29 20:50:31 BST 2016 : dazghent 0
+root 1.9
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 23.6
+-----------------------------
+Mon Aug 29 20:51:32 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 5.7
+jluo003 0
+odanne 21.5
+-----------------------------
+Mon Aug 29 20:52:34 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 20:53:35 BST 2016 : root 4
+jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+odanne 33.4
+-----------------------------
+Mon Aug 29 20:54:36 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+odanne 11.8
+-----------------------------
+Mon Aug 29 20:55:37 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:56:38 BST 2016 : jluo003 0
+dazghent 0
+root 4
+ecarboni 0
+hchristensen 0
+odanne 78.4
+-----------------------------
+Mon Aug 29 20:57:39 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 1.9
+odanne 2
+-----------------------------
+Mon Aug 29 20:58:40 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 20:59:41 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 21:00:42 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 2
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:01:43 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:02:45 BST 2016 : ecarboni 0
+jluo003 0
+root 2
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:03:46 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+root 10
+odanne 33.4
+-----------------------------
+Mon Aug 29 21:04:47 BST 2016 : dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:05:48 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 6
+odanne 35.3
+-----------------------------
+Mon Aug 29 21:06:49 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 21:07:50 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 6
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:08:51 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 21:09:52 BST 2016 : root 17.7
+dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 66.7
+-----------------------------
+Mon Aug 29 21:10:53 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:11:54 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 9.5
+odanne 25.6
+-----------------------------
+Mon Aug 29 21:12:56 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:13:57 BST 2016 : jluo003 0
+dazghent 0
+root 3.8
+hchristensen 0
+ecarboni 0
+odanne 25.5
+-----------------------------
+Mon Aug 29 21:14:58 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 80.3
+-----------------------------
+Mon Aug 29 21:15:59 BST 2016 : ecarboni 0
+root 7.6
+hchristensen 0
+jluo003 0
+dazghent 0
+odanne 88.4
+-----------------------------
+Mon Aug 29 21:17:00 BST 2016 : root 4
+ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:18:01 BST 2016 : jluo003 0
+dazghent 0
+root 71.7
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Mon Aug 29 21:19:02 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:20:03 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 7.6
+ecarboni 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 21:21:05 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:22:06 BST 2016 : hchristensen 0
+root 0
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 43.2
+-----------------------------
+Mon Aug 29 21:23:07 BST 2016 : hchristensen 0
+ecarboni 0
+root 0
+dazghent 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:24:08 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:25:09 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:26:10 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 21:27:11 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:28:12 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:29:13 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:30:14 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 21:31:16 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:32:17 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:33:18 BST 2016 : hchristensen 0
+dazghent 0
+root 7.9
+jluo003 0
+ecarboni 0
+odanne 41.2
+-----------------------------
+Mon Aug 29 21:34:19 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:35:20 BST 2016 : root 1.9
+dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+odanne 31.3
+-----------------------------
+Mon Aug 29 21:36:21 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:37:22 BST 2016 : dazghent 0
+root 4
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 102
+-----------------------------
+Mon Aug 29 21:38:23 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 1.9
+odanne 2
+-----------------------------
+Mon Aug 29 21:39:24 BST 2016 : hchristensen 0
+jluo003 0
+root 5.9
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:40:25 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 35.3
+-----------------------------
+Mon Aug 29 21:41:27 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Mon Aug 29 21:42:28 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 8
+odanne 78.3
+-----------------------------
+Mon Aug 29 21:43:29 BST 2016 : ecarboni 0
+dazghent 0
+root 9.9
+jluo003 0
+hchristensen 0
+odanne 6
+-----------------------------
+Mon Aug 29 21:44:30 BST 2016 : ecarboni 0
+root 9.5
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 96
+-----------------------------
+Mon Aug 29 21:45:31 BST 2016 : ecarboni 0
+dazghent 0
+root 28.8
+hchristensen 0
+jluo003 96.5
+odanne 93.3
+-----------------------------
+Mon Aug 29 21:46:32 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:47:33 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:48:34 BST 2016 : ecarboni 0
+root 4
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 21:49:35 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 21:50:37 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:51:38 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:52:39 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 4
+odanne 43.1
+-----------------------------
+Mon Aug 29 21:53:40 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 21:54:41 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 21:55:42 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 19.7
+-----------------------------
+Mon Aug 29 21:56:43 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 13.8
+odanne 23.6
+-----------------------------
+Mon Aug 29 21:57:44 BST 2016 : jluo003 0
+dazghent 0
+root 4
+ecarboni 0
+hchristensen 0
+odanne 15.7
+-----------------------------
+Mon Aug 29 21:58:45 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 19
+ecarboni 0
+odanne 53
+-----------------------------
+Mon Aug 29 21:59:46 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 22:00:48 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 17.2
+ecarboni 0
+odanne 88.4
+-----------------------------
+Mon Aug 29 22:01:49 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+hchristensen 0
+odanne 8
+-----------------------------
+Mon Aug 29 22:02:50 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:03:51 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:04:52 BST 2016 : root 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:05:53 BST 2016 : jluo003 0
+root 4
+dazghent 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:06:54 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:07:55 BST 2016 : dazghent 0
+hchristensen 0
+root 6
+jluo003 0
+ecarboni 0
+odanne 78.4
+-----------------------------
+Mon Aug 29 22:08:56 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 9.5
+odanne 5.9
+-----------------------------
+Mon Aug 29 22:09:58 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:10:59 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:12:00 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 4
+odanne 23.6
+-----------------------------
+Mon Aug 29 22:13:01 BST 2016 : dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:14:02 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+root 0
+dazghent 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:15:03 BST 2016 : jluo003 0
+root 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:16:04 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:17:05 BST 2016 : dazghent 0
+jluo003 0
+root 6
+ecarboni 0
+hchristensen 0
+odanne 62.8
+-----------------------------
+Mon Aug 29 22:18:06 BST 2016 : dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:19:07 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 27
+hchristensen 0
+odanne 66.6
+-----------------------------
+Mon Aug 29 22:20:09 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 22:21:10 BST 2016 : root 21.4
+hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:22:11 BST 2016 : jluo003 0
+root 1.9
+hchristensen 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:23:12 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:24:13 BST 2016 : hchristensen 0
+jluo003 0
+root 2
+dazghent 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Mon Aug 29 22:25:14 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:26:15 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 4
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:27:16 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:28:17 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 3.8
+odanne 0
+-----------------------------
+Mon Aug 29 22:29:18 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 53.1
+-----------------------------
+Mon Aug 29 22:30:20 BST 2016 : jluo003 0
+dazghent 0
+root 13.4
+ecarboni 0
+hchristensen 0
+odanne 19.7
+-----------------------------
+Mon Aug 29 22:31:21 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 8
+odanne 99.8
+-----------------------------
+Mon Aug 29 22:32:22 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 3.8
+ecarboni 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:33:23 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:34:24 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:35:25 BST 2016 : dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:36:26 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:37:27 BST 2016 : ecarboni 0
+jluo003 0
+root 2
+dazghent 0
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 22:38:28 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+odanne 11.7
+-----------------------------
+Mon Aug 29 22:39:30 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 5.9
+odanne 2
+-----------------------------
+Mon Aug 29 22:40:31 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 9.9
+odanne 5.9
+-----------------------------
+Mon Aug 29 22:41:32 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 7.9
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:42:33 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 11.4
+hchristensen 0
+odanne 80.4
+-----------------------------
+Mon Aug 29 22:43:34 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 15.9
+-----------------------------
+Mon Aug 29 22:44:35 BST 2016 : hchristensen 0
+jluo003 0
+root 2
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:45:36 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 6
+-----------------------------
+Mon Aug 29 22:46:37 BST 2016 : jluo003 0
+dazghent 0
+root 5.7
+ecarboni 0
+hchristensen 0
+odanne 37.2
+-----------------------------
+Mon Aug 29 22:47:38 BST 2016 : jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 11.8
+-----------------------------
+Mon Aug 29 22:48:39 BST 2016 : jluo003 0
+root 2
+dazghent 0
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:49:41 BST 2016 : dazghent 0
+jluo003 0
+root 5.7
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:50:42 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 13.4
+odanne 44.7
+-----------------------------
+Mon Aug 29 22:51:43 BST 2016 : jluo003 97.4
+dazghent 0
+ecarboni 0
+root 27
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:52:44 BST 2016 : hchristensen 0
+ecarboni 0
+root 0
+jluo003 0
+dazghent 0
+odanne 13.8
+-----------------------------
+Mon Aug 29 22:53:45 BST 2016 : hchristensen 0
+root 0
+ecarboni 0
+dazghent 0
+jluo003 0
+odanne 8
+-----------------------------
+Mon Aug 29 22:54:46 BST 2016 : root 4
+dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+odanne 82.5
+-----------------------------
+Mon Aug 29 22:55:47 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 22:56:48 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 22:57:49 BST 2016 : jluo003 0
+root 3.8
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:58:51 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Mon Aug 29 22:59:52 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:00:53 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 62.6
+root 2
+hchristensen 0
+odanne 4
+-----------------------------
+Mon Aug 29 23:01:54 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:02:55 BST 2016 : dazghent 0
+jluo003 0
+root 4
+ecarboni 0
+hchristensen 0
+odanne 15.8
+-----------------------------
+Mon Aug 29 23:03:56 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 23:04:57 BST 2016 : dazghent 0
+root 4
+hchristensen 0
+jluo003 0
+ecarboni 0
+odanne 49
+-----------------------------
+Mon Aug 29 23:05:58 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 1.9
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:06:59 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 9.8
+-----------------------------
+Mon Aug 29 23:08:00 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:09:02 BST 2016 : hchristensen 0
+jluo003 0
+root 8
+dazghent 0
+ecarboni 0
+odanne 97.1
+-----------------------------
+Mon Aug 29 23:10:03 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 15.7
+odanne 74.4
+-----------------------------
+Mon Aug 29 23:11:04 BST 2016 : hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:12:05 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:13:06 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 19.6
+-----------------------------
+Mon Aug 29 23:14:07 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:15:08 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:16:09 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:17:10 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 23:18:12 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 2
+odanne 2
+-----------------------------
+Mon Aug 29 23:19:13 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 23:20:14 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 7.9
+odanne 23.6
+-----------------------------
+Mon Aug 29 23:21:15 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Mon Aug 29 23:22:16 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+root 5.8
+ecarboni 0
+odanne 35.4
+-----------------------------
+Mon Aug 29 23:23:17 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 4
+-----------------------------
+Mon Aug 29 23:24:18 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:25:19 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 4
+odanne 2
+-----------------------------
+Mon Aug 29 23:26:20 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 8
+-----------------------------
+Mon Aug 29 23:27:21 BST 2016 : dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Mon Aug 29 23:28:23 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:29:24 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 3.9
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:30:25 BST 2016 : ecarboni 0
+dazghent 0
+root 15.6
+jluo003 0
+hchristensen 0
+odanne 55
+-----------------------------
+Mon Aug 29 23:31:26 BST 2016 : jluo003 0
+hchristensen 0
+root 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:32:27 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 11.5
+odanne 2
+-----------------------------
+Mon Aug 29 23:33:28 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 8
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:34:29 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Mon Aug 29 23:35:30 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:36:31 BST 2016 : dazghent 0
+jluo003 0
+root 3.8
+ecarboni 0
+hchristensen 0
+odanne 6
+-----------------------------
+Mon Aug 29 23:37:32 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:38:34 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 9.5
+odanne 109.8
+-----------------------------
+Mon Aug 29 23:39:35 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:40:36 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:41:37 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 23:42:38 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 76.5
+-----------------------------
+Mon Aug 29 23:43:39 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:44:40 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 4
+hchristensen 0
+odanne 6
+-----------------------------
+Mon Aug 29 23:45:41 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 19.7
+-----------------------------
+Mon Aug 29 23:46:42 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:47:43 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 2
+odanne 0
+-----------------------------
+Mon Aug 29 23:48:45 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:49:46 BST 2016 : jluo003 0
+root 4
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 7.8
+-----------------------------
+Mon Aug 29 23:50:47 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:51:48 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 8
+odanne 17.8
+-----------------------------
+Mon Aug 29 23:52:49 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 39.3
+-----------------------------
+Mon Aug 29 23:53:50 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 9.5
+odanne 101.9
+-----------------------------
+Mon Aug 29 23:54:51 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:55:52 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+root 38.9
+dazghent 0
+odanne 9.9
+-----------------------------
+Mon Aug 29 23:56:53 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:57:55 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 2
+odanne 15.7
+-----------------------------
+Mon Aug 29 23:58:56 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Mon Aug 29 23:59:57 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 5.7
+hchristensen 0
+odanne 55
+-----------------------------
+Tue Aug 30 00:00:58 BST 2016 : hchristensen 0
+jluo003 0
+root 7.6
+ecarboni 0
+dazghent 0
+odanne 35.4
+-----------------------------
+Tue Aug 30 00:01:59 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:03:00 BST 2016 : hchristensen 0
+root 7.6
+ecarboni 0
+jluo003 0
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:04:01 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+root 1.9
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:05:02 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 41.3
+-----------------------------
+Tue Aug 30 00:06:03 BST 2016 : dazghent 0
+jluo003 0
+root 3.8
+ecarboni 0
+hchristensen 0
+odanne 27.6
+-----------------------------
+Tue Aug 30 00:07:04 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:08:06 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 6
+odanne 2
+-----------------------------
+Tue Aug 30 00:09:07 BST 2016 : dazghent 0
+jluo003 0
+root 5.7
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:10:08 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 1.9
+odanne 2
+-----------------------------
+Tue Aug 30 00:11:09 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 1.9
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 00:12:10 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+odanne 0
+-----------------------------
+Tue Aug 30 00:13:11 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:14:12 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:15:13 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+root 2
+odanne 4
+-----------------------------
+Tue Aug 30 00:16:14 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 9.9
+odanne 33.4
+-----------------------------
+Tue Aug 30 00:17:16 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 11.8
+-----------------------------
+Tue Aug 30 00:18:17 BST 2016 : hchristensen 0
+jluo003 0
+root 8
+ecarboni 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 00:19:18 BST 2016 : ecarboni 0
+root 0
+hchristensen 0
+jluo003 0
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:20:19 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 1.9
+hchristensen 0
+odanne 21.6
+-----------------------------
+Tue Aug 30 00:21:20 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 2
+odanne 2
+-----------------------------
+Tue Aug 30 00:22:21 BST 2016 : dazghent 0
+jluo003 0
+root 5.7
+hchristensen 0
+ecarboni 0
+odanne 19.6
+-----------------------------
+Tue Aug 30 00:23:22 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:24:23 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 4
+odanne 0
+-----------------------------
+Tue Aug 30 00:25:24 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 2
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:26:26 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 13.5
+odanne 17.7
+-----------------------------
+Tue Aug 30 00:27:27 BST 2016 : root 0
+dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 15.8
+-----------------------------
+Tue Aug 30 00:28:28 BST 2016 : ecarboni 0
+dazghent 0
+root 8
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 00:29:29 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 7.9
+hchristensen 0
+odanne 4
+-----------------------------
+Tue Aug 30 00:30:30 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 2
+odanne 0
+-----------------------------
+Tue Aug 30 00:31:31 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 1.9
+jluo003 0
+odanne 15.8
+-----------------------------
+Tue Aug 30 00:32:32 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+odanne 2
+-----------------------------
+Tue Aug 30 00:33:33 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:34:34 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:35:35 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:36:37 BST 2016 : dazghent 0
+ecarboni 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 00:37:38 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:38:39 BST 2016 : dazghent 0
+jluo003 0
+root 2
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 00:39:40 BST 2016 : root 7.9
+hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+odanne 21.7
+-----------------------------
+Tue Aug 30 00:40:41 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 6
+odanne 2
+-----------------------------
+Tue Aug 30 00:41:42 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:42:43 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 3.8
+odanne 49
+-----------------------------
+Tue Aug 30 00:43:44 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 40.7
+odanne 31.4
+-----------------------------
+Tue Aug 30 00:44:45 BST 2016 : dazghent 0
+root 11.6
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 94.1
+-----------------------------
+Tue Aug 30 00:45:46 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 10
+odanne 101.9
+-----------------------------
+Tue Aug 30 00:46:48 BST 2016 : root 2
+hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 102
+-----------------------------
+Tue Aug 30 00:47:49 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 6
+ecarboni 0
+odanne 72.5
+-----------------------------
+Tue Aug 30 00:48:50 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:49:51 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:50:52 BST 2016 : ecarboni 0
+hchristensen 0
+root 2
+dazghent 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:51:53 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 43.3
+-----------------------------
+Tue Aug 30 00:52:54 BST 2016 : jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:53:55 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+root 1.9
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:54:56 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 00:55:58 BST 2016 : ecarboni 0
+jluo003 2
+dazghent 0
+root 1.9
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 00:56:59 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 6
+odanne 51.1
+-----------------------------
+Tue Aug 30 00:58:00 BST 2016 : jluo003 0
+dazghent 0
+root 13.7
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 00:59:01 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:00:02 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 5.9
+odanne 0
+-----------------------------
+Tue Aug 30 01:01:03 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:02:04 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 5.8
+odanne 0
+-----------------------------
+Tue Aug 30 01:03:05 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:04:06 BST 2016 : hchristensen 0
+jluo003 0
+root 2
+dazghent 0
+ecarboni 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 01:05:07 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:06:09 BST 2016 : jluo003 0
+hchristensen 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:07:10 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:08:11 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 4
+hchristensen 0
+odanne 5.9
+-----------------------------
+Tue Aug 30 01:09:12 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:10:13 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 5.9
+odanne 4
+-----------------------------
+Tue Aug 30 01:11:14 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:12:15 BST 2016 : root 2
+ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 9.8
+-----------------------------
+Tue Aug 30 01:13:16 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 4
+-----------------------------
+Tue Aug 30 01:14:17 BST 2016 : dazghent 0
+jluo003 0
+root 13.5
+hchristensen 0
+ecarboni 0
+odanne 3.9
+-----------------------------
+Tue Aug 30 01:15:18 BST 2016 : dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:16:20 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 8
+hchristensen 0
+odanne 4
+-----------------------------
+Tue Aug 30 01:17:21 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:18:22 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 8
+odanne 29.4
+-----------------------------
+Tue Aug 30 01:19:23 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:20:24 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 6
+hchristensen 0
+odanne 19.7
+-----------------------------
+Tue Aug 30 01:21:25 BST 2016 : hchristensen 0
+dazghent 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:22:26 BST 2016 : hchristensen 0
+dazghent 0
+root 7.9
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:23:27 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+root 5.7
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:24:28 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:25:29 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 11.4
+odanne 51
+-----------------------------
+Tue Aug 30 01:26:31 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:27:32 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 15.5
+odanne 31.5
+-----------------------------
+Tue Aug 30 01:28:33 BST 2016 : jluo003 0
+ecarboni 0
+root 1.9
+hchristensen 0
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:29:34 BST 2016 : ecarboni 0
+hchristensen 0
+root 5.7
+dazghent 0
+jluo003 0
+odanne 49.1
+-----------------------------
+Tue Aug 30 01:30:35 BST 2016 : hchristensen 0
+dazghent 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 01:31:36 BST 2016 : jluo003 0
+ecarboni 0
+root 2
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:32:37 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 1.9
+hchristensen 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 01:33:38 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 10
+ecarboni 0
+odanne 17.8
+-----------------------------
+Tue Aug 30 01:34:39 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:35:41 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 6
+odanne 11.8
+-----------------------------
+Tue Aug 30 01:36:42 BST 2016 : jluo003 0
+dazghent 0
+root 4
+ecarboni 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 01:37:43 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 01:38:44 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:39:45 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 13.9
+odanne 47
+-----------------------------
+Tue Aug 30 01:40:46 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 25.4
+-----------------------------
+Tue Aug 30 01:41:47 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 1.9
+ecarboni 0
+odanne 5.9
+-----------------------------
+Tue Aug 30 01:42:48 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 8
+odanne 35.3
+-----------------------------
+Tue Aug 30 01:43:49 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:44:50 BST 2016 : jluo003 0
+dazghent 0
+root 9.9
+ecarboni 0
+hchristensen 0
+odanne 53
+-----------------------------
+Tue Aug 30 01:45:52 BST 2016 : hchristensen 0
+ecarboni 0
+root 28.9
+jluo003 116.1
+dazghent 0
+odanne 19.6
+-----------------------------
+Tue Aug 30 01:46:53 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 2
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:47:54 BST 2016 : dazghent 0
+jluo003 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 54.8
+-----------------------------
+Tue Aug 30 01:48:55 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:49:56 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 8
+odanne 2
+-----------------------------
+Tue Aug 30 01:50:57 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 01:51:58 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 01:52:59 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:54:00 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 11.7
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:55:02 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+root 3.8
+dazghent 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 01:56:03 BST 2016 : dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:57:04 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 01:58:05 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 2
+odanne 47.1
+-----------------------------
+Tue Aug 30 01:59:06 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 11.8
+-----------------------------
+Tue Aug 30 02:00:07 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:01:08 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 4
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:02:09 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 4
+odanne 2
+-----------------------------
+Tue Aug 30 02:03:10 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:04:11 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:05:13 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:06:14 BST 2016 : hchristensen 0
+dazghent 0
+root 6
+ecarboni 0
+jluo003 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 02:07:15 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:08:16 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 1.9
+ecarboni 0
+odanne 35.2
+-----------------------------
+Tue Aug 30 02:09:17 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:10:18 BST 2016 : hchristensen 0
+ecarboni 0
+root 13.5
+jluo003 0
+dazghent 0
+odanne 9.8
+-----------------------------
+Tue Aug 30 02:11:19 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:12:20 BST 2016 : dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 57
+-----------------------------
+Tue Aug 30 02:13:21 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:14:22 BST 2016 : dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:15:24 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:16:25 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:17:26 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:18:27 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 23.7
+-----------------------------
+Tue Aug 30 02:19:28 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 2
+odanne 4
+-----------------------------
+Tue Aug 30 02:20:29 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:21:30 BST 2016 : jluo003 0
+root 11.4
+hchristensen 0
+dazghent 0
+ecarboni 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 02:22:31 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 2
+odanne 0
+-----------------------------
+Tue Aug 30 02:23:32 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 10
+odanne 6
+-----------------------------
+Tue Aug 30 02:24:33 BST 2016 : ecarboni 0
+dazghent 0
+root 8
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:25:35 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 7.6
+odanne 50.9
+-----------------------------
+Tue Aug 30 02:26:36 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:27:37 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 19.1
+odanne 35.4
+-----------------------------
+Tue Aug 30 02:28:38 BST 2016 : jluo003 0
+dazghent 0
+root 6
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:29:39 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 5.9
+-----------------------------
+Tue Aug 30 02:30:40 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 7.6
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 02:31:41 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 02:32:42 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 2
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:33:43 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 11.5
+jluo003 0
+odanne 27.5
+-----------------------------
+Tue Aug 30 02:34:45 BST 2016 : jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 02:35:46 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 11.4
+odanne 2
+-----------------------------
+Tue Aug 30 02:36:47 BST 2016 : jluo003 0
+dazghent 0
+root 2
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:37:48 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:38:49 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:39:50 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:40:51 BST 2016 : dazghent 0
+root 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:41:52 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:42:53 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:43:54 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+root 6
+dazghent 0
+odanne 15.8
+-----------------------------
+Tue Aug 30 02:44:56 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:45:57 BST 2016 : ecarboni 0
+root 2
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:46:58 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 4
+jluo003 0
+odanne 47
+-----------------------------
+Tue Aug 30 02:47:59 BST 2016 : jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:49:00 BST 2016 : dazghent 0
+jluo003 0
+root 5.7
+hchristensen 0
+ecarboni 0
+odanne 17.7
+-----------------------------
+Tue Aug 30 02:50:01 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 11.9
+odanne 7.9
+-----------------------------
+Tue Aug 30 02:51:02 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:52:03 BST 2016 : jluo003 21.5
+dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 02:53:04 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 7.6
+odanne 2
+-----------------------------
+Tue Aug 30 02:54:05 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 02:55:07 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:56:08 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 4
+odanne 9.8
+-----------------------------
+Tue Aug 30 02:57:09 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 02:58:10 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 2
+odanne 23.7
+-----------------------------
+Tue Aug 30 02:59:11 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 3.8
+odanne 2
+-----------------------------
+Tue Aug 30 03:00:12 BST 2016 : jluo003 0
+dazghent 0
+root 8
+ecarboni 0
+hchristensen 0
+odanne 9.8
+-----------------------------
+Tue Aug 30 03:01:13 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 5.8
+odanne 0
+-----------------------------
+Tue Aug 30 03:02:14 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:03:15 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 12
+odanne 11.8
+-----------------------------
+Tue Aug 30 03:04:17 BST 2016 : ecarboni 0
+dazghent 0
+root 8
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:05:18 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 03:06:19 BST 2016 : dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:07:20 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 7.6
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:08:21 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:09:22 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+odanne 33.3
+-----------------------------
+Tue Aug 30 03:10:23 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+odanne 2
+-----------------------------
+Tue Aug 30 03:11:24 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 9.8
+-----------------------------
+Tue Aug 30 03:12:25 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:13:27 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:14:28 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:15:29 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:16:30 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 6
+odanne 17.8
+-----------------------------
+Tue Aug 30 03:17:31 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:18:32 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 10
+hchristensen 0
+odanne 70.7
+-----------------------------
+Tue Aug 30 03:19:33 BST 2016 : jluo003 0
+dazghent 0
+root 3.9
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:20:34 BST 2016 : jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:21:35 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 1.9
+jluo003 0
+odanne 27.6
+-----------------------------
+Tue Aug 30 03:22:36 BST 2016 : ecarboni 0
+root 2
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 8
+-----------------------------
+Tue Aug 30 03:23:38 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 4
+odanne 2
+-----------------------------
+Tue Aug 30 03:24:39 BST 2016 : root 9.9
+hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+odanne 6
+-----------------------------
+Tue Aug 30 03:25:40 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:26:41 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:27:42 BST 2016 : root 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:28:43 BST 2016 : jluo003 0
+root 2
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:29:44 BST 2016 : dazghent 0
+root 23.6
+ecarboni 0
+jluo003 0
+hchristensen 0
+odanne 21.6
+-----------------------------
+Tue Aug 30 03:30:45 BST 2016 : dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:31:47 BST 2016 : ecarboni 0
+root 11.8
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 03:32:48 BST 2016 : hchristensen 0
+ecarboni 0
+root 0
+dazghent 0
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:33:49 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:34:50 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:35:51 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:36:52 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:37:53 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 4
+jluo003 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 03:38:54 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:39:56 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 5.9
+odanne 0
+-----------------------------
+Tue Aug 30 03:40:57 BST 2016 : ecarboni 0
+dazghent 0
+root 4
+hchristensen 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 03:41:58 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:42:59 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:44:00 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:45:01 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 6
+odanne 32.9
+-----------------------------
+Tue Aug 30 03:46:02 BST 2016 : dazghent 0
+root 2
+hchristensen 0
+ecarboni 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 03:47:03 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:48:05 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 5.9
+odanne 2
+-----------------------------
+Tue Aug 30 03:49:06 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:50:07 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:51:08 BST 2016 : dazghent 0
+jluo003 0
+root 5.9
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:52:09 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 7.8
+-----------------------------
+Tue Aug 30 03:53:10 BST 2016 : ecarboni 0
+root 2
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 03:54:11 BST 2016 : jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:55:12 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 03:56:13 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 03:57:15 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 03:58:16 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 7.6
+odanne 5.9
+-----------------------------
+Tue Aug 30 03:59:17 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 9.9
+odanne 9.8
+-----------------------------
+Tue Aug 30 04:00:18 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 04:01:19 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 8
+jluo003 0
+odanne 39.2
+-----------------------------
+Tue Aug 30 04:02:20 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 1.9
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:03:21 BST 2016 : hchristensen 0
+root 6
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:04:22 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 6
+odanne 7.9
+-----------------------------
+Tue Aug 30 04:05:23 BST 2016 : dazghent 0
+jluo003 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 7.8
+-----------------------------
+Tue Aug 30 04:06:25 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 2
+odanne 9.9
+-----------------------------
+Tue Aug 30 04:07:26 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 2
+odanne 7.9
+-----------------------------
+Tue Aug 30 04:08:27 BST 2016 : ecarboni 0
+root 0
+dazghent 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:09:28 BST 2016 : jluo003 0
+dazghent 0
+root 10
+ecarboni 0
+hchristensen 0
+odanne 3.9
+-----------------------------
+Tue Aug 30 04:10:29 BST 2016 : hchristensen 0
+ecarboni 0
+root 8
+dazghent 0
+jluo003 0
+odanne 15.7
+-----------------------------
+Tue Aug 30 04:11:30 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:12:31 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 68.4
+odanne 0
+-----------------------------
+Tue Aug 30 04:13:32 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 6
+-----------------------------
+Tue Aug 30 04:14:33 BST 2016 : ecarboni 0
+dazghent 0
+root 21.6
+jluo003 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:15:35 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 27
+jluo003 0
+odanne 8
+-----------------------------
+Tue Aug 30 04:16:36 BST 2016 : dazghent 0
+root 40.9
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 04:17:37 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 4
+odanne 2
+-----------------------------
+Tue Aug 30 04:18:38 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 5.9
+-----------------------------
+Tue Aug 30 04:19:39 BST 2016 : dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 04:20:40 BST 2016 : hchristensen 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:21:41 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 2
+ecarboni 0
+odanne 13.8
+-----------------------------
+Tue Aug 30 04:22:42 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:23:43 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 4
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:24:45 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:25:46 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:26:47 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 17.8
+odanne 15.8
+-----------------------------
+Tue Aug 30 04:27:48 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+ecarboni 0
+odanne 11.8
+-----------------------------
+Tue Aug 30 04:28:49 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 1.9
+hchristensen 0
+odanne 21.7
+-----------------------------
+Tue Aug 30 04:29:50 BST 2016 : hchristensen 0
+ecarboni 0
+root 13.3
+dazghent 0
+jluo003 0
+odanne 15.8
+-----------------------------
+Tue Aug 30 04:30:51 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:31:52 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:32:53 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:33:54 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 2
+odanne 9.9
+-----------------------------
+Tue Aug 30 04:34:56 BST 2016 : hchristensen 0
+jluo003 0
+root 1.9
+ecarboni 0
+dazghent 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:35:57 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 5.9
+jluo003 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:36:58 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+root 4
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:37:59 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+root 6
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:39:00 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 15.2
+odanne 33.8
+-----------------------------
+Tue Aug 30 04:40:01 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 17.7
+odanne 6
+-----------------------------
+Tue Aug 30 04:41:02 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:42:03 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:43:04 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:44:06 BST 2016 : jluo003 0
+dazghent 0
+root 7.9
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:45:07 BST 2016 : jluo003 0
+dazghent 0
+root 5.9
+ecarboni 0
+hchristensen 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:46:08 BST 2016 : jluo003 0
+root 10
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 11.8
+-----------------------------
+Tue Aug 30 04:47:09 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 2
+odanne 6
+-----------------------------
+Tue Aug 30 04:48:10 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:49:11 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 9.9
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 04:50:12 BST 2016 : dazghent 0
+jluo003 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 4
+-----------------------------
+Tue Aug 30 04:51:13 BST 2016 : hchristensen 0
+ecarboni 0
+root 29
+jluo003 117.4
+dazghent 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:52:14 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 04:53:15 BST 2016 : dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:54:17 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 04:55:18 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 04:56:19 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 04:57:20 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 04:58:21 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 04:59:22 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:00:23 BST 2016 : ecarboni 0
+dazghent 0
+root 5.9
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:01:24 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:02:25 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:03:26 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:04:27 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:05:28 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:06:29 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:07:30 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:08:31 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:09:33 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 6
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:10:34 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:11:35 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:12:36 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:13:37 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:14:38 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:15:39 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:16:40 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:17:41 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:18:42 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:19:43 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:20:44 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:21:45 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 05:22:46 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:23:47 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 05:24:48 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:25:50 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:26:51 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:27:52 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:28:53 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:29:54 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 5.9
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:30:55 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:31:56 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:32:57 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:33:58 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:34:59 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:36:00 BST 2016 : dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:37:01 BST 2016 : hchristensen 0
+root 2
+dazghent 0
+jluo003 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:38:02 BST 2016 : jluo003 0
+dazghent 0
+root 2
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:39:03 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:40:04 BST 2016 : dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:41:05 BST 2016 : jluo003 0
+hchristensen 0
+root 5.9
+dazghent 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:42:06 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:43:08 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:44:09 BST 2016 : dazghent 0
+root 2
+ecarboni 0
+jluo003 31.8
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 05:45:10 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:46:11 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:47:12 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:48:13 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:49:14 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:50:15 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:51:16 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:52:17 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:53:18 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:54:19 BST 2016 : dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:55:20 BST 2016 : jluo003 0
+root 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:56:21 BST 2016 : ecarboni 0
+jluo003 0
+root 2
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:57:22 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 05:58:23 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 05:59:25 BST 2016 : ecarboni 0
+hchristensen 0
+root 2
+dazghent 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:00:26 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:01:27 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:02:28 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:03:29 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:04:30 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:05:31 BST 2016 : jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:06:32 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:07:33 BST 2016 : ecarboni 0
+root 0
+hchristensen 0
+dazghent 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:08:34 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:09:35 BST 2016 : jluo003 0
+root 6
+dazghent 0
+ecarboni 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:10:36 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:11:37 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 06:12:38 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:13:39 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:14:40 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:15:41 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:16:43 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:17:44 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:18:45 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:19:46 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:20:47 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 6
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:21:48 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:22:49 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 6
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:23:50 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:24:51 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:25:52 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 06:26:53 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:27:54 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:28:55 BST 2016 : ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:29:56 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 5.9
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:30:57 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:31:58 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:33:00 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 06:34:01 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:35:02 BST 2016 : ecarboni 0
+root 0
+hchristensen 0
+dazghent 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:36:03 BST 2016 : jluo003 0
+hchristensen 0
+root 2
+dazghent 0
+ecarboni 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 06:37:04 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:38:05 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:39:06 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+odanne 6
+-----------------------------
+Tue Aug 30 06:40:07 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 5.9
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:41:08 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:42:09 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 6
+-----------------------------
+Tue Aug 30 06:43:10 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:44:11 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 4
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:45:12 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:46:13 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:47:14 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:48:15 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:49:16 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:50:18 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:51:19 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:52:20 BST 2016 : dazghent 0
+jluo003 49.6
+ecarboni 0
+hchristensen 0
+root 2
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:53:21 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:54:22 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:55:23 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:56:24 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:57:25 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 06:58:26 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 06:59:27 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:00:28 BST 2016 : ecarboni 0
+dazghent 0
+root 6
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:01:29 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 6
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:02:30 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:03:31 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:04:32 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:05:33 BST 2016 : hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:06:35 BST 2016 : hchristensen 0
+ecarboni 0
+root 0
+jluo003 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:07:36 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:08:37 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:09:38 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:10:39 BST 2016 : jluo003 0
+hchristensen 0
+ecarboni 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:11:40 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:12:41 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:13:42 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:14:43 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:15:44 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 2
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:16:45 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:17:46 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:18:47 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:19:48 BST 2016 : dazghent 0
+hchristensen 0
+root 6
+jluo003 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:20:49 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:21:50 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 6
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:22:51 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:23:53 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:24:54 BST 2016 : jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:25:55 BST 2016 : jluo003 0
+hchristensen 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:26:56 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:27:57 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:28:58 BST 2016 : dazghent 0
+jluo003 0
+ecarboni 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:29:59 BST 2016 : hchristensen 0
+root 4
+jluo003 0
+dazghent 0
+ecarboni 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:31:00 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:32:01 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:33:02 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+dazghent 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:34:03 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:35:04 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:36:05 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:37:06 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:38:07 BST 2016 : dazghent 0
+jluo003 104.8
+hchristensen 0
+ecarboni 0
+root 11.9
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:39:08 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:40:09 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:41:11 BST 2016 : hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:42:12 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:43:13 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:44:14 BST 2016 : jluo003 0
+hchristensen 0
+root 0
+ecarboni 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:45:15 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:46:16 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:47:17 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:48:18 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:49:19 BST 2016 : dazghent 0
+ecarboni 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:50:20 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:51:21 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:52:22 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 6
+-----------------------------
+Tue Aug 30 07:53:23 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:54:24 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:55:25 BST 2016 : jluo003 0
+root 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:56:26 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:57:27 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 07:58:29 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 07:59:30 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 5.9
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:00:31 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:01:32 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:02:33 BST 2016 : jluo003 0
+ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:03:34 BST 2016 : ecarboni 0
+hchristensen 0
+jluo003 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:04:35 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:05:36 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:06:37 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:07:38 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:08:39 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:09:40 BST 2016 : hchristensen 0
+ecarboni 0
+dazghent 0
+root 2
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:10:41 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:11:42 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:12:43 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:13:44 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:14:46 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:15:47 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:16:48 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:17:49 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:18:50 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:19:51 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+root 6
+ecarboni 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:20:52 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:21:53 BST 2016 : ecarboni 0
+dazghent 0
+root 7.9
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:22:54 BST 2016 : ecarboni 0
+root 0
+jluo003 0
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:23:55 BST 2016 : dazghent 0
+hchristensen 0
+root 2
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:24:56 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:25:57 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:26:58 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:27:59 BST 2016 : hchristensen 0
+jluo003 0
+ecarboni 0
+root 0
+dazghent 0
+odanne 4
+-----------------------------
+Tue Aug 30 08:29:00 BST 2016 : hchristensen 0
+ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:30:01 BST 2016 : dazghent 0
+ecarboni 0
+root 4
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:31:02 BST 2016 : jluo003 0
+hchristensen 0
+dazghent 0
+ecarboni 0
+root 2
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:32:04 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:33:05 BST 2016 : jluo003 0
+hchristensen 0
+root 0
+dazghent 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:34:06 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:35:07 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:36:08 BST 2016 : jluo003 0
+ecarboni 0
+root 2
+dazghent 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:37:09 BST 2016 : ecarboni 0
+hchristensen 0
+root 0
+dazghent 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:38:10 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 35.7
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:39:11 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:40:12 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:41:13 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:42:14 BST 2016 : dazghent 0
+ecarboni 0
+hchristensen 0
+jluo003 99.2
+root 23.9
+odanne 6
+-----------------------------
+Tue Aug 30 08:43:15 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 5.9
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:44:16 BST 2016 : jluo003 0
+dazghent 0
+root 0
+ecarboni 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:45:17 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:46:18 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:47:19 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:48:20 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 08:49:22 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:50:23 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+root 5.9
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:51:24 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:52:25 BST 2016 : ecarboni 0
+jluo003 0
+root 0
+dazghent 0
+hchristensen 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:53:26 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 6
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:54:27 BST 2016 : dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+ecarboni 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:55:28 BST 2016 : jluo003 0
+dazghent 0
+hchristensen 0
+ecarboni 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:56:29 BST 2016 : ecarboni 0
+jluo003 0
+hchristensen 0
+dazghent 0
+root 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 08:57:30 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 08:58:31 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+hchristensen 0
+root 0
+odanne 6
+-----------------------------
+Tue Aug 30 08:59:32 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+ecarboni 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:00:33 BST 2016 : jluo003 0
+ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:01:34 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 6
+-----------------------------
+Tue Aug 30 09:02:35 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 126.9
+root 27.9
+hchristensen 0
+odanne 5.9
+-----------------------------
+Tue Aug 30 09:03:36 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 09:04:37 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 09:05:39 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 2
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:06:40 BST 2016 : ecarboni 0
+jluo003 0
+dazghent 0
+hchristensen 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:07:41 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+root 2
+hchristensen 0
+odanne 11.9
+-----------------------------
+Tue Aug 30 09:08:42 BST 2016 : ecarboni 0
+hchristensen 0
+dazghent 0
+root 0
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:09:43 BST 2016 : jluo003 0
+root 6
+ecarboni 0
+dazghent 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:10:44 BST 2016 : jluo003 0
+dazghent 0
+root 0
+hchristensen 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:11:45 BST 2016 : jluo003 0
+dazghent 0
+ecarboni 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:12:46 BST 2016 : hchristensen 0
+dazghent 0
+edodd01 0
+ecarboni 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:13:47 BST 2016 : ecarboni 0
+dazghent 0
+jluo003 0
+edodd01 0
+hchristensen 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:14:48 BST 2016 : dazghent 0
+edodd01 0
+root 0
+ecarboni 0
+hchristensen 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 09:15:49 BST 2016 : ecarboni 0
+edodd01 0
+root 0
+dazghent 0
+hchristensen 0
+jluo003 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:16:50 BST 2016 : ecarboni 0
+dazghent 0
+root 2
+hchristensen 0
+jluo003 0
+edodd01 0
+odanne 2
+-----------------------------
+Tue Aug 30 09:17:51 BST 2016 : ecarboni 0
+dazghent 0
+edodd01 0
+jluo003 0
+hchristensen 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:18:52 BST 2016 : hchristensen 0
+edodd01 0
+dazghent 0
+jluo003 0
+ecarboni 0
+root 6
+odanne 7.9
+-----------------------------
+Tue Aug 30 09:19:53 BST 2016 : hchristensen 0
+edodd01 0
+ecarboni 0
+dazghent 0
+root 0
+jluo003 0
+odanne 7.9
+-----------------------------
+Tue Aug 30 09:20:54 BST 2016 : jluo003 0
+root 6
+ecarboni 0
+hchristensen 0
+dazghent 0
+edodd01 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:21:55 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+root 6
+jluo003 0
+edodd01 0
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:22:57 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+edodd01 0
+jluo003 0
+root 6
+odanne 9.9
+-----------------------------
+Tue Aug 30 09:23:58 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+pfortiz 0
+root 13.9
+edodd01 0
+odanne 2
+-----------------------------
+Tue Aug 30 09:24:59 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+pfortiz 0
+ecarboni 0
+klveal 0
+edodd01 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:26:00 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+edodd01 0
+klveal 0
+jluo003 0
+pfortiz 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:27:01 BST 2016 : ecarboni 0
+klveal 0
+hchristensen 0
+edodd01 0
+dazghent 0
+pfortiz 0
+jluo003 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:28:02 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+edodd01 0
+jluo003 0
+klveal 0
+pfortiz 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:29:03 BST 2016 : ecarboni 0
+dazghent 0
+edodd01 0
+hchristensen 0
+jluo003 0
+pfortiz 0
+klveal 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:30:04 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+klveal 0
+edodd01 0
+root 0
+jluo003 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:31:05 BST 2016 : dazghent 0
+hchristensen 0
+ecarboni 0
+jluo003 0
+pfortiz 0
+klveal 0
+edodd01 0
+root 0
+odanne 2
+-----------------------------
+Tue Aug 30 09:32:06 BST 2016 : hchristensen 0
+dazghent 0
+ecarboni 0
+root 2
+edodd01 0
+klveal 0
+jluo003 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:33:07 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+klveal 0
+jluo003 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:34:08 BST 2016 : dazghent 0
+jluo003 0
+pfortiz 0
+klveal 0
+ecarboni 0
+root 0
+edodd01 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:35:09 BST 2016 : dazghent 0
+hchristensen 0
+jluo003 0
+edodd01 0
+pfortiz 0
+klveal 0
+root 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:36:10 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+klveal 0
+ecarboni 0
+root 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:37:11 BST 2016 : ecarboni 0
+dazghent 0
+edodd01 0
+klveal 0
+jluo003 0
+pfortiz 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:38:13 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+pfortiz 0
+jluo003 0
+edodd01 0
+klveal 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:39:14 BST 2016 : hchristensen 0
+root 0
+ecarboni 0
+jluo003 0
+dazghent 0
+klveal 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:40:15 BST 2016 : dazghent 0
+ecarboni 0
+jluo003 0
+pfortiz 0
+klveal 0
+root 0
+edodd01 0
+hchristensen 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:41:16 BST 2016 : jluo003 0
+pfortiz 0
+klveal 0
+ecarboni 0
+dazghent 0
+edodd01 0
+hchristensen 0
+root 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:42:17 BST 2016 : ecarboni 0
+dazghent 0
+hchristensen 0
+root 0
+jluo003 0
+pfortiz 0
+klveal 0
+edodd01 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:43:18 BST 2016 : hchristensen 0
+pfortiz 0
+dazghent 0
+ecarboni 0
+root 0
+klveal 0
+edodd01 0
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:44:19 BST 2016 : hchristensen 0
+jluo003 0
+dazghent 0
+pfortiz 0
+klveal 0
+root 0
+edodd01 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:45:20 BST 2016 : dazghent 0
+root 0
+ecarboni 0
+pfortiz 0
+hchristensen 0
+klveal 0
+jluo003 0
+edodd01 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:46:21 BST 2016 : hchristensen 0
+klveal 0
+root 2
+dazghent 0
+pfortiz 0
+edodd01 0
+jluo003 0
+ecarboni 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:47:22 BST 2016 : hchristensen 0
+klveal 0
+root 0
+dazghent 0
+ecarboni 0
+jluo003 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:48:23 BST 2016 : dazghent 0
+jluo003 0
+hchristensen 0
+klveal 0
+ecarboni 0
+root 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:49:24 BST 2016 : ecarboni 0
+edodd01 0
+pfortiz 0
+klveal 0
+hchristensen 0
+jluo003 0
+root 0
+dazghent 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:50:25 BST 2016 : dazghent 0
+hchristensen 0
+klveal 0
+root 10
+ecarboni 0
+edodd01 5.9
+jluo003 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:51:26 BST 2016 : ecarboni 0
+dazghent 0
+root 0
+hchristensen 0
+klveal 0
+jluo003 0
+edodd01 0
+pfortiz 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:52:27 BST 2016 : hchristensen 0
+klveal 0
+dazghent 0
+ecarboni 0
+pfortiz 0
+root 0
+edodd01 0
+jluo003 0
+odanne 0
+-----------------------------
+Tue Aug 30 09:53:29 BST 2016 : hchristensen 0
+dazghent 0
+klveal 0
+root 0
+jluo003 0
+edodd01 0
+ecarboni 0
+pfortiz 0
+odanne 0
+-----------------------------

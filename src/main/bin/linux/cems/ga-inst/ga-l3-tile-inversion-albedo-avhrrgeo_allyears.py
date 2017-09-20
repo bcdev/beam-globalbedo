@@ -86,8 +86,8 @@ tiles.sort()
 ### processed 2016/12, 2017/01: 2012,2011,2010,2009,2008,2007,2006,2003,2002,2001,2000,1999,1998
 ### processed 2017/04: 2000-2010
 ### processed 2017/06: 2001, 2002, 2003, 2004, 2006 
-startYear = 1989
-endYear = 1989
+startYear = 2001
+endYear = 2001
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
@@ -116,6 +116,7 @@ for tile in tiles:
 
     # years to process
     for iyear in range(startYear, endYear+1):
+        print 'tile: ', tile
         year = str(iyear)
         startDoy = '000'
         endDoy = '361'

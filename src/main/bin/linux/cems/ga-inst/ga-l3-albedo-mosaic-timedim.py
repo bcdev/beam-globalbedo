@@ -17,13 +17,13 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 qa4ecvArchiveRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/qa4ecv_archive/qa4ecv'
 albedoMosaicRootDir = gaRootDir + '/Mosaic/Albedo'
 
-startYear = 2001
-endYear = 2001
+startYear = 2008
+endYear = 2010
 
 version = 'v0.9'
 sensorID = 'avh_geo'
-#snowModes = ['NoSnow','Snow']
-snowModes = ['NoSnow']
+snowModes = ['NoSnow','Snow']
+#snowModes = ['NoSnow']
 resolutions = ['05']
 #resolutions = ['005']
 

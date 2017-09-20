@@ -11,10 +11,7 @@ beamRootDir=$8
 
 avhrrMaskRootDir=$gaRootDir/MsslAvhrrMask
 
-if [ ! -e "$bbdrTileDir" ]
-then
-    mkdir -p $bbdrTileDir
-fi
+mkdir -p $bbdrTileDir
 
 if [ "$sensor" == "MVIRI" ]
 then
