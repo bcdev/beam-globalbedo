@@ -57,10 +57,10 @@ public class MergeAlbedoOp extends PixelOperator {
     private static int[] TRG_BHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static int[] TRG_BHR_SIGMA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 18;
-    private static final int TRG_REL_ENTROPY = 19;
-    private static final int TRG_GOODNESS_OF_FIT = 20;
-    private static final int TRG_DATA_MASK = 21;
-    private static final int TRG_SNOW_FRACTION = 22;
+    private static final int TRG_SNOW_FRACTION = 19;
+    private static final int TRG_REL_ENTROPY = 20;
+    private static final int TRG_GOODNESS_OF_FIT = 21;
+    private static final int TRG_DATA_MASK = 22;
     private static final int TRG_SZA = 23;
 
     @SourceProduct(description = "Albedo Snow product")
@@ -82,23 +82,23 @@ public class MergeAlbedoOp extends PixelOperator {
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
 
+        if (x == 750 && y == 50) {
+            System.out.println("x = " + x);
+        }
         if (x == 3500 && y == 1400) {
             System.out.println("x = " + x);
         }
 
-        if (totalNSamples > 0.0) {
-            if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
-                proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
-                proportionNsamplesSnow = nSamplesSnow / totalNSamples;
-                setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
-            } else if (nSamplesNoSnow > 0) {
-                setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
-            } else if (nSamplesSnow > 0) {
-                setMergedBandsToSnowBands(sourceSamples, targetSamples);
-            }
+        if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
+            proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
+            proportionNsamplesSnow = nSamplesSnow / totalNSamples;
+            setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
+        } else if (nSamplesNoSnow > 0) {
+            setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
+        } else if (nSamplesSnow > 0) {
+            setMergedBandsToSnowBands(sourceSamples, targetSamples);
         } else {
-            setMergedBandsToZero(sourceSamples, targetSamples);
-            targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            setMergedBandsToPrior(sourceSamples, targetSamples);
         }
     }
 
@@ -110,142 +110,55 @@ public class MergeAlbedoOp extends PixelOperator {
         setMergedBands(sourceSamples, targetSamples, 1.0, 0.0);
     }
 
-    private void setMergedBandsToZero(Sample[] sourceSamples, WritableSample[] targetSamples) {
+    private void setMergedBandsToPrior(Sample[] sourceSamples, WritableSample[] targetSamples) {
         setMergedBands(sourceSamples, targetSamples, 0.0, 0.0);
     }
 
     private void setMergedBands(Sample[] sourceSamples, WritableSample[] targetSamples, double proportionNsamplesSnow,
                                 double proportionNsamplesNoSnow) {
 
-        double[][] bhr = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        double[][] dhr = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        double[][] bhrAlpha = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        double[][] dhrAlpha = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        double[][] bhrSigma = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-        double[][] dhrSigma = new double[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-
+        // BHR/DHR, alphas, sigmas
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            // BHR
-            bhr[0][i] = sourceSamples[SRC_BHR[0][i]].getDouble();
-            bhr[1][i] = sourceSamples[SRC_BHR[1][i]].getDouble();
-            final double bhrNoSnow = AlbedoInversionUtils.isValid(bhr[0][i]) ? bhr[0][i] : 0.0;
-            final double bhrSnow = AlbedoInversionUtils.isValid(bhr[1][i]) ? bhr[1][i] : 0.0;
-
-            if (bhrNoSnow == 0.0 && bhrSnow == 0.0) {
-                targetSamples[TRG_BHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double bhrResult = bhrNoSnow * proportionNsamplesNoSnow + bhrSnow * proportionNsamplesSnow;
-                targetSamples[TRG_BHR[i]].set(bhrResult);
-            }
-
-            // DHR
-            dhr[0][i] = sourceSamples[SRC_DHR[0][i]].getDouble();
-            dhr[1][i] = sourceSamples[SRC_DHR[1][i]].getDouble();
-            final double dhrNoSnow = AlbedoInversionUtils.isValid(dhr[0][i]) ? dhr[0][i] : 0.0;
-            final double dhrSnow = AlbedoInversionUtils.isValid(dhr[1][i]) ? dhr[1][i] : 0.0;
-
-            if (dhrNoSnow == 0.0 && dhrSnow == 0.0) {
-                targetSamples[TRG_DHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double dhrResult = dhrNoSnow * proportionNsamplesNoSnow + dhrSnow * proportionNsamplesSnow;
-                targetSamples[TRG_DHR[i]].set(dhrResult);
-            }
-
-            // BHR Alpha
-            bhrAlpha[0][i] = sourceSamples[SRC_BHR_ALPHA[0][i]].getDouble();
-            bhrAlpha[1][i] = sourceSamples[SRC_BHR_ALPHA[1][i]].getDouble();
-            final double bhrAlphaNoSnow = AlbedoInversionUtils.isValid(bhrAlpha[0][i]) ? bhrAlpha[0][i] : 0.0;
-            final double bhrAlphaSnow = AlbedoInversionUtils.isValid(bhrAlpha[1][i]) ? bhrAlpha[1][i] : 0.0;
-
-            if (bhrAlphaNoSnow == 0.0 && bhrAlphaSnow == 0.0) {
-                targetSamples[TRG_BHR_ALPHA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double bhrResult = bhrAlphaNoSnow * proportionNsamplesNoSnow + bhrAlphaSnow * proportionNsamplesSnow;
-                targetSamples[TRG_BHR_ALPHA[i]].set(bhrResult);
-            }
-
-            // DHR Alpha
-            dhrAlpha[0][i] = sourceSamples[SRC_BHR_ALPHA[0][i]].getDouble();
-            dhrAlpha[1][i] = sourceSamples[SRC_BHR_ALPHA[1][i]].getDouble();
-            final double dhrAlphaNoSnow = AlbedoInversionUtils.isValid(dhrAlpha[0][i]) ? dhrAlpha[0][i] : 0.0;
-            final double dhrAlphaSnow = AlbedoInversionUtils.isValid(dhrAlpha[1][i]) ? dhrAlpha[1][i] : 0.0;
-
-            if (dhrAlphaNoSnow == 0.0 && dhrAlphaSnow == 0.0) {
-                targetSamples[TRG_DHR_ALPHA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double dhrResult = dhrAlphaNoSnow * proportionNsamplesNoSnow + dhrAlphaSnow * proportionNsamplesSnow;
-                targetSamples[TRG_DHR_ALPHA[i]].set(dhrResult);
-            }
-
-            // BHR Sigma
-            bhrSigma[0][i] = sourceSamples[SRC_BHR_SIGMA[0][i]].getDouble();
-            bhrSigma[1][i] = sourceSamples[SRC_BHR_SIGMA[1][i]].getDouble();
-            final double bhrSigmaNoSnow = AlbedoInversionUtils.isValid(bhrSigma[0][i]) ? bhrSigma[0][i] : 0.0;
-            final double bhrSigmaSnow = AlbedoInversionUtils.isValid(bhrSigma[1][i]) ? bhrSigma[1][i] : 0.0;
-
-            if (bhrSigmaNoSnow == 0.0 && bhrSigmaSnow == 0.0) {
-                targetSamples[TRG_BHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double bhrResult = bhrSigmaNoSnow * proportionNsamplesNoSnow + bhrSigmaSnow * proportionNsamplesSnow;
-                targetSamples[TRG_BHR_SIGMA[i]].set(bhrResult);
-            }
-
-            // DHR Sigma
-            dhrSigma[0][i] = sourceSamples[SRC_DHR_SIGMA[0][i]].getDouble();
-            dhrSigma[1][i] = sourceSamples[SRC_DHR_SIGMA[1][i]].getDouble();
-            final double dhrSigmaNoSnow = AlbedoInversionUtils.isValid(dhrSigma[0][i]) ? dhrSigma[0][i] : 0.0;
-            final double dhrSigmaSnow = AlbedoInversionUtils.isValid(dhrSigma[1][i]) ? dhrSigma[1][i] : 0.0;
-
-            if (dhrSigmaNoSnow == 0.0 && dhrSigmaSnow == 0.0) {
-                targetSamples[TRG_DHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-            } else {
-                final double dhrResult = dhrSigmaNoSnow * proportionNsamplesNoSnow + dhrSigmaSnow * proportionNsamplesSnow;
-                targetSamples[TRG_DHR_SIGMA[i]].set(dhrResult);
-            }
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_BHR[0][i], SRC_BHR[1][i], TRG_BHR[i]);
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_DHR[0][i], SRC_DHR[1][i], TRG_DHR[i]);
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_BHR_ALPHA[0][i], SRC_BHR_ALPHA[1][i], TRG_BHR_ALPHA[i]);
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_DHR_ALPHA[0][i], SRC_DHR_ALPHA[1][i], TRG_DHR_ALPHA[i]);
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_BHR_SIGMA[0][i], SRC_BHR_SIGMA[1][i], TRG_BHR_SIGMA[i]);
+            setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                                  SRC_DHR_SIGMA[0][i], SRC_DHR_SIGMA[1][i], TRG_DHR_SIGMA[i]);
         }
 
-        final double relEntNoSnowDataValue = sourceSamples[SRC_REL_ENTROPY[0]].getDouble();
-        final double relEntNoSnow = AlbedoInversionUtils.isValid(relEntNoSnowDataValue) ? relEntNoSnowDataValue : 0.0;
-        final double relEntSnowDataValue = sourceSamples[SRC_REL_ENTROPY[1]].getDouble();
-        final double relEntSnow = AlbedoInversionUtils.isValid(relEntSnowDataValue) ? relEntSnowDataValue : 0.0;
-        final double relEntropyResult = relEntSnow * proportionNsamplesSnow + relEntNoSnow * proportionNsamplesNoSnow;
-        if (relEntNoSnow == 0.0 && relEntSnow == 0.0) {
-            targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
-        } else {
-            targetSamples[TRG_REL_ENTROPY].set(relEntropyResult);
-        }
+        // rel. entropy
+        setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                              SRC_REL_ENTROPY[0], SRC_REL_ENTROPY[1], TRG_REL_ENTROPY);
 
-        final double wnsNoSnowDataValue = sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[0]].getDouble();
-        final double wnsNoSnow = AlbedoInversionUtils.isValid(wnsNoSnowDataValue) ? wnsNoSnowDataValue : 0.0;
-        final double wnsSnowDataValue = sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[1]].getDouble();
-        final double wnsSnow = AlbedoInversionUtils.isValid(wnsSnowDataValue) ? wnsSnowDataValue : 0.0;
-        final double wnsResult = wnsSnow * proportionNsamplesSnow + wnsNoSnow * proportionNsamplesNoSnow;
-        if (wnsNoSnow == 0.0 && wnsSnow == 0.0) {
-            targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
-        } else {
-            targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(wnsResult);
-        }
+        // WNSamples
+        setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                              SRC_WEIGHTED_NUM_SAMPLES[0], SRC_WEIGHTED_NUM_SAMPLES[1], TRG_WEIGHTED_NUM_SAMPLES);
 
-        final double gofNoSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[0]].getDouble();
-        final double gofNoSnow = AlbedoInversionUtils.isValid(gofNoSnowDataValue) ? gofNoSnowDataValue : 0.0;
-        final double gofSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[1]].getDouble();
-        final double gofSnow = AlbedoInversionUtils.isValid(gofSnowDataValue) ? gofSnowDataValue : 0.0;
-        final double gofResult = gofSnow * proportionNsamplesSnow + gofNoSnow * proportionNsamplesNoSnow;
-        if (gofNoSnow == 0.0 && gofSnow == 0.0) {
-            targetSamples[TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
-        } else {
-            targetSamples[TRG_GOODNESS_OF_FIT].set(gofResult);
-        }
+        // GoF
+        setWeightedMergeValue(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow,
+                              SRC_GOODNESS_OF_FIT[0], SRC_GOODNESS_OF_FIT[1], TRG_GOODNESS_OF_FIT);
 
+        // data mask: 1.0 or 0.0
         final double maskNoSnowDataValue = sourceSamples[SRC_DATA_MASK[0]].getDouble();
         final double maskNoSnow = AlbedoInversionUtils.isValid(maskNoSnowDataValue) ? maskNoSnowDataValue : 0.0;
         final double maskSnowDataValue = sourceSamples[SRC_DATA_MASK[1]].getDouble();
         final double maskSnow = AlbedoInversionUtils.isValid(maskSnowDataValue) ? maskSnowDataValue : 0.0;
-        final double maskResult = Math.max(maskNoSnow, maskSnow);
-        targetSamples[TRG_DATA_MASK].set(maskResult);
+        targetSamples[TRG_DATA_MASK].set(Math.max(maskNoSnow, maskSnow));
 
-        targetSamples[TRG_SNOW_FRACTION].set(proportionNsamplesSnow);
+        // snow fraction is just proportionNsamplesSnow
+        final double snowFraction = Math.max(maskNoSnow, maskSnow) > 0.0 && proportionNsamplesSnow > 0.0 ?
+                proportionNsamplesSnow : AlbedoInversionConstants.NO_DATA_VALUE;
 
+        targetSamples[TRG_SNOW_FRACTION].set(snowFraction);
+
+        // sza from one of the data sets where available
         final double szaNoSnowDataValue = sourceSamples[SRC_SZA[0]].getDouble();
         final double szaSnowDataValue = sourceSamples[SRC_SZA[1]].getDouble();
         if (AlbedoInversionUtils.isValid(szaNoSnowDataValue)) {
@@ -257,6 +170,33 @@ public class MergeAlbedoOp extends PixelOperator {
         }
     }
 
+    private void setWeightedMergeValue(Sample[] sourceSamples, WritableSample[] targetSamples,
+                                       double proportionNsamplesSnow,
+                                       double proportionNsamplesNoSnow,
+                                       int srcNoSnowIndex, int srcSnowIndex, int targetMergeIndex) {
+        final double noSnowSample = sourceSamples[srcNoSnowIndex].getDouble();
+        final double snowSample = sourceSamples[srcSnowIndex].getDouble();
+        final double noSnowValue = AlbedoInversionUtils.isValid(noSnowSample) ? noSnowSample : 0.0;
+        final double snowValue = AlbedoInversionUtils.isValid(snowSample) ? snowSample : 0.0;
+
+        if (noSnowValue == 0.0 && snowValue == 0.0) {
+            targetSamples[targetMergeIndex].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            double mergeValue;
+            if (proportionNsamplesNoSnow > 0.0 || proportionNsamplesSnow > 0.0) {
+                // real sample available
+                mergeValue = noSnowValue * proportionNsamplesNoSnow + snowValue * proportionNsamplesSnow;
+            } else {
+                // prior info only
+                if (noSnowValue != 0.0 && snowValue != 0.0) {
+                    mergeValue = 0.5 * (noSnowValue + snowValue);
+                } else  {
+                    mergeValue = noSnowValue != 0.0 ? noSnowValue : snowValue;
+                }
+            }
+            targetSamples[targetMergeIndex].set(mergeValue);
+        }
+    }
 
     @Override
     protected void configureTargetProduct(ProductConfigurer productConfigurer) throws OperatorException {
@@ -441,10 +381,10 @@ public class MergeAlbedoOp extends PixelOperator {
         }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
+        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, dataMaskBandName);
-        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index, szaBandName);
     }
 

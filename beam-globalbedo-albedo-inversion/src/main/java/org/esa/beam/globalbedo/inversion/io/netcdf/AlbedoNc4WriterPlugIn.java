@@ -157,10 +157,10 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, goodnessOfFitBand,
                                                           "Goodness of Fit", NODATA, "1");
             }
-//            final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
-//            if (snowFractionBand != null) {
-//                addNc4BrdfAncillaryVariableWithAttributes(writeable, snowFractionBand, "Snow Fraction", NODATA, "1");
-//            }
+            final Band snowFractionBand = p.getBand(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME);
+            if (snowFractionBand != null) {
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, snowFractionBand, "Snow Fraction", NODATA, "1");
+            }
             final Band dataMaskBand = p.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
             if (dataMaskBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, dataMaskBand, "Data Mask", NODATA, "1");

@@ -138,7 +138,6 @@ public class GlobalbedoLevel3UpscaleModisPriors extends GlobalbedoLevel3UpscaleB
                 targetRect.width * scaling,
                 targetRect.height * scaling);
         Map<String, Tile> targetTiles = getTargetTiles(targetBandTiles);
-        targetTiles.
         if (hasValidPixel(getSourceTile(maskBand, srcRect), maskBand.getNoDataValue())) {
             Map<String, Tile> srcTiles = getSourceTiles(srcRect);
 
