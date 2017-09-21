@@ -35,6 +35,7 @@ public class MergeAlbedoOp extends PixelOperator {
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
     private String dataMaskBandName;
+    private String snowFractionBandName;
     private String szaBandName;
 
     private static int[][] SRC_DHR = new int[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -56,11 +57,11 @@ public class MergeAlbedoOp extends PixelOperator {
     private static int[] TRG_BHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static int[] TRG_BHR_SIGMA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 18;
-    private static final int TRG_DATA_MASK = 19;
-    //    private static final int TRG_REL_ENTROPY = 19;
-//    private static final int TRG_GOODNESS_OF_FIT = 20;
-    private static final int TRG_SNOW_FRACTION = 20;
-//    private static final int TRG_SZA = 23;
+    private static final int TRG_REL_ENTROPY = 19;
+    private static final int TRG_GOODNESS_OF_FIT = 20;
+    private static final int TRG_DATA_MASK = 21;
+    private static final int TRG_SNOW_FRACTION = 22;
+    private static final int TRG_SZA = 23;
 
     @SourceProduct(description = "Albedo Snow product")
     private Product snowProduct;
@@ -80,6 +81,10 @@ public class MergeAlbedoOp extends PixelOperator {
 
         double proportionNsamplesSnow;
         double proportionNsamplesNoSnow;
+
+        if (x == 3500 && y == 1400) {
+            System.out.println("x = " + x);
+        }
 
         if (totalNSamples > 0.0) {
             if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
@@ -199,16 +204,16 @@ public class MergeAlbedoOp extends PixelOperator {
             }
         }
 
-//        final double relEntNoSnowDataValue = sourceSamples[SRC_REL_ENTROPY[0]].getDouble();
-//        final double relEntNoSnow = AlbedoInversionUtils.isValid(relEntNoSnowDataValue) ? relEntNoSnowDataValue : 0.0;
-//        final double relEntSnowDataValue = sourceSamples[SRC_REL_ENTROPY[1]].getDouble();
-//        final double relEntSnow = AlbedoInversionUtils.isValid(relEntSnowDataValue) ? relEntSnowDataValue : 0.0;
-//        final double relEntropyResult = relEntSnow * proportionNsamplesSnow + relEntNoSnow * proportionNsamplesNoSnow;
-//        if (relEntNoSnow == 0.0 && relEntSnow == 0.0) {
-//            targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
-//        } else {
-//            targetSamples[TRG_REL_ENTROPY].set(relEntropyResult);
-//        }
+        final double relEntNoSnowDataValue = sourceSamples[SRC_REL_ENTROPY[0]].getDouble();
+        final double relEntNoSnow = AlbedoInversionUtils.isValid(relEntNoSnowDataValue) ? relEntNoSnowDataValue : 0.0;
+        final double relEntSnowDataValue = sourceSamples[SRC_REL_ENTROPY[1]].getDouble();
+        final double relEntSnow = AlbedoInversionUtils.isValid(relEntSnowDataValue) ? relEntSnowDataValue : 0.0;
+        final double relEntropyResult = relEntSnow * proportionNsamplesSnow + relEntNoSnow * proportionNsamplesNoSnow;
+        if (relEntNoSnow == 0.0 && relEntSnow == 0.0) {
+            targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_REL_ENTROPY].set(relEntropyResult);
+        }
 
         final double wnsNoSnowDataValue = sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[0]].getDouble();
         final double wnsNoSnow = AlbedoInversionUtils.isValid(wnsNoSnowDataValue) ? wnsNoSnowDataValue : 0.0;
@@ -221,16 +226,16 @@ public class MergeAlbedoOp extends PixelOperator {
             targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(wnsResult);
         }
 
-//        final double gofNoSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[0]].getDouble();
-//        final double gofNoSnow = AlbedoInversionUtils.isValid(gofNoSnowDataValue) ? gofNoSnowDataValue : 0.0;
-//        final double gofSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[1]].getDouble();
-//        final double gofSnow = AlbedoInversionUtils.isValid(gofSnowDataValue) ? gofSnowDataValue : 0.0;
-//        final double gofResult = gofSnow * proportionNsamplesSnow + gofNoSnow * proportionNsamplesNoSnow;
-//        if (gofNoSnow == 0.0 && gofSnow == 0.0) {
-//            targetSamples[TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
-//        } else {
-//            targetSamples[TRG_GOODNESS_OF_FIT].set(gofResult);
-//        }
+        final double gofNoSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[0]].getDouble();
+        final double gofNoSnow = AlbedoInversionUtils.isValid(gofNoSnowDataValue) ? gofNoSnowDataValue : 0.0;
+        final double gofSnowDataValue = sourceSamples[SRC_GOODNESS_OF_FIT[1]].getDouble();
+        final double gofSnow = AlbedoInversionUtils.isValid(gofSnowDataValue) ? gofSnowDataValue : 0.0;
+        final double gofResult = gofSnow * proportionNsamplesSnow + gofNoSnow * proportionNsamplesNoSnow;
+        if (gofNoSnow == 0.0 && gofSnow == 0.0) {
+            targetSamples[TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        } else {
+            targetSamples[TRG_GOODNESS_OF_FIT].set(gofResult);
+        }
 
         final double maskNoSnowDataValue = sourceSamples[SRC_DATA_MASK[0]].getDouble();
         final double maskNoSnow = AlbedoInversionUtils.isValid(maskNoSnowDataValue) ? maskNoSnowDataValue : 0.0;
@@ -240,7 +245,16 @@ public class MergeAlbedoOp extends PixelOperator {
         targetSamples[TRG_DATA_MASK].set(maskResult);
 
         targetSamples[TRG_SNOW_FRACTION].set(proportionNsamplesSnow);
-//        targetSamples[TRG_SZA].set(sourceSamples[SRC_SZA[0]].getDouble());
+
+        final double szaNoSnowDataValue = sourceSamples[SRC_SZA[0]].getDouble();
+        final double szaSnowDataValue = sourceSamples[SRC_SZA[1]].getDouble();
+        if (AlbedoInversionUtils.isValid(szaNoSnowDataValue)) {
+            targetSamples[TRG_SZA].set(szaNoSnowDataValue);
+        } else if (AlbedoInversionUtils.isValid(szaSnowDataValue)) {
+            targetSamples[TRG_SZA].set(szaSnowDataValue);
+        } else {
+            targetSamples[TRG_SZA].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        }
     }
 
 
@@ -305,30 +319,31 @@ public class MergeAlbedoOp extends PixelOperator {
         index++;
         targetProduct.addBand(weightedNumberOfSamplesBandName, ProductData.TYPE_FLOAT32);
 
-//        SRC_REL_ENTROPY[0] = index;
-//        SRC_REL_ENTROPY[1] = index + 100;
-//        index++;
-//        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
-//        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
+        SRC_REL_ENTROPY[0] = index;
+        SRC_REL_ENTROPY[1] = index + 100;
+        index++;
+        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
+        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
 
-//        SRC_GOODNESS_OF_FIT[0] = index;
-//        SRC_GOODNESS_OF_FIT[1] = index + 100;
-//        index++;
-//        goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
-//        targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
+        SRC_GOODNESS_OF_FIT[0] = index;
+        SRC_GOODNESS_OF_FIT[1] = index + 100;
+        index++;
+        goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
+        targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
         SRC_DATA_MASK[0] = index;
         SRC_DATA_MASK[1] = index + 100;
-//        index++;
+        index++;
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
 
-        targetProduct.addBand("snow_fraction", ProductData.TYPE_FLOAT32);
+        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
 
-//        SRC_SZA[0] = index;
-//        SRC_SZA[1] = index + 100;
-//        szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
-//        targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
+        SRC_SZA[0] = index;
+        SRC_SZA[1] = index + 100;
+        szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
+        targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
 
         for (Band b : targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
@@ -376,14 +391,14 @@ public class MergeAlbedoOp extends PixelOperator {
 
         configurator.defineSample(SRC_WEIGHTED_NUM_SAMPLES[0], weightedNumberOfSamplesBandName, noSnowProduct);
         configurator.defineSample(SRC_WEIGHTED_NUM_SAMPLES[1], weightedNumberOfSamplesBandName, snowProduct);
-//        configurator.defineSample(SRC_REL_ENTROPY[0], relEntropyBandName, noSnowProduct);
-//        configurator.defineSample(SRC_REL_ENTROPY[1], relEntropyBandName, snowProduct);
-//        configurator.defineSample(SRC_GOODNESS_OF_FIT[0], goodnessOfFitBandName, noSnowProduct);
-//        configurator.defineSample(SRC_GOODNESS_OF_FIT[1], goodnessOfFitBandName, snowProduct);
+        configurator.defineSample(SRC_REL_ENTROPY[0], relEntropyBandName, noSnowProduct);
+        configurator.defineSample(SRC_REL_ENTROPY[1], relEntropyBandName, snowProduct);
+        configurator.defineSample(SRC_GOODNESS_OF_FIT[0], goodnessOfFitBandName, noSnowProduct);
+        configurator.defineSample(SRC_GOODNESS_OF_FIT[1], goodnessOfFitBandName, snowProduct);
         configurator.defineSample(SRC_DATA_MASK[0], dataMaskBandName, noSnowProduct);
         configurator.defineSample(SRC_DATA_MASK[1], dataMaskBandName, snowProduct);
-//        configurator.defineSample(SRC_SZA[0], szaBandName, noSnowProduct);
-//        configurator.defineSample(SRC_SZA[1], szaBandName, snowProduct);
+        configurator.defineSample(SRC_SZA[0], szaBandName, noSnowProduct);
+        configurator.defineSample(SRC_SZA[1], szaBandName, snowProduct);
     }
 
     @Override
@@ -426,11 +441,11 @@ public class MergeAlbedoOp extends PixelOperator {
         }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
-//        configurator.defineSample(index++, relEntropyBandName);
-//        configurator.defineSample(index++, goodnessOfFitBandName);
+        configurator.defineSample(index++, relEntropyBandName);
+        configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, dataMaskBandName);
-        configurator.defineSample(index, "snow_fraction");
-//        configurator.defineSample(index, szaBandName);
+        configurator.defineSample(index++, snowFractionBandName);
+        configurator.defineSample(index, szaBandName);
     }
 
     public static class Spi extends OperatorSpi {

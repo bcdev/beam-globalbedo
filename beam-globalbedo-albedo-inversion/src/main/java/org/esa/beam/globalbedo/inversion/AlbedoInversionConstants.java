@@ -48,6 +48,7 @@ public class AlbedoInversionConstants {
     public static final String INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME = "Weighted_Number_of_Samples";
     public static final String INV_GOODNESS_OF_FIT_BAND_NAME = "Goodness_of_Fit";
     public static final String ALB_DATA_MASK_BAND_NAME = "Data_Mask";
+    public static final String ALB_SNOW_FRACTION_BAND_NAME = "Snow_Fraction";
     public static final String ALB_SZA_BAND_NAME = "Solar_Zenith_Angle";
 
     public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
