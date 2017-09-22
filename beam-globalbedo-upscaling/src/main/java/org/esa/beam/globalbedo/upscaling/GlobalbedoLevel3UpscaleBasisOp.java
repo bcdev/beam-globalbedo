@@ -205,11 +205,12 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                         target.setSample(x, y, max);
                     } else {
                         // south pole correction
-                        if (reprojection.equals("PC") && geoPos.getLat() < -86.0) {
-                            target.setSample(x, y, 0.0);
-                        } else {
-                            target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
-                        }
+//                        if (reprojection.equals("PC") && geoPos.getLat() < -86.0) {
+//                            target.setSample(x, y, 0.0);
+//                        } else {
+//                            target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
+//                        }
+                        target.setSample(x, y, AlbedoInversionConstants.NO_DATA_VALUE);
                     }
                 }
             }
