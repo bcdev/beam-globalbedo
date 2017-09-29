@@ -169,8 +169,11 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
 
                     logger.log(Level.ALL, "Daily acc 'single': tile: " +
                             tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
+                    System.out.println("Daily acc 'single': tile: " +
+                            tile + ", year: " + currentYear + ", day: " + IOUtils.getDoyString(currentDay));
                     for (Product inputProduct : inputProducts) {
                         logger.log(Level.ALL, "       - ': " + inputProduct.getName());
+                        System.out.println("       - ': " + inputProduct.getName());
                     }
                     DailyAccumulationSinglePixel dailyAccumulationSinglePixel =
                             new DailyAccumulationSinglePixel(inputProducts, computeSnow);
