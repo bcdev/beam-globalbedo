@@ -224,6 +224,18 @@ public class IOUtilsTest extends TestCase {
         assertEquals(20, IOUtils.getDayDifference(doy, year, refDoy, refYear));
         refYear = 2003;
         assertEquals(710, IOUtils.getDayDifference(doy, year, refDoy, refYear));
+
+        refDoy = 1;
+        refYear = 2006;
+        doy = 353;
+        year = 2005;
+        assertEquals(13, IOUtils.getDayDifference(doy, year, refDoy, refYear));
+        refDoy = 365;
+        refYear = 2005;
+        assertEquals(12, IOUtils.getDayDifference(doy, year, refDoy, refYear));
+        doy = 118;
+        year = 2006;
+        assertEquals(118, IOUtils.getDayDifference(doy, year, refDoy, refYear));
     }
 
     public void testGetDoyFromAlbedoProductName() throws Exception {
