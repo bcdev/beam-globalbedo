@@ -96,6 +96,10 @@ public class InversionSinglePixelOp extends PixelOperator {
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
 
+    @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
+    private int priorVersion;
+
+
     @Parameter(defaultValue = "30.0", description = "Prior scale factor")
     private double priorScaleFactor;
 
@@ -117,6 +121,14 @@ public class InversionSinglePixelOp extends PixelOperator {
 //    @Parameter(defaultValue = "land_mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     @Parameter(defaultValue = "Data_Mask", description = "Prior NSamples band name (default fits to the latest prior version)")
     private String priorLandMaskBandName;
+
+    //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
+    // Oct. 2016:
+//    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
+    private String priorDataMaskBandName;
+
 
     Accumulator[][] singlePixelAccumulator;
 
@@ -157,39 +169,41 @@ public class InversionSinglePixelOp extends PixelOperator {
         // we have:
         // 3x3 mean, 3x3 SD, Nsamples, mask
         if (usePrior) {
-            for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
-                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
-                    final String indexString = Integer.toString(priorBandStartIndex + i);
-//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
-//                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                    // Oct. 2015 version, e.g. Mean_VIS_f0
-                    final String meanBandName = priorMeanBandNamePrefix + AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
-                    configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+            configurePriorSourceSamples(configurator);
 
-//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
-                    // 2014, e.g. SD:_BAND_7_PARAMETER_F1
-//                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
-                    // Oct. 2015 version:
-                    // SD:_BAND_7_PARAMETER_F0 --> now Cov_VIS_f0_VIS_f0
-                    // SD:_BAND_7_PARAMETER_F1 --> now Cov_VIS_f1_VIS_f1
-                    // SD:_BAND_7_PARAMETER_F2 --> now Cov_VIS_f2_VIS_f2
-                    // SD:_BAND_8_PARAMETER_F0 --> now Cov_NIR_f0_NIR_f0
-                    // SD:_BAND_8_PARAMETER_F1 --> now Cov_NIR_f1_NIR_f1
-                    // SD:_BAND_8_PARAMETER_F2 --> now Cov_NIR_f2_NIR_f2
-                    // SD:_BAND_9_PARAMETER_F0 --> now Cov_SW_f0_SW_f0
-                    // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
-                    // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
-                    final String sdMeanBandName = priorSdBandNamePrefix +
-                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j + "_" +
-                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
-                    configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
-                }
-            }
-//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
-            configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
-//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
-            configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
+//            for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+//                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+//                    final String indexString = Integer.toString(priorBandStartIndex + i);
+////                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+//                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
+////                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
+//                    // Oct. 2015 version, e.g. Mean_VIS_f0
+//                    final String meanBandName = priorMeanBandNamePrefix + AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+//                    configurator.defineSample(SRC_PRIOR_MEAN[i][j], meanBandName, priorProduct);
+//
+////                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+//                    // 2014, e.g. SD:_BAND_7_PARAMETER_F1
+////                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
+//                    // Oct. 2015 version:
+//                    // SD:_BAND_7_PARAMETER_F0 --> now Cov_VIS_f0_VIS_f0
+//                    // SD:_BAND_7_PARAMETER_F1 --> now Cov_VIS_f1_VIS_f1
+//                    // SD:_BAND_7_PARAMETER_F2 --> now Cov_VIS_f2_VIS_f2
+//                    // SD:_BAND_8_PARAMETER_F0 --> now Cov_NIR_f0_NIR_f0
+//                    // SD:_BAND_8_PARAMETER_F1 --> now Cov_NIR_f1_NIR_f1
+//                    // SD:_BAND_8_PARAMETER_F2 --> now Cov_NIR_f2_NIR_f2
+//                    // SD:_BAND_9_PARAMETER_F0 --> now Cov_SW_f0_SW_f0
+//                    // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
+//                    // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
+//                    final String sdMeanBandName = priorSdBandNamePrefix +
+//                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j + "_" +
+//                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+//                    configurator.defineSample(SRC_PRIOR_SD[i][j], sdMeanBandName, priorProduct);
+//                }
+//            }
+////            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+////            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_MASK, priorLandMaskBandName, priorProduct);
         }
     }
 
@@ -398,6 +412,72 @@ public class InversionSinglePixelOp extends PixelOperator {
         }
         return 0.5 * log(productSvdMSRecip) + svdMSingularValues.length * sqrt(log(2.0 * PI * E));
     }
+
+    private void configurePriorSourceSamples(SampleConfigurer configurator) {
+        for (int i = 0; i < NUM_ALBEDO_PARAMETERS; i++) {
+            if (priorVersion == 6) {
+                // collection 6 , from Oct 2016
+                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                    // priorMeanBandNamePrefix = priorSdBandNamePrefix = 'BRDF_Albedo_Parameters_'
+                    // BRDF_Albedo_Parameters_vis_f0_avr <--> MEAN_VIS_f0
+                    // BRDF_Albedo_Parameters_nir_f0_avr <--> MEAN_NIR_f0
+                    // BRDF_Albedo_Parameters_shortwave_f0_avr <--> MEAN_SW_f0
+                    // same for f1, f2
+                    final String meanBandName = priorMeanBandNamePrefix +
+                            AlbedoInversionConstants.PRIOR_6_BB_BANDS[i] + "_f" + j + "_avr";
+                    final int meanIndex = SRC_PRIOR_MEAN[i][j];
+                    configurator.defineSample(meanIndex, meanBandName, priorProduct);
+
+                    // BRDF_Albedo_Parameters_vis_f0_sd <--> sqrt (Cov_VIS_f0_VIS_f0)
+                    // BRDF_Albedo_Parameters_nir_f0_sd <--> sqrt (Cov_NIR_f0_NIR_f0)
+                    // BRDF_Albedo_Parameters_shortwave_f0_sd <--> sqrt (Cov_SW_f0_SW_f0)
+                    // same for f1, f2
+                    final String sdBandName = priorMeanBandNamePrefix +
+                            AlbedoInversionConstants.PRIOR_6_BB_BANDS[i] + "_f" + j + "_sd";
+                    final int sdIndex = SRC_PRIOR_SD[i][j];
+                    configurator.defineSample(sdIndex, sdBandName, priorProduct);
+                }
+                configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+                configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);
+            } else {
+                // collection 5 , before Oct 2016
+                for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
+                    final String indexString = Integer.toString(priorBandStartIndex + i);
+//                    final String meanBandName = "MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    // 2014, e.g. MEAN:_BAND_7_PARAMETER_F1
+//                    final String meanBandName = priorMeanBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                    // Oct. 2015 version, e.g. Mean_VIS_f0
+                    final String meanBandName = priorMeanBandNamePrefix + AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+                    final int meanIndex = SRC_PRIOR_MEAN[i][j];
+                    configurator.defineSample(meanIndex, meanBandName, priorProduct);
+
+//                    final String sdMeanBandName = "SD_MEAN__BAND________" + i + "_PARAMETER_F" + j;
+                    // 2014, e.g. SD:_BAND_7_PARAMETER_F1
+//                    final String sdMeanBandName = priorSdBandNamePrefix + indexString + "_PARAMETER_F" + j;
+                    // Oct. 2015 version:
+                    // SD:_BAND_7_PARAMETER_F0 --> now Cov_VIS_f0_VIS_f0
+                    // SD:_BAND_7_PARAMETER_F1 --> now Cov_VIS_f1_VIS_f1
+                    // SD:_BAND_7_PARAMETER_F2 --> now Cov_VIS_f2_VIS_f2
+                    // SD:_BAND_8_PARAMETER_F0 --> now Cov_NIR_f0_NIR_f0
+                    // SD:_BAND_8_PARAMETER_F1 --> now Cov_NIR_f1_NIR_f1
+                    // SD:_BAND_8_PARAMETER_F2 --> now Cov_NIR_f2_NIR_f2
+                    // SD:_BAND_9_PARAMETER_F0 --> now Cov_SW_f0_SW_f0
+                    // SD:_BAND_9_PARAMETER_F1 --> now Cov_SW_f1_SW_f1
+                    // SD:_BAND_9_PARAMETER_F2 --> now Cov_SW_f2_SW_f2
+                    final String sdMeanBandName = priorSdBandNamePrefix +
+                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j + "_" +
+                            AlbedoInversionConstants.BBDR_WAVE_BANDS[i] + "_f" + j;
+                    final int sdIndex = SRC_PRIOR_SD[i][j];
+                    configurator.defineSample(sdIndex, sdMeanBandName, priorProduct);
+                }
+//            configurator.defineSample(SRC_PRIOR_NSAMPLES, PRIOR_NSAMPLES_NAME, priorProduct);
+                configurator.defineSample(SRC_PRIOR_NSAMPLES, priorNSamplesBandName, priorProduct);
+//            configurator.defineSample(SRC_PRIOR_MASK, PRIOR_MASK_NAME, priorProduct);
+                configurator.defineSample(SRC_PRIOR_MASK, priorDataMaskBandName, priorProduct);
+            }
+        }
+    }
+
 
 
     public static class Spi extends OperatorSpi {

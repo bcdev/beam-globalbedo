@@ -64,22 +64,63 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @Parameter(defaultValue = "", description = "MODIS Prior root directory") // e.g., /disk2/Priors
     private String priorRootDir;
 
+//    @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
+//    // e.g., background/processed.p1.0.618034.p2.1.00000
+//    private String priorRootDirSuffix;
+//
+//    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+//    // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
+//    private String priorFileNamePrefix;
+//
+//    //    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+//    // Oct. 2015:
+//    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+//    private String priorMeanBandNamePrefix;
+//
+//    //    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+//    private String priorSdBandNamePrefix;
+
+
     @Parameter(defaultValue = "", description = "MODIS Prior root directory suffix")
     // e.g., background/processed.p1.0.618034.p2.1.00000
     private String priorRootDirSuffix;
 
-    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    //    @Parameter(defaultValue = "kernel", description = "MODIS Prior file name prefix")
+    // Oct. 2016:
+    @Parameter(defaultValue = "prior.modis.c6", description = "MODIS Prior file name prefix")
     // e.g., filename = kernel.001.006.h18v04.Snow.1km.nc
     private String priorFileNamePrefix;
 
     //    @Parameter(defaultValue = "MEAN:_BAND_", description = "Prefix of prior mean band (default fits to the latest prior version)")
     // Oct. 2015:
-    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Mean_", description = "Prefix of prior mean band (default fits to the latest prior version)")
+    // Oct. 2016:
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior mean band (default fits to the latest prior version)")
     private String priorMeanBandNamePrefix;
 
     //    @Parameter(defaultValue = "SD:_BAND_", description = "Prefix of prior SD band (default fits to the latest prior version)")
-    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Cov_", description = "Prefix of prior SD band (default fits to the latest prior version)")
+    // Oct. 2016:
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior SD band (default fits to the latest prior version)")
     private String priorSdBandNamePrefix;
+
+    @Parameter(defaultValue = "7", description = "Prior broad bands start index (no longer needed for Collection 6 priors)")
+    private int priorBandStartIndex;
+
+    //    @Parameter(defaultValue = "Weighted_number_of_samples", description = "Prior NSamples band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "BRDF_Albedo_Parameters_bb_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "BRDF_Albedo_Parameters_nir_wns", description = "Prior NSamples band name (default fits to the latest prior version)")
+    // Oct. 2016:
+    private String priorNSamplesBandName;
+
+    //    @Parameter(defaultValue = "land_mask", description = "Prior data mask band name (default fits to the latest prior version)")
+//    @Parameter(defaultValue = "Data_Mask", description = "Prior data mask band name (default fits to the latest prior version)")
+    // Oct. 2016:
+//    @Parameter(defaultValue = "snow", description = "Prior data mask band name (default fits to the latest prior version)")
+    @Parameter(defaultValue = "snowFraction", description = "Prior data mask band name (default fits to the latest prior version)")
+    private String priorDataMaskBandName;
+
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
@@ -102,7 +143,7 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
     @SourceProduct(description = "Prior product as single pixel (i.e. CSV)", optional = true)
     private Product priorPixelProduct;
 
-    @Parameter(defaultValue = "5", description = "Prior version (MODIS collection)")  // todo: change default to 6 later
+    @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")  // todo: change default to 6 later
     private int priorVersion;
 
 
@@ -260,6 +301,9 @@ public class GlobalbedoLevel3InversionSinglePixel extends Operator {
             inversionSinglePixelOp.setParameter("usePrior", usePrior);
             inversionSinglePixelOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
             inversionSinglePixelOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);
+            inversionSinglePixelOp.setParameter("priorNSamplesBandName", priorNSamplesBandName);
+            inversionSinglePixelOp.setParameter("priorDataMaskBandName", priorDataMaskBandName);
+            inversionSinglePixelOp.setParameter("priorVersion", priorVersion);
             Product inversionProduct = inversionSinglePixelOp.getTargetProduct();
 
             if (priorProduct == null) {

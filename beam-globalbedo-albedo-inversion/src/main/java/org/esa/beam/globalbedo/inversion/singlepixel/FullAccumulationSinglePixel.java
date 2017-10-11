@@ -2,7 +2,6 @@ package org.esa.beam.globalbedo.inversion.singlepixel;
 
 import Jama.Matrix;
 import org.esa.beam.globalbedo.inversion.Accumulator;
-import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
@@ -61,17 +60,13 @@ public class FullAccumulationSinglePixel {
             BeamLogManager.getSystemLogger().log(Level.FINEST, "Full accumulation for year/day:  " +
                     currentYear + "/" + IOUtils.getDoyString(currentDay) + " ...");
 
-//            int dayDifference = getDayDifference(currentDay);  // this is wrong i.e. for wing years!!
-            int dayDifference = IOUtils.getDayDifference(currentDay, currentYear, doy, year);
+            int dayDifference = IOUtils.getDayDifference(currentDay, currentYear, doy, year); // fixed 20171009 !
             final float weight = AlbedoInversionUtils.getWeight(dayDifference);
 
             final Matrix dailyAccM = dailyAccs[iDay+90].getM();
             final Matrix dailyAccV = dailyAccs[iDay+90].getV();
             final Matrix dailyAccE = dailyAccs[iDay+90].getE();
             final double dailyAccMask = dailyAccs[iDay+90].getMask();
-//            final Matrix dailyAccM = AlbedoInversionUtils.getMatrix2DTruncated(dailyAccs[iDay+90].getM());
-//            final Matrix dailyAccV = AlbedoInversionUtils.getMatrix2DTruncated(dailyAccs[iDay+90].getV());
-//            final Matrix dailyAccE = AlbedoInversionUtils.getMatrix2DTruncated(dailyAccs[iDay+90].getE());
             tmpAcc[0][0].setM(tmpAcc[0][0].getM().plus(dailyAccM.times(weight)));
             tmpAcc[0][0].setV(tmpAcc[0][0].getV().plus(dailyAccV.times(weight)));
             tmpAcc[0][0].setE(tmpAcc[0][0].getE().plus(dailyAccE.times(weight)));
@@ -87,22 +82,6 @@ public class FullAccumulationSinglePixel {
         }
 
         return new FullAccumulator(year, doy, tmpAcc, daysToTheClosestSample);
-    }
-
-    private int getDayDifference(int dailAccDay) {
-        int referenceYear = year;
-        if (dailAccDay < 90) {
-            referenceYear--;
-        } else if (dailAccDay > 90 + 365) {
-            referenceYear++;
-        }
-//        final int difference = 365 * (year - referenceYear) + (doy - dailAccDay);
-        final int difference = 365 * (year - referenceYear) + ((doy+8) - dailAccDay); // this is as in old code
-        return Math.abs(difference);
-    }
-
-    private int getDayDifference(int dailAccYear, int dailAccDay) {
-        return 365 * (year - dailAccYear) + (doy - dailAccDay);
     }
 
 }
