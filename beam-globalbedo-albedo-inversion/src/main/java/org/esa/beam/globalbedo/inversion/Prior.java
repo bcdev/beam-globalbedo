@@ -127,7 +127,9 @@ public class Prior {
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+//                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+                // 20171107: allow f-parameters > 1.0 to avoid gaps in snow processing (i.e. Antarctzica, Greenland)
+                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0;
                 final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
                         (!computeSnow && priorSnowFraction >= 0.93);
                 if (priorMeanNotOk || priorSnowFractionNotOk) {
