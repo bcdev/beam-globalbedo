@@ -32,10 +32,13 @@ public class SpectralFullAccumulation {
     private int rasterHeight;
 
     private String sdrRootDir;
+    private String dailyAccRootDir;
     private String tile;
     private int year;
     private int doy;
     private int wings;
+
+    private int singleBandIndex;
 
     private int subStartX;
     private int subStartY;
@@ -48,7 +51,8 @@ public class SpectralFullAccumulation {
 
     public SpectralFullAccumulation(int numSdrBands, int rasterWidth, int rasterHeight,
                                     int subStartX, int subStartY,
-                                    String sdrRootDir, String tile,
+                                    String sdrRootDir, String dailyAccRootDir,
+                                    int singleBandIndex, String tile,
                                     int year, int doy,
                                     int wings, boolean computeSnow) {
         this.numSdrBands = numSdrBands;
@@ -57,6 +61,8 @@ public class SpectralFullAccumulation {
         this.subStartX = subStartX;
         this.subStartY = subStartY;
         this.sdrRootDir = sdrRootDir;
+        this.singleBandIndex = singleBandIndex;
+        this.dailyAccRootDir = dailyAccRootDir;
         this.tile = tile;
         this.year = year;
         this.doy = doy;
@@ -74,13 +80,14 @@ public class SpectralFullAccumulation {
         logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get Daily Accumulator input files...
-        final String dailyAccDir = sdrRootDir + File.separator + "DailyAcc";
+        final String dailyAccDir = dailyAccRootDir + File.separator + "band_" + singleBandIndex;
+//        final String dailyAccDir = sdrRootDir + File.separator + "DailyAcc";
 
         AccumulatorHolder dailyAccumulators = SpectralIOUtils.getDailyAccumulator(dailyAccDir, numSdrBands,
                                                                                   doy, year, tile,
                                                                                   subStartX, subStartY,
-                                                                          wings,
-                                                                          computeSnow, false);
+                                                                                  wings,
+                                                                                  computeSnow, false);
 
         if (dailyAccumulators != null) {
             final String[] dailyAccBinaryFilenames = dailyAccumulators.getProductBinaryFilenames();

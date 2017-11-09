@@ -54,6 +54,9 @@ public class SpectralInversionOp extends PixelOperator {
     @Parameter(defaultValue = "", description = "Globalbedo SDR root directory")
     private String sdrRootDir;
 
+    @Parameter(defaultValue = "", description = "Daily acc binary files root directory")
+    private String dailyAccRootDir;
+
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
@@ -112,17 +115,19 @@ public class SpectralInversionOp extends PixelOperator {
         int subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor;
 
         SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(numSdrBands,
-                                                                                 subtileWidth, subtileHeight,
-                                                                                 subStartX, subStartY,
-                                                                                 sdrRootDir, tile, year, doy,
-                                                                                 wings, computeSnow);
+                subtileWidth, subtileHeight,
+                subStartX, subStartY,
+                sdrRootDir, dailyAccRootDir,
+                singleBandIndex,
+                tile, year, doy,
+                wings, computeSnow);
         fullAccumulator = fullAccumulation.getResult();
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         Matrix parameters = new Matrix(numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
-                                       AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
         Matrix uncertainties;
 
         double entropy = 0.0; // == det in BB
@@ -148,15 +153,15 @@ public class SpectralInversionOp extends PixelOperator {
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) ||
                         AlbedoInversionUtils.matrixHasZerosInDiagonale(tmpM)) {
                     tmpM = new Matrix(3 * numSdrBands, 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
-                                      AlbedoInversionConstants.NO_DATA_VALUE);
+                            AlbedoInversionConstants.NO_DATA_VALUE);
                 }
                 uncertainties = tmpM;
             } else {
                 parameters = new Matrix(numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 1,
-                                        AlbedoInversionConstants.NO_DATA_VALUE);
+                        AlbedoInversionConstants.NO_DATA_VALUE);
                 uncertainties = new Matrix(3 * numSdrBands,
-                                           3 * numSdrBands,
-                                           AlbedoInversionConstants.NO_DATA_VALUE);
+                        3 * numSdrBands,
+                        AlbedoInversionConstants.NO_DATA_VALUE);
                 maskAcc = 0.0;
             }
 
@@ -172,15 +177,15 @@ public class SpectralInversionOp extends PixelOperator {
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
         } else {
             uncertainties = new Matrix(3 * numSdrBands, 3 * numSdrBands,
-                                       AlbedoInversionConstants.NO_DATA_VALUE);
+                    AlbedoInversionConstants.NO_DATA_VALUE);
             entropy = AlbedoInversionConstants.NO_DATA_VALUE;
             relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
         }
 
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
-                          parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, daysToTheClosestSample);
+                parameters, uncertainties, entropy, relEntropy,
+                maskAcc, goodnessOfFit, daysToTheClosestSample);
     }
 
     @Override
@@ -230,15 +235,15 @@ public class SpectralInversionOp extends PixelOperator {
         }
 
         productConfigurer.addBand(AlbedoInversionConstants.INV_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32,
-                                  AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME, ProductData.TYPE_FLOAT32,
-                                  AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32,
-                                  AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32,
-                                  AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
         productConfigurer.addBand(AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32,
-                                  AlbedoInversionConstants.NO_DATA_VALUE);
+                AlbedoInversionConstants.NO_DATA_VALUE);
 
         for (Band b : getTargetProduct().getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);

@@ -28,6 +28,9 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
     @Parameter(defaultValue = "", description = "Globalbedo SDR root directory")
     private String sdrRootDir;
 
+    @Parameter(defaultValue = "", description = "Daily acc binary files root directory")
+    private String dailyAccRootDir;
+
     @Parameter(description = "MODIS tile")
     private String tile;
 
@@ -73,6 +76,7 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
         Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(subtileWidth, subtileHeight);
         inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
         inversionOp.setParameter("sdrRootDir", sdrRootDir);
+        inversionOp.setParameter("dailyAccRootDir", dailyAccRootDir);
         inversionOp.setParameter("year", year);
         inversionOp.setParameter("tile", tile);
         inversionOp.setParameter("doy", doy);

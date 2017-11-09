@@ -32,6 +32,9 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
     @Parameter(defaultValue = "", description = "SDR root directory")
     private String sdrRootDir;
 
+    @Parameter(defaultValue = "", description = "Daily acc binary files root directory")
+    private String dailyAccRootDir;
+
     @Parameter(label = "Sensors to ingest in BRDF retrieval", defaultValue = "MERIS,VGT")
     private String[] sensors;
 
@@ -85,7 +88,7 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
         if (inputProducts.length > 0) {
 //            String dailyAccumulatorDir = sdrRootDir + File.separator + "DailyAcc"
 //                    + File.separator + year + File.separator + tile;
-            String dailyAccumulatorDir = sdrRootDir + File.separator + "band_" + singleBandIndex + File.separator + "DailyAcc"
+            String dailyAccumulatorDir = dailyAccRootDir + File.separator + "band_" + singleBandIndex
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
