@@ -76,7 +76,9 @@ public class SpectralIOUtils {
         for (int i = 0; i < 3; i++) {
             // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
             for (int j = i; j < 3; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f0_" +
+//                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f0_" +
+//                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f" + (j % 3) + "_" +
                         spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
             }
         }
@@ -124,6 +126,43 @@ public class SpectralIOUtils {
             }
         }
         return bbdrProductList.toArray(new Product[bbdrProductList.size()]);
+    }
+
+    static Product[] getSpectralBrdfBandMergeInputProducts(String brdfRootDir, boolean computeSnow,
+                                                           String tile, int year, int doy) throws IOException {
+        final String daystring_yyyyddd = String.valueOf(year) + String.valueOf(doy);
+
+        String snowDirName = computeSnow ? "Snow" : "NoSnow";
+        String brdfDirName =
+                brdfRootDir + File.separator + snowDirName + File.separator + year + File.separator + tile;
+
+        List<Product> brdfProductList = new ArrayList<>();
+        int numProducts = 0;
+        final File brdfDir = new File(brdfDirName);  // e.g. ../GlobAlbedoTest/Inversion_spectral/NoSnow/2005/h22v02
+        if (brdfDir.exists()) {
+            for (int bandIndex = 1; bandIndex <= 7; bandIndex++) {
+                final String brdfBandDirName = brdfDirName + File.separator + "band_" + bandIndex;
+                final File brdfBandDir = new File(brdfBandDirName);
+                if (brdfDir.exists()) {
+                    // Qa4ecv.brdf.spectral.6.2005356.h22v02.NoSnow.nc
+                    final String brdfBandFileName = "Qa4ecv.brdf.spectral." + bandIndex + "." + daystring_yyyyddd +
+                            "." + tile + "." + snowDirName + ".nc";
+                    final String brdfBandFilePath = brdfBandDir + File.separator + brdfBandFileName;
+                    final File brdfBandFile = new File(brdfBandFilePath);
+                    if (brdfBandFile.exists()) {
+                        Product product = ProductIO.readProduct(brdfBandFileName);
+                        if (product != null) {
+                            brdfProductList.add(product);
+                            numProducts++;
+                        }
+                    }
+                }
+            }
+            BeamLogManager.getSystemLogger().log
+                    (Level.INFO, "Collecting spectral BRDF band products for tile/year/doy: " +
+                            tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": " + numProducts + " products added.");
+        }
+        return brdfProductList.toArray(new Product[brdfProductList.size()]);
     }
 
     public static AccumulatorHolder getDailyAccumulator(String accumulatorRootDir,
