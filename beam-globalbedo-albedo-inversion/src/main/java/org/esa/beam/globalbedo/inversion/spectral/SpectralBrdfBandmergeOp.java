@@ -42,9 +42,6 @@ public class SpectralBrdfBandmergeOp extends Operator {
     private boolean computeSnow;
 
 
-    @SourceProduct(description = "BRDF source product (dummy)")
-    private Product sourceProduct;
-
     @Override
     public void initialize() throws OperatorException {
         try {
@@ -56,13 +53,13 @@ public class SpectralBrdfBandmergeOp extends Operator {
             } else {
                 BeamLogManager.getSystemLogger().log(Level.WARNING, "No BRDF band products found for year/doy/tile " +
                         year + "/" + doy + "/" + tile + " ...");
-                setTargetProduct(sourceProduct);
+                setTargetProduct(new Product("dummy", "dummy", 1, 1));
             }
         } catch (IOException e) {
             BeamLogManager.getSystemLogger().log(Level.WARNING, "Cannot get BRDF band products found for year/doy/tile " +
                     year + "/" + doy + "/" + tile + " ...");
             e.printStackTrace();
-            setTargetProduct(sourceProduct);
+            setTargetProduct(new Product("dummy", "dummy", 1, 1));
         }
 
     }

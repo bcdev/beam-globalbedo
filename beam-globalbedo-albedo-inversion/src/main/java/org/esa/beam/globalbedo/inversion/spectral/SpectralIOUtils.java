@@ -130,7 +130,7 @@ public class SpectralIOUtils {
 
     static Product[] getSpectralBrdfBandMergeInputProducts(String brdfRootDir, boolean computeSnow,
                                                            String tile, int year, int doy) throws IOException {
-        final String daystring_yyyyddd = String.valueOf(year) + String.valueOf(doy);
+        final String daystring_yyyyddd = String.valueOf(year) + IOUtils.getDoyString(doy);
 
         String snowDirName = computeSnow ? "Snow" : "NoSnow";
         String brdfDirName =
@@ -150,7 +150,7 @@ public class SpectralIOUtils {
                     final String brdfBandFilePath = brdfBandDir + File.separator + brdfBandFileName;
                     final File brdfBandFile = new File(brdfBandFilePath);
                     if (brdfBandFile.exists()) {
-                        Product product = ProductIO.readProduct(brdfBandFileName);
+                        Product product = ProductIO.readProduct(brdfBandFilePath);
                         if (product != null) {
                             brdfProductList.add(product);
                             numProducts++;

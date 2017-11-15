@@ -110,7 +110,11 @@ public class SpectralDailyAccumulationOp extends Operator {
         final int resultArrayElements = (3 * numSdrBands) * (3 * numSdrBands) + 3 * numSdrBands + 1 + 1;
         resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
 
+        BeamLogManager.getSystemLogger().log(Level.INFO, "numSdrBands: " + numSdrBands);
+        BeamLogManager.getSystemLogger().log(Level.INFO, "singleBandIndex: " + singleBandIndex);
+        BeamLogManager.getSystemLogger().log(Level.INFO, "sdrBandNames[0]: " + sdrBandNames[0]);
         for (int k = 0; k < sourceProducts.length; k++) {
+            BeamLogManager.getSystemLogger().log(Level.INFO, "sourceProducts[k]: " + sourceProducts[k].getName());
             int sdrIndex = 0;
             for (int j = 0; j < numSdrBands; j++) {
                 sdrTiles[k][j] = getSourceTile(sourceProducts[k].getBand(sdrBandNames[sdrIndex++]), sourceRect);
