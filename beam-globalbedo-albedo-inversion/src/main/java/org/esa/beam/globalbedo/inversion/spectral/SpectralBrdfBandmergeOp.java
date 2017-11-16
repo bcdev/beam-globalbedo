@@ -8,6 +8,7 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.gpf.operators.standard.MergeOp;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -72,7 +73,7 @@ public class SpectralBrdfBandmergeOp extends Operator {
         Product targetProduct = mergeOp.getTargetProduct();
 
         for (Band band : targetProduct.getBands()) {
-            band.setNoDataValue(Float.NaN);
+            band.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             band.setNoDataValueUsed(true);
         }
 

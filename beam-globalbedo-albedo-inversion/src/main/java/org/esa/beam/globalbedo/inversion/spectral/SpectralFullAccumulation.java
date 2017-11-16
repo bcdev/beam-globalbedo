@@ -2,6 +2,7 @@ package org.esa.beam.globalbedo.inversion.spectral;
 
 import org.esa.beam.framework.gpf.OperatorException;
 import org.esa.beam.globalbedo.inversion.AccumulatorHolder;
+import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.FullAccumulator;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
@@ -31,7 +32,6 @@ public class SpectralFullAccumulation {
     private int rasterWidth;
     private int rasterHeight;
 
-    private String sdrRootDir;
     private String dailyAccRootDir;
     private String tile;
     private int year;
@@ -40,27 +40,21 @@ public class SpectralFullAccumulation {
 
     private int singleBandIndex;
 
-    private int subStartX;
-    private int subStartY;
+//    private int subStartX;
+//    private int subStartY;
 
     private boolean computeSnow;
 
-    private Logger logger;
-
     FullAccumulator result;
 
-    public SpectralFullAccumulation(int numSdrBands, int rasterWidth, int rasterHeight,
-                                    int subStartX, int subStartY,
-                                    String sdrRootDir, String dailyAccRootDir,
+    public SpectralFullAccumulation(int numSdrBands,
+                                    String dailyAccRootDir,
                                     int singleBandIndex, String tile,
                                     int year, int doy,
                                     int wings, boolean computeSnow) {
         this.numSdrBands = numSdrBands;
-        this.rasterWidth = rasterWidth;
-        this.rasterHeight = rasterHeight;
-        this.subStartX = subStartX;
-        this.subStartY = subStartY;
-        this.sdrRootDir = sdrRootDir;
+        this.rasterWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH;
+        this.rasterHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT;
         this.singleBandIndex = singleBandIndex;
         this.dailyAccRootDir = dailyAccRootDir;
         this.tile = tile;
@@ -77,15 +71,12 @@ public class SpectralFullAccumulation {
     }
 
     private void accumulate() throws OperatorException {
-        logger = BeamLogManager.getSystemLogger();
 
         // STEP 1: get Daily Accumulator input files...
         final String dailyAccDir = dailyAccRootDir + File.separator + "band_" + singleBandIndex;
-//        final String dailyAccDir = sdrRootDir + File.separator + "DailyAcc";
 
         AccumulatorHolder dailyAccumulators = SpectralIOUtils.getDailyAccumulator(dailyAccDir, numSdrBands,
                                                                                   doy, year, tile,
-                                                                                  subStartX, subStartY,
                                                                                   wings,
                                                                                   computeSnow, false);
 

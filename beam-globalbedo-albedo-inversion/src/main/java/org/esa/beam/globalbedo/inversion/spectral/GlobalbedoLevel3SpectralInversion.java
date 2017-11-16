@@ -25,9 +25,6 @@ import java.util.logging.Logger;
 @OperatorMetadata(alias = "ga.l3.inversion.spectral")
 public class GlobalbedoLevel3SpectralInversion extends Operator {
 
-    @Parameter(defaultValue = "", description = "Globalbedo SDR root directory")
-    private String sdrRootDir;
-
     @Parameter(defaultValue = "", description = "Daily acc binary files root directory")
     private String dailyAccRootDir;
 
@@ -43,52 +40,29 @@ public class GlobalbedoLevel3SpectralInversion extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    // for the moment we only accept original size (no division) or division into 4x4 subtiles
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
-            defaultValue = "1", valueSet = {"1", "4"})
-    private int subtileFactor;
-
-    @Parameter(description = "Sub tile start X", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
-    private int subStartX;
-
-    @Parameter(description = "Sub tile start Y", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
-    private int subStartY;
-
-    @Parameter(defaultValue = "1", interval = "[1,7]",
-            description = "Number of spectral bands (currently always 7 for standard MODIS spectral mapping")
-    private int numSdrBands;
-
-    @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
+    @Parameter(interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
-    int subtileWidth;
-    int subtileHeight;
 
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 
-        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH/subtileFactor;
-        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT/subtileFactor;
-
         SpectralInversionOp inversionOp = new SpectralInversionOp();
         inversionOp.setParameterDefaultValues();
-        Product dummySourceProduct = AlbedoInversionUtils.createDummySourceProduct(subtileWidth, subtileHeight);
+        Product dummySourceProduct =
+                AlbedoInversionUtils.createDummySourceProduct(AlbedoInversionConstants.MODIS_TILE_WIDTH,
+                                                              AlbedoInversionConstants.MODIS_TILE_HEIGHT);
         inversionOp.setSourceProduct("priorProduct", dummySourceProduct);
-        inversionOp.setParameter("sdrRootDir", sdrRootDir);
         inversionOp.setParameter("dailyAccRootDir", dailyAccRootDir);
         inversionOp.setParameter("year", year);
         inversionOp.setParameter("tile", tile);
         inversionOp.setParameter("doy", doy);
         inversionOp.setParameter("computeSnow", computeSnow);
-        inversionOp.setParameter("subStartX", subStartX);
-        inversionOp.setParameter("subStartY", subStartY);
-        inversionOp.setParameter("subtileFactor", subtileFactor);
-        inversionOp.setParameter("numSdrBands", numSdrBands);
         inversionOp.setParameter("singleBandIndex", singleBandIndex);
         Product inversionProduct = inversionOp.getTargetProduct();
 
-        inversionProduct.setGeoCoding(SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY));
+        inversionProduct.setGeoCoding(SpectralIOUtils.getSinusoidalGeocoding(tile));
 
         setTargetProduct(inversionProduct);
 

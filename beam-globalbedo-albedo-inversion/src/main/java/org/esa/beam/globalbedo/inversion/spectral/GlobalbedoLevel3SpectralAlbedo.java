@@ -9,11 +9,8 @@ import org.esa.beam.framework.gpf.OperatorSpi;
 import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.BrdfToAlbedoOp;
-import org.esa.beam.globalbedo.inversion.MergeBrdfOp;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
-import org.esa.beam.globalbedo.inversion.util.SouthPoleCorrectionOp;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
 
@@ -48,83 +45,35 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
     @Parameter(description = "DoY")
     private int doy;
 
-    @Parameter(defaultValue = "false", description = "Write merged BRDF product only (no albedo compuation)")
-    private boolean mergedProductOnly;
-
-    @Parameter(description = "Sub tile start X", valueSet = {"0", "300", "600", "900"})
-    private int subStartX;
-
-    @Parameter(description = "Sub tile start Y", valueSet = {"0", "300", "600", "900"})
-    private int subStartY;
+    @Parameter(defaultValue = "false", description = "Compute only snow pixels")
+    private boolean computeSnow;
 
 
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
-        final String subTileString = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-        final String brdfDir = inversionRootDir + File.separator;
-        final String brdfSnowDir = brdfDir + "Snow" + File.separator + year + File.separator + tile +
-                File.separator + subTileString;
-        final String brdfNoSnowDir = brdfDir + "NoSnow" + File.separator + year + File.separator + tile +
-                File.separator + subTileString;
 
-        logger.log(Level.INFO, "Searching for BRDF SNOW file in directory: '" + brdfSnowDir + "'...");
-        logger.log(Level.INFO, "Searching for BRDF NOSNOW file in directory: '" + brdfNoSnowDir + "'...");
+        final String snowDirName = computeSnow ? "Snow" : "NoSnow";
+        final String brdfDir = inversionRootDir + File.separator + snowDirName + File.separator + year + File.separator + tile;
 
-        Product brdfMergedProduct = null;
-        Product brdfSnowProduct;
-        Product brdfNoSnowProduct;
+        logger.log(Level.INFO, "Searching for BRDF file in directory: '" + brdfDir + "'...");
+
+        Product brdfProduct;
         try {
-            brdfSnowProduct = SpectralIOUtils.getSpectralBrdfProduct(brdfSnowDir, year, doy, true, subStartX, subStartY);
-            brdfNoSnowProduct = SpectralIOUtils.getSpectralBrdfProduct(brdfNoSnowDir, year, doy, false, subStartX, subStartY);
+            brdfProduct = SpectralIOUtils.getSpectralBrdfProduct(brdfDir, year, doy, true);
         } catch (IOException e) {
             throw new OperatorException("Cannot load spectral BRDF product: " + e.getMessage());
         }
 
-        if (brdfSnowProduct != null && brdfNoSnowProduct != null) {
-            // merge Snow/NoSnow products...
-            MergeSpectralBrdfOp mergeBrdfOp = new MergeSpectralBrdfOp();
-            mergeBrdfOp.setParameterDefaultValues();
-            mergeBrdfOp.setSourceProduct("snowProduct", brdfSnowProduct);
-            mergeBrdfOp.setSourceProduct("noSnowProduct", brdfNoSnowProduct);
-            brdfMergedProduct = mergeBrdfOp.getTargetProduct();
-        } else if (brdfSnowProduct != null) {
-            logger.log(Level.WARNING, "Found only 'Snow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
-            // only use Snow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfSnowProduct, 1.0f);
-        } else if (brdfNoSnowProduct != null) {
-            logger.log(Level.WARNING, "Found only 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
-            // only use NoSnow product...
-            brdfMergedProduct = copyFromSingleProduct(brdfNoSnowProduct, 0.0f);
-        } else {
-            logger.log(Level.WARNING, "Neither 'Snow' nor 'NoSnow' BRDF product for tile:" + tile + ", year: " +
-                    year + ", DoY: " + IOUtils.getDoyString(doy));
-        }
-
-        if (brdfMergedProduct != null) {
-            if (brdfMergedProduct.getGeoCoding() == null) {
-                final ModisTileGeoCoding sinusoidalSubtileGeocoding =
-                        SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY);
-                brdfMergedProduct.setGeoCoding(sinusoidalSubtileGeocoding);
-            }
-
-            if (mergedProductOnly) {
-                setTargetProduct(brdfMergedProduct);
-            } else {
-                // STEP 2: compute albedo from merged BRDF product...
-                SpectralBrdfToAlbedoOp albedoOp = new SpectralBrdfToAlbedoOp();
-                albedoOp.setParameterDefaultValues();
-                albedoOp.setSourceProduct("spectralBrdfProduct", brdfMergedProduct);
-                albedoOp.setParameter("doy", doy);
-                final Product albedoProduct = albedoOp.getTargetProduct();
-//                final ModisTileGeoCoding sinusoidalSubtileGeocoding =
-//                        SpectralIOUtils.getSinusoidalSubtileGeocoding(tile, subStartX, subStartY);
-//                albedoProduct.setGeoCoding(sinusoidalSubtileGeocoding);
-                ProductUtils.copyGeoCoding(brdfMergedProduct, albedoProduct);
-                setTargetProduct(albedoProduct);
-            }
+        if (brdfProduct != null) {
+            // compute albedo from BRDF product...
+            SpectralBrdfToAlbedoOp albedoOp = new SpectralBrdfToAlbedoOp();
+            albedoOp.setParameterDefaultValues();
+            albedoOp.setSourceProduct("spectralBrdfProduct", brdfProduct);
+            albedoOp.setParameter("doy", doy);
+            final Product albedoProduct = albedoOp.getTargetProduct();
+            ProductUtils.copyGeoCoding(brdfProduct, albedoProduct);
+            setTargetProduct(albedoProduct);
 
             logger.log(Level.INFO, "Finished albedo computation process for tile: " + tile + ", year: " + year + ", DoY: " +
                     IOUtils.getDoyString(doy));
@@ -133,25 +82,6 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
                     ", Doy: " + IOUtils.getDoyString(doy));
         }
     }
-
-    private Product copyFromSingleProduct(Product sourceProduct, float propNSampleConstantValue) {
-        final int width = sourceProduct.getSceneRasterWidth();
-        final int height = sourceProduct.getSceneRasterHeight();
-        Product targetProduct = new Product(sourceProduct.getName(), sourceProduct.getProductType(), width, height);
-        for (Band band : sourceProduct.getBands()) {
-            ProductUtils.copyBand(band.getName(), sourceProduct, targetProduct, true);
-        }
-        // we need to fill the 'Proportion_NSamples' band: 1.0 if only snow, 0.0 if only no snow
-        Band propNSamplesBand = targetProduct.addBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32);
-        BufferedImage bi = ConstantDescriptor.create((float) width, (float) height, new Float[]{propNSampleConstantValue},
-                                                     null).getAsBufferedImage();
-        propNSamplesBand.setSourceImage(bi);
-
-//        ProductUtils.copyGeoCoding(sourceProduct, targetProduct);
-        ProductUtils.copyMetadata(sourceProduct, targetProduct);
-        return targetProduct;
-    }
-
 
     public static class Spi extends OperatorSpi {
 

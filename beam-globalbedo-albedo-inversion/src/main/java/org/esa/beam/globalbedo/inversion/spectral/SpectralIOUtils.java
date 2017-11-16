@@ -17,10 +17,7 @@ import org.opengis.referencing.crs.CoordinateReferenceSystem;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 /**
@@ -59,11 +56,22 @@ public class SpectralIOUtils {
                                                                       Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[][] = new String[3 * numSdrBands][3 * numSdrBands];
 
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i / 3) + "_f" + (i % 3) + "_" +
-                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
+        // we want:
+        // VAR_b1_f0_b1_f0
+        // VAR_b1_f1_b1_f1
+        // VAR_b1_f2_b1_f2
+        // VAR_b2_f0_b2_f0
+        // VAR_b2_f1_b2_f1
+        // VAR_b2_f2_b2_f2
+        // ...
+        // VAR_b7_f0_b7_f0
+        // VAR_b7_f1_b7_f1
+        // VAR_b7_f2_b7_f2
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 3; j++) {
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i) + "_f" + j + "_" +
+                        spectralWaveBandsMap.get(i) + "_f" + j;
+                System.out.println("i, j, bandNames = " + i + "," + j + ", " + bandNames[i][j]);
             }
         }
 
@@ -74,10 +82,7 @@ public class SpectralIOUtils {
         String bandNames[][] = new String[3][3];
 
         for (int i = 0; i < 3; i++) {
-            // only UR triangle matrix: 0.5*(21*21 - diag) + diag = 0.5*420 + 21 = 231
             for (int j = i; j < 3; j++) {
-//                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f0_" +
-//                        spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
                 bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(0) + "_f" + (j % 3) + "_" +
                         spectralWaveBandsMap.get(j / 3) + "_f" + (j % 3);
             }
@@ -87,7 +92,6 @@ public class SpectralIOUtils {
     }
 
     public static Product[] getSpectralAccumulationInputProducts(String sdrRootDir, String[] sensors,
-                                                                 int numSdrBands, int subStartX, int subStartY,
                                                                  String tile, int year, int doy) throws IOException {
         final String daystring_yyyymmdd = AlbedoInversionUtils.getDateFromDoy(year, doy);
         final String daystring_yyyy_mm_dd = AlbedoInversionUtils.getDateFromDoy(year, doy, "yyyy_MM_dd");  // for AVHRR products
@@ -98,17 +102,11 @@ public class SpectralIOUtils {
                 int numProducts = 0;
                 String sensorBbdrDirName =
                         sdrRootDir + File.separator + sensor + File.separator + year + File.separator + tile;
-                String subTileDir = null;
-                if (numSdrBands > 1) {
-                    subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-                    sensorBbdrDirName = sensorBbdrDirName.concat(subTileDir);
-                }
                 final File sensorBbdrDir = new File(sensorBbdrDirName);
                 if (sensorBbdrDir.exists()) {
                     final String[] sensorBbdrFiles = sensorBbdrDir.list();
                     for (String sensorBbdrFile : sensorBbdrFiles) {
                         if ((sensorBbdrFile.endsWith(".nc") || sensorBbdrFile.endsWith(".nc.gz")) &&
-                                (subTileDir == null || sensorBbdrFile.contains(subTileDir)) &&
                                 (sensorBbdrFile.contains(daystring_yyyymmdd) || sensorBbdrFile.contains(daystring_yyyy_mm_dd))) {
                             final String sourceProductFileName = sensorBbdrDirName + File.separator + sensorBbdrFile;
                             Product product = ProductIO.readProduct(sourceProductFileName);
@@ -162,13 +160,19 @@ public class SpectralIOUtils {
                     (Level.INFO, "Collecting spectral BRDF band products for tile/year/doy: " +
                             tile + "/" + year + "/" + IOUtils.getDoyString(doy) + ": " + numProducts + " products added.");
         }
+        Collections.sort(brdfProductList, new Comparator<Product>() {
+            @Override
+            public int compare(final Product p1, final Product p2) {
+                return p1.getName().compareTo(p2.getName());
+            }
+        } );
+
         return brdfProductList.toArray(new Product[brdfProductList.size()]);
     }
 
     public static AccumulatorHolder getDailyAccumulator(String accumulatorRootDir,
                                                         int numSdrBands,
                                                         int doy, int year, String tile,
-                                                        int subStartX, int subStartY,
                                                         int wings,
                                                         boolean computeSnow,
                                                         boolean computeSeaice) {
@@ -178,11 +182,9 @@ public class SpectralIOUtils {
         final List<String> albedoInputProductBinaryFileList = getDailyAccumulatorBinaryFileNames(accumulatorRootDir,
                                                                                                  numSdrBands,
                                                                                                  doy, year, tile,
-                                                                                                 subStartX, subStartY,
                                                                                                  wings,
                                                                                                  computeSnow);
 
-        final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
 
         if (albedoInputProductBinaryFileList.size() > 0) {
             accumulatorHolder = new AccumulatorHolder();
@@ -204,9 +206,6 @@ public class SpectralIOUtils {
                     productYearRootDir = accumulatorRootDir.concat(
                             File.separator + thisProductYear + File.separator + tile + File.separator + "NoSnow");
                 }
-                if (numSdrBands > 1) {
-                    productYearRootDir = productYearRootDir.concat(File.separator + subTileDir);
-                }
 
                 String sourceProductBinaryFileName = productYearRootDir + File.separator + albedoInputProductBinaryName;
                 albedoInputProductBinaryFilenames[binaryProductIndex] = sourceProductBinaryFileName;
@@ -222,7 +221,7 @@ public class SpectralIOUtils {
                                                            int numSdrBands,
                                                            final int doy,
                                                            final int year, String tile,
-                                                           final int subStartX, final int subStartY,
+//                                                           final int subStartX, final int subStartY,
                                                            int wings,
                                                            boolean computeSnow) {
         List<String> accumulatorNameList = new ArrayList<>();
@@ -254,8 +253,6 @@ public class SpectralIOUtils {
 //        int doy = doyIn + 8; // 'MODIS day'
 //        doy = Math.min(doy + 8, 365); // at least we need to set this limit
 
-        final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-
         // fill the name list year by year...
         for (String accProductYear : accumulatorYears) {
             String thisYearsRootDir;
@@ -265,9 +262,6 @@ public class SpectralIOUtils {
             } else {
                 thisYearsRootDir = accumulatorRootDir.concat(
                         File.separator + accProductYear + File.separator + tile + File.separator + "NoSnow");
-            }
-            if (numSdrBands > 1) {
-                thisYearsRootDir = thisYearsRootDir.concat(File.separator + subTileDir);
             }
             final String[] thisYearAccumulatorFiles = (new File(thisYearsRootDir)).list(accumulatorNameFilter);
 
@@ -285,11 +279,11 @@ public class SpectralIOUtils {
             }
         }
 
-        return sortAccumulatorFileList(accumulatorNameList, year, doy, numSdrBands, subTileDir);
+        return sortAccumulatorFileList(accumulatorNameList, year, doy, numSdrBands);
     }
 
     static List<String> sortAccumulatorFileList(List<String> accumulatorNameList, int refYear, int refDoy,
-                                                int numSdrBands, String subTileDir) {
+                                                int numSdrBands) {
         // we want to sort from center:
         // e.g. reference date: 2005121
         // -->  matrices_2005121.bin, matrices_2005122.bin, matrices_2005120.bin, matrices_2005123.bin, , matrices_2005119.bin...
@@ -300,7 +294,7 @@ public class SpectralIOUtils {
         int doyPlus = refDoy;
         int doyMinus = refDoy;
 
-        final String accExt = numSdrBands > 1 ? "_" + subTileDir + ".bin" : ".bin";
+        final String accExt = ".bin";
 
         while (doyMinus > 0 && doyPlus < 366) {
             String accName = "matrices_" + Integer.toString(refYear) + String.format("%03d", doyMinus) + accExt;
@@ -448,7 +442,7 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
-    public static ModisTileGeoCoding getSinusoidalSubtileGeocoding(String tile, int startX, int startY) {
+    public static ModisTileGeoCoding getSinusoidalGeocoding(String tile) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);
         if (tileIndex == -1) {
@@ -457,8 +451,8 @@ public class SpectralIOUtils {
 
         final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X;
         final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y;
-        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex) + startX * pixelSizeX;
-        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex) - startY * pixelSizeY;
+        final double easting = modisTileCoordinates.getUpperLeftX(tileIndex);
+        final double northing = modisTileCoordinates.getUpperLeftY(tileIndex);
         final String crsString = AlbedoInversionConstants.MODIS_SIN_PROJECTION_CRS_STRING;
         ModisTileGeoCoding geoCoding;
         try {
@@ -470,11 +464,9 @@ public class SpectralIOUtils {
         return geoCoding;
     }
 
-    public static Product getSpectralBrdfProduct(String brdfDir, int year, int doy, boolean isSnow,
-                                                 int subStartX, int subStartY) throws IOException {
+    public static Product getSpectralBrdfProduct(String brdfDir, int year, int doy, boolean isSnow) throws IOException {
         final String[] brdfFiles = (new File(brdfDir)).list();
-        final String subTileString = Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-        final List<String> brdfFileList = getSpectralBrdfProductNames(brdfFiles, isSnow, subTileString);
+        final List<String> brdfFileList = getSpectralBrdfProductNames(brdfFiles, isSnow);
 
         final String doyString = IOUtils.getDoyString(doy);
 
@@ -488,17 +480,15 @@ public class SpectralIOUtils {
         return null;
     }
 
-    private static List<String> getSpectralBrdfProductNames(String[] brdfFiles, boolean snow, String subTileString) {
+    private static List<String> getSpectralBrdfProductNames(String[] brdfFiles, boolean snow) {
         List<String> brdfFileList = new ArrayList<>();
         for (String s : brdfFiles) {
-            if ((!snow && s.contains(".NoSnow") && s.contains(subTileString) && s.endsWith(".nc")) ||
-                    (snow && s.contains(".Snow") && s.contains(subTileString) && s.endsWith(".nc"))) {
+            if ((!snow && s.contains(".NoSnow") && s.endsWith(".nc")) || (snow && s.contains(".Snow") && s.endsWith(".nc"))) {
                 brdfFileList.add(s);
             }
         }
         Collections.sort(brdfFileList);
         return brdfFileList;
     }
-
 
 }

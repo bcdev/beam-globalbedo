@@ -1,7 +1,6 @@
 package org.esa.beam.globalbedo.inversion.spectral;
 
 import junit.framework.TestCase;
-import org.esa.beam.globalbedo.inversion.util.IOUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -96,27 +95,25 @@ public class SpectralInversionTest extends TestCase {
     }
 
     public void testGetInversionUncertaintyBandNames() {
-        int numSdrBands = 3;
-        SpectralInversionOp.setupSpectralWaveBandsMap(numSdrBands);
+        int singleBandIndex = 3;
         String[][] uncertaintyBandNames =
-                SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
+                SpectralIOUtils.getSpectralInversionUncertaintySingleBandNames(getSingleSpectralWaveBandMap(singleBandIndex));
         assertNotNull(uncertaintyBandNames);
-        assertEquals(9, uncertaintyBandNames.length);
-        for (int i = 0; i < 9; i++) {
-            assertEquals(9, uncertaintyBandNames[i].length);
+        assertEquals(3, uncertaintyBandNames.length);
+        for (int i = 0; i < 3; i++) {
+            assertEquals(3, uncertaintyBandNames[i].length);
         }
-        assertEquals("VAR_b1_f0_b1_f0", uncertaintyBandNames[0][0]);
-        assertEquals("VAR_b1_f1_b3_f1", uncertaintyBandNames[1][7]);
-        assertEquals("VAR_b2_f0_b3_f0", uncertaintyBandNames[3][6]);
-        assertEquals("VAR_b2_f1_b2_f1", uncertaintyBandNames[4][4]);
-        assertEquals("VAR_b2_f2_b2_f2", uncertaintyBandNames[5][5]);
-        assertEquals("VAR_b2_f2_b3_f0", uncertaintyBandNames[5][6]);
-        assertEquals("VAR_b3_f0_b3_f1", uncertaintyBandNames[6][7]);
-        assertEquals("VAR_b3_f1_b3_f2", uncertaintyBandNames[7][8]);
-        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[8][8]);
+        assertEquals("VAR_b3_f0_b3_f0", uncertaintyBandNames[0][0]);
+        assertEquals("VAR_b3_f1_b3_f1", uncertaintyBandNames[0][1]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[0][2]);
+        assertNull(uncertaintyBandNames[1][0]);
+        assertEquals("VAR_b3_f1_b3_f1", uncertaintyBandNames[1][1]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[1][2]);
+        assertNull(uncertaintyBandNames[2][0]);
+        assertNull(uncertaintyBandNames[2][1]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[2][2]);
 
-        numSdrBands = 7;
-        SpectralInversionOp.setupSpectralWaveBandsMap(numSdrBands);
+        int numSdrBands = 7;
         uncertaintyBandNames =
                 SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, getSpectralWaveBandsMap(numSdrBands));
         assertNotNull(uncertaintyBandNames);
@@ -125,23 +122,11 @@ public class SpectralInversionTest extends TestCase {
             assertEquals(21, uncertaintyBandNames[i].length);
         }
         assertEquals("VAR_b1_f0_b1_f0", uncertaintyBandNames[0][0]);
-        assertEquals("VAR_b1_f1_b3_f1", uncertaintyBandNames[1][7]);
-        assertEquals("VAR_b2_f0_b3_f0", uncertaintyBandNames[3][6]);
-        assertEquals("VAR_b2_f1_b2_f1", uncertaintyBandNames[4][4]);
-        assertEquals("VAR_b2_f2_b2_f2", uncertaintyBandNames[5][5]);
-        assertEquals("VAR_b2_f2_b3_f0", uncertaintyBandNames[5][6]);
-        assertEquals("VAR_b3_f0_b3_f1", uncertaintyBandNames[6][7]);
-        assertEquals("VAR_b3_f1_b3_f2", uncertaintyBandNames[7][8]);
-        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[8][8]);
-        assertEquals("VAR_b4_f1_b4_f2", uncertaintyBandNames[10][11]);
-        assertEquals("VAR_b5_f0_b5_f1", uncertaintyBandNames[12][13]);
-        assertEquals("VAR_b5_f1_b5_f1", uncertaintyBandNames[13][13]);
-        assertEquals("VAR_b6_f0_b6_f1", uncertaintyBandNames[15][16]);
-        assertEquals("VAR_b6_f1_b7_f0", uncertaintyBandNames[16][18]);
-        assertEquals("VAR_b7_f0_b7_f1", uncertaintyBandNames[18][19]);
-        assertEquals("VAR_b7_f1_b7_f1", uncertaintyBandNames[19][19]);
-        assertEquals("VAR_b7_f1_b7_f2", uncertaintyBandNames[19][20]);
-        assertEquals("VAR_b7_f2_b7_f2", uncertaintyBandNames[20][20]);
+        assertEquals("VAR_b2_f2_b2_f2", uncertaintyBandNames[1][2]);
+        assertEquals("VAR_b3_f2_b3_f2", uncertaintyBandNames[2][2]);
+        assertEquals("VAR_b5_f1_b5_f1", uncertaintyBandNames[4][1]);
+        assertEquals("VAR_b6_f0_b6_f0", uncertaintyBandNames[5][0]);
+        assertEquals("VAR_b7_f2_b7_f2", uncertaintyBandNames[6][2]);
 
     }
 
@@ -150,6 +135,12 @@ public class SpectralInversionTest extends TestCase {
         for (int i = 0; i < numSdrBands; i++) {
             map.put(i, "b" + (i + 1));
         }
+        return map;
+    }
+
+    private static Map<Integer, String> getSingleSpectralWaveBandMap(int singleBandIndex) {
+        Map<Integer, String> map = new HashMap<>();
+        map.put(0, "b" + singleBandIndex);
         return map;
     }
 }

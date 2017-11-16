@@ -36,21 +36,11 @@ public class SpectralDailyAccumulationOp extends Operator {
     @SourceProducts(description = "SDR source products")
     private Product[] sourceProducts;
 
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size",
-            defaultValue = "1", valueSet = {"1", "4"})
-    private int subtileFactor;
-
-    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
-    private int numSdrBands;
-
     @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
-
-    @Parameter(defaultValue = "false", description = "Debug - run additional parts of code if needed.")
-    private boolean debug;
 
     @Parameter(description = "Daily accumulator binary file")
     private File dailyAccumulatorBinaryFile;
@@ -68,34 +58,29 @@ public class SpectralDailyAccumulationOp extends Operator {
     private Tile[] snowMaskTile;
 
     private int currentSourceProductIndex;
-    private int numSigmaSdrBands;
 
-    private int[] sigmaSdrDiagonalIndices;
-    private int[] sigmaSdrURIndices;
+    private int numSdrBands = 1;     // no longer a parameter
 
-    int subtileWidth;
-    int subtileHeight;
 
     @Override
     public void initialize() throws OperatorException {
 
-        subtileWidth = AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor;
-        subtileHeight = AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor;
-
-        final Rectangle sourceRect = new Rectangle(0, 0, subtileWidth, subtileHeight);
+        final Rectangle sourceRect = new Rectangle(0, 0,
+                                                   AlbedoInversionConstants.MODIS_TILE_WIDTH,
+                                                   AlbedoInversionConstants.MODIS_TILE_HEIGHT);
 
         sdrTiles = new Tile[sourceProducts.length][numSdrBands];
         // (7*7 - 7)/2  + 7 = 28 sigma bands default (UR matrix)
 //        numSigmaSdrBands = (numSdrBands * numSdrBands - numSdrBands)/2 + numSdrBands;
         // we need only the stdevs, no cross correlations?!
-        numSigmaSdrBands = numSdrBands;
+        int numSigmaSdrBands = numSdrBands;
         sigmaSdrTiles = new Tile[sourceProducts.length][numSigmaSdrBands];
 
         String[] sdrBandNames = new String[numSdrBands];
         String[] sigmaSdrBandNames = new String[numSdrBands];
         if (numSdrBands == 1) {
-            sdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_NAME_PREFIX + singleBandIndex;
-            sigmaSdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + singleBandIndex;
+            sdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_NAME_PREFIX + (singleBandIndex - 1);
+            sigmaSdrBandNames[0] = AlbedoInversionConstants.MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX + (singleBandIndex - 1);
         } else {
             sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
             sigmaSdrBandNames = SpectralInversionUtils.getSigmaSdrBandNames(numSigmaSdrBands);
@@ -105,10 +90,13 @@ public class SpectralDailyAccumulationOp extends Operator {
         kgeoTile = new Tile[sourceProducts.length];
         snowMaskTile = new Tile[sourceProducts.length];
 
-        // we have:
+        // originally we had:
         // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
+        // that is why we now process single bands subsequently (numSdrBands = 1)
         final int resultArrayElements = (3 * numSdrBands) * (3 * numSdrBands) + 3 * numSdrBands + 1 + 1;
-        resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
+        resultArray = new float[resultArrayElements]
+                [AlbedoInversionConstants.MODIS_TILE_WIDTH]
+                [AlbedoInversionConstants.MODIS_TILE_HEIGHT];
 
         BeamLogManager.getSystemLogger().log(Level.INFO, "numSdrBands: " + numSdrBands);
         BeamLogManager.getSystemLogger().log(Level.INFO, "singleBandIndex: " + singleBandIndex);
@@ -131,8 +119,8 @@ public class SpectralDailyAccumulationOp extends Operator {
         // per pixel, accumulate the matrices from the single products...
         // Since we loop over all source products, we need a sequential and thread-safe approach, so we do not
         // implement computeTile.
-        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH / subtileFactor; x++) {
-            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT / subtileFactor; y++) {
+        for (int x = 0; x < AlbedoInversionConstants.MODIS_TILE_WIDTH; x++) {
+            for (int y = 0; y < AlbedoInversionConstants.MODIS_TILE_HEIGHT; y++) {
                 accumulate(x, y);
             }
         }
@@ -171,7 +159,6 @@ public class SpectralDailyAccumulationOp extends Operator {
         // check validity of ALL inputs used:
         final Matrix sdr = getSDR(x, y);
         final double[] stdev = getSD(x, y);
-//        final double[] correlation = getCorrelation(x, y);
         final Matrix kernels = getKernels(x, y);
         if (isSnowFilter(x, y) || DailyAccumulationUtils.isAccumulatorInputInvalid(sdr, stdev, kernels)) {
             return getZeroAccumulator();
@@ -253,37 +240,6 @@ public class SpectralDailyAccumulationOp extends Operator {
         return SD;
     }
 
-
-//    private double[] getSD(int x, int y) {
-//        double[] SD = new double[numSdrBands];
-//        // sigma_00 xx xx xx xx xx xx
-//        // sigma_   01 xx xx xx xx xx
-//        // sigma_      02 xx xx xx xx
-//        // sigma_         03 xx xx xx
-//        // sigma_            04 xx xx
-//        // sigma_               05 xx
-//        // sigma_                  06
-//        for (int j = 0; j < numSdrBands; j++) {
-//            SD[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
-//        }
-//        return SD;
-//    }
-
-//    private double[] getCorrelation(int x, int y) {
-//        double[] correlation = new double[numSigmaSdrBands - numSdrBands];
-//        // sigma_xx 01 02 03 04 05 06
-//        // sigma_   xx 02 03 04 05 06
-//        // sigma_      xx 03 04 05 06
-//        // sigma_         xx 04 05 06
-//        // sigma_            xx 05 06
-//        // sigma_               xx 06
-//        // sigma_                  xx
-//        for (int j = 0; j < sigmaSdrURIndices.length; j++) {
-//            correlation[j] = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrURIndices[j]].getSampleDouble(x, y);
-//        }
-//        return correlation;
-//    }
-
     private void fillBinaryResultArray(Accumulator accumulator, int x, int y) {
         int offset = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
@@ -329,16 +285,6 @@ public class SpectralDailyAccumulationOp extends Operator {
         return ((computeSnow && !(snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
                 (!computeSnow && (snowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
-
-//    private boolean isSDFilter(int x, int y) {
-//        for (int j = 0; j < numSdrBands; j++) {
-//            final double sigmaSdr = sigmaSdrTiles[currentSourceProductIndex][sigmaSdrDiagonalIndices[j]].getSampleDouble(x, y);
-//            if (sigmaSdr == 0.0 || !AlbedoInversionUtils.isValid(sigmaSdr) || sigmaSdr == 9999.0) {
-//                return true;
-//            }
-//        }
-//        return false;
-//    }
 
 
     public static class Spi extends OperatorSpi {
