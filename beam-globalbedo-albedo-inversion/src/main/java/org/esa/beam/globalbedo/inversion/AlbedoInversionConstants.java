@@ -34,6 +34,7 @@ public class AlbedoInversionConstants {
     public final static String ACC_MASK_NAME = "mask";
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME_OLD = "Days_to_the_Closest_Sample";
     public static final String ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME = "Time_to_the_Closest_Sample";    // for CEMS todo: generalize!!
+    public static final String PRIOR_VALID_PIXEL_FLAG_NAME = "Prior_Valid_Pixel_Flag";    // for CEMS todo: generalize!!
 
     public final static String MODIS_SPECTRAL_SDR_NAME_PREFIX = "SDR_";  // todo: check with Said's interface
     public final static String MODIS_SPECTRAL_SDR_SIGMA_NAME_PREFIX = "SDR_SIGMA_";  // todo: check with Said's interface
