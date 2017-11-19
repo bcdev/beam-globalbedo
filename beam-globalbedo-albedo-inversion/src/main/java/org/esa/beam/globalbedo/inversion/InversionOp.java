@@ -53,9 +53,10 @@ public class InversionOp extends PixelOperator {
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 2;
     private static final int TRG_GOODNESS_OF_FIT = 3;
     private static final int TRG_DAYS_TO_THE_CLOSEST_SAMPLE = 4;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_1 = 5;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_2 = 6;
-    private static final int TRG_GOODNESS_OF_FIT_TERM_3 = 7;
+    private static final int TRG_PRIOR_VALID_PIXEL_FLAG = 5;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_1 = 6;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_2 = 7;
+    private static final int TRG_GOODNESS_OF_FIT_TERM_3 = 8;
 
     private static final String[] PARAMETER_BAND_NAMES = IOUtils.getInversionParameterBandNames();
     private static final String[][] UNCERTAINTY_BAND_NAMES = IOUtils.getInversionUncertaintyBandNames();
@@ -175,12 +176,14 @@ public class InversionOp extends PixelOperator {
         Band bInvWeighNumSampl = productConfigurer.addBand(INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bAccDaysClSampl = productConfigurer.addBand(ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         Band bInvGoodnessFit = productConfigurer.addBand(INV_GOODNESS_OF_FIT_BAND_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        Band priorValidPixelFlagBand = productConfigurer.addBand(PRIOR_VALID_PIXEL_FLAG_NAME, ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         if (computeSeaice) {
             bInvEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvRelEntr.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvWeighNumSampl.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bAccDaysClSampl.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
             bInvGoodnessFit.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
+            priorValidPixelFlagBand.setValidPixelExpression(AlbedoInversionConstants.SEAICE_ALBEDO_VALID_PIXEL_EXPRESSION);
         }
 
         for (Band b : getTargetProduct().getBands()) {
@@ -244,6 +247,7 @@ public class InversionOp extends PixelOperator {
         configurator.defineSample(offset + TRG_WEIGHTED_NUM_SAMPLES, INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME);
         configurator.defineSample(offset + TRG_GOODNESS_OF_FIT, INV_GOODNESS_OF_FIT_BAND_NAME);
         configurator.defineSample(offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE, ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME);
+        configurator.defineSample(offset + TRG_PRIOR_VALID_PIXEL_FLAG, PRIOR_VALID_PIXEL_FLAG_NAME);
     }
 
     @Override
@@ -267,10 +271,12 @@ public class InversionOp extends PixelOperator {
         }
 
         double maskPrior = 1.0;
+        double priorValidPixelFlag = 0;
         Prior prior = null;
         if (usePrior) {
             prior = Prior.createForInversion(sourceSamples, priorScaleFactor, computeSnow);
             maskPrior = prior.getMask();
+            priorValidPixelFlag = prior.getPriorValidPixelFlag();
         }
 
 //        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
@@ -282,6 +288,7 @@ public class InversionOp extends PixelOperator {
 //            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
 //            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
 //            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "priorValidPixelFlag = " + priorValidPixelFlag);
 //            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
 //        }
 
@@ -381,7 +388,7 @@ public class InversionOp extends PixelOperator {
         // we have the final result - fill target samples...
         fillTargetSamples(targetSamples,
                           parameters, uncertainties, entropy, relEntropy,
-                          maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample);
+                          maskAcc, goodnessOfFit, goodnessOfFitTerms, daysToTheClosestSample, priorValidPixelFlag);
     }
 
     // Python breadboard:
@@ -438,7 +445,7 @@ public class InversionOp extends PixelOperator {
                                    double weightedNumberOfSamples,
                                    double goodnessOfFit,
                                    double[] goodnessOfFitTerms,
-                                   float daysToTheClosestSample) {
+                                   float daysToTheClosestSample, double priorValidPixelFlag) {
 
         // parameters
         int index = 0;
@@ -472,6 +479,7 @@ public class InversionOp extends PixelOperator {
         targetSamples[offset + TRG_WEIGHTED_NUM_SAMPLES].set(weightedNumberOfSamples);
         targetSamples[offset + TRG_GOODNESS_OF_FIT].set(goodnessOfFit);
         targetSamples[offset + TRG_DAYS_TO_THE_CLOSEST_SAMPLE].set(daysToTheClosestSample);
+        targetSamples[offset + TRG_PRIOR_VALID_PIXEL_FLAG].set(priorValidPixelFlag);
     }
 
 

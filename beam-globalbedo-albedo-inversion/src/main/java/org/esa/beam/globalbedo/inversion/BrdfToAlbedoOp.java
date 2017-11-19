@@ -48,8 +48,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
     private static final int SRC_REL_ENTROPY = 1;
     private static final int SRC_WEIGHTED_NUM_SAMPLES = 2;
     private static final int SRC_DAYS_CLOSEST_SAMPLE = 3;
-    private static final int SRC_GOODNESS_OF_FIT = 4;
-    private static final int SRC_PROPORTION_NSAMPLE = 5;
+    private static final int SRC_PRIOR_VALID_PIXEL_FLAG = 4;
+    private static final int SRC_GOODNESS_OF_FIT = 5;
+    private static final int SRC_PROPORTION_NSAMPLE = 6;
 
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] bhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -60,6 +61,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
+    private String priorValidPixelFlagName;
     private String goodnessOfFitBandName;
 //    private String snowFractionBandName;
     private String dataMaskBandName;
@@ -342,6 +344,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         targetProduct.addBand(weightedNumberOfSamplesBandName, ProductData.TYPE_FLOAT32);
 
+        priorValidPixelFlagName= AlbedoInversionConstants.PRIOR_VALID_PIXEL_FLAG_NAME;
+        targetProduct.addBand(priorValidPixelFlagName, ProductData.TYPE_FLOAT32);
+
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
 
@@ -414,6 +419,9 @@ public class BrdfToAlbedoOp extends PixelOperator {
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES,
                 weightedNumberOfSamplesBandName, brdfMergedProduct);
         configurator.defineSample(
+                SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PRIOR_VALID_PIXEL_FLAG,
+                AlbedoInversionConstants.PRIOR_VALID_PIXEL_FLAG_NAME, brdfMergedProduct);
+        configurator.defineSample(
                 SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_DAYS_CLOSEST_SAMPLE,
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, brdfMergedProduct);
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
@@ -473,6 +481,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
+        configurator.defineSample(index++, priorValidPixelFlagName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
 //        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {

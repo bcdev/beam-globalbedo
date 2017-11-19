@@ -33,12 +33,6 @@ public class SpectralAccumulator {
      */
     public static SpectralAccumulator createForInversion(float[][][] sumMatrices, int x, int y, int numWaveBands) {
 
-        // from daily accumulation:
-        // we have:
-        // (3*7) * (3*7) + 3*7 + 1 + 1= 464 elements to store in daily acc :-(
-        // final int resultArrayElements =  (3*7) * (3*7) + 3*7 + 1 + 1;
-        // resultArray = new float[resultArrayElements][subtileWidth][subtileHeight];
-
         Matrix M = new Matrix(3 * numWaveBands,
                               3 * numWaveBands);
         Matrix V = new Matrix(3 * numWaveBands, 1);

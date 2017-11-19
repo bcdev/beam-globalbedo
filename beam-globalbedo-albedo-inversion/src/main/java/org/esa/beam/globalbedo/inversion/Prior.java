@@ -17,12 +17,14 @@ public class Prior {
     private Matrix V;
     private double mask;
     private Matrix parameters;
+    private double priorValidPixelFlag;
 
-    public Prior(Matrix m, Matrix v, double mask, Matrix parameters) {
+    public Prior(Matrix m, Matrix v, double mask, Matrix parameters, double priorValidPixelFlag) {
         this.M = m;
         this.V = v;
         this.mask = mask;
         this.parameters = parameters;
+        this.priorValidPixelFlag = priorValidPixelFlag;
     }
 
     /**
@@ -92,8 +94,10 @@ public class Prior {
         mask = 1.0;
         LUDecomposition lud = new LUDecomposition(C);
         // first check if pixel is regarded as valid
-        boolean isValidPixel = validatePixel(computeSnow, priorSnowFraction, priorMean);
-        if (isValidPixel) {
+//        boolean isValidPixel = validatePixel(computeSnow, priorSnowFraction, priorMean);
+        double priorValidPixelFlag = validatePixel(computeSnow, priorSnowFraction, priorMean);
+//        if (isValidPixel) {
+        if (priorValidPixelFlag == 0) {
             // # Calculate C inverse
             // simplified condition (GL, 20110407)
             if (lud.isNonsingular()) {
@@ -108,7 +112,7 @@ public class Prior {
             mask = 0.0;
         }
 
-        return new Prior(inverseC, inverseC_F, mask, priorMean);
+        return new Prior(inverseC, inverseC_F, mask, priorMean, priorValidPixelFlag);
     }
 
     private static void setInverseC_F(Matrix inverseC, Matrix inverseC_F, Matrix priorMean) {
@@ -122,23 +126,54 @@ public class Prior {
         }
     }
 
-    private static boolean validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
-        boolean processPixel = true;
+//    private static boolean validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
+//        boolean processPixel = true;
+//        int index = 0;
+//        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+//            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+////                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+//                // 20171107: allow f-parameters > 1.0 to avoid gaps in snow processing (i.e. Antarctzica, Greenland)
+//                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0;
+//                final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
+//                        (!computeSnow && priorSnowFraction >= 0.93);
+//                if (priorMeanNotOk || priorSnowFractionNotOk) {
+//                    processPixel = false;
+//                    break;
+//                }
+//                index++;
+//            }
+//        }
+//        return processPixel;
+//    }
+
+    private static int validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
+        int returnValue = 0;
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                final boolean priorMeanNotOk = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+//                final boolean priorMeanTooLow = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
+                // 20171107: allow f-parameters > 1.0 to avoid gaps in snow processing (i.e. Antarctzica, Greenland)
+                final boolean priorMeanTooLow = priorMean.get(index, 0) <= 0.0;
+                final boolean priorMeanTooHigh = priorMean.get(index, 0) > 1.0;
                 final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
                         (!computeSnow && priorSnowFraction >= 0.93);
-                if (priorMeanNotOk || priorSnowFractionNotOk) {
-                    processPixel = false;
+
+                if (priorSnowFractionNotOk) {
+                    returnValue = -2;
+                    break;
+                } else if (priorMeanTooLow) {
+                    returnValue = -1;
+                    break;
+                } else if (priorMeanTooHigh) {
+                    returnValue = 1;
                     break;
                 }
                 index++;
             }
         }
-        return processPixel;
+        return returnValue;
     }
+
 
     public Matrix getM() {
         return M;
@@ -156,4 +191,7 @@ public class Prior {
         return parameters;
     }
 
+    public double getPriorValidPixelFlag() {
+        return priorValidPixelFlag;
+    }
 }

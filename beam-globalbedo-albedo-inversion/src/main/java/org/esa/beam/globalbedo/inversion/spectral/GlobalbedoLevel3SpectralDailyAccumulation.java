@@ -32,6 +32,9 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
     @Parameter(defaultValue = "", description = "SDR root directory")
     private String sdrRootDir;
 
+    @Parameter(defaultValue = "", description = "Daily acc binary files root directory")
+    private String dailyAccRootDir;
+
     @Parameter(label = "Sensors to ingest in BRDF retrieval", defaultValue = "MERIS,VGT")
     private String[] sensors;
 
@@ -44,54 +47,33 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
     @Parameter(description = "Day of Year", interval = "[1,366]")
     private int doy;
 
-    // for the moment we only accept original size (no division) or division into 4x4 subtiles
-    @Parameter(description = "Sub tiling factor (e.g. 4 for 300x300 subtile size)",
-            defaultValue = "1", valueSet = {"1", "4"})
-    private int subtileFactor;
-
-    @Parameter(description = "Sub tile start X", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
-    private int subStartX;
-
-    @Parameter(description = "Sub tile start Y", defaultValue = "0", valueSet = {"0", "300", "600", "900"})
-    private int subStartY;
-
-
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "1", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
-    private int numSdrBands;
-
-    @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
-    private int singleBandIndex;    // todo: consider chemistry bands
+    @Parameter(interval = "[1,7]", description = "SDR band index")
+    private int singleBandIndex;
 
 
     @Override
     public void initialize() throws OperatorException {
         Logger logger = BeamLogManager.getSystemLogger();
 
-        final String subTileDir = "SUB_" + Integer.toString(subStartX) + "_" + Integer.toString(subStartY);
-
         // STEP 1: get SDR input product list...
         Product[] inputProducts;
         try {
-            inputProducts = SpectralIOUtils.getSpectralAccumulationInputProducts(sdrRootDir, sensors, numSdrBands,
-                                                                                 subStartX, subStartY,
+            inputProducts = SpectralIOUtils.getSpectralAccumulationInputProducts(sdrRootDir, sensors,
                                                                                  tile, year, doy);
         } catch (IOException e) {
             throw new OperatorException("Daily Accumulator: Cannot get list of SDR input products: " + e.getMessage());
         }
 
         if (inputProducts.length > 0) {
-            String dailyAccumulatorDir = sdrRootDir + File.separator + "DailyAcc"
+            String dailyAccumulatorDir = dailyAccRootDir + File.separator + "band_" + singleBandIndex
                     + File.separator + year + File.separator + tile;
             if (computeSnow) {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "Snow" + File.separator);
             } else {
                 dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + "NoSnow" + File.separator);
-            }
-            if (numSdrBands > 1) {
-                dailyAccumulatorDir = dailyAccumulatorDir.concat(File.separator + subTileDir + File.separator);
             }
             if (!new File(dailyAccumulatorDir).exists()) {
                 final boolean madeDir = new File(dailyAccumulatorDir).mkdirs();
@@ -104,22 +86,14 @@ public class GlobalbedoLevel3SpectralDailyAccumulation extends Operator {
             Product accumulationProduct;
             // make sure that binary output is written sequentially
             JAI.getDefaultInstance().getTileScheduler().setParallelism(1);
-            String dailyAccumulatorBinaryFilename;
-            if (numSdrBands > 1) {
-                dailyAccumulatorBinaryFilename =
-                        "matrices_" + year + IOUtils.getDoyString(doy) + "_" + subTileDir + ".bin";
-            } else {
-                dailyAccumulatorBinaryFilename =
+            String dailyAccumulatorBinaryFilename =
                         "matrices_" + year + IOUtils.getDoyString(doy) + ".bin";
-            }
             final File dailyAccumulatorBinaryFile = new File(dailyAccumulatorDir + dailyAccumulatorBinaryFilename);
             SpectralDailyAccumulationOp accumulationOp = new SpectralDailyAccumulationOp();
             accumulationOp.setParameterDefaultValues();
             accumulationOp.setSourceProducts(inputProducts);
-            accumulationOp.setParameter("subtileFactor", subtileFactor);
             accumulationOp.setParameter("computeSnow", computeSnow);
             accumulationOp.setParameter("dailyAccumulatorBinaryFile", dailyAccumulatorBinaryFile);
-            accumulationOp.setParameter("numSdrBands", numSdrBands);
             accumulationOp.setParameter("singleBandIndex", singleBandIndex);
             accumulationProduct = accumulationOp.getTargetProduct();
 
