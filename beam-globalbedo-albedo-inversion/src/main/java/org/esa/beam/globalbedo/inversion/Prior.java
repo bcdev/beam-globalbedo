@@ -146,26 +146,29 @@ public class Prior {
 //        return processPixel;
 //    }
 
-    private static int validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
-        int returnValue = 0;
+    private static double validatePixel(boolean computeSnow, double priorSnowFraction, Matrix priorMean) {
+        double returnValue = 0;
         int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
 //                final boolean priorMeanTooLow = priorMean.get(index, 0) <= 0.0 || priorMean.get(index, 0) > 1.0;
                 // 20171107: allow f-parameters > 1.0 to avoid gaps in snow processing (i.e. Antarctzica, Greenland)
+                final boolean priorMeanNoData = priorMean.get(index, 0) == 0.0;
                 final boolean priorMeanTooLow = priorMean.get(index, 0) <= 0.0;
                 final boolean priorMeanTooHigh = priorMean.get(index, 0) > 1.0;
                 final boolean priorSnowFractionNotOk = (computeSnow && priorSnowFraction <= 0.03) ||
                         (!computeSnow && priorSnowFraction >= 0.93);
 
-                if (priorSnowFractionNotOk) {
-                    returnValue = -2;
+                if (priorMeanNoData) {
+                    returnValue = AlbedoInversionConstants.NO_DATA_VALUE;
+                } else if (priorSnowFractionNotOk) {
+                    returnValue = -2.0;
                     break;
                 } else if (priorMeanTooLow) {
-                    returnValue = -1;
+                    returnValue = -1.0;
                     break;
                 } else if (priorMeanTooHigh) {
-                    returnValue = 1;
+                    returnValue = 1.0;
                     break;
                 }
                 index++;

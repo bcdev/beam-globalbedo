@@ -15,6 +15,9 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.util.logging.BeamLogManager;
+
+import java.util.logging.Level;
 
 import static java.lang.Math.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
@@ -279,18 +282,18 @@ public class InversionOp extends PixelOperator {
             priorValidPixelFlag = prior.getPriorValidPixelFlag();
         }
 
-//        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
-//            if (accumulator != null) {
-//                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
-//            }
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "trustAccumulation = " + trustAccumulation);
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "priorValidPixelFlag = " + priorValidPixelFlag);
-//            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
-//        }
+        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
+            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
+            if (accumulator != null) {
+                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
+            }
+            BeamLogManager.getSystemLogger().log(Level.INFO, "trustAccumulation = " + trustAccumulation);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
+            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "priorValidPixelFlag = " + priorValidPixelFlag);
+            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
+        }
 
         double goodnessOfFit = 0.0;
         double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};

@@ -137,6 +137,11 @@ public class BrdfNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, daysClosestSampleBand,
                                                           "Number of days to the closest sample", NODATA, "days");
             }
+            final Band priorValidPixelFlagBand = p.getBand(AlbedoInversionConstants.PRIOR_VALID_PIXEL_FLAG_NAME);
+            if (priorValidPixelFlagBand != null) {
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, priorValidPixelFlagBand, "Prior valid pixel flag", NODATA, "1");
+            }
+
             final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
             if (latBand != null) {
                 addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees");

@@ -165,6 +165,10 @@ public class AlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             if (dataMaskBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, dataMaskBand, "Data Mask", NODATA, "1");
             }
+            final Band priorValidPixelFlagBand = p.getBand(AlbedoInversionConstants.PRIOR_VALID_PIXEL_FLAG_NAME);
+            if (priorValidPixelFlagBand != null) {
+                addNc4BrdfAncillaryVariableWithAttributes(writeable, priorValidPixelFlagBand, "Prior valid pixel flag", NODATA, "1");
+            }
             final Band szaBand = p.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
             if (szaBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, szaBand, "Solar Zenith Angle", NODATA, "degrees");
