@@ -97,7 +97,7 @@ public class Prior {
 //        boolean isValidPixel = validatePixel(computeSnow, priorSnowFraction, priorMean);
         double priorValidPixelFlag = validatePixel(computeSnow, priorSnowFraction, priorMean);
 //        if (isValidPixel) {
-        if (priorValidPixelFlag == 0) {
+        if (priorValidPixelFlag >= 0) {  // we accept now BRDF f-params > 1.0
             // # Calculate C inverse
             // simplified condition (GL, 20110407)
             if (lud.isNonsingular()) {

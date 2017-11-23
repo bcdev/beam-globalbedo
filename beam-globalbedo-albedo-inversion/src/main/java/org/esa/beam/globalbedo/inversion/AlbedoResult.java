@@ -21,6 +21,7 @@ public class AlbedoResult {
     private double weightedNumberOfSamples;
     private double relEntropy;
     private double goodnessOfFit;
+    private double priorValidPixelFlag;
     private double snowFraction;
     private double dataMask;
     private double sza;
@@ -28,7 +29,8 @@ public class AlbedoResult {
     public AlbedoResult(double[] bsa, double[] bsaAlpha, Matrix[] bsaSigma,
                         double[] wsa, double[] wsaAlpha, Matrix[] wsaSigma,
                         double weightedNumberOfSamples,
-                        double relEntropy, double goodnessOfFit, double snowFraction, double dataMask, double sza) {
+                        double relEntropy, double goodnessOfFit, double priorValidPixelFlag,
+                        double snowFraction, double dataMask, double sza) {
         this.bsa = bsa;
         this.bsaAlpha = bsaAlpha;
         this.wsa = wsa;
@@ -38,6 +40,7 @@ public class AlbedoResult {
         this.weightedNumberOfSamples = weightedNumberOfSamples;
         this.relEntropy = relEntropy;
         this.goodnessOfFit = goodnessOfFit;
+        this.priorValidPixelFlag = priorValidPixelFlag;
         this.snowFraction = snowFraction;
         this.dataMask = dataMask;
         this.sza = sza;
@@ -46,7 +49,8 @@ public class AlbedoResult {
     public AlbedoResult(double[] bsa, double[] bsaAlpha, double[] bsaSigma,
                         double[] wsa, double[] wsaAlpha, double[] wsaSigma,
                         double weightedNumberOfSamples,
-                        double relEntropy, double goodnessOfFit, double snowFraction, double dataMask, double sza) {
+                        double relEntropy, double goodnessOfFit, double priorValidPixelFlag,
+                        double snowFraction, double dataMask, double sza) {
         this.bsa = bsa;
         this.bsaAlpha = bsaAlpha;
         this.wsa = wsa;
@@ -56,6 +60,7 @@ public class AlbedoResult {
         this.weightedNumberOfSamples = weightedNumberOfSamples;
         this.relEntropy = relEntropy;
         this.goodnessOfFit = goodnessOfFit;
+        this.priorValidPixelFlag = priorValidPixelFlag;
         this.snowFraction = snowFraction;
         this.dataMask = dataMask;
         this.sza = sza;
@@ -156,6 +161,14 @@ public class AlbedoResult {
 
     public void setSza(double sza) {
         this.sza = sza;
+    }
+
+    public double getPriorValidPixelFlag() {
+        return priorValidPixelFlag;
+    }
+
+    public void setPriorValidPixelFlag(double priorValidPixelFlag) {
+        this.priorValidPixelFlag = priorValidPixelFlag;
     }
 
     public double[] getBsaSigmaArray() {

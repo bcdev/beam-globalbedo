@@ -251,7 +251,9 @@ public class BrdfMosaicToAlbedoMosaicOp extends PixelOperator {
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(blackSkyAlbedo, alphaDHR, bsaSigma,
                 whiteSkyAlbedo, alphaBHR, wsaSigma,
-                weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
+                weightedNumberOfSamples, relEntropy, goodnessOfFit,
+                AlbedoInversionConstants.NO_DATA_VALUE, // todo: priorValidPixelFlag
+                snowFraction,
                 maskEntropy, SZAdeg);
 
         fillTargetSamples(targetSamples, result);

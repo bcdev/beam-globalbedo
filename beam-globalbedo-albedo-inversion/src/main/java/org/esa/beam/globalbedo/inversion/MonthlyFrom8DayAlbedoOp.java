@@ -165,7 +165,9 @@ public class MonthlyFrom8DayAlbedoOp extends PixelOperator {
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyDHRAlpha, monthlyDHRSigma,
                 monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
 //                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, Double.NaN,
+                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit,
+                AlbedoInversionConstants.NO_DATA_VALUE, // todo: priorValidPixelFlag
+                Double.NaN,
                 monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);

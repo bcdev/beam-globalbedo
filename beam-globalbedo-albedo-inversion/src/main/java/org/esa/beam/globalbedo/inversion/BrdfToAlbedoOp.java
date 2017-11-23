@@ -286,6 +286,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         // write results to target product...
         final double weightedNumberOfSamples = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_WEIGHTED_NUM_SAMPLES].getDouble();
         final double goodnessOfFit = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_GOODNESS_OF_FIT].getDouble();
+        final double priorValidPixelFlag = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PRIOR_VALID_PIXEL_FLAG].getDouble();
         double snowFraction = AlbedoInversionConstants.NO_DATA_VALUE;
 //        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
 //            snowFraction = sourceSamples[SRC_PARAMETERS.length + SRC_UNCERTAINTIES.length + SRC_PROPORTION_NSAMPLE].getDouble();
@@ -293,7 +294,8 @@ public class BrdfToAlbedoOp extends PixelOperator {
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
                                                BHR, alphaBHR, sigmaBHR,
-                                               weightedNumberOfSamples, relEntropy, goodnessOfFit, snowFraction,
+                                               weightedNumberOfSamples, relEntropy, goodnessOfFit,
+                                                priorValidPixelFlag, snowFraction,
                                                maskEntropy, SZAdeg);
 
         fillTargetSamples(targetSamples, result);
@@ -595,6 +597,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
         final int offsetFactor = reducedOutput ? 2 : 6;
         int index = offsetFactor * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
         targetSamples[index++].set(result.getWeightedNumberOfSamples());
+        targetSamples[index++].set(result.getPriorValidPixelFlag());
         targetSamples[index++].set(result.getRelEntropy());
         targetSamples[index++].set(result.getGoodnessOfFit());
 //        if (brdfMergedProduct.containsBand(AlbedoInversionConstants.MERGE_PROPORTION_NSAMPLES_BAND_NAME)) {
@@ -602,6 +605,7 @@ public class BrdfToAlbedoOp extends PixelOperator {
 //        }
         targetSamples[index++].set(result.getDataMask());
         targetSamples[index++].set(result.getSza());
+
         if (singlePixelMode) {
             targetSamples[index++].set(latLon.getLat());
             targetSamples[index].set(latLon.getLon());

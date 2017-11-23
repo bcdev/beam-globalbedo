@@ -36,7 +36,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
-//    private String snowFractionBandName;
+    //    private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
 
@@ -166,10 +166,12 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         }
 
         AlbedoResult result = new AlbedoResult(monthlyDHR, monthlyDHRAlpha, monthlyDHRSigma,
-                                               monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
+                monthlyBHR, monthlyBHRAlpha, monthlyBHRSigma,
 //                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, monthlySnowFraction,
-                                               monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit, Double.NaN,
-                                               monthlyDataMask, monthlySza);
+                monthlyNsamples, monthlyRelativeEntropy, monthlyGoodnessOfFit,
+                AlbedoInversionConstants.NO_DATA_VALUE, // todo: priorValidPixelFlag
+                Double.NaN,
+                monthlyDataMask, monthlySza);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -282,7 +284,7 @@ public class MonthlyFrom8DayAlbedoMosaicsOp extends PixelOperator {
         // is not in breadboard monthly product
         targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
 
-        for (Band b:targetProduct.getBands()) {
+        for (Band b : targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             b.setNoDataValueUsed(true);
         }

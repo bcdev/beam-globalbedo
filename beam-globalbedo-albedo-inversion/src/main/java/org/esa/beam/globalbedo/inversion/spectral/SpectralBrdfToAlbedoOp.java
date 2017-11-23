@@ -62,7 +62,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
     private String relEntropyBandName;
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
-//    private String snowFractionBandName;
+    //    private String snowFractionBandName;
     private String dataMaskBandName;
     private String szaBandName;
 
@@ -118,7 +118,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         final double SZAdeg = AlbedoInversionUtils.computeSza(latLon, doy);
         final double SZA = SZAdeg * MathUtils.DTOR;
 
-        if (x == 40 && y == 160)  {
+        if (x == 40 && y == 160) {
             System.out.println("x = " + x);
         }
 
@@ -290,9 +290,11 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         final double entropy = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_ENTROPY].getDouble();
         final double maskEntropy = (AlbedoInversionUtils.isValid(entropy)) ? 1.0 : 0.0;
         AlbedoResult result = new AlbedoResult(DHR, alphaDHR, sigmaDHR,
-                                               BHR, alphaBHR, sigmaBHR,
-                                               weightedNumberOfSamples, relEntropy, goodnessOfFit, 0,
-                                               maskEntropy, SZAdeg);
+                BHR, alphaBHR, sigmaBHR,
+                weightedNumberOfSamples, relEntropy, goodnessOfFit,
+                AlbedoInversionConstants.NO_DATA_VALUE, // todo: priorValidPixelFlag
+                0,
+                maskEntropy, SZAdeg);
 
         fillTargetSamples(targetSamples, result);
     }
@@ -309,7 +311,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             dhrBand.setSpectralBandIndex(i);
             // MODIS wavelengths (we assume all 7 are present):
             // 645.0f, 865.0f, 470.0f, 555.0f, 1240.0f, 1640.0f, 2130.0f
-            final float wvl = i == 0 ? wvls[2] : i == 1 ? wvls[3] :  i == 2 ? wvls[0] : i == 3 ? wvls[1] : wvls[i];
+            final float wvl = i == 0 ? wvls[2] : i == 1 ? wvls[3] : i == 2 ? wvls[0] : i == 3 ? wvls[1] : wvls[i];
             dhrBand.setSpectralWavelength(wvl);
         }
 
@@ -329,7 +331,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         for (int i = 0; i < numSdrBands; i++) {
             final Band bhrBand = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
             bhrBand.setSpectralBandIndex(i);
-            final float wvl = i == 0 ? wvls[2] : i == 1 ? wvls[3] :  i == 2 ? wvls[0] : i == 3 ? wvls[1] : wvls[i];
+            final float wvl = i == 0 ? wvls[2] : i == 1 ? wvls[3] : i == 2 ? wvls[0] : i == 3 ? wvls[1] : wvls[i];
             bhrBand.setSpectralWavelength(wvl);
         }
 
@@ -392,17 +394,17 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
             for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 srcUncertainties[index] = index;
                 configurator.defineSample(srcParameters.length + srcUncertainties[index],
-                                          uncertaintyBandNames[i][j], spectralBrdfProduct);
+                        uncertaintyBandNames[i][j], spectralBrdfProduct);
                 index++;
             }
         }
 
         String entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
         configurator.defineSample(srcParameters.length + srcUncertainties.length + SRC_ENTROPY,
-                                  entropyBandName, spectralBrdfProduct);
+                entropyBandName, spectralBrdfProduct);
         relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
         configurator.defineSample(srcParameters.length + srcUncertainties.length + SRC_REL_ENTROPY,
-                                  relEntropyBandName, spectralBrdfProduct);
+                relEntropyBandName, spectralBrdfProduct);
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         configurator.defineSample(
                 srcParameters.length + srcUncertainties.length + SRC_WEIGHTED_NUM_SAMPLES,
@@ -412,7 +414,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
                 AlbedoInversionConstants.ACC_DAYS_TO_THE_CLOSEST_SAMPLE_BAND_NAME, spectralBrdfProduct);
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         configurator.defineSample(srcParameters.length + srcUncertainties.length + SRC_GOODNESS_OF_FIT,
-                                  goodnessOfFitBandName, spectralBrdfProduct);
+                goodnessOfFitBandName, spectralBrdfProduct);
     }
 
     @Override
