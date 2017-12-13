@@ -330,21 +330,14 @@ public class DailyAccumulationOp extends Operator {
     }
 
     private boolean isSnowFilter(int x, int y) {
-//        if (processingMode == ProcessingMode.AVHRRGEO) {
-//            return ((computeSnow && !(avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)) ||
-//                    (!computeSnow && (avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 3)));
-//        } else {
-//            return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
-//                    (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
-//        }
+        // NOTE: keep in mind that snow mask value is 1 in 'snow_mask' band in BBDR product. This represents the value 3
+        //       in 'mask' band in original msslMask products!!
         return ((computeSnow && !(bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)) ||
                 (!computeSnow && (bbdrSnowMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 1)));
     }
 
     private boolean isAvhrrMaskCloudFilter(int x, int y) {
-//        if (processingMode == ProcessingMode.AVHRRGEO) {
-//            return avhrrMaskTile[currentSourceProductIndex].getSampleInt(x, y) == 2;
-//        }
+        // no longer needed here, already filtered in BBDR processing
         return false;
     }
 
