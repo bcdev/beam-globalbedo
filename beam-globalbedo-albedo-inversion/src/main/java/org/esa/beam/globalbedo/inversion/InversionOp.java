@@ -264,13 +264,10 @@ public class InversionOp extends PixelOperator {
         double maskAcc = 0.0;
         Accumulator accumulator = null;
         float daysToTheClosestSample = 0.0f;
-        boolean trustAccumulation = false;
         if (fullAccumulator != null) {
             accumulator = Accumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y);
             maskAcc = accumulator.getMask();
             daysToTheClosestSample = fullAccumulator.getDaysToTheClosestSample()[x][y];
-            trustAccumulation = maskAcc > 1.0 && daysToTheClosestSample < 10.0;
-            trustAccumulation = true;  // todo: test
         }
 
         double maskPrior = 1.0;
@@ -282,22 +279,22 @@ public class InversionOp extends PixelOperator {
             priorValidPixelFlag = prior.getPriorValidPixelFlag();
         }
 
-        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
-            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
-            if (accumulator != null) {
-                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
-            }
-            BeamLogManager.getSystemLogger().log(Level.INFO, "trustAccumulation = " + trustAccumulation);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
-            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "priorValidPixelFlag = " + priorValidPixelFlag);
-            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
-        }
+//        if ((x == 50 && y == 50) || (x == 100 && y == 80))  {
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "x,y = " + x + "," + y);
+//            if (accumulator != null) {
+//                AlbedoInversionUtils.printAccumulatorMatrices(accumulator);
+//            }
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "trustAccumulation = " + trustAccumulation);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "accumulator != null = " + (accumulator != null));
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskAcc = " + maskAcc);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "maskPrior = " + maskPrior);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "priorValidPixelFlag = " + priorValidPixelFlag);
+//            BeamLogManager.getSystemLogger().log(Level.INFO, "usePrior = " + usePrior);
+//        }
 
         double goodnessOfFit = 0.0;
         double[] goodnessOfFitTerms = new double[]{0.0, 0.0, 0.0};
-        if (trustAccumulation && accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
+        if (accumulator != null && maskAcc > 0 && ((usePrior && maskPrior > 0) || !usePrior)) {
             final Matrix mAcc = accumulator.getM();
             Matrix vAcc = accumulator.getV();
             final Matrix eAcc = accumulator.getE();
