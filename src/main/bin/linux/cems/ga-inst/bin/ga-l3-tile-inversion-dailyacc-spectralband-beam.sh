@@ -1,19 +1,18 @@
 #!/bin/bash
 
-tile=$1
-year=$2
-start=$3
-end=$4
-gaRootDir=$5
-spectralSdrRootDir=$6
-beamRootDir=$7
-
-bandIndex=3  # we do band 3 for the moment
+bandIndex=$1
+tile=$2
+year=$3
+start=$4
+end=$5
+gaRootDir=$6
+spectralSdrRootDir=$7
+beamRootDir=$8
 
 gpt=$beamRootDir/bin/gpt-d-l2.sh
 
-dailyAccNosnowDir=$gaRootDir/SDR_spectral/DailyAcc/$year/$tile/NoSnow
-dailyAccSnowDir=$gaRootDir/SDR_spectral/DailyAcc/$year/$tile/Snow
+dailyAccNosnowDir=$gaRootDir/SDR_spectral/band_${bandIndex}/DailyAcc/$year/$tile/NoSnow
+dailyAccSnowDir=$gaRootDir/SDR_spectral/band_${bandIndex}/DailyAcc/$year/$tile/Snow
 if [ ! -d "$dailyAccNosnowDir" ]
 then 
    mkdir -p $dailyAccNosnowDir

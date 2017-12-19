@@ -14,7 +14,8 @@ stagingNc2browseResultDir=$7
 task="ga-l3-staging-nc2browse"
 jobname="${task}-${year}-${doy}-${snowMode}-${res}-${proj}"
 #command="./bin/${task}-python.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
-command="./bin/${task}-python_only2bands.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
+#command="./bin/${task}-python_only2bands.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
+command="./bin/${task}-python_only4bands.sh ${stagingNc2browseFile} ${stagingNc2browseResultDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

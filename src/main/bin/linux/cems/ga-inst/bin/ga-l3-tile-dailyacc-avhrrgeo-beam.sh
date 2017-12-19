@@ -35,6 +35,10 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
 
     echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e"
     time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e
+    
+    # test (REMOVE):
+    #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e
+    #time $gpt  ga.l3.dailyacc -Psensors="GOES_W" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e
 
     status=$?
     echo "Status: $status"

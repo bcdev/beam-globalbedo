@@ -8,14 +8,15 @@
 # --> many bsubs are supervised by one PMonitor
 # --> should allow to feed many more jobs into the LSF queue for same PMonitor limit (e.g. 192)
 
-tile=$1
-year=$2
-startdoy=$3
-enddoy=$4
-step=$5
-gaRootDir=$6
-spectralSdrRootDir=$7
-beamDir=${8}
+bandIndex=$1
+tile=$2
+year=$3
+startdoy=$4
+enddoy=$5
+step=$6
+gaRootDir=$7
+spectralSdrRootDir=$8
+beamDir=${9}
 
 # e.g. we have startdoy='000', enddoy='361'. Doy interval is always 8.
 # we want to submit one job for each doy
@@ -24,8 +25,8 @@ for iStartDoy in $(seq -w $startdoy $step $enddoy); do   # -w takes care for lea
     iEndDoy=`printf '%03d\n' "$((10#$iStartDoy + 7))"`
 
     task="ga-l3-tile-inversion-dailyacc-spectralband"
-    jobname="${task}-${tile}-${year}-${iStartDoy}-dailyacc"
-    command="./bin/${task}-beam.sh ${tile} ${year} ${iStartDoy} ${iEndDoy} ${modisTileScaleFactor} ${gaRootDir} ${spectralSdrRootDir} ${beamDir}"
+    jobname="${task}-${bandIndex}-${tile}-${year}-${iStartDoy}-dailyacc"
+    command="./bin/${task}-beam.sh ${bandIndex} ${tile} ${year} ${iStartDoy} ${iEndDoy} ${modisTileScaleFactor} ${gaRootDir} ${spectralSdrRootDir} ${beamDir}"
 
     echo "jobname: $jobname"
     echo "command: $command"
@@ -44,7 +45,7 @@ done
 
 for iStartDoy in $(seq -w $startdoy $step $enddoy); do
     task="ga-l3-tile-inversion-dailyacc-spectralband"
-    jobname="${task}-${tile}-${year}-${iStartDoy}-dailyacc"
+    jobname="${task}-${bandIndex}-${tile}-${year}-${iStartDoy}-dailyacc"
     
     echo "calling wait_for_task_jobs_completion: $jobname"
     wait_for_task_jobs_completion ${jobname}

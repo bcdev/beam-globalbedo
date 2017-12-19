@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo.sh
-. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo_nologs.sh
+. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo.sh
+#. ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo_nologs.sh
 
 sensorID=$1
 year=$2

@@ -3,23 +3,24 @@
 . ${GA_INST}/bin/ga_env/ga-env-l3-tile-inversion-albedo.sh
 
 sensorID=$1
-tile=$2
-year=$3
-startdoy=$4
-enddoy=$5
-gaRootDir=$6
-spectralSdrRootDir=$7
-inversionRootDir=${8}
-beamDir=${9}
-albedoTargetDir=${10}  # remind the brackets if >= 10!!
+bandIndex=$2
+tile=$3
+year=$4
+startdoy=$5
+enddoy=$6
+gaRootDir=$7
+spectralSdrRootDir=$8
+inversionRootDir=${9}
+beamDir=${10}
+albedoTargetDir=${11}  # remind the brackets if >= 10!!
 
 # TODO: to be safe, add a wait loop (60 sec) here and check for completion of writing binary accumulator files in ../DailyAccs/$year/(No)Snow
 # This is indicated by presence of marker files 'PROCESSED_ALL'
 # continue when they are present or after 15min with a warning
 # (assume that wing years are ready as they were processed before the center year and have less daily accs)
 
-dailyAccNoSnowDir=$gaRootDir/SDR_spectral/DailyAcc/$year/$tile/NoSnow
-dailyAccSnowDir=$gaRootDir/SDR_spectral/DailyAcc/$year/$tile/Snow
+dailyAccNoSnowDir=$gaRootDir/SDR_spectral/band_${bandIndex}/DailyAcc/$year/$tile/NoSnow
+dailyAccSnowDir=$gaRootDir/SDR_spectral/band_${bandIndex}/DailyAcc/$year/$tile/Snow
 
 waitCount=0
 while [  "$waitCount" -lt "15" ]; do
@@ -41,8 +42,8 @@ fi
 
 for iDoy in $(seq -w $startdoy $enddoy); do   # -w takes care for leading zeros
     task="ga-l3-tile-inversion-albedo-spectralband"
-    jobname="${task}-${tile}-${year}-${iDoy}"
-    command="./bin/${task}-beam.sh ${sensorID} ${tile} ${year} ${iDoy} ${gaRootDir} ${spectralSdrRootDir} ${inversionRootDir} ${beamDir} ${albedoTargetDir}"
+    jobname="${task}-${bandIndex}-${tile}-${year}-${iDoy}"
+    command="./bin/${task}-beam.sh ${sensorID} ${bandIndex} ${tile} ${year} ${iDoy} ${gaRootDir} ${spectralSdrRootDir} ${inversionRootDir} ${beamDir} ${albedoTargetDir}"
 
     echo "jobname: $jobname"
     echo "command: $command"
