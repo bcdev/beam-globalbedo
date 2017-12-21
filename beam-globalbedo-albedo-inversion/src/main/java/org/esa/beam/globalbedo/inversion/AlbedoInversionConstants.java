@@ -51,6 +51,8 @@ public class AlbedoInversionConstants {
     public static final String ALB_DATA_MASK_BAND_NAME = "Data_Mask";
     public static final String ALB_SNOW_FRACTION_BAND_NAME = "Snow_Fraction_of_Samples";
     public static final String ALB_SZA_BAND_NAME = "Solar_Zenith_Angle";
+    public static final String PRIOR_INFO_SNOW_FRACTION_BAND_NAME = "snowFraction";
+    public static final String PRIOR_INFO_LAND_WATER_MASK_BAND_NAME = "landWaterType";
 
     public static final String MERGE_PROPORTION_NSAMPLES_BAND_NAME = "Proportion_NSamples";
 

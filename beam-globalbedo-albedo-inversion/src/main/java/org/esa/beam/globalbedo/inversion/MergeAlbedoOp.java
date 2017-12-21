@@ -49,6 +49,8 @@ public class MergeAlbedoOp extends PixelOperator {
     private static int[] SRC_GOODNESS_OF_FIT = new int[2];
     private static int[] SRC_DATA_MASK = new int[2];
     private static int[] SRC_SZA = new int[2];
+    private static int[] SRC_PRIOR_INFO_SNOW_FRACTION = new int[2];
+    private static int[] SRC_PRIOR_INFO_LAND_WATER_MASK = new int[2];
 
     private static int[] TRG_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static int[] TRG_DHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -69,6 +71,12 @@ public class MergeAlbedoOp extends PixelOperator {
     @SourceProduct(description = "Albedo NoSnow product")
     private Product noSnowProduct;
 
+    @SourceProduct(description = "Prior Info NoSnow product", optional = true)
+    private Product priorInfoNoSnowProduct;
+
+    @SourceProduct(description = "Prior Info Snow product", optional = true)
+    private Product priorInfoSnowProduct;
+
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -86,17 +94,22 @@ public class MergeAlbedoOp extends PixelOperator {
 //            System.out.println("x = " + x);
 //        }
 
-        if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
-            proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
-            proportionNsamplesSnow = nSamplesSnow / totalNSamples;
-            setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
-        } else if (nSamplesNoSnow > 0) {
-            setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
-        } else if (nSamplesSnow > 0) {
-            setMergedBandsToSnowBands(sourceSamples, targetSamples);
-        } else {
-            setMergedBandsToPrior(sourceSamples, targetSamples);
-        }
+        final double priorLandWaterMaskDataValue = sourceSamples[SRC_PRIOR_INFO_LAND_WATER_MASK[0]].getDouble();
+//        if (priorLandWaterMaskDataValue != 1.0) {         activate when products are ready
+//            setMergedBandsToNoData(targetSamples);
+//        } else {
+            if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
+                proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
+                proportionNsamplesSnow = nSamplesSnow / totalNSamples;
+                setMergedBands(sourceSamples, targetSamples, proportionNsamplesSnow, proportionNsamplesNoSnow);
+            } else if (nSamplesNoSnow > 0) {
+                setMergedBandsToNoSnowBands(sourceSamples, targetSamples);
+            } else if (nSamplesSnow > 0) {
+                setMergedBandsToSnowBands(sourceSamples, targetSamples);
+            } else {
+                setMergedBandsToPrior(sourceSamples, targetSamples);
+            }
+//        }
     }
 
     private void setMergedBandsToNoSnowBands(Sample[] sourceSamples, WritableSample[] targetSamples) {
@@ -125,37 +138,56 @@ public class MergeAlbedoOp extends PixelOperator {
             targetSamples[TRG_SZA].set(AlbedoInversionConstants.NO_DATA_VALUE);
         }
 
+        double priorSnowFractionNoSnowDataValue = 0.0;
+        double priorSnowFractionSnowDataValue = 0.0;
+        if (priorInfoNoSnowProduct != null && priorInfoSnowProduct != null) {
+            priorSnowFractionNoSnowDataValue = sourceSamples[SRC_PRIOR_INFO_SNOW_FRACTION[0]].getDouble();
+            priorSnowFractionSnowDataValue = sourceSamples[SRC_PRIOR_INFO_SNOW_FRACTION[1]].getDouble();
+        }
+
         // BHR/DHR, alphas, sigmas
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
             targetSamples[TRG_BHR[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_BHR[0][i]].getDouble(),
                                               sourceSamples[SRC_BHR[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
             targetSamples[TRG_DHR[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_DHR[0][i]].getDouble(),
                                               sourceSamples[SRC_DHR[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
             targetSamples[TRG_BHR_ALPHA[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_BHR_ALPHA[0][i]].getDouble(),
                                               sourceSamples[SRC_BHR_ALPHA[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
             targetSamples[TRG_DHR_ALPHA[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_DHR_ALPHA[0][i]].getDouble(),
                                               sourceSamples[SRC_DHR_ALPHA[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
             targetSamples[TRG_BHR_SIGMA[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_BHR_SIGMA[0][i]].getDouble(),
                                               sourceSamples[SRC_BHR_SIGMA[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
             targetSamples[TRG_DHR_SIGMA[i]].
                     set(getWeightedMergeValue(sourceSamples[SRC_DHR_SIGMA[0][i]].getDouble(),
                                               sourceSamples[SRC_DHR_SIGMA[1][i]].getDouble(),
                                               proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
         }
 
@@ -164,6 +196,8 @@ public class MergeAlbedoOp extends PixelOperator {
                 set(getWeightedMergeValue(sourceSamples[SRC_REL_ENTROPY[0]].getDouble(),
                                           sourceSamples[SRC_REL_ENTROPY[1]].getDouble(),
                                           proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                          priorSnowFractionNoSnowDataValue,
+                                          priorSnowFractionSnowDataValue,
                                           szaNoSnowDataValue));
 
         // WNSamples
@@ -171,6 +205,8 @@ public class MergeAlbedoOp extends PixelOperator {
                 set(getWeightedMergeValue(sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[0]].getDouble(),
                                           sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[1]].getDouble(),
                                           proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                          priorSnowFractionNoSnowDataValue,
+                                          priorSnowFractionSnowDataValue,
                                           szaNoSnowDataValue));
 
         // GoF
@@ -178,6 +214,8 @@ public class MergeAlbedoOp extends PixelOperator {
                 set(getWeightedMergeValue(sourceSamples[SRC_GOODNESS_OF_FIT[0]].getDouble(),
                                           sourceSamples[SRC_GOODNESS_OF_FIT[1]].getDouble(),
                                           proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                          priorSnowFractionNoSnowDataValue,
+                                          priorSnowFractionSnowDataValue,
                                           szaNoSnowDataValue));
 
         // data mask: 1.0 or 0.0
@@ -199,6 +237,25 @@ public class MergeAlbedoOp extends PixelOperator {
 
         targetSamples[TRG_SNOW_FRACTION].set(snowFraction);
 
+    }
+
+    private void setMergedBandsToNoData(WritableSample[] targetSamples) {
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            targetSamples[TRG_BHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_DHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_BHR_ALPHA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_DHR_ALPHA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_BHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_DHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        }
+
+        targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        targetSamples[TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        targetSamples[TRG_DATA_MASK].set(0.0);
+        targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        targetSamples[TRG_SNOW_FRACTION].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        targetSamples[TRG_SZA].set(AlbedoInversionConstants.NO_DATA_VALUE);
     }
 
     @Override
@@ -285,13 +342,22 @@ public class MergeAlbedoOp extends PixelOperator {
 
         SRC_SZA[0] = index;
         SRC_SZA[1] = index + 100;
+        index++;
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
+
+        SRC_PRIOR_INFO_SNOW_FRACTION[0] = index;
+        SRC_PRIOR_INFO_SNOW_FRACTION[1] = index + 100;
+        index++;
+
+        SRC_PRIOR_INFO_LAND_WATER_MASK[0] = index;
+        SRC_PRIOR_INFO_LAND_WATER_MASK[1] = index + 100;
 
         for (Band b : targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
             b.setNoDataValueUsed(true);
         }
+
     }
 
 
@@ -343,6 +409,17 @@ public class MergeAlbedoOp extends PixelOperator {
         configurator.defineSample(SRC_DATA_MASK[1], dataMaskBandName, snowProduct);
         configurator.defineSample(SRC_SZA[0], szaBandName, noSnowProduct);
         configurator.defineSample(SRC_SZA[1], szaBandName, snowProduct);
+
+        if (priorInfoNoSnowProduct != null && priorInfoSnowProduct != null) {
+            configurator.defineSample(SRC_PRIOR_INFO_SNOW_FRACTION[0],
+                                      AlbedoInversionConstants.PRIOR_INFO_SNOW_FRACTION_BAND_NAME, priorInfoNoSnowProduct);
+            configurator.defineSample(SRC_PRIOR_INFO_SNOW_FRACTION[1],
+                                      AlbedoInversionConstants.PRIOR_INFO_SNOW_FRACTION_BAND_NAME, priorInfoSnowProduct);
+            configurator.defineSample(SRC_PRIOR_INFO_LAND_WATER_MASK[0],
+                                      AlbedoInversionConstants.PRIOR_INFO_LAND_WATER_MASK_BAND_NAME, priorInfoNoSnowProduct);
+            configurator.defineSample(SRC_PRIOR_INFO_LAND_WATER_MASK[1],
+                                      AlbedoInversionConstants.PRIOR_INFO_LAND_WATER_MASK_BAND_NAME, priorInfoSnowProduct);
+        }
     }
 
     @Override
@@ -394,6 +471,8 @@ public class MergeAlbedoOp extends PixelOperator {
 
     static double getWeightedMergeValue(double noSnowValue, double snowValue,
                                         double proportionNsamplesNoSnow, double proportionNsamplesSnow,
+                                        double priorSnowFractionNoSnowDataValue,
+                                        double priorSnowFractionSnowDataValue,
                                         double sza) {
         final boolean noSnowValid = AlbedoInversionUtils.isValid(noSnowValue);
         final boolean snowValid = AlbedoInversionUtils.isValid(snowValue);
@@ -414,13 +493,21 @@ public class MergeAlbedoOp extends PixelOperator {
             } else {
                 // prior info only
                 if (noSnowValid && snowValid) {
-                    if (Math.abs(sza) > 88.0) {
-                        // we should be in high polar regions here
-                        // todo: find corresponding priors for this pixel and consider their snowFraction values
-                        mergeValue = snowValue;
+//                    if (Math.abs(sza) > 88.0) {
+//                        // we should be in high polar regions here
+//                        // todo: find corresponding priors for this pixel and consider their snowFraction values
+//                        mergeValue = snowValue;
+//                    } else {
+//                        // some guess but might also be wrong
+//                        mergeValue = 0.5 * (noSnowValue + snowValue);
+//                    }
+                    // TEST Dec 2017:
+                    final double priorSnowFraction =
+                            Math.max(priorSnowFractionNoSnowDataValue, priorSnowFractionSnowDataValue);
+                    if (Double.isNaN(priorSnowFraction)) {
+                        mergeValue = noSnowValue;
                     } else {
-                        // some guess but might also be wrong
-                        mergeValue = 0.5 * (noSnowValue + snowValue);
+                        mergeValue = (1.0 - priorSnowFraction) * noSnowValue + priorSnowFraction * snowValue;
                     }
                 } else {
                     mergeValue = noSnowValid ? noSnowValue : snowValue;
