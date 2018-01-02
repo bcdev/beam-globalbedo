@@ -95,9 +95,9 @@ public class MergeAlbedoOp extends PixelOperator {
 //        }
 
         final double priorLandWaterMaskDataValue = sourceSamples[SRC_PRIOR_INFO_LAND_WATER_MASK[0]].getDouble();
-//        if (priorLandWaterMaskDataValue != 1.0) {         activate when products are ready
-//            setMergedBandsToNoData(targetSamples);
-//        } else {
+        if (priorLandWaterMaskDataValue != 1.0) {         // activate when products are ready
+            setMergedBandsToNoData(targetSamples);
+        } else {
             if (nSamplesNoSnow > 0 && nSamplesSnow > 0) {
                 proportionNsamplesNoSnow = nSamplesNoSnow / totalNSamples;
                 proportionNsamplesSnow = nSamplesSnow / totalNSamples;
@@ -109,7 +109,7 @@ public class MergeAlbedoOp extends PixelOperator {
             } else {
                 setMergedBandsToPrior(sourceSamples, targetSamples);
             }
-//        }
+        }
     }
 
     private void setMergedBandsToNoSnowBands(Sample[] sourceSamples, WritableSample[] targetSamples) {
