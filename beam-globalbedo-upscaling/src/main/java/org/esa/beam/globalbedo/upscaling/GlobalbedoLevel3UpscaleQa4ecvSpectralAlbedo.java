@@ -20,6 +20,7 @@ import com.bc.ceres.core.ProgressMonitor;
 import org.esa.beam.framework.dataio.ProductIO;
 import org.esa.beam.framework.dataio.ProductReader;
 import org.esa.beam.framework.datamodel.Band;
+import org.esa.beam.framework.datamodel.CrsGeoCoding;
 import org.esa.beam.framework.datamodel.Product;
 import org.esa.beam.framework.datamodel.ProductData;
 import org.esa.beam.framework.gpf.OperatorException;
@@ -29,15 +30,21 @@ import org.esa.beam.framework.gpf.annotations.OperatorMetadata;
 import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.TargetProduct;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
+import org.esa.beam.globalbedo.inversion.spectral.SpectralIOUtils;
 import org.esa.beam.globalbedo.inversion.util.IOUtils;
+import org.esa.beam.globalbedo.inversion.util.ModisTileGeoCoding;
 import org.esa.beam.globalbedo.mosaic.GlobAlbedoQa4ecvMosaicProductReader;
+import org.esa.beam.globalbedo.mosaic.MosaicConstants;
 import org.esa.beam.util.ProductUtils;
 import org.esa.beam.util.logging.BeamLogManager;
+import org.geotools.referencing.crs.DefaultGeographicCRS;
+import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
 import java.awt.*;
 import java.io.File;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -49,14 +56,14 @@ import java.util.logging.Level;
  * @author olafd
  */
 @OperatorMetadata(
-        alias = "ga.l3.upscale.albedo.qa4ecv",
+        alias = "ga.l3.upscale.albedo.spectral.qa4ecv",
         authors = "Olaf Danne",
         copyright = "2016 Brockmann Consult",
         version = "0.1",
         internal = true,
         description = "Reprojects and upscales horizontal subsets of GlobAlbedo tile products \n" +
                 " into a SIN or a 0.5 or 0.05 degree  Plate Caree product.")
-public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3UpscaleBasisOp {
+public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel3UpscaleBasisOp {
 
     @Parameter(valueSet = {"1200", "200"},
             description = "Input product tile size (default = 1200 (MODIS), 200 for AVHRR/GEO",
@@ -70,7 +77,7 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             description = "Input BRDF type, either Merge, Snow or NoSnow.")
     private String snowMode;
 
-    @Parameter(defaultValue = "Albedo", description = "Name of albedo subdirectory.")
+    @Parameter(defaultValue = "Albedo_spectral", description = "Name of albedo subdirectory.")
     private String albedoSubdirName;
 
     @Parameter(defaultValue = "false",
@@ -80,32 +87,40 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     @Parameter(label = "If set, only these bands will be written into mosaic")
     private String[] bandsToWrite;
 
-    @Parameter(defaultValue = "0", description = "Tile h start index of mosaic")
+    @Parameter(defaultValue = "17", description = "Tile h start index of mosaic")
     protected int hStartIndex;
 
-    @Parameter(defaultValue = "35", description = "Tile h end index of mosaic")
+    @Parameter(defaultValue = "20", description = "Tile h end index of mosaic")
     protected int hEndIndex;
 
-    @Parameter(defaultValue = "0", description = "Tile v start index of mosaic")
+    @Parameter(defaultValue = "2", description = "Tile v start index of mosaic")
     protected int vStartIndex;
 
-    @Parameter(defaultValue = "17", description = "Tile v end index of mosaic")
+    @Parameter(defaultValue = "5", description = "Tile v end index of mosaic")
     protected int vEndIndex;
+
+    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    private int numSdrBands;
 
 
     @TargetProduct
     private Product targetProduct;
 
+    // bands:
+    // DHR_b1,...,DHR_b7
+    // BHR_b1,...,BHR_b7
+    // DHR_sigma_b1,...,DHR_sigma_b7
+    // BHR_sigma_b1,...,BHR_sigma_b7
 
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] bhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] dhrAlphaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] bhrAlphaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] dhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private String[] bhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
 
     private Band dataMaskBand;
     private Band szaBand;
+
+    private Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
 
     @Override
     public void initialize() throws OperatorException {
@@ -127,12 +142,12 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             ((GlobAlbedoQa4ecvMosaicProductReader) productReader).setVEndIndex(vEndIndex);
         }
 
-        dhrBandNames = IOUtils.getAlbedoDhrBandNames();
-        bhrBandNames = IOUtils.getAlbedoBhrBandNames();
-        dhrAlphaBandNames = IOUtils.getAlbedoDhrAlphaBandNames();
-        bhrAlphaBandNames = IOUtils.getAlbedoBhrAlphaBandNames();
-        dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
-        bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
+        setupSpectralWaveBandsMap(numSdrBands);
+
+        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
+        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
 
         Product mosaicProduct;
         try {
@@ -142,8 +157,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             throw new OperatorException("Could not read mosaic product: '" + refTile.getAbsolutePath() + "'. " + e.getMessage(), e);
         }
 
-        setReprojectedProduct(mosaicProduct, inputProductTileSize);
-//        setReprojectedProduct(mosaicProduct, inputProductTileSize, hStartIndex, vStartIndex);   // todo: test and activate
+//        setReprojectedProduct(mosaicProduct, inputProductTileSize);
+        setReprojectedProduct(mosaicProduct, inputProductTileSize, hStartIndex, vStartIndex);
 
         final int numHorizontalTiles = hEndIndex - hStartIndex + 1;
         final int numVerticalTiles = vEndIndex - vStartIndex + 1;
@@ -167,7 +182,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             }
         }
 
-        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojection);
+//        attachQa4ecvUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojection);
+        attachQa4ecvSpectralAlbedoUpscaleGeoCoding(mosaicProduct, scaling, hStartIndex, vStartIndex, width, height, reprojection);
 
         dataMaskBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME);
         szaBand = reprojectedProduct.getBand(AlbedoInversionConstants.ALB_SZA_BAND_NAME);
@@ -210,23 +226,13 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
                 computeNearestAlbedo(srcTiles.get(bhrBandName), targetTiles.get(bhrBandName),
                                      srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
-            if (!reducedOutput) {
-                for (String dhrAlphaBandName : dhrAlphaBandNames) {
-                    computeNearestAlbedo(srcTiles.get(dhrAlphaBandName), targetTiles.get(dhrAlphaBandName),
-                                         srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-                }
-                for (String bhrAlphaBandName : bhrAlphaBandNames) {
-                    computeNearestAlbedo(srcTiles.get(bhrAlphaBandName), targetTiles.get(bhrAlphaBandName),
-                                         srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-                }
-                for (String dhrSigmaBandName : dhrSigmaBandNames) {
-                    computeNearestAlbedo(srcTiles.get(dhrSigmaBandName), targetTiles.get(dhrSigmaBandName),
-                                         srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-                }
-                for (String bhrSigmaBandName : bhrSigmaBandNames) {
-                    computeNearestAlbedo(srcTiles.get(bhrSigmaBandName), targetTiles.get(bhrSigmaBandName),
-                                         srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-                }
+            for (String dhrSigmaBandName : dhrSigmaBandNames) {
+                computeNearestAlbedo(srcTiles.get(dhrSigmaBandName), targetTiles.get(dhrSigmaBandName),
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
+            }
+            for (String bhrSigmaBandName : bhrSigmaBandNames) {
+                computeNearestAlbedo(srcTiles.get(bhrSigmaBandName), targetTiles.get(bhrSigmaBandName),
+                                     srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             }
 
             computeMajority(srcTiles.get(AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME),
@@ -236,9 +242,6 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
-//            computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-//                                 targetTiles.get(AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME),
-//                                 srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
             computeNearestAlbedo(srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                                  targetTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME),
                                  srcTiles.get(AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME));
@@ -294,52 +297,40 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     }
 
     private void addTargetBand(Band srcBand) {
-        boolean skipBand = reducedOutput && (srcBand.getName().contains("alpha") || srcBand.getName().contains("sigma"));
-        if (!skipBand) {
-            if (!upscaledProduct.containsBand(srcBand.getName())) {
-//                Band band = upscaledProduct.addBand(srcBand.getName(), srcBand.getDataType());
-                Band band = upscaledProduct.addBand(srcBand.getName(), ProductData.TYPE_FLOAT32);
-                ProductUtils.copyRasterDataNodeProperties(srcBand, band);
-            }
+        if (!upscaledProduct.containsBand(srcBand.getName())) {
+            Band band = upscaledProduct.addBand(srcBand.getName(), ProductData.TYPE_FLOAT32);
+            ProductUtils.copyRasterDataNodeProperties(srcBand, band);
         }
     }
-
 
     private File findRefTile() {
 
         final FilenameFilter albedoFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
                 // e.g.:
-                // Qa4ecv.albedo.avh_geo.2001016.h20v06.NoSnow.nc
-                // Qa4ecv.albedo.avh_geo.2001016.h20v06.Snow.nc
-                final String expectedPrefix1 = "Qa4ecv.";
-                final String expectedPrefix2 = "GlobAlbedo.";
+                // Qa4ecv.albedo.spectral.2005339.h17v03.NoSnow.nc
+                // Qa4ecv.albedo.spectral.2005339.h17v03.NoSnow.nc
+                final String expectedPrefix = "Qa4ecv.";
                 String expectedNamepart;
                 final String expectedFilenameExt = ".nc";
-                final String expectedSnowpart = "." + snowMode + ".";
 
-                if (isMonthlyAlbedo) {
-                    expectedNamepart = year + IOUtils.getMonthString(monthIndex) + "." + dir.getName();
-                } else {
-                    expectedNamepart = year + IOUtils.getDoyString(doy) + "." + dir.getName();
-                }
+                expectedNamepart = year + IOUtils.getDoyString(doy) + "." + dir.getName();
 
                 final boolean isTileToProcess =
                         GlobAlbedoQa4ecvMosaicProductReader.isTileToProcess(dir.getName(),
                                                                             hStartIndex, hEndIndex,
                                                                             vStartIndex, vEndIndex);
 
-                final boolean filterAccepted = isTileToProcess &&
-                        (name.startsWith(expectedPrefix1) || name.startsWith(expectedPrefix2)) &&
+                return isTileToProcess &&
+                        name.startsWith(expectedPrefix) &&
                         name.contains(expectedNamepart) &&
-//                        name.contains(expectedSnowpart) &&
                         name.endsWith(expectedFilenameExt) &&
                         name.contains("albedo");
-                return filterAccepted;
             }
         };
 
-        String albedoDirString = gaRootDir + File.separator + albedoSubdirName + File.separator + year;
+        String albedoDirString = gaRootDir + File.separator + albedoSubdirName + File.separator + snowMode +
+                File.separator + year;
 
         final File[] albedoFiles = IOUtils.getTileDirectories(albedoDirString);
         if (albedoFiles != null && albedoFiles.length > 0) {
@@ -360,16 +351,68 @@ public class GlobalbedoLevel3UpscaleQa4ecvAlbedo extends GlobalbedoLevel3Upscale
     private void computeNearestAlbedo(Tile src, Tile target, Tile mask) {
         if (src != null && target != null && mask != null) {
             computeNearest(src, target, mask, scaling);
-            // todo: dirty implementation problems with coarse 0.5deg resolution - do we still need this with latest Priors?
-//            applySouthPoleCorrection(src, target, mask);
         }
     }
+
+    private void setupSpectralWaveBandsMap(int numSdrBands) {
+        for (int i = 0; i < numSdrBands; i++) {
+            spectralWaveBandsMap.put(i, "b" + (i + 1));
+        }
+    }
+
+    private void attachQa4ecvSpectralAlbedoUpscaleGeoCoding(Product mosaicProduct,
+                                                double scaling,
+                                                int hStartIndex, int vStartIndex,
+                                                int width, int height,
+                                                String reprojection) {
+        if (reprojection.equals("PC")) {
+            final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+//            final double pixelSizeX = 0.05; // todo - this is for 360deg
+            final double pixelSizeX = 1./120.; // todo
+//            final double pixelSizeY = 0.05;
+            final double pixelSizeY = 1./120.;
+            final double northing = 90.0 - 10.*vStartIndex;
+            final double easting = -180.0 + 10.*hStartIndex;
+            final CrsGeoCoding crsGeoCoding;
+            try {
+                crsGeoCoding = new CrsGeoCoding(crs, width, height, easting, northing, pixelSizeX, pixelSizeY);
+                upscaledProduct.setGeoCoding(crsGeoCoding);
+            } catch (Exception e) {
+                e.printStackTrace();
+                throw new OperatorException("Cannot attach geocoding for mosaic: ", e);
+            }
+        } else {
+            final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
+            try {
+
+                final double pixelSizeX = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
+                final double pixelSizeY = MosaicConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
+                final double northing = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y -
+                        vStartIndex * pixelSizeY * inputProductTileSize;
+                final double easting = MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X +
+                        hStartIndex * pixelSizeX * inputProductTileSize;
+                ModisTileGeoCoding geoCoding = new ModisTileGeoCoding(mapCRS, easting, northing, pixelSizeX, pixelSizeY);
+
+//                final double pixelSizeX = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_X * scaling;
+//                final double pixelSizeY = AlbedoInversionConstants.MODIS_SIN_PROJECTION_PIXEL_SIZE_Y * scaling;
+//                                                new ModisTileGeoCoding(mapCRS,
+//                                                                      MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_X,
+//                                                                      MosaicConstants.MODIS_UPPER_LEFT_TILE_UPPER_LEFT_Y,
+//                                                                      pixelSizeX,
+//                                                                      pixelSizeY);
+                upscaledProduct.setGeoCoding(geoCoding);
+            } catch (Exception e) {
+                throw new OperatorException("Cannot attach geocoding for mosaic: ", e);
+            }
+        }
+    }
+
 
 
     public static class Spi extends OperatorSpi {
 
         public Spi() {
-            super(GlobalbedoLevel3UpscaleQa4ecvAlbedo.class);
+            super(GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo.class);
         }
     }
 }

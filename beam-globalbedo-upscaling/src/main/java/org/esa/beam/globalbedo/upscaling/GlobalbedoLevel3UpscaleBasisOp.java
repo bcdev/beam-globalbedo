@@ -85,6 +85,26 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
         }
     }
 
+    protected void setReprojectedProduct(Product mosaicProduct, int tileSize, int hStartIndex, int vStartIndex) {
+        if (reprojection.equals("PC")) {
+            final double northing = 90.0 - 10.*vStartIndex;
+            final double easting = -180.0 + 10.*hStartIndex;
+
+            ReprojectionOp reprojection = new ReprojectionOp();
+            reprojection.setParameterDefaultValues();
+            reprojection.setParameter("crs", MosaicConstants.WGS84_CODE);
+            reprojection.setParameter("northing", northing);
+            reprojection.setParameter("easting", easting);
+            reprojection.setParameter("referencePixelX", 0.0);
+            reprojection.setParameter("referencePixelY", 0.0);
+            reprojection.setSourceProduct(mosaicProduct);
+            reprojectedProduct = reprojection.getTargetProduct();
+            reprojectedProduct.setPreferredTileSize(tileSize / 4, tileSize / 4);
+        } else {
+            reprojectedProduct = mosaicProduct;
+        }
+    }
+
     protected void setUpscaledProduct(Product mosaicProduct, int width, int height, int tileWidth, int tileHeight) {
         upscaledProduct = new Product(mosaicProduct.getName() + "_upscaled", "GA_UPSCALED", width, height);
         upscaledProduct.setStartTime(reprojectedProduct.getStartTime());
@@ -134,19 +154,39 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
                                           int width, int height,
                                           String reprojection) {
         if (reprojection.equals("PC")) {
-            final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
-            final double pixelSizeX = 0.05; // todo
-            final double pixelSizeY = 0.05;
+//            final CoordinateReferenceSystem crs = DefaultGeographicCRS.WGS84;
+//            final double pixelSizeX = 0.05; // todo
+//            final double pixelSizeY = 0.05;
+//            final double northing = 90.0 - 10.*vStartIndex;
+//            final double easting = -180.0 + 10.*hStartIndex;
+//            final CrsGeoCoding crsGeoCoding;
+//            try {
+//                crsGeoCoding = new CrsGeoCoding(crs, width, height, easting, northing, pixelSizeX, pixelSizeY);
+//                upscaledProduct.setGeoCoding(crsGeoCoding);
+//            } catch (Exception e) {
+//                e.printStackTrace();
+//                throw new OperatorException("Cannot attach geocoding for mosaic: ", e);
+//            }
+
+            final AffineTransform modelTransform = ImageManager.getImageToModelTransform(reprojectedProduct.getGeoCoding());
+            final double pixelSizeX = modelTransform.getScaleX();
+            final double pixelSizeY = modelTransform.getScaleY();
             final double northing = 90.0 - 10.*vStartIndex;
             final double easting = -180.0 + 10.*hStartIndex;
-            final CrsGeoCoding crsGeoCoding;
-            try {
-                crsGeoCoding = new CrsGeoCoding(crs, width, height, easting, northing, pixelSizeX, pixelSizeY);
-                upscaledProduct.setGeoCoding(crsGeoCoding);
-            } catch (Exception e) {
-                e.printStackTrace();
-                throw new OperatorException("Cannot attach geocoding for mosaic: ", e);
-            }
+            ReprojectionOp reprojectionUpscale = new ReprojectionOp();
+            reprojectionUpscale.setParameterDefaultValues();
+            reprojectionUpscale.setParameter("crs", MosaicConstants.WGS84_CODE);
+            reprojectionUpscale.setParameter("pixelSizeX", pixelSizeX * scaling);
+            reprojectionUpscale.setParameter("pixelSizeY", -pixelSizeY * scaling);
+            reprojectionUpscale.setParameter("width", width);
+            reprojectionUpscale.setParameter("height", height);
+            reprojectionUpscale.setParameter("northing", northing);
+            reprojectionUpscale.setParameter("easting", easting);
+            reprojectionUpscale.setParameter("referencePixelX", 0.0);
+            reprojectionUpscale.setParameter("referencePixelY", 0.0);
+            reprojectionUpscale.setSourceProduct(reprojectedProduct);
+            Product targetGeoCodingProduct = reprojectionUpscale.getTargetProduct();
+            ProductUtils.copyGeoCoding(targetGeoCodingProduct, upscaledProduct);
         } else {
             final CoordinateReferenceSystem mapCRS = mosaicProduct.getGeoCoding().getMapCRS();
             try {
@@ -163,7 +203,6 @@ public abstract class GlobalbedoLevel3UpscaleBasisOp extends Operator {
             }
         }
     }
-
 
     protected void computeNearest(Tile src, Tile target, Tile mask, double scaling) {
         Rectangle targetRectangle = target.getRectangle();

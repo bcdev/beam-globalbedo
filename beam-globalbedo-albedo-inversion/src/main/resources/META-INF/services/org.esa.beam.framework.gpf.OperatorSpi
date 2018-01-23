@@ -17,6 +17,7 @@ org.esa.beam.globalbedo.inversion.spectral.SpectralDailyAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralInversionOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralBrdfToAlbedoOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.MergeSpectralBrdfOp$Spi
+org.esa.beam.globalbedo.inversion.spectral.MergeSpectralAlbedoOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralAlbedo$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralInversion$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralDailyAccumulation$Spi
