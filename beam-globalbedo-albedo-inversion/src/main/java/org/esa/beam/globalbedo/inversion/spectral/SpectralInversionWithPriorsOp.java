@@ -29,7 +29,7 @@ import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALB
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
-@OperatorMetadata(alias = "ga.inversion.inversion.spectral",
+@OperatorMetadata(alias = "ga.inversion.inversion.spectral.withpriors",
         description = "Implements the inversion part extended from broadband to spectral appropach (MODIS bands).",
         authors = "Olaf Danne",
         version = "1.0",
