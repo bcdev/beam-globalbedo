@@ -129,17 +129,20 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
 
         // we have product filenames:
         // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_C_BRF_EUMP_20050501000000.nc
+        // (W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,ME05+MVIRI_VIS_000_C_BRF_EUMP_19941231000000.nc for 201801 delivery)
         // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET5+MVIRI_063_C_BRF_EUMP_20070420000000.nc
         // W_XX-EUMETSAT-Darmstadt,VIS+SATELLITE,MET7+MVIRI_057_C_BRF_EUMP_20070420000000.nc
         // and the latlon products:
         // MET_000_VIS01_LatLon.nc (000 products from 1982-2006)
         // MET_057_VIS01_LatLon.nc (057 products from 2006-2010)
         // MET_063_VIS01_LatLon.nc (063 products from 1998-2007)
-        final boolean matchesMviri000Disk = sourceProduct.getName().contains("VIRI_C_BRF") &&
+        final String srcName = sourceProduct.getName();
+        final boolean matchesMviri000Disk = (srcName.contains("VIRI_C_BRF") ||
+                srcName.contains("VIRI_VIS_000_C_BRF")) &&  // for new products 201801 !!
                 latlonProduct.getName().equals("MET_000_VIS01_LatLon");
-        final boolean matchesMviri057Disk = sourceProduct.getName().contains("VIRI_057_C_BRF") &&
+        final boolean matchesMviri057Disk = srcName.contains("VIRI_057_C_BRF") &&
                 latlonProduct.getName().equals("MET_057_VIS01_LatLon");
-        final boolean matchesMviri063Disk = sourceProduct.getName().contains("VIRI_063_C_BRF") &&
+        final boolean matchesMviri063Disk = srcName.contains("VIRI_063_C_BRF") &&
                 latlonProduct.getName().equals("MET_063_VIS01_LatLon");
 
         return matchesMviri000Disk || matchesMviri057Disk || matchesMviri063Disk;
