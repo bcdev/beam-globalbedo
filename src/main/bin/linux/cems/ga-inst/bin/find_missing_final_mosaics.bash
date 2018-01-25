@@ -4,9 +4,9 @@ set -e
 year=$1
 
 start=001
-end=366
+end=365
 
-res=05
+res=$2
 
 OLDDIR=$PWD
 # e.g.  ../GlobAlbedoTest/Mosaic/Albedo/NoSnow/avh_geo/2001/05/Qa4ecv.albedo.avh_geo.NoSnow.05.2001020.PC.nc

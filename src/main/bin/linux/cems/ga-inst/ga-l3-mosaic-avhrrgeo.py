@@ -26,19 +26,20 @@ sensorID = 'avh_geo' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #sensorID = '/' # must be one of: '/', 'avh', 'geo', 'avh_geo'
 #######
 
-#years = ['1991']    #test  
-#years = ['1982']  
+years = ['1994']
+#years = ['2015']  
 #years = ['1990','1992']    #test  
-years = ['1985']    #test  
+#years = ['1985']    #test  
 ##years = ['1996','1997','1998','1999','2000','2001','2002','2003','2004','2005']  
+#years = ['2000','2001','2002','2003','2004','2005','2006','2007','2008','2009','2010','2011','2012','2013','2014','2015','2016']  
 
-snowModes = ['NoSnow']
+#snowModes = ['NoSnow']
 #snowModes = ['Snow']
-#snowModes = ['NoSnow','Snow']
+snowModes = ['NoSnow','Snow']
 
-#resolutions = ['05', '005']
+resolutions = ['05', '005']
 #resolutions = ['005']
-resolutions = ['05']
+#resolutions = ['05']
 
 #projections = ['SIN', 'PC']
 #projections = ['SIN']
@@ -76,8 +77,8 @@ m = PMonitor(inputs,
 for year in years:
     for snowMode in snowModes:
 
-        for idoy in range(0,366):    
-        #for idoy in range(162,163):    
+        for idoy in range(0,365):    
+        #for idoy in range(12,17):    
         #for idoy in range(180,181):    
         #for idoy in range(120,121):    
         #for idoy in range(365,366):    

@@ -30,11 +30,8 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
     #     AVHRR + GEO (MVIRI, SEVIRI, GOES_E, GOES_W, GMS)
 
     # MVIRI, SEVIRI, GOES_E, GOES_W, GMS and AVHRR (the new AVHRR+GEO default, 20170315):
-    #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e -t $TARGET"
-    #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e -t $TARGET
-
-    echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e"
-    time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e
+    #echo "time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e"
+    #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","AVHRR","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e
     
     # test (REMOVE):
     #time $gpt  ga.l3.dailyacc -Psensors="MVIRI","SEVIRI","GOES_E","GOES_W","GMS" -PmeteosatUseAllLongitudes=true -PmodisTileScaleFactor=$modisTileScaleFactor -Ptile=$tile -Pyear=$year -Pdoy=$doy -PcomputeSnow=false -PbbdrRootDir=$bbdrRootDir -PdailyAccDir=$dailyAccNosnowDir -e

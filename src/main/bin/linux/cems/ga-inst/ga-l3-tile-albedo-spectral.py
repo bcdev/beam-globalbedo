@@ -27,12 +27,17 @@ spectralAlbedoRootDir = gaRootDir + '/Albedo_spectral'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 #tiles = ['h22v02'] # test
-#tiles = ['h18v04'] # test
+tiles = ['h17v04'] # test
 #tiles = ['h20v06','h25v06'] # test
-tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
+#tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
+#tiles = ['h17v02','h18v02','h19v02','h20v02',
+#         'h17v03','h18v03','h19v03','h20v03',
+#         'h17v02','h18v04','h19v04','h20v04',
+#         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
-startYear = 2007  # test
-endYear = 2007
+
+startYear = 2005  # test
+endYear = 2005
 
 inputs = ['brdfs']
 
@@ -50,16 +55,13 @@ for tile in tiles:
 
         year = str(iyear)
         startDoy = '001'
-        endDoy = '366'
+        endDoy = '365'
 
         postCond = 'albedo_' + year + '_' + tile
         m.execute('ga-l3-tile-albedo-spectral-step.sh',
                      ['brdfs'], 
 		     [postCond], 
                      parameters=[tile,year,startDoy,endDoy,gaRootDir,spectralInversionRootDir,spectralAlbedoRootDir,beamDir])
-
-    ### cleanup:
-    # do this manually for the moment
 
 # wait for processing to complete
 m.wait_for_completion()

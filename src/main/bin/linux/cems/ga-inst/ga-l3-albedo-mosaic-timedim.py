@@ -18,17 +18,18 @@ qa4ecvArchiveRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/qa4ecv_archive
 qa4ecvArchiveRootDir = '/group_workspaces/cems2/qa4ecv/vol3/olafd/qa4ecv_archive/qa4ecv'
 albedoMosaicRootDir = gaRootDir + '/Mosaic/Albedo'
 
-startYear = 2002
-endYear = 2003
+startYear = 2016
+endYear = 2016
 
 version = 'v0.92'
 sensorID = 'avh_geo'
 #snowModes = ['NoSnow','Snow','Merge']
-#snowModes = ['NoSnow','Snow']
-snowModes = ['Merge']
-resolutions = ['05']
+#snowModes = ['NoSnow']
+snowModes = ['Snow']
+#snowModes = ['Merge']
+#resolutions = ['05']
 #resolutions = ['05','005']
-#resolutions = ['005']
+resolutions = ['005']
 
 inputs = ['albedos']
 m = PMonitor(inputs,
@@ -45,11 +46,11 @@ for res in resolutions:
             year = str(iyear)
             albedoMosaicSourceDir = albedoMosaicRootDir + '/' + snowMode + '/' + sensorID + '/' + year + '/' + res
             albedoMosaicTimedimDir = qa4ecvArchiveRootDir + '/albedo/L3_Mosaic_' + snowMode + '/' + version + '/' + year
-            startDoy = '001'
-            endDoy = '366'
-
             #startDoy = '001'
-            #endDoy = '031'
+            #endDoy = '365'
+
+            startDoy = '017'
+            endDoy = '017'
 
             postCond = 'albedo_mosaic_timedim_' + res + '_' + snowMode + '_' + year + '_' + startDoy
             m.execute('ga-l3-albedo-mosaic-timedim-step.sh', ['albedos'], [postCond], parameters=[sensorID,year,res,snowMode,startDoy,endDoy,albedoMosaicSourceDir,albedoMosaicTimedimDir])

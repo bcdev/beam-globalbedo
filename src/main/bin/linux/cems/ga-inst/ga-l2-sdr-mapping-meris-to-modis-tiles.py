@@ -20,8 +20,8 @@ from pmonitor import PMonitor
 
 __author__ = 'olafd'
 
-#years = ['2005']
-years = ['2007']
+years = ['2005']
+#years = ['2007']
 
 #sensors = ['MERIS'] # start with
 #sensors = ['VGT'] # start with
@@ -33,9 +33,13 @@ priorDir = '/group_workspaces/cems2/qa4ecv/vol3/500m' # this is preliminary, 201
 #tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories
 
 #tiles = ['h20v06'] # start with
-#tiles = ['h18v04'] # start with
+tiles = ['h17v04'] # start with
 #tiles = ['h25v06'] # start with
-tiles = ['h18v04','h22v02','h19v08','h25v06'] # final
+#tiles = ['h18v04','h22v02','h19v08','h25v06'] # final
+#tiles = ['h17v02','h18v02','h19v02','h20v02',
+#         'h17v03','h18v03','h19v03','h20v03',
+#         'h17v04','h18v04','h19v04','h20v04',
+#         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
 #subtileStartX = ['0','300','600','900']
 #subtileStartY = ['0','300','600','900']
@@ -46,12 +50,6 @@ gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 inputs = ['dummy']
-#m = PMonitor(inputs, 
-#             request='ga-l2-sdr-mapping-meris-to-modis-tiles',
-#             logdir='log', 
-#             hosts=[('localhost',192)],
-#             types=[('ga-l2-sdr-mapping-meris-to-modis-tiles-step.sh',64),
-#                    ('ga-l2-sdr-modis-tiles-to-subtiles-step.sh',128)])
 m = PMonitor(inputs,
              request='ga-l2-sdr-mapping-meris-to-modis-tiles',
              logdir='log',

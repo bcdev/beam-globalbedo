@@ -43,10 +43,10 @@ tiles.sort()
 #         'h15v17','h16v17','h17v17','h18v17','h19v17','h20v17']
 #tiles = ['h27v08']
 #tiles = ['h20v01','h20v02']
-tiles = ['h24v02','h24v03']
+#tiles = ['h24v02','h24v03']
 
-startYear = 2002
-endYear = 2002
+startYear = 1994
+endYear = 1994
 
 inputs = ['bbdrs']
 m = PMonitor(inputs,
