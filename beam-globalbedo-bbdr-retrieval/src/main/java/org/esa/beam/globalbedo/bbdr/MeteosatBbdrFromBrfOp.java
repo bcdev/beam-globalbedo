@@ -130,8 +130,9 @@ public class MeteosatBbdrFromBrfOp extends PixelOperator {
         final boolean isSnow = avhrrMaskProduct != null && AvhrrMsslFlag.isSnow(avhrrMsslFlag);
         final boolean isClearLand = avhrrMaskProduct == null || AvhrrMsslFlag.isClearLand(avhrrMsslFlag);
         final boolean isSea = !isClearLand && !isCloud && !isSnow;
-        if (isSea || isCloud) {
-            // only compute over clear land
+//        if (isSea || isCloud) {
+        if (isSea) {
+            // only compute over land. Ignore clouds (since new data provided by EUM 201801)
             BbdrUtils.fillTargetSampleWithNoDataValue(targetSamples);
             computeAvhrrMsslSnapFlag(avhrrMsslFlag, targetSamples);
             return;

@@ -310,7 +310,7 @@ public class MeteosatBrfTilesExtractor extends Operator implements Output {
                         if (avhrrMaskProduct != null) {
                             Map<String, Product> meteosatBbdrInputProducts = new HashMap<>();
                             meteosatBbdrInputProducts.put("brf", tileProduct.getProduct());
-//                            meteosatBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);    // test for new BRF 201801 !!!
+                            meteosatBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);    // test for new BRF 201801 !!!
                             Map<String, Object> meteosatBbdrInputParms = new HashMap<>();
                             meteosatBbdrInputParms.put("sensor", sensor);
                             productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(MeteosatBbdrFromBrfOp.class),
