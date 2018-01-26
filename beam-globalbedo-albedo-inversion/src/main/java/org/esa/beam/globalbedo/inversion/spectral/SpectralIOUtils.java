@@ -221,7 +221,6 @@ public class SpectralIOUtils {
                                                            int numSdrBands,
                                                            final int doy,
                                                            final int year, String tile,
-//                                                           final int subStartX, final int subStartY,
                                                            int wings,
                                                            boolean computeSnow) {
         List<String> accumulatorNameList = new ArrayList<>();

@@ -64,12 +64,8 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
     @Parameter(defaultValue = "3", interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
     private int singleBandIndex;    // todo: consider chemistry bands
 
-
-    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior mean band (default fits to the latest prior version)")
-    private String priorMeanBandNamePrefix;
-
-    @Parameter(defaultValue = "BRDF_Albedo_Parameters_", description = "Prefix of prior SD band (default fits to the latest prior version)")
-    private String priorSdBandNamePrefix;
+    private String priorMeanBandNamePrefix = "BRDF_Albedo_Parameters_";
+    private String priorSdBandNamePrefix = "BRDF_Albedo_Parameters_";
 
 
     private double priorScaleFactor = 30.0;
@@ -121,6 +117,10 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
 
         double entropy = 0.0; // == det in BB
         double relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
+
+//        if (x == 50 && y == 50) {
+//            System.out.println("x = " + x);
+//        }
 
         double maskAcc = 0.0;
         SpectralAccumulator accumulator = null;
@@ -220,6 +220,7 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
 
     @Override
     protected void configureSourceSamples(SampleConfigurer sampleConfigurer) throws OperatorException {
+        configurePriorSourceSamples(sampleConfigurer);
     }
 
     @Override
