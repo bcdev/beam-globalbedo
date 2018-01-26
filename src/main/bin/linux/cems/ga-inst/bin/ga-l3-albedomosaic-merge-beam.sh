@@ -10,6 +10,9 @@ beamRootDir=$6
 noSnowProduct=$gaRootDir/Mosaic/Albedo/NoSnow/avh_geo/$year/$deg/Qa4ecv.albedo.avh_geo.NoSnow.$deg.${year}${doy}.$proj.nc
 snowProduct=$gaRootDir/Mosaic/Albedo/Snow/avh_geo/$year/$deg/Qa4ecv.albedo.avh_geo.Snow.$deg.${year}${doy}.$proj.nc
 
+priorInfoNoSnowProduct=/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/mask_snowfraction/mosaic/${deg}/doy/${doy}/GlobAlbedo.brdf.nosnow.${deg}.doy${doy}.nc
+priorInfoSnowProduct=/group_workspaces/cems2/qa4ecv/vol3/prior.c6.v2/mask_snowfraction/mosaic/${deg}/doy/${doy}/GlobAlbedo.brdf.snow.${deg}.doy${doy}.nc
+
 targetDir=$gaRootDir/Mosaic/Albedo/Merge/avh_geo/$year/$deg
 if [ ! -d "$targetDir" ]
 then
@@ -19,8 +22,11 @@ target=$targetDir/Qa4ecv.albedo.avh_geo.Merge.$deg.${year}${doy}.$proj.nc
 
 if [ -f $noSnowProduct ] && [ -f $snowProduct ]
 then
-    echo "time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -e -f NetCDF4-GA-ALBEDO -t $target"
-    time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -e -f NetCDF4-GA-ALBEDO -t $target
+    #echo "time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -e -f NetCDF4-GA-ALBEDO -t $target"
+    #time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -e -f NetCDF4-GA-ALBEDO -t $target
+
+    echo "time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -SpriorInfoNoSnowProduct=$priorInfoNoSnowProduct -SpriorInfoSnowProduct=$priorInfoSnowProduct -e -f NetCDF4-GA-ALBEDO -t $target"
+    time $beamRootDir/bin/gpt-d-l3.sh ga.albedo.mergealbedo -SnoSnowProduct=$noSnowProduct -SsnowProduct=$snowProduct -SpriorInfoNoSnowProduct=$priorInfoNoSnowProduct -SpriorInfoSnowProduct=$priorInfoSnowProduct -e -f NetCDF4-GA-ALBEDO -t $target
 else
     if [ ! -f $noSnowProduct ]
     then

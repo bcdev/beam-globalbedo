@@ -11,24 +11,24 @@ __author__ = 'olafd'
 #############################################################################################################################
 
 #years=['2005']
-years=['2002']
+#years=['2002']
 #years=['2001','2002']
 #years=['2001','2002','2003','2004','2005','2006']
 #years=['2011','2012','2013','2014','2015','2016']
 #years=['1982','1983','1984','1985','1986','1987','1988','1989','1990']
 #years=['1995','1996','1997','1998','1999']
 
-startYear = 2002
-endYear = 2002
+startYear = 1994
+endYear = 1994
 
-#snowModes=['Merge']
+snowModes=['Merge']
 #snowModes=['NoSnow']
 #snowModes=['Snow']
 #snowModes=['NoSnow','Snow']
-snowModes=['NoSnow','Snow','Merge']
-#resolutions=['005','05']
+#snowModes=['NoSnow','Snow','Merge']
+resolutions=['005','05']
 #resolutions=['005']
-resolutions=['05']
+#resolutions=['05']
 #projections=['PC','SIN']
 projections=['PC']
 #projections=['SIN']

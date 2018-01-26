@@ -7,16 +7,14 @@ echo "entered ga-l3-albedomosaic-merge-step..."
 
 year=$1
 doy=$2
-deg=$3
-proj=$4
-gaRootDir=$5
-beamDir=$6
+gaRootDir=$3
+beamDir=$4
 
 doy=`printf '%03d\n' "$((10#$doy))"`
 
-task="ga-l3-albedomosaic-merge"
-jobname="${task}-${year}-${doy}-${deg}-${proj}"
-command="./bin/${task}-beam.sh ${year} ${doy} ${deg} ${proj} ${gaRootDir} ${beamDir}"
+task="ga-l3-albedomosaic-spectral-merge"
+jobname="${task}-${year}-${doy}"
+command="./bin/${task}-beam.sh ${year} ${doy} ${gaRootDir} ${beamDir}"
 
 echo "jobname: $jobname"
 echo "command: $command"

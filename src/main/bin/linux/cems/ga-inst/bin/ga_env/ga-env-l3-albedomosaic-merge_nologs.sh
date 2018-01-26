@@ -27,7 +27,7 @@ submit_job() {
     #bsubmit="bsub -U root#14 -q short-serial -P ga_qa4ecv -R rusage[mem=32000] -M 32000000 -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
     #bsubmit="bsub -q short-serial -P ga_qa4ecv -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
     # we really need the 32G RAM...
-    bsubmit="bsub -q short-serial -P ga_qa4ecv -R rusage[mem=32000] -M 32000000 -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
+    bsubmit="bsub -q short-serial -W 180 -P ga_qa4ecv -R rusage[mem=32000] -M 32000000 -cwd ${GA_INST} -J ${jobname} ${GA_INST}/${command} ${@:3}"
 
     #bsubmit="bsub -U root#14 -q short-serial -P ga_qa4ecv -R rusage[mem=32000] -M 32000000 -cwd ${GA_INST} -oo ${GA_LOG}/${jobname}.out -eo ${GA_LOG}/${jobname}.err -J ${jobname} ${GA_INST}/${command} ${@:3}"
 

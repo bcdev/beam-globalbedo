@@ -52,8 +52,8 @@ for doy in $(seq -w $start $end); do   # -w takes care for leading zeros
        if [ -f ${TARGET_NOSNOW} ] && [ -f ${TARGET_SNOW} ]
        then
           TARGET_MERGE=${spectralAlbedoMergeTargetDir}/Qa4ecv.albedo.spectral.$year$doy.$tile.Merge.nc
-          echo "time $gpt ga.albedo.mergealbedo -SnoSnowProduct=${TARGET_NOSNOW} -SsnowProduct=${TARGET_SNOW} -e -f NetCDF4-GA-ALBEDO -t ${TARGET_MERGE}"
-          time $gpt ga.albedo.mergealbedo -SnoSnowProduct=${TARGET_NOSNOW} -SsnowProduct=${TARGET_SNOW} -e -f NetCDF4-GA-ALBEDO -t ${TARGET_MERGE}
+          echo "time $gpt ga.albedo.mergealbedo -SnoSnowProduct=${TARGET_NOSNOW} -SsnowProduct=${TARGET_SNOW} -e -f NetCDF4-BEAM -t ${TARGET_MERGE}"
+          time $gpt ga.albedo.mergealbedo -SnoSnowProduct=${TARGET_NOSNOW} -SsnowProduct=${TARGET_SNOW} -e -f NetCDF4-BEAM -t ${TARGET_MERGE}
        else
           if [ ! -f ${TARGET_NOSNOW} ]
           then

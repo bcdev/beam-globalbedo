@@ -17,16 +17,16 @@ __author__ = 'olafd'
 
 sensor = 'MVIRI'
 
-years = ['1982','1983','1984','1985','1986','1987','1988','1989']     
+#years = ['1982','1983','1984','1985','1986','1987','1988','1989']     
 #years = ['1982','1983','1984','1985']     
 #years = ['1991','1992','1993','1994','1995','1996','1997','1998','1999']     
 #years = ['2000','2001','2002']     
 #years = ['2003','2004','2005','2006']     
 #years = ['2007','2008','2009','2010']     
-#years=['1990']
+years=['1994']
 
-diskIds = ['000', '057', '063'] 
-#diskIds = ['000'] 
+#diskIds = ['000', '057', '063'] 
+diskIds = ['000'] 
 #diskIds = ['063'] 
 #diskIds = ['057'] 
 hIndices = ['09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', 
@@ -49,7 +49,8 @@ m = PMonitor(inputs,
 for diskId in diskIds:
 
     if diskId == '000':
-        diskIdString = 'MVIRI_C_BRF'
+        # diskIdString = 'MVIRI_C_BRF'
+        diskIdString = 'MVIRI_VIS_000_C_BRF'  # new for 1993-1995 data provided 201801 !!
     elif diskId == '057':
         diskIdString = 'MVIRI_057_C_BRF'
     else:

@@ -4,7 +4,7 @@ set -e
 year=$1
 
 start=001
-end=366
+end=365
 
 res=$2
 

@@ -31,13 +31,16 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 sensorID = 'mer_vgt' # must be one of: 'mer', 'vgt', 'mer_vgt'
 #######
 
-#tiles = ['h22v02'] # test
+tiles = ['h17v04'] # test
 #tiles = ['h18v04'] # test
-#tiles = ['h20v06','h25v06'] # test
-tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
+#tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
+#tiles = ['h17v02','h18v02','h19v02','h20v02',
+#         'h17v03','h18v03','h19v03','h20v03',
+#         'h17v04','h18v04','h19v04','h20v04',
+#         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
-startYear = 2007  # test
-endYear = 2007
+startYear = 2005  # test
+endYear = 2005
 
 bandIndices = ['1', '2', '3', '4', '5', '6', '7']
 #bandIndices = ['3', '4']
@@ -48,8 +51,8 @@ inputs = ['dailyaccs']
 m = PMonitor(inputs,
              request='ga-l3-tile-inversion-spectral',
              logdir='log',
-             hosts=[('localhost',128)], # let's try this number...
-             types=[ ('ga-l3-tile-inversion-spectral-step.sh',64)] )
+             hosts=[('localhost',32)], # let's try this number...
+             types=[ ('ga-l3-tile-inversion-spectral-step.sh',32)] )
 
 ##### LOOP over tiles and years: ####
 for tile in tiles:
