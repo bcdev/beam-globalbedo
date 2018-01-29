@@ -60,7 +60,7 @@ public class GlobalbedoLevel3SpectralAlbedo extends Operator {
 
         Product brdfProduct;
         try {
-            brdfProduct = SpectralIOUtils.getSpectralBrdfProduct(brdfDir, year, doy, true);
+            brdfProduct = SpectralIOUtils.getSpectralBrdfProduct(brdfDir, year, doy, computeSnow);
         } catch (IOException e) {
             throw new OperatorException("Cannot load spectral BRDF product: " + e.getMessage());
         }

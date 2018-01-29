@@ -240,7 +240,8 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             SRC_DHR[0][i] = index;
             SRC_DHR[1][i] = index + 100;
             index++;
-            targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
+            final Band dhrBand = targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
+            dhrBand.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
         }
 
 //        dhrAlphaBandNames = IOUtils.getAlbedoDhrAlphaBandNames();
@@ -264,7 +265,8 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             SRC_BHR[0][i] = index;
             SRC_BHR[1][i] = index + 100;
             index++;
-            targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
+            final Band bhrBand = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
+            bhrBand.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
         }
 
 //        bhrAlphaBandNames = IOUtils.getAlbedoBhrAlphaBandNames();

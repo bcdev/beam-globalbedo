@@ -68,6 +68,7 @@ public class SpectralPrior {
             }
         }
 
+        offset = 7 * 2 * NUM_ALBEDO_PARAMETERS;
         double priorSnowFraction = sourceSamples[offset++].getDouble();
         int landWaterType = sourceSamples[offset].getInt();
 

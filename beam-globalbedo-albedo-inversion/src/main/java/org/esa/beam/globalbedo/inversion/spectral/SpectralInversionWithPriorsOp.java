@@ -118,9 +118,9 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
         double entropy = 0.0; // == det in BB
         double relEntropy = AlbedoInversionConstants.NO_DATA_VALUE;
 
-//        if (x == 50 && y == 50) {
-//            System.out.println("x = " + x);
-//        }
+        if (x == 200 && y == 200) {
+            System.out.println("x = " + x);
+        }
 
         double maskAcc = 0.0;
         SpectralAccumulator accumulator = null;
@@ -385,11 +385,11 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
                 ;
                 configurator.defineSample(offset++, sdBandName, priorProduct);
             }
-            String snowFractionBandName = "snowFraction";
-            configurator.defineSample(offset++, snowFractionBandName, priorProduct);
-            String landWaterBandName = "landWaterType";
-            configurator.defineSample(offset++, landWaterBandName, priorProduct);
         }
+        String snowFractionBandName = "snowFraction";
+        configurator.defineSample(offset++, snowFractionBandName, priorProduct);
+        String landWaterBandName = "landWaterType";
+        configurator.defineSample(offset++, landWaterBandName, priorProduct);
     }
 
 
