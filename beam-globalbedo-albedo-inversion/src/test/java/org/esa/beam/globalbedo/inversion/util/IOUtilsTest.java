@@ -617,6 +617,16 @@ public class IOUtilsTest extends TestCase {
         assertNull(avhrrMaskProduct);
     }
 
+    public void testCovarianceNames() throws Exception {
+        String[][] uncertaintyBandNames = IOUtils.getInversionUncertaintyBandNames();
+        for (String[] uncertaintyBandName : uncertaintyBandNames) {
+            for (String s : uncertaintyBandName) {
+                System.out.println("uncertaintyBandName = " + s);
+            }
+        }
+        System.out.println();
+    }
+
     public void testSomething()  {
         new Color(220, 230, 240);
         new Color(230, 253, 200);

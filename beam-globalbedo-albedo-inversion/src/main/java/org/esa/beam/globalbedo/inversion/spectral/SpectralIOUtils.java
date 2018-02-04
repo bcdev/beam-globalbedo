@@ -30,7 +30,22 @@ import java.util.logging.Level;
  */
 public class SpectralIOUtils {
 
+    public static String[] getSpectralInversionParameter3BandNames(int[] bandIndices) {
+        int numSdrBands = 3;
+        String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        int index = 0;
+        for (int i = 0; i < numSdrBands; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                bandNames[index] = "mean_b" + bandIndices[i] + "_f" + j;
+                index++;
+            }
+        }
+        return bandNames;
+    }
+
+
     public static String[] getSpectralInversionParameterBandNames(int numSdrBands) {
+        // todo: this works only if we have all bands 1-7!
         String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
@@ -43,6 +58,7 @@ public class SpectralIOUtils {
     }
 
     public static String[] getSpectralInversionParameterSingleBandNames(int singleBandIndex) {
+        // todo: this works only if we have all bands 1-7!
         String bandNames[] = new String[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         int index = 0;
         for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
@@ -76,6 +92,66 @@ public class SpectralIOUtils {
         }
 
         return bandNames;
+    }
+
+    public static String[][] getSpectralInversionUncertainty3BandNames(int[] bandIndices,
+                                                                       Map<Integer, String> spectralWaveBandsMap) {
+        // we want for e.g. bands 4, 1, 3:
+        // VAR_b4_f0_b4_f0           d
+        // VAR_b4_f0_b4_f1
+        // VAR_b4_f0_b4_f2
+        // VAR_b4_f1_b4_f1           d
+        // VAR_b4_f1_b4_f2
+        // VAR_b4_f2_b4_f2           d
+
+        // VAR_b4_f0_b1_f0
+        // VAR_b4_f0_b1_f1
+        // VAR_b4_f0_b1_f2
+        // VAR_b4_f1_b1_f1
+        // VAR_b4_f1_b1_f2
+        // VAR_b4_f2_b1_f2
+
+        // VAR_b4_f0_b3_f0
+        // VAR_b4_f0_b3_f1
+        // VAR_b4_f0_b3_f2
+        // VAR_b4_f1_b3_f1
+        // VAR_b4_f1_b3_f2
+        // VAR_b4_f2_b3_f2
+
+
+        // VAR_b1_f0_b1_f0           d
+        // VAR_b1_f0_b1_f1
+        // VAR_b1_f0_b1_f2
+        // VAR_b1_f1_b1_f1           d
+        // VAR_b1_f1_b1_f2
+        // VAR_b1_f2_b1_f2           d
+
+        // VAR_b1_f0_b3_f0
+        // VAR_b1_f0_b3_f1
+        // VAR_b1_f0_b3_f2
+        // VAR_b1_f1_b3_f1
+        // VAR_b1_f1_b3_f2
+        // VAR_b1_f2_b3_f2
+
+        // VAR_b3_f0_b3_f0            d
+        // VAR_b3_f0_b3_f1
+        // VAR_b3_f0_b3_f2
+        // VAR_b3_f1_b3_f1            d
+        // VAR_b3_f1_b3_f2
+        // VAR_b3_f2_b3_f2            d
+
+        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
+                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
+            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i) +
+                        "_f" + (bandIndices[i] % 3) + "_b" + j / 3 + "_f" + (j % 3);
+            }
+        }
+        return bandNames;
+
     }
 
     public static String[][] getSpectralInversionUncertaintySingleBandNames(Map<Integer, String> spectralWaveBandsMap) {
