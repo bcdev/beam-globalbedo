@@ -96,49 +96,52 @@ public class SpectralIOUtils {
 
     public static String[][] getSpectralInversionUncertainty3BandNames(int[] bandIndices,
                                                                        Map<Integer, String> spectralWaveBandsMap) {
-        // we want for e.g. bands 4, 1, 3:
-        // VAR_b4_f0_b4_f0           d
-        // VAR_b4_f0_b4_f1
-        // VAR_b4_f0_b4_f2
-        // VAR_b4_f1_b4_f1           d
-        // VAR_b4_f1_b4_f2
-        // VAR_b4_f2_b4_f2           d
-
-        // VAR_b4_f0_b1_f0
-        // VAR_b4_f0_b1_f1
-        // VAR_b4_f0_b1_f2
-        // VAR_b4_f1_b1_f1
-        // VAR_b4_f1_b1_f2
-        // VAR_b4_f2_b1_f2
-
-        // VAR_b4_f0_b3_f0
-        // VAR_b4_f0_b3_f1
-        // VAR_b4_f0_b3_f2
-        // VAR_b4_f1_b3_f1
-        // VAR_b4_f1_b3_f2
-        // VAR_b4_f2_b3_f2
-
-
-        // VAR_b1_f0_b1_f0           d
-        // VAR_b1_f0_b1_f1
-        // VAR_b1_f0_b1_f2
-        // VAR_b1_f1_b1_f1           d
-        // VAR_b1_f1_b1_f2
-        // VAR_b1_f2_b1_f2           d
-
-        // VAR_b1_f0_b3_f0
-        // VAR_b1_f0_b3_f1
-        // VAR_b1_f0_b3_f2
-        // VAR_b1_f1_b3_f1
-        // VAR_b1_f1_b3_f2
-        // VAR_b1_f2_b3_f2
-
-        // VAR_b3_f0_b3_f0            d
-        // VAR_b3_f0_b3_f1
-        // VAR_b3_f0_b3_f2
-        // VAR_b3_f1_b3_f1            d
-        // VAR_b3_f1_b3_f2
-        // VAR_b3_f2_b3_f2            d
+        // we want for e.g. bands 6, 4, 5:
+//        VAR_b6_f0_b6_f0
+//        VAR_b6_f0_b6_f1
+//        VAR_b6_f0_b6_f2
+//        VAR_b6_f0_b4_f0
+//        VAR_b6_f0_b4_f1
+//        VAR_b6_f0_b4_f2
+//        VAR_b6_f0_b5_f0
+//        VAR_b6_f0_b5_f1
+//        VAR_b6_f0_b5_f2
+//        VAR_b6_f1_b6_f1
+//        VAR_b6_f1_b6_f2
+//        VAR_b6_f1_b4_f0
+//        VAR_b6_f1_b4_f1
+//        VAR_b6_f1_b4_f2
+//        VAR_b6_f1_b5_f0
+//        VAR_b6_f1_b5_f1
+//        VAR_b6_f1_b5_f2
+//        VAR_b6_f2_b6_f2
+//        VAR_b6_f2_b4_f0
+//        VAR_b6_f2_b4_f1
+//        VAR_b6_f2_b4_f2
+//        VAR_b6_f2_b5_f0
+//        VAR_b6_f2_b5_f1
+//        VAR_b6_f2_b5_f2
+//        VAR_b4_f0_b4_f0
+//        VAR_b4_f0_b4_f1
+//        VAR_b4_f0_b4_f2
+//        VAR_b4_f0_b5_f0
+//        VAR_b4_f0_b5_f1
+//        VAR_b4_f0_b5_f2
+//        VAR_b4_f1_b4_f1
+//        VAR_b4_f1_b4_f2
+//        VAR_b4_f1_b5_f0
+//        VAR_b4_f1_b5_f1
+//        VAR_b4_f1_b5_f2
+//        VAR_b4_f2_b4_f2
+//        VAR_b4_f2_b5_f0
+//        VAR_b4_f2_b5_f1
+//        VAR_b4_f2_b5_f2
+//        VAR_b5_f2_b5_f0
+//        VAR_b5_f2_b5_f1
+//        VAR_b5_f2_b5_f2
+//        VAR_b5_f1_b5_f1
+//        VAR_b5_f1_b5_f2
+//        VAR_b5_f2_b5_f2
 
         String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
                 [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];

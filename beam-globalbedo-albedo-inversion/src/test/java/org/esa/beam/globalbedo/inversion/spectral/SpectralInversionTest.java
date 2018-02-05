@@ -131,11 +131,11 @@ public class SpectralInversionTest extends TestCase {
     }
 
     public void testCovarianceNames() throws Exception {
-        int[] bandIndices = {4, 1, 3};
+        int[] bandIndices = {6, 4, 5};
         Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
-        spectralWaveBandsMap.put(0, "b4");
-        spectralWaveBandsMap.put(1, "b1");
-        spectralWaveBandsMap.put(2, "b3");
+        spectralWaveBandsMap.put(0, "b6");
+        spectralWaveBandsMap.put(1, "b4");
+        spectralWaveBandsMap.put(2, "b5");
         String[][] uncertaintyBandNames =
                 SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
         for (String[] uncertaintyBandName : uncertaintyBandNames) {
