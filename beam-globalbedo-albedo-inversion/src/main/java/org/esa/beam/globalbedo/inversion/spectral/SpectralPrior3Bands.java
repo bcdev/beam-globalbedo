@@ -7,6 +7,7 @@ import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.InversionOp;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.*;
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
 
 /**
@@ -54,17 +55,17 @@ public class SpectralPrior3Bands {
         Matrix inverseC = new Matrix(NUM_ALBEDO_PARAMETERS, 3 * numSdrBands);
         Matrix inverseC_F = new Matrix(3 * numSdrBands, 1);  // 9x1
 
-        Matrix priorMean = new Matrix(AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
-        Matrix priorSD = new Matrix(AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
+        Matrix priorMean = new Matrix(NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
+        Matrix priorSD = new Matrix(NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
 
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                final int priorIndexMij = InversionOp.SRC_PRIOR_MEAN[bandIndices[i]][j];
+            for (int j = 0; j < NUM_BBDR_WAVE_BANDS; j++) {
+                final int priorIndexMij = (bandIndices[i]-1)* NUM_ALBEDO_PARAMETERS + 2*j;
                 final double m_ij_value = sourceSamples[priorIndexMij].getDouble();
                 final double m_ij = AlbedoInversionUtils.isValid(m_ij_value) ? m_ij_value : 0.0;
                 priorMean.set(index, 0, m_ij);
-                final int priorIndexSDij = InversionOp.SRC_PRIOR_SD[bandIndices[i]][j];
+                final int priorIndexSDij = (bandIndices[i]-1)* NUM_ALBEDO_PARAMETERS + 2*j + 1;
                 final double cov_ij_value = sourceSamples[priorIndexSDij].getDouble();
                 final double sd_ij = AlbedoInversionUtils.isValid(cov_ij_value) ? Math.sqrt(cov_ij_value) : 0.0;
                 priorSD.set(index, 0, sd_ij);
@@ -79,7 +80,7 @@ public class SpectralPrior3Bands {
         double priorSnowFraction = sourceSamples[offset++].getDouble();
         int landWaterType = sourceSamples[offset].getInt();
 
-        for (int i = 0; i < numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; i++) {
+        for (int i = 0; i < numSdrBands * NUM_ALBEDO_PARAMETERS; i++) {
             // priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 1.0)); // original
             // this will lead to higher weighting of the Prior:
             priorSD.set(i, 0, Math.min(1.0, priorSD.get(bandIndices[i], 0) * priorScaleFactor * 0.01));  // todo: make configurable!
@@ -110,8 +111,8 @@ public class SpectralPrior3Bands {
     private static void setInverseC_F(Matrix inverseC, Matrix inverseC_F, Matrix priorMean) {
         int index;
         index = 0;
-        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+        for (int i = 0; i < NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < NUM_BBDR_WAVE_BANDS; j++) {
                 inverseC_F.set(index, 0, inverseC.get(index, index) * priorMean.get(index, 0));
                 index++;
             }
@@ -132,7 +133,7 @@ public class SpectralPrior3Bands {
                         (!computeSnow && priorSnowFraction >= 0.93);
 
                 if (landWaterType <= 0 || priorMeanNoData) {
-                    returnValue = AlbedoInversionConstants.NO_DATA_VALUE;
+                    returnValue = NO_DATA_VALUE;
                 } else if (priorSnowFractionNotOk) {
                     returnValue = -2.0;
                     break;
