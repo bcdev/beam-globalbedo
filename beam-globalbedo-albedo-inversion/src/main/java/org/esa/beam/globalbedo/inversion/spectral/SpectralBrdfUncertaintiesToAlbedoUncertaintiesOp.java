@@ -58,7 +58,7 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
     private String dataMaskBandName;
 
     private String[] parameterBandNames;
-    private String[][] uncertaintyBandNames;
+    private String[] uncertaintyBandNames;
 
     private Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
 
@@ -237,13 +237,13 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
         }
 
         int index = 0;
-        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertaintyBandNames(numSdrBands, spectralWaveBandsMap);
+        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
 
         for (int i = 0; i < numSdrBands; i++) {
             for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
                 srcUncertainties[index] = index;
                 configurator.defineSample(srcParameters.length + srcUncertainties[index],
-                        uncertaintyBandNames[i][j], spectralBrdfUncertaintiesProduct);
+                        uncertaintyBandNames[index], spectralBrdfUncertaintiesProduct);
                 index++;
             }
         }

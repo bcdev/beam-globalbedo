@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 
+import static java.lang.Math.pow;
+
 /**
  * todo: add comment
  * To change this template use File | Settings | File Templates.
@@ -29,6 +31,10 @@ import java.util.logging.Level;
  * @author olafd
  */
 public class SpectralIOUtils {
+
+    private static final int NUM_UNCERTAINTIES = ((int) pow(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
+                                                                    AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 2.0) +
+            AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS) / 2;
 
     public static String[] getSpectralInversionParameter3BandNames(int[] bandIndices) {
         int numSdrBands = 3;
@@ -94,8 +100,8 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
-    public static String[][] getSpectralInversionUncertainty3BandNames(int[] bandIndices,
-                                                                       Map<Integer, String> spectralWaveBandsMap) {
+    public static String[] getSpectralInversionUncertainty3BandNames(int[] bandIndices,
+                                                                     Map<Integer, String> spectralWaveBandsMap) {
         // we want for e.g. bands 6, 4, 5:
 //        VAR_b6_f0_b6_f0
 //        VAR_b6_f0_b6_f1
@@ -143,16 +149,28 @@ public class SpectralIOUtils {
 //        VAR_b5_f1_b5_f2
 //        VAR_b5_f2_b5_f2
 
-        String bandNames[][] = new String[3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS]
-                [3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        String bandNames[] = new String[NUM_UNCERTAINTIES];
 
+        int index = 0;
         for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
-            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
-            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
-                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i) +
-                        "_f" + (bandIndices[i] % 3) + "_b" + j / 3 + "_f" + (j % 3);
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                for (int k = i; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
+                    final int m0 = i == k ? j : 0;
+                    for (int m = m0; m < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; m++) {
+                        bandNames[index++] = "VAR_" + spectralWaveBandsMap.get(i) +
+                                "_f" + j + "_" + spectralWaveBandsMap.get(k) + "_f" + m;
+                    }
+                }
             }
         }
+
+//        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+//            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
+//            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+//                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i) +
+//                        "_f" + (bandIndices[i] % 3) + "_b" + j / 3 + "_f" + (j % 3);
+//            }
+//        }
         return bandNames;
 
     }
@@ -244,7 +262,7 @@ public class SpectralIOUtils {
             public int compare(final Product p1, final Product p2) {
                 return p1.getName().compareTo(p2.getName());
             }
-        } );
+        });
 
         return brdfProductList.toArray(new Product[brdfProductList.size()]);
     }

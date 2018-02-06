@@ -67,7 +67,7 @@ public class SpectralUncertaintiesOp extends PixelOperator {
 
     private double priorScaleFactor = 30.0;
 
-    private String[][] uncertaintyBandNames;
+    private String[] uncertaintyBandNames;
 
     static final Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
 
@@ -87,15 +87,15 @@ public class SpectralUncertaintiesOp extends PixelOperator {
             if (bandIndices[i] > 7 || bandIndices[i] < 1) {
                 throw new OperatorException("band index '" + bandIndices[i] + "' out of range!");
             }
-            spectralWaveBandsMap.put(0, "b" + (bandIndices[i]));
+            spectralWaveBandsMap.put(i, "b" + (bandIndices[i]));
         }
         uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
 
         SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(numSdrBands,
-                dailyAccRootDir,
-                bandIndices[0],     // todo: for first test we accumulate first band only but take 3 from Prior...
-                tile, year, doy,
-                wings, computeSnow);
+                                                                                 dailyAccRootDir,
+                                                                                 bandIndices[0],     // todo: for first test we accumulate first band only but take 3 from Prior...
+                                                                                 tile, year, doy,
+                                                                                 wings, computeSnow);
         fullAccumulator = fullAccumulation.getResult();
     }
 
@@ -116,7 +116,7 @@ public class SpectralUncertaintiesOp extends PixelOperator {
 
         double maskPrior;
         SpectralPrior3Bands prior = SpectralPrior3Bands.createForInversion(sourceSamples, priorScaleFactor,
-                computeSnow, bandIndices);
+                                                                           computeSnow, bandIndices);
         maskPrior = prior.getMask();
 
         if (accumulator != null && maskAcc > 0 && maskPrior > 0) {
@@ -136,13 +136,13 @@ public class SpectralUncertaintiesOp extends PixelOperator {
                 if (AlbedoInversionUtils.matrixHasNanElements(tmpM) ||
                         AlbedoInversionUtils.matrixHasZerosInDiagonale(tmpM)) {
                     tmpM = new Matrix(3 * numSdrBands, 3 * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS,
-                            AlbedoInversionConstants.NO_DATA_VALUE);
+                                      AlbedoInversionConstants.NO_DATA_VALUE);
                 }
                 uncertainties = tmpM;
             } else {
                 uncertainties = new Matrix(3 * numSdrBands,
-                        3 * numSdrBands,
-                        AlbedoInversionConstants.NO_DATA_VALUE);     // 3x3
+                                           3 * numSdrBands,
+                                           AlbedoInversionConstants.NO_DATA_VALUE);     // 3x3
                 maskAcc = 0.0;
             }
         } else {
@@ -157,7 +157,7 @@ public class SpectralUncertaintiesOp extends PixelOperator {
                 }
             } else {
                 uncertainties = new Matrix(3 * numSdrBands, 3 * numSdrBands,
-                        AlbedoInversionConstants.NO_DATA_VALUE);
+                                           AlbedoInversionConstants.NO_DATA_VALUE);
             }
         }
 
@@ -172,13 +172,8 @@ public class SpectralUncertaintiesOp extends PixelOperator {
 
     @Override
     protected void configureTargetSamples(SampleConfigurer configurator) throws OperatorException {
-        int index = 0;
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // Feb. 2018: new 3-band approach
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                configurator.defineSample(3 * numSdrBands + index, uncertaintyBandNames[i][j]);
-                index++;
-            }
+        for (int i = 0; i < uncertaintyBandNames.length; i++) {
+            configurator.defineSample(i, uncertaintyBandNames[i]);
             // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
             // configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][i]);
             // index++;
@@ -189,12 +184,8 @@ public class SpectralUncertaintiesOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
 
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            // Feb. 2018: new 3-band approach
-            // add bands only for UR triangular matrix
-            for (int j = i; j < 3 * numSdrBands; j++) {
-                productConfigurer.addBand(uncertaintyBandNames[i][j], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-            }
+        for (int i = 0; i < uncertaintyBandNames.length; i++) {
+            productConfigurer.addBand(uncertaintyBandNames[i], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
             // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
             // productConfigurer.addBand(uncertaintyBandNames[i][i], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
         }
@@ -208,20 +199,17 @@ public class SpectralUncertaintiesOp extends PixelOperator {
     private void fillTargetSamples(WritableSample[] targetSamples,
                                    Matrix uncertainties,
                                    double weightedNumberOfSamples) {
-
         // uncertainties
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
             // Feb. 2018: new 3-band approach
             for (int j = i; j < 3 * numSdrBands; j++) {
-                targetSamples[3 * numSdrBands + index].set(uncertainties.get(i, j));
-                index++;
+                targetSamples[index++].set(uncertainties.get(i, j));
             }
             // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
-            targetSamples[3 * numSdrBands + index].set(uncertainties.get(i, i));
-            index++;
+            // targetSamples[3 * numSdrBands + index].set(uncertainties.get(i, i));
+            // index++;
         }
-        targetSamples[index].set(weightedNumberOfSamples);
     }
 
     private void configurePriorSourceSamples(SampleConfigurer configurator) {
