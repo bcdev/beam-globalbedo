@@ -520,20 +520,18 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
-    public static String[] getSpectralAlbedoDhrSigmaBandNames(int numSdrBands,
-                                                              Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
-            bandNames[i] = "DHR_sigma_" + spectralWaveBandsMap.get(i);
+    public static String[] getSpectralAlbedoDhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "DHR_sigma_b" + sigmaBandIndices[i];
         }
         return bandNames;
     }
 
-    public static String[] getSpectralAlbedoBhrSigmaBandNames(int numSdrBands,
-                                                              Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
-            bandNames[i] = "BHR_sigma_" + spectralWaveBandsMap.get(i);
+    public static String[] getSpectralAlbedoBhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "BHR_sigma_b" + sigmaBandIndices[i];
         }
         return bandNames;
     }

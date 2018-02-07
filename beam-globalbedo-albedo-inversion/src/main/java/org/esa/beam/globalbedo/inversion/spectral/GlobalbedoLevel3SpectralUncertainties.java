@@ -43,8 +43,8 @@ public class GlobalbedoLevel3SpectralUncertainties extends Operator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(interval = "[1,7]", description = "Band index in case only 1 SDR band is processed")
-    private int singleBandIndex;    // todo: consider chemistry bands
+    @Parameter(defaultValue = "5,3,2", description = "Band indices (3 spectral bands)")
+    private int[] bandIndices;
 
 
     @Override
@@ -75,7 +75,7 @@ public class GlobalbedoLevel3SpectralUncertainties extends Operator {
         spectralUncertaintiesOp.setParameter("tile", tile);
         spectralUncertaintiesOp.setParameter("doy", doy);
         spectralUncertaintiesOp.setParameter("computeSnow", computeSnow);
-        spectralUncertaintiesOp.setParameter("singleBandIndex", singleBandIndex);
+        spectralUncertaintiesOp.setParameter("bandIndices", bandIndices);
         Product uncertaintiesProduct = spectralUncertaintiesOp.getTargetProduct();
 
         uncertaintiesProduct.setGeoCoding(SpectralIOUtils.getSinusoidalGeocoding(tile));

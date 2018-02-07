@@ -10,7 +10,6 @@ import org.esa.beam.framework.gpf.annotations.Parameter;
 import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
-import org.esa.beam.globalbedo.inversion.AlbedoResult;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
 import org.esa.beam.util.math.MathUtils;
 
@@ -31,33 +30,24 @@ import static java.lang.Math.pow;
         copyright = "(C) 2016 by Brockmann Consult")
 public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOperator {
 
-    @SourceProduct(description = "Spectral BRDF product")
-    private Product spectralBrdfProduct;
-
     @SourceProduct(description = "Spectral BRDF uncertainties product")
     private Product spectralBrdfUncertaintiesProduct;
 
     @Parameter(description = "doy", interval = "[1,366]")
     private int doy;
 
-    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    @Parameter(defaultValue = "3", description = "Number of spectral bands")
     private int numSdrBands;
 
-    @Parameter(defaultValue = "4,3,2", description = "Band indices (3 spectral bands)")
+//    VIS-NIR: 3,1,2 (3 sigma & 3 alpha) and
+//    BGR=3,4,1; and NIR: b2,b5 & b6 (sigma only)
+//    (email JPM, 20180122
+    @Parameter(defaultValue = "3,1,2", description = "Band indices (3 spectral bands)")
     private int[] bandIndices;
-
-
-    private static final int SRC_ENTROPY = 0;
-
-    private int[] srcParameters;
-    private int[] srcUncertainties;
 
     private String[] dhrSigmaBandNames;
     private String[] bhrSigmaBandNames;
 
-    private String dataMaskBandName;
-
-    private String[] parameterBandNames;
     private String[] uncertaintyBandNames;
 
     private Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
@@ -73,21 +63,12 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
             if (bandIndices[i] > 7 || bandIndices[i] < 1) {
                 throw new OperatorException("band index '" + bandIndices[i] + "' out of range!");
             }
-            spectralWaveBandsMap.put(0, "b" + (bandIndices[i]));
+            spectralWaveBandsMap.put(i, "b" + (bandIndices[i]));
         }
-
-        // todo: setup correct numbers
-        srcParameters = new int[3 * numSdrBands];
-        final int urMatrixOffset = ((int) pow(3 * numSdrBands, 2.0) + 3 * numSdrBands) / 2;
-        srcUncertainties = new int[urMatrixOffset];
-
-        // we only have diagonal terms in QA4ECV spectral approach
-        srcUncertainties = new int[3 * numSdrBands];
 
         dhrSigmaBandNames = new String[numSdrBands];
         bhrSigmaBandNames = new String[numSdrBands];
 
-        parameterBandNames = SpectralIOUtils.getSpectralInversionParameter3BandNames(bandIndices);
         uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
     }
 
@@ -99,11 +80,12 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
         C = Variance/Covariance matrix (9x9 matrix)
         U = Polynomial coefficients
 
-        Black-sky Albedo = f0 + f1 * (-0.007574 + (-0.070887 * SZA^2) + (0.307588 * SZA^3)) + f2 * (-1.284909 + (-0.166314 * SZA^2) + (0.041840 * SZA^3))
+        Black-sky Albedo = f0 + f1 * (-0.007574 + (-0.070887 * SZA^2) + (0.307588 * SZA^3)) +
+        f2 * (-1.284909 + (-0.166314 * SZA^2) + (0.041840 * SZA^3))
 
         White-sky Albedo = f0 + f1 * (0.189184) + f2 * (-1.377622)
 
-        Uncertainties = U^T C^-1 U , U is stored as a 1X9 vector (transpose), so, actually U^T is the regulat 9x1 vector
+        Uncertainties = U^T C^-1 U , U is stored as a 1X9 vector (transpose), so, actually U^T is the regular 9x1 vector
         */
 
         final PixelPos pixelPos = new PixelPos(x, y);
@@ -111,13 +93,10 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
         final double SZAdeg = AlbedoInversionUtils.computeSza(latLon, doy);
         final double SZA = SZAdeg * MathUtils.DTOR;
 
-        // todo: clarify issues:
-        // implementation follows breadboard, assuming 3 broadbands.
-        // Does not work for 7 bands at all.
-        // Maybe does not work at all, as we have only diagonal elements of full uncertainty matrix.
-        // Scientists to provide new scheme for uncertainties, and following sigma/alpha computation.
-        // For the moment, set alpha/sigma terms to zero or leave out (20171116)
-        // In Jan 2017, we only processed until BRDF and did not notice this issue.
+//        if (x == 400 && y == 500) {
+//            System.out.println("x = " + x);
+//        }
+
         final Matrix C = getCMatrixFromSpectralInversionProduct(sourceSamples);
 
         Matrix[] sigmaBHR = new Matrix[numSdrBands];
@@ -145,14 +124,11 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
             }
         }
 
-//        if (x == 600 && y == 550) {
+//        if (x == 400 && y == 500) {
 //            System.out.println("x = " + x);
 //        }
 
-        double maskEntropyDataValue = sourceSamples[srcParameters.length + srcUncertainties.length + SRC_ENTROPY].getDouble();
-
-        // skip for the moment (20171116):
-        if (AlbedoInversionUtils.isValid(maskEntropyDataValue)) {
+        if (AlbedoInversionUtils.isValid(sourceSamples[0].getDouble())) { // todo: is this ok everywhwere?
             final LUDecomposition cLUD = new LUDecomposition(C.transpose());
             if (cLUD.isNonsingular()) {
                 // # Calculate White-Sky sigma
@@ -165,7 +141,6 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
                     uBsa[i] = new Matrix(1, 3 * numSdrBands);
                 }
 
-                // todo: Lewis to provide uBsaArray numbers for spectral approach
                 final double[] uBsaArray = new double[]{
                         1.0,
                         -0.007574 + (-0.070887 * Math.pow(SZA, 2.0)) + (0.307588 * Math.pow(SZA, 3.0)),
@@ -209,12 +184,12 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(bandIndices);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(bandIndices);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
@@ -229,30 +204,9 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
 
     @Override
     protected void configureSourceSamples(SampleConfigurer configurator) throws OperatorException {
-        // (merged?) BRDF product...
-        parameterBandNames = SpectralIOUtils.getSpectralInversionParameterBandNames(numSdrBands);
-        for (int i = 0; i < 3 * numSdrBands; i++) {
-            srcParameters[i] = i;
-            configurator.defineSample(srcParameters[i], parameterBandNames[i], spectralBrdfUncertaintiesProduct);
+        for (int i = 0; i < uncertaintyBandNames.length; i++) {
+            configurator.defineSample(i, uncertaintyBandNames[i], spectralBrdfUncertaintiesProduct);
         }
-
-        int index = 0;
-        uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
-
-        for (int i = 0; i < numSdrBands; i++) {
-            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
-                srcUncertainties[index] = index;
-                configurator.defineSample(srcParameters.length + srcUncertainties[index],
-                        uncertaintyBandNames[index], spectralBrdfUncertaintiesProduct);
-                index++;
-            }
-        }
-
-        String entropyBandName = AlbedoInversionConstants.INV_ENTROPY_BAND_NAME;
-        configurator.defineSample(srcParameters.length + srcUncertainties.length + SRC_ENTROPY,
-                entropyBandName, spectralBrdfUncertaintiesProduct);
-
-        // todo: add BRDF uncertainty product
     }
 
     @Override
@@ -264,12 +218,6 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
 
         for (int i = 0; i < numSdrBands; i++) {
             configurator.defineSample(index++, bhrSigmaBandNames[i]);
-        }
-    }
-
-    private void setupSpectralWaveBandsMap(int numSdrBands) {
-        for (int i = 0; i < numSdrBands; i++) {
-            spectralWaveBandsMap.put(i, "b" + (i + 1));
         }
     }
 
@@ -289,13 +237,11 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
     private Matrix getCMatrixFromSpectralInversionProduct(Sample[] sourceSamples) {
         final int n = bandIndices.length * bandIndices.length;
         Matrix C = new Matrix(n, n);
-        double[] cTmp = new double[srcUncertainties.length];
+        double[] cTmp = new double[uncertaintyBandNames.length];
 
-        int index = 0;
-        for (int i = 0; i < srcUncertainties.length; i++) {
-            final double sampleUncertainty = sourceSamples[srcParameters.length + index].getDouble();
+        for (int i = 0; i < uncertaintyBandNames.length; i++) {
+            final double sampleUncertainty = sourceSamples[i].getDouble();
             cTmp[i] = sampleUncertainty;
-            index++;
         }
 
         int index1;
@@ -310,16 +256,13 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
             }
 
             for (int i = 0; i < k; i++) {
-                // todo: this does not work for 7 bands, index 'finalIndex' becomes larger than #uncertainties
-                // maybe this worked by accident for numBands=3
-                // C matrix affects alpha and sigma terms (not albedos)
-                // see code in Albedo.py and clarify with Gerardo!
-                final int finalIndex = index1 - n + i;    // original
-//                final int finalIndex = (index1 - n) / 7 + i;  // keep index reasonably small fort the moment to get code running
-//                System.out.println("n,k,i,index1,index2,n-k,n-k+i,finalIndex = " + n + "," + k + "," + i + "," + index1 + "," + index2 + "," +
-//                                           (n-k) + "," + (n-k+i) + "," + finalIndex);
-                C.set(n - k, n - k + i, cTmp[finalIndex]);
-                C.set(n - k + i, n - k, cTmp[finalIndex]);
+                int finalIndex = index1 - n + i;
+                int ii = n - k;
+                int jj = n - k + i;
+                C.set(ii, jj, cTmp[finalIndex]);
+                ii = n - k + i;
+                jj = n - k;
+                C.set(ii, jj, cTmp[finalIndex]);
             }
         }
 

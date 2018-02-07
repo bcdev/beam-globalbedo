@@ -19,18 +19,21 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS;
+import static org.esa.beam.globalbedo.inversion.AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS;
 
 /**
- * Pixel operator implementing the inversion part extended from broadband to spectral appropach (MODIS bands).
+ * Pixel operator implementing the uncertainties computation for the spectral appropach.
+ * This operator provides covariance terms for a tupel of 3 input bands. Should be run for two sets of input bands
+ * to finally cover MODIS bands 1-6 (skip band 7).
  *
  * @author Olaf Danne
  * @version $Revision: $ $Date:  $
  */
 @OperatorMetadata(alias = "ga.inversion.inversion.spectral.uncertainties",
-        description = "Implements the inversion part extended from broadband to spectral appropach (MODIS bands).",
+        description = "Pixel operator implementing the uncertainties computation for the spectral appropach.",
         authors = "Olaf Danne",
         version = "1.0",
-        copyright = "(C) 2016 by Brockmann Consult")
+        copyright = "(C) 2018 by Brockmann Consult")
 
 public class SpectralUncertaintiesOp extends PixelOperator {
 
@@ -58,11 +61,13 @@ public class SpectralUncertaintiesOp extends PixelOperator {
     @Parameter(defaultValue = "false", description = "Compute only snow pixels")
     private boolean computeSnow;
 
-    @Parameter(defaultValue = "4,3,2", description = "Band indices (3 spectral bands)")
+    //    VIS-NIR: 3,1,2 (3 sigma & 3 alpha) and
+//    BGR=3,4,1; and NIR: b2,b5 & b6 (sigma only)
+//    (email JPM, 20180122)
+    @Parameter(defaultValue = "3,1,2", description = "Band indices (3 spectral bands)")
     private int[] bandIndices;
 
     private String priorMeanBandNamePrefix = "BRDF_Albedo_Parameters_";
-    private String priorSdBandNamePrefix = "BRDF_Albedo_Parameters_";
 
 
     private double priorScaleFactor = 30.0;
@@ -71,10 +76,9 @@ public class SpectralUncertaintiesOp extends PixelOperator {
 
     static final Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
 
-    private FullAccumulator fullAccumulator;
+    private FullAccumulator[] fullAccumulators;
 
     private int numSdrBands = 3;     // bands to process
-    private int totalNumSdrBands = 7;     // all MODIS bands
 
     @Override
     protected void prepareInputs() throws OperatorException {
@@ -91,27 +95,33 @@ public class SpectralUncertaintiesOp extends PixelOperator {
         }
         uncertaintyBandNames = SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
 
-        SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(numSdrBands,
-                                                                                 dailyAccRootDir,
-                                                                                 bandIndices[0],     // todo: for first test we accumulate first band only but take 3 from Prior...
-                                                                                 tile, year, doy,
-                                                                                 wings, computeSnow);
-        fullAccumulator = fullAccumulation.getResult();
+        fullAccumulators = new FullAccumulator[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            SpectralFullAccumulation fullAccumulation = new SpectralFullAccumulation(numSdrBands,
+                                                                dailyAccRootDir,
+                                                                bandIndices[i],
+                                                                tile, year, doy,
+                                                                wings, computeSnow);
+            fullAccumulators[i] = fullAccumulation.getResult();
+        }
+
     }
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
         Matrix uncertainties;
 
-        if (x == 200 && y == 200) {
-            System.out.println("x = " + x);
-        }
+//        if (x == 580 && y == 550) {
+//            System.out.println("x = " + x);
+//        }
 
-        double maskAcc = 0.0;
-        SpectralAccumulator accumulator = null;
-        if (fullAccumulator != null) {
-            accumulator = SpectralAccumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y, numSdrBands);
-            maskAcc = accumulator.getMask();
+        SpectralAccumulator[] accumulators = new SpectralAccumulator[numSdrBands];
+        double[] maskAccs = new double[numSdrBands];
+        for (int i = 0; i < numSdrBands; i++) {
+            if (fullAccumulators[i] != null) {
+                accumulators[i] = SpectralAccumulator.createForInversion(fullAccumulators[i].getSumMatrices(), x, y, 1);
+                maskAccs[i] = accumulators[i].getMask();
+            }
         }
 
         double maskPrior;
@@ -119,8 +129,8 @@ public class SpectralUncertaintiesOp extends PixelOperator {
                                                                            computeSnow, bandIndices);
         maskPrior = prior.getMask();
 
-        if (accumulator != null && maskAcc > 0 && maskPrior > 0) {
-            final Matrix mAcc = accumulator.getM();
+        if (accumulationDataAvailable(accumulators, maskAccs) && maskPrior > 0) {
+            final Matrix mAcc = getMAccFor3Bands(accumulators);
 
             for (int i = 0; i < 3 * numSdrBands; i++) {
                 double m_ii_accum = mAcc.get(i, i);
@@ -143,7 +153,6 @@ public class SpectralUncertaintiesOp extends PixelOperator {
                 uncertainties = new Matrix(3 * numSdrBands,
                                            3 * numSdrBands,
                                            AlbedoInversionConstants.NO_DATA_VALUE);     // 3x3
-                maskAcc = 0.0;
             }
         } else {
             if (maskPrior > 0.0) {
@@ -162,7 +171,31 @@ public class SpectralUncertaintiesOp extends PixelOperator {
         }
 
         // we have the final result - fill target samples...
-        fillTargetSamples(targetSamples, uncertainties, maskAcc);
+        fillTargetSamples(targetSamples, uncertainties);
+    }
+
+    private Matrix getMAccFor3Bands(SpectralAccumulator[] accumulators) {
+        Matrix mAccTotal = new Matrix(numSdrBands*NUM_ALBEDO_PARAMETERS, numSdrBands*NUM_BBDR_WAVE_BANDS);
+        for (int i = 0; i < numSdrBands; i++) {
+            final Matrix mAcc_i = accumulators[i].getM();
+            for (int j = 0; j < mAcc_i.getColumnDimension(); j++) {
+                for (int k = 0; k < mAcc_i.getRowDimension(); k++) {
+                    final double mAcc_elem = mAcc_i.get(j, k);
+                    mAccTotal.set(i*numSdrBands + j, i*numSdrBands + k, mAcc_elem);
+                }
+            }
+        }
+
+        // test:
+//        for (int j = 0; j < mAccTotal.getColumnDimension(); j++) {
+//            for (int k = 0; k < mAccTotal.getRowDimension(); k++) {
+//                if (mAccTotal.get(j, k) == 0.0) {
+//                    mAccTotal.set(j, k, Math.abs(10.0*(Math.random() - 0.5)));
+//                }
+//            }
+//        }
+
+        return mAccTotal;
     }
 
     @Override
@@ -174,9 +207,6 @@ public class SpectralUncertaintiesOp extends PixelOperator {
     protected void configureTargetSamples(SampleConfigurer configurator) throws OperatorException {
         for (int i = 0; i < uncertaintyBandNames.length; i++) {
             configurator.defineSample(i, uncertaintyBandNames[i]);
-            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
-            // configurator.defineSample(numTargetParameters + index, uncertaintyBandNames[i][i]);
-            // index++;
         }
     }
 
@@ -184,10 +214,9 @@ public class SpectralUncertaintiesOp extends PixelOperator {
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         super.configureTargetProduct(productConfigurer);
 
-        for (int i = 0; i < uncertaintyBandNames.length; i++) {
-            productConfigurer.addBand(uncertaintyBandNames[i], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
-            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
-            // productConfigurer.addBand(uncertaintyBandNames[i][i], ProductData.TYPE_FLOAT32, AlbedoInversionConstants.NO_DATA_VALUE);
+        for (String uncertaintyBandName : uncertaintyBandNames) {
+            productConfigurer.addBand(uncertaintyBandName, ProductData.TYPE_FLOAT32,
+                                      AlbedoInversionConstants.NO_DATA_VALUE);
         }
 
         for (Band b : getTargetProduct().getBands()) {
@@ -196,9 +225,20 @@ public class SpectralUncertaintiesOp extends PixelOperator {
         }
     }
 
+    private boolean accumulationDataAvailable(SpectralAccumulator[] accumulators, double[] maskAccs) {
+        if (accumulators.length != maskAccs.length) {
+            return false;
+        }
+        for (int i = 0; i < accumulators.length; i++) {
+            if (accumulators[i] == null || maskAccs[i] == 0.0) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     private void fillTargetSamples(WritableSample[] targetSamples,
-                                   Matrix uncertainties,
-                                   double weightedNumberOfSamples) {
+                                   Matrix uncertainties) {
         // uncertainties
         int index = 0;
         for (int i = 0; i < 3 * numSdrBands; i++) {
@@ -206,14 +246,12 @@ public class SpectralUncertaintiesOp extends PixelOperator {
             for (int j = i; j < 3 * numSdrBands; j++) {
                 targetSamples[index++].set(uncertainties.get(i, j));
             }
-            // Nov. 2016: only provide the SD (diagonal terms), not the full matrix!
-            // targetSamples[3 * numSdrBands + index].set(uncertainties.get(i, i));
-            // index++;
         }
     }
 
     private void configurePriorSourceSamples(SampleConfigurer configurator) {
         int offset = 0;
+        int totalNumSdrBands = 7;
         for (int i = 0; i < totalNumSdrBands; i++) {
             for (int j = 0; j < NUM_ALBEDO_PARAMETERS; j++) {
                 final String meanBandName = priorMeanBandNamePrefix + "Band" + (i + 1) + "_f" + j + "_avr";
@@ -227,7 +265,7 @@ public class SpectralUncertaintiesOp extends PixelOperator {
         String snowFractionBandName = "snowFraction";
         configurator.defineSample(offset++, snowFractionBandName, priorProduct);
         String landWaterBandName = "landWaterType";
-        configurator.defineSample(offset++, landWaterBandName, priorProduct);
+        configurator.defineSample(offset, landWaterBandName, priorProduct);
     }
 
 

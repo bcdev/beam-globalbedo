@@ -51,12 +51,12 @@ public class SpectralPrior3Bands {
                                                          boolean computeSnow,
                                                          int[] bandIndices) {
 
-        Matrix C = new Matrix(NUM_ALBEDO_PARAMETERS, 3 * numSdrBands);
-        Matrix inverseC = new Matrix(NUM_ALBEDO_PARAMETERS, 3 * numSdrBands);
+        Matrix C = new Matrix(3*NUM_ALBEDO_PARAMETERS, 3 * numSdrBands);
+        Matrix inverseC = new Matrix(3*NUM_ALBEDO_PARAMETERS, 3 * numSdrBands);
         Matrix inverseC_F = new Matrix(3 * numSdrBands, 1);  // 9x1
 
-        Matrix priorMean = new Matrix(NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
-        Matrix priorSD = new Matrix(NUM_ALBEDO_PARAMETERS, numSdrBands, 1);
+        Matrix priorMean = new Matrix(NUM_ALBEDO_PARAMETERS * numSdrBands, 1);
+        Matrix priorSD = new Matrix(NUM_ALBEDO_PARAMETERS * numSdrBands, 1);
 
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
@@ -83,8 +83,8 @@ public class SpectralPrior3Bands {
         for (int i = 0; i < numSdrBands * NUM_ALBEDO_PARAMETERS; i++) {
             // priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 1.0)); // original
             // this will lead to higher weighting of the Prior:
-            priorSD.set(i, 0, Math.min(1.0, priorSD.get(bandIndices[i], 0) * priorScaleFactor * 0.01));  // todo: make configurable!
-            C.set(bandIndices[i], i, priorSD.get(bandIndices[i], 0) * priorSD.get(bandIndices[i], 0));
+            priorSD.set(i, 0, Math.min(1.0, priorSD.get(i, 0) * priorScaleFactor * 0.01));  // todo: make configurable!
+            C.set(i, i, priorSD.get(i, 0) * priorSD.get(i, 0));
         }
 
         double mask = 1.0;
