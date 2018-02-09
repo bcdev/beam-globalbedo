@@ -21,7 +21,7 @@ import org.esa.beam.globalbedo.inversion.util.IOUtils;
         authors = "Olaf Danne",
         version = "1.0",
         copyright = "(C) 2017 by Brockmann Consult")
-class InterpolateAlbedoOp extends PixelOperator {
+public class InterpolateAlbedoOp extends PixelOperator {
 
     // source samples:
     private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -73,6 +73,9 @@ class InterpolateAlbedoOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
+        if (x == 378 && y == 54) {
+            System.out.println("x = " + x);
+        }
         setInterpolatedBands(sourceSamples, targetSamples);
     }
 
@@ -221,6 +224,8 @@ class InterpolateAlbedoOp extends PixelOperator {
         configurator.defineSample(SRC_DATA_MASK[1], dataMaskBandName, firstAlbedoProduct);
         configurator.defineSample(SRC_SZA[0], szaBandName, secondAlbedoProduct);
         configurator.defineSample(SRC_SZA[1], szaBandName, firstAlbedoProduct);
+        configurator.defineSample(SRC_SNOW_FRACTION[0], snowFractionBandName, secondAlbedoProduct);
+        configurator.defineSample(SRC_SNOW_FRACTION[1], snowFractionBandName, firstAlbedoProduct);
     }
 
     @Override
@@ -330,11 +335,6 @@ class InterpolateAlbedoOp extends PixelOperator {
                 set(getInterpolatedValue(sourceSamples[SRC_SZA[0]].getDouble(),
                         sourceSamples[SRC_SZA[1]].getDouble()));
 
-        // WNS
-        targetSamples[TRG_WEIGHTED_NUM_SAMPLES].
-                set(getInterpolatedValue(sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[0]].getDouble(),
-                        sourceSamples[SRC_WEIGHTED_NUM_SAMPLES[1]].getDouble()));
-
         // Snow fraction
         targetSamples[TRG_SNOW_FRACTION].
                 set(getInterpolatedValue(sourceSamples[SRC_SNOW_FRACTION[0]].getDouble(),
@@ -342,8 +342,8 @@ class InterpolateAlbedoOp extends PixelOperator {
 
         // data mask: 1.0 or 0.0
         targetSamples[TRG_DATA_MASK].
-                set(Math.max(sourceSamples[SRC_SNOW_FRACTION[0]].getDouble(),
-                        sourceSamples[SRC_SNOW_FRACTION[1]].getDouble()));
+                set(Math.max(sourceSamples[SRC_DATA_MASK[0]].getDouble(),
+                        sourceSamples[SRC_DATA_MASK[1]].getDouble()));
     }
 
     public static class Spi extends OperatorSpi {
