@@ -13,12 +13,16 @@ org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.MergeAlbedoOp$Spi
+org.esa.beam.globalbedo.inversion.InterpolateAlbedoOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralDailyAccumulationOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralInversionOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralInversionWithPriorsOp$Spi
+org.esa.beam.globalbedo.inversion.spectral.SpectralUncertaintiesOp$Spi
+org.esa.beam.globalbedo.inversion.spectral.SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.SpectralBrdfToAlbedoOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.MergeSpectralBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.spectral.MergeSpectralAlbedoOp$Spi
+org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralUncertainties$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralAlbedo$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralInversion$Spi
 org.esa.beam.globalbedo.inversion.spectral.GlobalbedoLevel3SpectralInversionWithPriors$Spi

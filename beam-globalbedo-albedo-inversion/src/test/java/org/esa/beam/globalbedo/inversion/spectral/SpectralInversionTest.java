@@ -11,6 +11,54 @@ import java.util.Map;
  */
 public class SpectralInversionTest extends TestCase {
 
+    private static String[] EXPECTED_COVARIANCE_BAND_NAMES_6_4_5 = {
+            "VAR_b6_f0_b6_f0",
+            "VAR_b6_f0_b6_f1",
+            "VAR_b6_f0_b6_f2",
+            "VAR_b6_f0_b4_f0",
+            "VAR_b6_f0_b4_f1",
+            "VAR_b6_f0_b4_f2",
+            "VAR_b6_f0_b5_f0",
+            "VAR_b6_f0_b5_f1",
+            "VAR_b6_f0_b5_f2",
+            "VAR_b6_f1_b6_f1",
+            "VAR_b6_f1_b6_f2",
+            "VAR_b6_f1_b4_f0",
+            "VAR_b6_f1_b4_f1",
+            "VAR_b6_f1_b4_f2",
+            "VAR_b6_f1_b5_f0",
+            "VAR_b6_f1_b5_f1",
+            "VAR_b6_f1_b5_f2",
+            "VAR_b6_f2_b6_f2",
+            "VAR_b6_f2_b4_f0",
+            "VAR_b6_f2_b4_f1",
+            "VAR_b6_f2_b4_f2",
+            "VAR_b6_f2_b5_f0",
+            "VAR_b6_f2_b5_f1",
+            "VAR_b6_f2_b5_f2",
+            "VAR_b4_f0_b4_f0",
+            "VAR_b4_f0_b4_f1",
+            "VAR_b4_f0_b4_f2",
+            "VAR_b4_f0_b5_f0",
+            "VAR_b4_f0_b5_f1",
+            "VAR_b4_f0_b5_f2",
+            "VAR_b4_f1_b4_f1",
+            "VAR_b4_f1_b4_f2",
+            "VAR_b4_f1_b5_f0",
+            "VAR_b4_f1_b5_f1",
+            "VAR_b4_f1_b5_f2",
+            "VAR_b4_f2_b4_f2",
+            "VAR_b4_f2_b5_f0",
+            "VAR_b4_f2_b5_f1",
+            "VAR_b4_f2_b5_f2",
+            "VAR_b5_f0_b5_f0",
+            "VAR_b5_f0_b5_f1",
+            "VAR_b5_f0_b5_f2",
+            "VAR_b5_f1_b5_f1",
+            "VAR_b5_f1_b5_f2",
+            "VAR_b5_f2_b5_f2"
+    };
+
     public void testGetSdrBandNames() {
         int numSdrBands = 7;
         final String[] sdrBandNames = SpectralInversionUtils.getSdrBandNames(numSdrBands);
@@ -128,6 +176,23 @@ public class SpectralInversionTest extends TestCase {
         assertEquals("VAR_b6_f0_b6_f0", uncertaintyBandNames[5][0]);
         assertEquals("VAR_b7_f2_b7_f2", uncertaintyBandNames[6][2]);
 
+    }
+
+    public void testCovarianceNames() throws Exception {
+        int[] bandIndices = {6, 4, 5};
+        Map<Integer, String> spectralWaveBandsMap = new HashMap<>();
+        spectralWaveBandsMap.put(0, "b6");
+        spectralWaveBandsMap.put(1, "b4");
+        spectralWaveBandsMap.put(2, "b5");
+        String[] uncertaintyBandNames =
+                SpectralIOUtils.getSpectralInversionUncertainty3BandNames(bandIndices, spectralWaveBandsMap);
+        assertNotNull(uncertaintyBandNames);
+        assertEquals(EXPECTED_COVARIANCE_BAND_NAMES_6_4_5.length, uncertaintyBandNames.length);
+        int index = 0;
+        for (String uncertaintyBandName : uncertaintyBandNames) {
+            assertEquals(EXPECTED_COVARIANCE_BAND_NAMES_6_4_5[index++], uncertaintyBandName);
+//            System.out.println("uncertaintyBandName = " + (index++) + ", " + uncertaintyBandName);
+        }
     }
 
     private static Map<Integer, String> getSpectralWaveBandsMap(int numSdrBands) {

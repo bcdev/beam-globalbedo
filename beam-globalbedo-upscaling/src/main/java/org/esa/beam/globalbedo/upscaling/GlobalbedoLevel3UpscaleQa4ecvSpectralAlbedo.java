@@ -102,6 +102,11 @@ public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel
     @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
+    //    VIS-NIR: 3,1,2 (3 sigma & 3 alpha) and
+//    BGR=3,4,1; and NIR: b2,b5 & b6 (sigma only)
+//    (email JPM, 20180122
+    @Parameter(defaultValue = "3,1,2", description = "Band indices (3 spectral bands)")
+    private int[] bandIndices;
 
     @TargetProduct
     private Product targetProduct;
@@ -146,8 +151,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel
 
         dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
         bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
-        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
-        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(numSdrBands, spectralWaveBandsMap);
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(bandIndices);
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(bandIndices);
 
         Product mosaicProduct;
         try {

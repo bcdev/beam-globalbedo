@@ -20,6 +20,8 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Level;
 
+import static java.lang.Math.pow;
+
 /**
  * todo: add comment
  * To change this template use File | Settings | File Templates.
@@ -30,7 +32,26 @@ import java.util.logging.Level;
  */
 public class SpectralIOUtils {
 
+    private static final int NUM_UNCERTAINTIES = ((int) pow(AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS *
+                                                                    AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS, 2.0) +
+            AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS) / 2;
+
+    public static String[] getSpectralInversionParameter3BandNames(int[] bandIndices) {
+        int numSdrBands = 3;
+        String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
+        int index = 0;
+        for (int i = 0; i < numSdrBands; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                bandNames[index] = "mean_b" + bandIndices[i] + "_f" + j;
+                index++;
+            }
+        }
+        return bandNames;
+    }
+
+
     public static String[] getSpectralInversionParameterBandNames(int numSdrBands) {
+        // todo: this works only if we have all bands 1-7!
         String bandNames[] = new String[numSdrBands * AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
@@ -43,6 +64,7 @@ public class SpectralIOUtils {
     }
 
     public static String[] getSpectralInversionParameterSingleBandNames(int singleBandIndex) {
+        // todo: this works only if we have all bands 1-7!
         String bandNames[] = new String[AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS];
         int index = 0;
         for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
@@ -76,6 +98,81 @@ public class SpectralIOUtils {
         }
 
         return bandNames;
+    }
+
+    public static String[] getSpectralInversionUncertainty3BandNames(int[] bandIndices,
+                                                                     Map<Integer, String> spectralWaveBandsMap) {
+        // we want for e.g. bands 6, 4, 5:
+//        VAR_b6_f0_b6_f0
+//        VAR_b6_f0_b6_f1
+//        VAR_b6_f0_b6_f2
+//        VAR_b6_f0_b4_f0
+//        VAR_b6_f0_b4_f1
+//        VAR_b6_f0_b4_f2
+//        VAR_b6_f0_b5_f0
+//        VAR_b6_f0_b5_f1
+//        VAR_b6_f0_b5_f2
+//        VAR_b6_f1_b6_f1
+//        VAR_b6_f1_b6_f2
+//        VAR_b6_f1_b4_f0
+//        VAR_b6_f1_b4_f1
+//        VAR_b6_f1_b4_f2
+//        VAR_b6_f1_b5_f0
+//        VAR_b6_f1_b5_f1
+//        VAR_b6_f1_b5_f2
+//        VAR_b6_f2_b6_f2
+//        VAR_b6_f2_b4_f0
+//        VAR_b6_f2_b4_f1
+//        VAR_b6_f2_b4_f2
+//        VAR_b6_f2_b5_f0
+//        VAR_b6_f2_b5_f1
+//        VAR_b6_f2_b5_f2
+//        VAR_b4_f0_b4_f0
+//        VAR_b4_f0_b4_f1
+//        VAR_b4_f0_b4_f2
+//        VAR_b4_f0_b5_f0
+//        VAR_b4_f0_b5_f1
+//        VAR_b4_f0_b5_f2
+//        VAR_b4_f1_b4_f1
+//        VAR_b4_f1_b4_f2
+//        VAR_b4_f1_b5_f0
+//        VAR_b4_f1_b5_f1
+//        VAR_b4_f1_b5_f2
+//        VAR_b4_f2_b4_f2
+//        VAR_b4_f2_b5_f0
+//        VAR_b4_f2_b5_f1
+//        VAR_b4_f2_b5_f2
+//        VAR_b5_f2_b5_f0
+//        VAR_b5_f2_b5_f1
+//        VAR_b5_f2_b5_f2
+//        VAR_b5_f1_b5_f1
+//        VAR_b5_f1_b5_f2
+//        VAR_b5_f2_b5_f2
+
+        String bandNames[] = new String[NUM_UNCERTAINTIES];
+
+        int index = 0;
+        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+            for (int j = 0; j < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; j++) {
+                for (int k = i; k < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; k++) {
+                    final int m0 = i == k ? j : 0;
+                    for (int m = m0; m < AlbedoInversionConstants.NUM_ALBEDO_PARAMETERS; m++) {
+                        bandNames[index++] = "VAR_" + spectralWaveBandsMap.get(i) +
+                                "_f" + j + "_" + spectralWaveBandsMap.get(k) + "_f" + m;
+                    }
+                }
+            }
+        }
+
+//        for (int i = 0; i < AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; i++) {
+//            // only UR triangle matrix: 0.5*((3*3)*(3*3) - diag) + diag = 0.5*72 + 3*3 = 45
+//            for (int j = i; j < 3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS; j++) {
+//                bandNames[i][j] = "VAR_" + spectralWaveBandsMap.get(i) +
+//                        "_f" + (bandIndices[i] % 3) + "_b" + j / 3 + "_f" + (j % 3);
+//            }
+//        }
+        return bandNames;
+
     }
 
     public static String[][] getSpectralInversionUncertaintySingleBandNames(Map<Integer, String> spectralWaveBandsMap) {
@@ -165,7 +262,7 @@ public class SpectralIOUtils {
             public int compare(final Product p1, final Product p2) {
                 return p1.getName().compareTo(p2.getName());
             }
-        } );
+        });
 
         return brdfProductList.toArray(new Product[brdfProductList.size()]);
     }
@@ -423,20 +520,18 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
-    public static String[] getSpectralAlbedoDhrSigmaBandNames(int numSdrBands,
-                                                              Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
-            bandNames[i] = "DHR_sigma_" + spectralWaveBandsMap.get(i);
+    public static String[] getSpectralAlbedoDhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "DHR_sigma_b" + sigmaBandIndices[i];
         }
         return bandNames;
     }
 
-    public static String[] getSpectralAlbedoBhrSigmaBandNames(int numSdrBands,
-                                                              Map<Integer, String> spectralWaveBandsMap) {
-        String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
-            bandNames[i] = "BHR_sigma_" + spectralWaveBandsMap.get(i);
+    public static String[] getSpectralAlbedoBhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "BHR_sigma_b" + sigmaBandIndices[i];
         }
         return bandNames;
     }

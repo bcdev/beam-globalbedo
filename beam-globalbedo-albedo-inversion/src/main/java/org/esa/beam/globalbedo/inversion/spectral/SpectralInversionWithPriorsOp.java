@@ -128,6 +128,9 @@ public class SpectralInversionWithPriorsOp extends PixelOperator {
             accumulator = SpectralAccumulator.createForInversion(fullAccumulator.getSumMatrices(), x, y, numSdrBands);
             maskAcc = accumulator.getMask();
         }
+        if (maskAcc > 0.0) {
+            System.out.println("maskAcc = " + maskAcc);
+        }
 
         double goodnessOfFit = 0.0;
         float daysToTheClosestSample = 0.0f;
