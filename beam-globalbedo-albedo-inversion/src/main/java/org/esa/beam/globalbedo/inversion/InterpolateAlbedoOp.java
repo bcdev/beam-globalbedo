@@ -35,7 +35,7 @@ public class InterpolateAlbedoOp extends PixelOperator {
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
     private String dataMaskBandName;
-    private String snowFractionBandName;
+//    private String snowFractionBandName;
     private String szaBandName;
 
     private static int[][] SRC_DHR = new int[2][AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -49,7 +49,7 @@ public class InterpolateAlbedoOp extends PixelOperator {
     private static int[] SRC_GOODNESS_OF_FIT = new int[2];
     private static int[] SRC_DATA_MASK = new int[2];
     private static int[] SRC_SZA = new int[2];
-    private static int[] SRC_SNOW_FRACTION = new int[2];
+//    private static int[] SRC_SNOW_FRACTION = new int[2];
 
     private static int[] TRG_DHR = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static int[] TRG_DHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
@@ -58,11 +58,11 @@ public class InterpolateAlbedoOp extends PixelOperator {
     private static int[] TRG_BHR_ALPHA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static int[] TRG_BHR_SIGMA = new int[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 18;
-    private static final int TRG_SNOW_FRACTION = 19;
-    private static final int TRG_REL_ENTROPY = 20;
-    private static final int TRG_GOODNESS_OF_FIT = 21;
-    private static final int TRG_DATA_MASK = 22;
-    private static final int TRG_SZA = 23;
+//    private static final int TRG_SNOW_FRACTION = 19;
+    private static final int TRG_REL_ENTROPY = 19;
+    private static final int TRG_GOODNESS_OF_FIT = 20;
+    private static final int TRG_DATA_MASK = 21;
+    private static final int TRG_SZA = 22;
 
     @SourceProduct(description = "Albedo Snow product")
     private Product firstAlbedoProduct;
@@ -73,9 +73,6 @@ public class InterpolateAlbedoOp extends PixelOperator {
 
     @Override
     protected void computePixel(int x, int y, Sample[] sourceSamples, WritableSample[] targetSamples) {
-        if (x == 378 && y == 54) {
-            System.out.println("x = " + x);
-        }
         setInterpolatedBands(sourceSamples, targetSamples);
     }
 
@@ -158,8 +155,8 @@ public class InterpolateAlbedoOp extends PixelOperator {
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
 
-        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+//        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+//        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
 
         SRC_SZA[0] = index;
         SRC_SZA[1] = index + 100;
@@ -167,8 +164,8 @@ public class InterpolateAlbedoOp extends PixelOperator {
         szaBandName = AlbedoInversionConstants.ALB_SZA_BAND_NAME;
         targetProduct.addBand(szaBandName, ProductData.TYPE_FLOAT32);
 
-        SRC_SNOW_FRACTION[0] = index;
-        SRC_SNOW_FRACTION[1] = index + 100;
+//        SRC_SNOW_FRACTION[0] = index;
+//        SRC_SNOW_FRACTION[1] = index + 100;
 
         for (Band b : targetProduct.getBands()) {
             b.setNoDataValue(AlbedoInversionConstants.NO_DATA_VALUE);
@@ -224,8 +221,8 @@ public class InterpolateAlbedoOp extends PixelOperator {
         configurator.defineSample(SRC_DATA_MASK[1], dataMaskBandName, firstAlbedoProduct);
         configurator.defineSample(SRC_SZA[0], szaBandName, secondAlbedoProduct);
         configurator.defineSample(SRC_SZA[1], szaBandName, firstAlbedoProduct);
-        configurator.defineSample(SRC_SNOW_FRACTION[0], snowFractionBandName, secondAlbedoProduct);
-        configurator.defineSample(SRC_SNOW_FRACTION[1], snowFractionBandName, firstAlbedoProduct);
+//        configurator.defineSample(SRC_SNOW_FRACTION[0], snowFractionBandName, secondAlbedoProduct);
+//        configurator.defineSample(SRC_SNOW_FRACTION[1], snowFractionBandName, firstAlbedoProduct);
     }
 
     @Override
@@ -268,7 +265,7 @@ public class InterpolateAlbedoOp extends PixelOperator {
         }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
-        configurator.defineSample(index++, snowFractionBandName);
+//        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
         configurator.defineSample(index++, dataMaskBandName);
@@ -336,9 +333,9 @@ public class InterpolateAlbedoOp extends PixelOperator {
                         sourceSamples[SRC_SZA[1]].getDouble()));
 
         // Snow fraction
-        targetSamples[TRG_SNOW_FRACTION].
-                set(getInterpolatedValue(sourceSamples[SRC_SNOW_FRACTION[0]].getDouble(),
-                        sourceSamples[SRC_SNOW_FRACTION[1]].getDouble()));
+//        targetSamples[TRG_SNOW_FRACTION].
+//                set(getInterpolatedValue(sourceSamples[SRC_SNOW_FRACTION[0]].getDouble(),
+//                        sourceSamples[SRC_SNOW_FRACTION[1]].getDouble()));
 
         // data mask: 1.0 or 0.0
         targetSamples[TRG_DATA_MASK].
