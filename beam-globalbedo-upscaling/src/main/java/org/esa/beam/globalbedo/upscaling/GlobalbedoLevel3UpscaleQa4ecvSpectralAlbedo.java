@@ -330,7 +330,8 @@ public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel
                         name.startsWith(expectedPrefix) &&
                         name.contains(expectedNamepart) &&
                         name.endsWith(expectedFilenameExt) &&
-                        name.contains("albedo");
+//                        name.contains("albedo");
+                        name.contains("albedosigma");        // albedos + sigmas, Feb 2018
             }
         };
 
