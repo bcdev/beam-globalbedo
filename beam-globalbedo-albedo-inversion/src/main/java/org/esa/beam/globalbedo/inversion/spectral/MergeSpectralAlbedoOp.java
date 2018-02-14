@@ -10,6 +10,7 @@ import org.esa.beam.framework.gpf.annotations.SourceProduct;
 import org.esa.beam.framework.gpf.pointop.*;
 import org.esa.beam.globalbedo.inversion.AlbedoInversionConstants;
 import org.esa.beam.globalbedo.inversion.util.AlbedoInversionUtils;
+import org.esa.beam.globalbedo.inversion.util.IOUtils;
 import org.geotools.referencing.crs.DefaultGeographicCRS;
 import org.opengis.referencing.crs.CoordinateReferenceSystem;
 
@@ -42,14 +43,14 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
     @SourceProduct(description = "Prior Info Snow product")
     private Product priorInfoSnowProduct;
 
-    @Parameter(defaultValue = "7", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
+    @Parameter(defaultValue = "6", description = "Number of spectral bands (7 for standard MODIS spectral mapping")
     private int numSdrBands;
 
     // source samples:
     private String[] dhrBandNames;
-//    private String[] dhrSigmaBandNames = new String[numSdrBands];
+    private String[] dhrSigmaBandNames = new String[numSdrBands];
     private String[] bhrBandNames;
-//    private String[] bhrSigmaBandNames = new String[numSdrBands];
+    private String[] bhrSigmaBandNames = new String[numSdrBands];
 
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
@@ -58,18 +59,18 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
     private String szaBandName;
 
     private int[][] SRC_DHR;
-//    private int[][] SRC_DHR_SIGMA = new int[2][numSdrBands];
+    private int[][] SRC_DHR_SIGMA;
     private int[][] SRC_BHR;
-//    private int[][] SRC_BHR_SIGMA = new int[2][numSdrBands];
+    private int[][] SRC_BHR_SIGMA;
     private int[] SRC_WEIGHTED_NUM_SAMPLES = new int[2];
     private int[] SRC_GOODNESS_OF_FIT = new int[2];
     private int[] SRC_DATA_MASK = new int[2];
     private int[] SRC_SZA = new int[2];
 
     private int[] TRG_DHR;
-//    private int[] TRG_DHR_SIGMA = new int[numSdrBands];
+    private int[] TRG_DHR_SIGMA;
     private int[] TRG_BHR;
-//    private int[] TRG_BHR_SIGMA = new int[numSdrBands];
+    private int[] TRG_BHR_SIGMA;
     private static final int TRG_WEIGHTED_NUM_SAMPLES = 14;
     private static final int TRG_SNOW_FRACTION = 15;
     private static final int TRG_GOODNESS_OF_FIT = 16;
@@ -92,8 +93,12 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         bhrBandNames = new String[numSdrBands];
         SRC_DHR = new int[2][numSdrBands];
         SRC_BHR = new int[2][numSdrBands];
+        SRC_DHR_SIGMA = new int[2][numSdrBands];
+        SRC_BHR_SIGMA = new int[2][numSdrBands];
         TRG_DHR = new int[numSdrBands];
         TRG_BHR = new int[numSdrBands];
+        TRG_DHR_SIGMA = new int[numSdrBands];
+        TRG_BHR_SIGMA = new int[numSdrBands];
         setupSpectralWaveBandsMap(numSdrBands);
 
         priorWidth = priorInfoNoSnowProduct.getSceneRasterWidth();
@@ -243,16 +248,20 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
                                               priorSnowFractionNoSnowDataValue,
                                               priorSnowFractionSnowDataValue,
                                               szaNoSnowDataValue));
-//            targetSamples[TRG_BHR_SIGMA[i]].
-//                    set(getWeightedMergeValue(sourceSamples[SRC_BHR_SIGMA[0][i]].getDouble(),
-//                                              sourceSamples[SRC_BHR_SIGMA[1][i]].getDouble(),
-//                                              proportionNsamplesNoSnow, proportionNsamplesSnow,
-//                                              szaNoSnowDataValue));
-//            targetSamples[TRG_DHR_SIGMA[i]].
-//                    set(getWeightedMergeValue(sourceSamples[SRC_DHR_SIGMA[0][i]].getDouble(),
-//                                              sourceSamples[SRC_DHR_SIGMA[1][i]].getDouble(),
-//                                              proportionNsamplesNoSnow, proportionNsamplesSnow,
-//                                              szaNoSnowDataValue));
+            targetSamples[TRG_BHR_SIGMA[i]].
+                    set(getWeightedMergeValue(sourceSamples[SRC_BHR_SIGMA[0][i]].getDouble(),
+                                              sourceSamples[SRC_BHR_SIGMA[1][i]].getDouble(),
+                                              proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
+                                              szaNoSnowDataValue));
+            targetSamples[TRG_DHR_SIGMA[i]].
+                    set(getWeightedMergeValue(sourceSamples[SRC_DHR_SIGMA[0][i]].getDouble(),
+                                              sourceSamples[SRC_DHR_SIGMA[1][i]].getDouble(),
+                                              proportionNsamplesNoSnow, proportionNsamplesSnow,
+                                              priorSnowFractionNoSnowDataValue,
+                                              priorSnowFractionSnowDataValue,
+                                              szaNoSnowDataValue));
         }
 
         // WNSamples
@@ -298,8 +307,8 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         for (int i = 0; i < numSdrBands; i++) {
             targetSamples[TRG_BHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
             targetSamples[TRG_DHR[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-//            targetSamples[TRG_BHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
-//            targetSamples[TRG_DHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_BHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
+            targetSamples[TRG_DHR_SIGMA[i]].set(AlbedoInversionConstants.NO_DATA_VALUE);
         }
 
         targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
@@ -315,7 +324,9 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         super.configureTargetProduct(productConfigurer);
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
+        int[] sigmaBandIndices = new int[]{1, 2, 3, 4, 5, 6, 7};
+
+        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands+1, spectralWaveBandsMap);
         int index = 0;
         for (int i = 0; i < numSdrBands; i++) {
             SRC_DHR[0][i] = index;
@@ -325,15 +336,15 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             dhrBand.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
         }
 
-//        dhrSigmaBandNames = IOUtils.getAlbedoDhrSigmaBandNames();
-//        for (int i = 0; i < numSdrBands; i++) {
-//            SRC_DHR_SIGMA[0][i] = index;
-//            SRC_DHR_SIGMA[1][i] = index + 100;
-//            index++;
-//            targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-//        }
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(sigmaBandIndices);
+        for (int i = 0; i < numSdrBands; i++) {
+            SRC_DHR_SIGMA[0][i] = index;
+            SRC_DHR_SIGMA[1][i] = index + 100;
+            index++;
+            targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
+        }
 
-        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
+        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands+1, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             SRC_BHR[0][i] = index;
             SRC_BHR[1][i] = index + 100;
@@ -342,13 +353,13 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             bhrBand.setSpectralWavelength(AlbedoInversionConstants.MODIS_WAVELENGHTS[i]);
         }
 
-//        bhrSigmaBandNames = IOUtils.getAlbedoBhrSigmaBandNames();
-//        for (int i = 0; i < numSdrBands; i++) {
-//            SRC_BHR_SIGMA[0][i] = index;
-//            SRC_BHR_SIGMA[1][i] = index + 100;
-//            index++;
-//            targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
-//        }
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(sigmaBandIndices);
+        for (int i = 0; i < numSdrBands; i++) {
+            SRC_BHR_SIGMA[0][i] = index;
+            SRC_BHR_SIGMA[1][i] = index + 100;
+            index++;
+            targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
+        }
 
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         SRC_WEIGHTED_NUM_SAMPLES[0] = index;
@@ -402,16 +413,16 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             configurator.defineSample(SRC_BHR[1][i], bhrBandNames[i], snowProduct);
         }
 
-//        for (int i = 0; i < numSdrBands; i++) {
-//            configurator.defineSample(SRC_DHR_SIGMA[0][i], dhrSigmaBandNames[i], noSnowProduct);
-//            configurator.defineSample(SRC_DHR_SIGMA[1][i], dhrSigmaBandNames[i], snowProduct);
-//        }
-//
-//        for (int i = 0; i < numSdrBands; i++) {
-//            configurator.defineSample(SRC_BHR_SIGMA[0][i], bhrSigmaBandNames[i], noSnowProduct);
-//            configurator.defineSample(SRC_BHR_SIGMA[1][i], bhrSigmaBandNames[i], snowProduct);
-//        }
-//
+        for (int i = 0; i < numSdrBands; i++) {
+            configurator.defineSample(SRC_DHR_SIGMA[0][i], dhrSigmaBandNames[i], noSnowProduct);
+            configurator.defineSample(SRC_DHR_SIGMA[1][i], dhrSigmaBandNames[i], snowProduct);
+        }
+
+        for (int i = 0; i < numSdrBands; i++) {
+            configurator.defineSample(SRC_BHR_SIGMA[0][i], bhrSigmaBandNames[i], noSnowProduct);
+            configurator.defineSample(SRC_BHR_SIGMA[1][i], bhrSigmaBandNames[i], snowProduct);
+        }
+
 
         configurator.defineSample(SRC_WEIGHTED_NUM_SAMPLES[0], weightedNumberOfSamplesBandName, noSnowProduct);
         configurator.defineSample(SRC_WEIGHTED_NUM_SAMPLES[1], weightedNumberOfSamplesBandName, snowProduct);
@@ -432,11 +443,11 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             index++;
         }
 
-//        for (int i = 0; i < numSdrBands; i++) {
-//            TRG_DHR_SIGMA[i] = index;
-//            configurator.defineSample(TRG_DHR_SIGMA[i], dhrSigmaBandNames[i]);
-//            index++;
-//        }
+        for (int i = 0; i < numSdrBands; i++) {
+            TRG_DHR_SIGMA[i] = index;
+            configurator.defineSample(TRG_DHR_SIGMA[i], dhrSigmaBandNames[i]);
+            index++;
+        }
 
         for (int i = 0; i < numSdrBands; i++) {
             TRG_BHR[i] = index;
@@ -444,11 +455,11 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             index++;
         }
 
-//        for (int i = 0; i < numSdrBands; i++) {
-//            TRG_BHR_SIGMA[i] = index;
-//            configurator.defineSample(TRG_BHR_SIGMA[i], bhrSigmaBandNames[i]);
-//            index++;
-//        }
+        for (int i = 0; i < numSdrBands; i++) {
+            TRG_BHR_SIGMA[i] = index;
+            configurator.defineSample(TRG_BHR_SIGMA[i], bhrSigmaBandNames[i]);
+            index++;
+        }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
         configurator.defineSample(index++, snowFractionBandName);
