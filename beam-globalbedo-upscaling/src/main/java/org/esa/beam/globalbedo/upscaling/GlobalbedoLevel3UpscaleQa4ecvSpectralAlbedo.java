@@ -117,10 +117,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel
     // DHR_sigma_b1,...,DHR_sigma_b7
     // BHR_sigma_b1,...,BHR_sigma_b7
 
-    private String[] dhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] bhrBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] dhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
-    private String[] bhrSigmaBandNames = new String[AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS];
+    private String[] dhrBandNames;
+    private String[] bhrBandNames;
+    private String[] dhrSigmaBandNames;
+    private String[] bhrSigmaBandNames;
 
     private Band dataMaskBand;
     private Band szaBand;
@@ -151,8 +151,10 @@ public class GlobalbedoLevel3UpscaleQa4ecvSpectralAlbedo extends GlobalbedoLevel
 
         dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
         bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
-        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(bandIndices);
-        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(bandIndices);
+
+        int[] sigmaBandIndices = new int[]{1, 2, 3, 4, 5, 6, 7};
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(sigmaBandIndices);
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(sigmaBandIndices);
 
         Product mosaicProduct;
         try {

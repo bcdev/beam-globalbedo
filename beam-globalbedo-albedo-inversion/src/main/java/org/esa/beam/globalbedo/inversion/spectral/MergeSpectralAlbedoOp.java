@@ -48,9 +48,9 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
 
     // source samples:
     private String[] dhrBandNames;
-    private String[] dhrSigmaBandNames = new String[numSdrBands];
+    private String[] dhrSigmaBandNames;
     private String[] bhrBandNames;
-    private String[] bhrSigmaBandNames = new String[numSdrBands];
+    private String[] bhrSigmaBandNames;
 
     private String weightedNumberOfSamplesBandName;
     private String goodnessOfFitBandName;
@@ -90,7 +90,9 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
     @Override
     protected void prepareInputs() throws OperatorException {
         dhrBandNames = new String[numSdrBands];
+        dhrSigmaBandNames = new String[numSdrBands];
         bhrBandNames = new String[numSdrBands];
+        bhrSigmaBandNames = new String[numSdrBands];
         SRC_DHR = new int[2][numSdrBands];
         SRC_BHR = new int[2][numSdrBands];
         SRC_DHR_SIGMA = new int[2][numSdrBands];
