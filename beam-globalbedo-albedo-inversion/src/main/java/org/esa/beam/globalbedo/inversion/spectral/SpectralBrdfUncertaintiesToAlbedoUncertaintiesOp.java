@@ -184,12 +184,12 @@ public class SpectralBrdfUncertaintiesToAlbedoUncertaintiesOp extends PixelOpera
     protected void configureTargetProduct(ProductConfigurer productConfigurer) {
         final Product targetProduct = productConfigurer.getTargetProduct();
 
-        dhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoDhrSigmaBandNames(bandIndices);
+        dhrSigmaBandNames = SpectralIOUtils.getSpectralBrdfUncertaintiesDhrSigmaBandNames(bandIndices);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }
 
-        bhrSigmaBandNames = SpectralIOUtils.getSpectralAlbedoBhrSigmaBandNames(bandIndices);
+        bhrSigmaBandNames = SpectralIOUtils.getSpectralBrdfUncertaintiesBhrSigmaBandNames(bandIndices);
         for (int i = 0; i < numSdrBands; i++) {
             targetProduct.addBand(bhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
         }

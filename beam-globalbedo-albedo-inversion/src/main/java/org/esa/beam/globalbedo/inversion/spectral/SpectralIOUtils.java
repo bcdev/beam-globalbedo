@@ -540,6 +540,22 @@ public class SpectralIOUtils {
         return bandNames;
     }
 
+    public static String[] getSpectralBrdfUncertaintiesDhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "DHR_sigma_b" + sigmaBandIndices[i];
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralBrdfUncertaintiesBhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "BHR_sigma_b" + sigmaBandIndices[i];
+        }
+        return bandNames;
+    }
+
     public static ModisTileGeoCoding getSinusoidalGeocoding(String tile) {
         ModisTileCoordinates modisTileCoordinates = ModisTileCoordinates.getInstance();
         int tileIndex = modisTileCoordinates.findTileIndex(tile);

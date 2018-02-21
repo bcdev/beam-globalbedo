@@ -58,6 +58,20 @@ public class AlbedoInversionUtils {
     }
 
     /**
+     * Gets the month (index in [1, 12]) for given year and doy
+     *
+     * @param year - year
+     * @param doy - day of year
+     *
+     * @return int monthIndex
+     */
+    public static int getMonthFromDoy(int year, int doy) {
+        Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.DAY_OF_YEAR, doy);
+        return cal.get(Calendar.MONTH) + 1;
+    }
+
+    /**
      * Returns a vector (as nx1 matrix) which contains the diagonal elements of the original matrix
      *
      * @param m - original matrix

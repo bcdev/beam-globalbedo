@@ -288,7 +288,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 
         final float[] wvls = AlbedoInversionConstants.MODIS_WAVELENGHTS;
 
-        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands, spectralWaveBandsMap);
+        dhrBandNames = SpectralIOUtils.getSpectralAlbedoDhrBandNames(numSdrBands+1, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             final Band dhrBand = targetProduct.addBand(dhrBandNames[i], ProductData.TYPE_FLOAT32);
             dhrBand.setSpectralBandIndex(i);
@@ -304,7 +304,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 //            targetProduct.addBand(dhrSigmaBandNames[i], ProductData.TYPE_FLOAT32);
 //        }
 
-        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands, spectralWaveBandsMap);
+        bhrBandNames = SpectralIOUtils.getSpectralAlbedoBhrBandNames(numSdrBands+1, spectralWaveBandsMap);
         for (int i = 0; i < numSdrBands; i++) {
             final Band bhrBand = targetProduct.addBand(bhrBandNames[i], ProductData.TYPE_FLOAT32);
             bhrBand.setSpectralBandIndex(i);

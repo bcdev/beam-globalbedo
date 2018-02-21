@@ -299,8 +299,8 @@ public class IOUtils {
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorDir = " + priorDir);
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorFiles = " + priorFiles.length);
             BeamLogManager.getSystemLogger().log(Level.INFO, "priorFileNamePrefix = " + priorFileNamePrefix);
-            for (int iDoy=0; iDoy <=8; iDoy++) {
-                for (int sgn=-1; sgn<=1; sgn+=2) {
+            for (int iDoy = 0; iDoy <= 8; iDoy++) {
+                for (int sgn = -1; sgn <= 1; sgn += 2) {
                     final int offset = sgn * iDoy;
                     final String doyString = getDoyString(doy + offset);
                     BeamLogManager.getSystemLogger().log(Level.INFO, "doyString = " + doyString);
@@ -978,8 +978,8 @@ public class IOUtils {
 
     }
 
-    public static Product[] getAlbedo8DayMosaicProducts(String gaRootDir, final int monthIndex,
-                                                        final String year, final String mosaicScaling) {
+    public static Product[] getAlbedoMonthlyMosaic8DayInputProducts(String gaRootDir, final int monthIndex,
+                                                                    final String year, final String mosaicScaling) {
 
         final FilenameFilter inputProductNameFilter = new FilenameFilter() {
             public boolean accept(File dir, String name) {
@@ -1035,6 +1035,61 @@ public class IOUtils {
 
     }
 
+    public static Product[] getAlbedoMonthlyMosaicDailyInputProducts(String gaRootDir, String snowMode, final int monthIndex,
+                                                                     final String year, final String mosaicScaling) {
+
+        // for QA4ECV
+        // e.g. ../GlobAlbedoTest/Mosaic/Albedo/Merge/avh_geo/1984/05/Qa4ecv.albedo.avh_geo.Merge.05.1984348.PC.nc
+        final FilenameFilter inputProductNameFilter = new FilenameFilter() {
+            public boolean accept(File dir, String name) {
+                final boolean isCorrectPrefix = name.startsWith("Qa4ecv.albedo.avh_geo");
+                final boolean isCorrectSuffix = name.endsWith("PC.nc");
+                final boolean isCorrectYearAndScaling = name.contains(mosaicScaling + "." + year);
+                if (isCorrectSuffix && isCorrectPrefix && isCorrectYearAndScaling) {
+                    final String doy = name.substring(name.length()-9, name.length()-6);
+                    int monthFromDoy = AlbedoInversionUtils.getMonthFromDoy(Integer.parseInt(year), Integer.parseInt(doy));
+                    if (monthIndex == monthFromDoy) {
+                        return true;
+                    }
+                    return false;
+                }
+                return false;
+            }
+        };
+
+        final String albedoDir = gaRootDir + File.separator + "Mosaic" + File.separator + "Albedo" +
+                File.separator + snowMode + File.separator + "avh_geo" + File.separator +
+                File.separator + year + File.separator + mosaicScaling + File.separator;
+        final String[] albedoFiles = (new File(albedoDir)).list(inputProductNameFilter);
+
+        if (albedoFiles != null && albedoFiles.length > 0) {
+            Product[] albedoProducts = new Product[albedoFiles.length];
+
+            int productIndex = 0;
+            for (String albedoFile : albedoFiles) {
+                String albedoProductFileName = albedoDir + File.separator + albedoFile;
+
+                if ((new File(albedoProductFileName)).exists()) {
+                    Product product;
+                    try {
+                        BeamLogManager.getSystemLogger().log(Level.INFO, "Found albedo daily product: " +
+                                albedoProductFileName);
+                        product = ProductIO.readProduct(albedoProductFileName);
+                        albedoProducts[productIndex] = product;
+                        productIndex++;
+                    } catch (IOException e) {
+                        throw new OperatorException("Cannot load Albedo daily product " + albedoProductFileName + ": "
+                                + e.getMessage());
+                    }
+                }
+            }
+            return albedoProducts;
+        } else {
+            return null;
+        }
+
+    }
+
     public static File[] getTileDirectories(String rootDirString) {
         final Pattern finalPattern = Pattern.compile("h(\\d\\d)v(\\d\\d)");
         FileFilter tileFilter = new FileFilter() {
@@ -1070,4 +1125,5 @@ public class IOUtils {
         Collections.sort(brdfFileList);
         return brdfFileList;
     }
+
 }

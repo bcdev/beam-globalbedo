@@ -10,6 +10,8 @@ org.esa.beam.globalbedo.inversion.singlepixel.GlobalbedoLevel3AlbedoSinglePixel$
 org.esa.beam.globalbedo.inversion.singlepixel.InversionSinglePixelOp$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3Albedo$Spi
 org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFrom8DayAlbedo$Spi
+org.esa.beam.globalbedo.inversion.GlobalbedoLevel3MonthlyFromDailyAlbedo$Spi
+org.esa.beam.globalbedo.inversion.MonthlyFromDailyAlbedoMosaicsOp$Spi
 org.esa.beam.globalbedo.inversion.InversionOp$Spi
 org.esa.beam.globalbedo.inversion.MergeBrdfOp$Spi
 org.esa.beam.globalbedo.inversion.MergeAlbedoOp$Spi
