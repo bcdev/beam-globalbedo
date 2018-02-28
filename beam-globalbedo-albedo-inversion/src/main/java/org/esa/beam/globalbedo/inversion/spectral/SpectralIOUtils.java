@@ -485,7 +485,8 @@ public class SpectralIOUtils {
     public static String[] getSpectralAlbedoDhrBandNames(int numSdrBands,
                                                          Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
+//        for (int i = 0; i < numSdrBands; i++) {
+        for (int i = 0; i < numSdrBands-1; i++) {   // skip band 7, JPM 201801
             bandNames[i] = "DHR_" + spectralWaveBandsMap.get(i);
         }
         return bandNames;
@@ -494,7 +495,8 @@ public class SpectralIOUtils {
     public static String[] getSpectralAlbedoBhrBandNames(int numSdrBands,
                                                          Map<Integer, String> spectralWaveBandsMap) {
         String bandNames[] = new String[numSdrBands];
-        for (int i = 0; i < numSdrBands; i++) {
+//        for (int i = 0; i < numSdrBands; i++) {
+        for (int i = 0; i < numSdrBands-1; i++) {   // skip band 7, JPM 201801
             bandNames[i] = "BHR_" + spectralWaveBandsMap.get(i);
         }
         return bandNames;
@@ -522,13 +524,31 @@ public class SpectralIOUtils {
 
     public static String[] getSpectralAlbedoDhrSigmaBandNames(int[] sigmaBandIndices) {
         String bandNames[] = new String[sigmaBandIndices.length];
-        for (int i = 0; i < sigmaBandIndices.length; i++) {
+//        for (int i = 0; i < sigmaBandIndices.length; i++) {
+        for (int i = 0; i < sigmaBandIndices.length-1; i++) {       // skip band 7, JPM 201801
             bandNames[i] = "DHR_sigma_b" + sigmaBandIndices[i];
         }
         return bandNames;
     }
 
     public static String[] getSpectralAlbedoBhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+//        for (int i = 0; i < sigmaBandIndices.length; i++) {
+        for (int i = 0; i < sigmaBandIndices.length-1; i++) {        // skip band 7, JPM 201801
+            bandNames[i] = "BHR_sigma_b" + sigmaBandIndices[i];
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralBrdfUncertaintiesDhrSigmaBandNames(int[] sigmaBandIndices) {
+        String bandNames[] = new String[sigmaBandIndices.length];
+        for (int i = 0; i < sigmaBandIndices.length; i++) {
+            bandNames[i] = "DHR_sigma_b" + sigmaBandIndices[i];
+        }
+        return bandNames;
+    }
+
+    public static String[] getSpectralBrdfUncertaintiesBhrSigmaBandNames(int[] sigmaBandIndices) {
         String bandNames[] = new String[sigmaBandIndices.length];
         for (int i = 0; i < sigmaBandIndices.length; i++) {
             bandNames[i] = "BHR_sigma_b" + sigmaBandIndices[i];

@@ -52,7 +52,7 @@ public class GlobalbedoLevel3MonthlyFrom8DayAlbedo extends Operator {
 
         Product[] albedo8DayProducts;
         if (isMosaicAlbedo) {
-            albedo8DayProducts = IOUtils.getAlbedo8DayMosaicProducts(gaRootDir, monthIndex, year, mosaicScaling);
+            albedo8DayProducts = IOUtils.getAlbedoMonthlyMosaic8DayInputProducts(gaRootDir, monthIndex, year, mosaicScaling);
         } else {
             albedo8DayProducts = IOUtils.getAlbedo8DayTileProducts(gaRootDir, year, tile);
         }
