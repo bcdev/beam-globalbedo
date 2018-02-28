@@ -320,8 +320,8 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
         weightedNumberOfSamplesBandName = AlbedoInversionConstants.INV_WEIGHTED_NUMBER_OF_SAMPLES_BAND_NAME;
         targetProduct.addBand(weightedNumberOfSamplesBandName, ProductData.TYPE_FLOAT32);
 
-//        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
-//        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
+        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
+        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
 
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
@@ -403,7 +403,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 //        }
 
         configurator.defineSample(index++, weightedNumberOfSamplesBandName);
-//        configurator.defineSample(index++, relEntropyBandName);
+        configurator.defineSample(index++, relEntropyBandName);
         configurator.defineSample(index++, goodnessOfFitBandName);
 //        configurator.defineSample(index++, snowFractionBandName);
         configurator.defineSample(index++, dataMaskBandName);
@@ -440,7 +440,7 @@ public class SpectralBrdfToAlbedoOp extends PixelOperator {
 //        }
 
         targetSamples[index++].set(result.getWeightedNumberOfSamples());
-//        targetSamples[index++].set(result.getRelEntropy());
+        targetSamples[index++].set(result.getRelEntropy());
         targetSamples[index++].set(result.getGoodnessOfFit());
 //        targetSamples[index++].set(result.getSnowFraction());
         targetSamples[index++].set(result.getDataMask());
