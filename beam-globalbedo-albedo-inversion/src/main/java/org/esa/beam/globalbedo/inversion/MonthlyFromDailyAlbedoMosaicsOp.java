@@ -74,6 +74,10 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
     @Parameter(defaultValue = "1", interval = "[1,12]", description = "Month index")
     private int monthIndex;
 
+    @Parameter(defaultValue = "Merge", valueSet = {"Merge", "Snow", "NoSnow"},
+            description = "Input BRDF type, either Merge, Snow or NoSnow.")
+    private String snowMode;
+
 
     @Override
     protected void prepareInputs() throws OperatorException {
@@ -138,8 +142,10 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
                 if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble())) {
                     monthlyGoodnessOfFit += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT].getDouble();
                 }
-                if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble())) {
-                    monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
+                if (snowMode.equals("Merge")) {
+                    if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble())) {
+                        monthlySnowFraction += thisWeight * sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION].getDouble();
+                    }
                 }
                 monthlyDataMask = 1.0;
                 if (AlbedoInversionUtils.isValid(sourceSamples[j * SOURCE_SAMPLE_OFFSET + SRC_SZA].getDouble())) {
@@ -209,7 +215,9 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
         }
 
         targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(result.getWeightedNumberOfSamples());
-        targetSamples[TRG_SNOW_FRACTION].set(result.getSnowFraction());
+        if (snowMode.equals("Merge")) {
+            targetSamples[TRG_SNOW_FRACTION].set(result.getSnowFraction());
+        }
         targetSamples[TRG_REL_ENTROPY].set(result.getRelEntropy());
         targetSamples[TRG_GOODNESS_OF_FIT].set(result.getGoodnessOfFit());
         targetSamples[TRG_DATA_MASK].set(result.getDataMask());
@@ -273,8 +281,10 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
-        targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+        if (snowMode.equals("Merge")) {
+            snowFractionBandName = AlbedoInversionConstants.ALB_SNOW_FRACTION_BAND_NAME;
+            targetProduct.addBand(snowFractionBandName, ProductData.TYPE_FLOAT32);
+        }
 
         dataMaskBandName = AlbedoInversionConstants.ALB_DATA_MASK_BAND_NAME;
         targetProduct.addBand(dataMaskBandName, ProductData.TYPE_FLOAT32);
@@ -324,7 +334,9 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName, albedoDailyProducts[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_REL_ENTROPY, relEntropyBandName, albedoDailyProducts[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_GOODNESS_OF_FIT, goodnessOfFitBandName, albedoDailyProducts[j]);
-            configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedoDailyProducts[j]);
+            if (snowMode.equals("Merge")) {
+                configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SNOW_FRACTION, snowFractionBandName, albedoDailyProducts[j]);
+            }
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_DATA_MASK, dataMaskBandName, albedoDailyProducts[j]);
             configurator.defineSample(j * SOURCE_SAMPLE_OFFSET + SRC_SZA, szaBandName, albedoDailyProducts[j]);
         }
@@ -370,7 +382,9 @@ public class MonthlyFromDailyAlbedoMosaicsOp extends PixelOperator {
         }
 
         configurator.defineSample(TRG_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName);
-        configurator.defineSample(TRG_SNOW_FRACTION, snowFractionBandName);
+        if (snowMode.equals("Merge")) {
+            configurator.defineSample(TRG_SNOW_FRACTION, snowFractionBandName);
+        }
         configurator.defineSample(TRG_REL_ENTROPY, relEntropyBandName);
         configurator.defineSample(TRG_GOODNESS_OF_FIT, goodnessOfFitBandName);
         configurator.defineSample(TRG_DATA_MASK, dataMaskBandName);

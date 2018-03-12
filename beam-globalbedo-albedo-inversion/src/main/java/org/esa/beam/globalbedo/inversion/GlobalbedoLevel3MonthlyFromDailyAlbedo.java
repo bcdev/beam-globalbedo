@@ -57,6 +57,7 @@ public class GlobalbedoLevel3MonthlyFromDailyAlbedo extends Operator {
             monthlyAlbedoMosaicsOp.setParameterDefaultValues();
             monthlyAlbedoMosaicsOp.setSourceProducts(albedoDailyProducts);
             monthlyAlbedoMosaicsOp.setParameter("monthIndex", monthIndex);
+            monthlyAlbedoMosaicsOp.setParameter("snowMode", snowMode);
             setTargetProduct(monthlyAlbedoMosaicsOp.getTargetProduct());
             logger.log(Level.INFO, "Finished monthly albedo computation process for year: " + year +
                     ", month: " + monthIndex);
