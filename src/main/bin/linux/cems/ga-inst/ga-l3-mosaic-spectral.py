@@ -18,7 +18,8 @@ __author__ = 'olafd'
 tileSize='1200' # MERIS/VGT
 ###########################
 
-years = ['2005']
+#years = ['2007']
+years = ['1998','1999','2000']
 
 #snowModes = ['NoSnow']
 #snowModes = ['Snow']

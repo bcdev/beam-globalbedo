@@ -20,12 +20,15 @@ from pmonitor import PMonitor
 
 __author__ = 'olafd'
 
-years = ['2005']
+#years = ['2005']
+#years = ['2006']
 #years = ['2007']
+#years = ['2008']
+years = ['2000']
 
 #sensors = ['MERIS'] # start with
-#sensors = ['VGT'] # start with
-sensors = ['MERIS','VGT'] # final
+sensors = ['VGT'] # start with
+#sensors = ['MERIS','VGT'] # final
 
 #priorDir = '/group_workspaces/cems2/qa4ecv/vol3/prior.c6/stage2/1km' # another change by SK, 20161115. NO LONGER EXISTING, 20170522
 priorDir = '/group_workspaces/cems2/qa4ecv/vol3/500m' # this is preliminary, 20170522
@@ -33,13 +36,13 @@ priorDir = '/group_workspaces/cems2/qa4ecv/vol3/500m' # this is preliminary, 201
 #tiles = glob.glob1(priorDir, 'h??v??') # we have same number (326) of snow and noSnow prior directories
 
 #tiles = ['h20v06'] # start with
-tiles = ['h17v04'] # start with
+#tiles = ['h17v04'] # start with
 #tiles = ['h25v06'] # start with
 #tiles = ['h18v04','h22v02','h19v08','h25v06'] # final
-#tiles = ['h17v02','h18v02','h19v02','h20v02',
-#         'h17v03','h18v03','h19v03','h20v03',
-#         'h17v04','h18v04','h19v04','h20v04',
-#         'h17v05','h18v05','h19v05','h20v05'] # Europe
+tiles = ['h17v02','h18v02','h19v02','h20v02',
+         'h17v03','h18v03','h19v03','h20v03',
+         'h17v04','h18v04','h19v04','h20v04',
+         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
 #subtileStartX = ['0','300','600','900']
 #subtileStartY = ['0','300','600','900']

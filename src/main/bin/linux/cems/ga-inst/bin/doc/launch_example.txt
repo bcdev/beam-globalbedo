@@ -1,0 +1,34 @@
+#####################################
+#####################################
+#launch examples....
+#####################################
+#####################################
+
+
+#launch stage1: matching for h18v03 and hh18v04
+tile=h18v03; bsub -o out.stage1.$tile "sh stage1_matching.sh $tile"
+tile=h18v04; bsub -o out.stage1.$tile "sh stage1_matching.sh $tile"
+
+#launh stage2: mosaiking
+date=2005001; bsub -o out.stage2.$date -R "rusage[mem=10000]" "sh stage2_mosaking.sh ../lists/brdf1km/list.${date}.merge.txt"
+
+#launch stage4: brdf-->albedo
+list=list1.txt ; bsub -o out.stage3.$list "sh stage3_brdf2albedo.sh ../lists/brdfMosaic/$list"
+
+#launch stage4: add attributes and time as 3rd dimension
+list=list1.txt ; bsub -o out.stage4.list1.txt "sh stage4_addattributes.sh ../lists/albedo_0/list1.txt"
+
+#launch stage5: daily2monthly
+year=2005; res=05; list=list.${res}.${year}.txt ; bsub -o out.stage5.$list "sh stage5_daily2monthly.sh ../lists/albedo_1/$list $year /group_workspaces/cems/globalalbedo/public/tmp/albedo_monthly/${res}/${year}/"
+year=2005; res=005; list=list.${res}.${year}.txt ; bsub -o out.stage5.$list "sh stage5_daily2monthly.sh ../lists/albedo_1/$list $year /group_workspaces/cems/globalalbedo/public/tmp/albedo_monthly/${res}/${year}/"
+
+
+#launch stage6: netcdf-->browse images (.png)
+year=2005; temp="monthly";res=05; list=list.$year.$temp.$res.txt ; bsub -o out.stage6.$list "sh stage6_nc2browse.sh ../lists/albedo_1/list.$year.$temp.$res.txt  /group_workspaces/cems/globalalbedo/public/tmp/browse/$temp/$res/$year/"
+year=2005; temp="monthly";res=005; list=list.$year.$temp.$res.txt ; bsub -o out.stage6.$list "sh stage6_nc2browse.sh ../lists/albedo_1/list.$year.$temp.$res.txt  /group_workspaces/cems/globalalbedo/public/tmp/browse/$temp/$res/$year/"
+year=2005; temp="8daily";res=05; list=list.$year.$temp.$res.txt ; bsub -o out.stage6.$list "sh stage6_nc2browse.sh ../lists/albedo_1/list.$year.$temp.$res.txt  /group_workspaces/cems/globalalbedo/public/tmp/browse/$temp/$res/$year/"
+year=2005; temp="8daily";res=005; list=list.$year.$temp.$res.txt ; bsub -o out.stage6.$list "sh stage6_nc2browse.sh ../lists/albedo_1/list.$year.$temp.$res.txt  /group_workspaces/cems/globalalbedo/public/tmp/browse/$temp/$res/$year/"
+
+#launch stage7: browse images-->movie for 8daily_2005 of BHR_SW and BHR_VIS
+year=2005; dir0="/group_workspaces/cems/globalalbedo/public/tmp/"; dir1="/8daily/005/$year/BHR_SW/";  bsub -o stage7.$year.out  "sh stage7_browse2mov.sh $dir0/browse/$dir1 4 $year $dir0/movie/$dir1"
+year=2005; dir0="/group_workspaces/cems/globalalbedo/public/tmp/"; dir1="/8daily/005/$year/BHR_VIS/";  bsub -o stage7.$year.out  "sh stage7_browse2mov.sh $dir0/browse/$dir1 4 $year $dir0/movie/$dir1"

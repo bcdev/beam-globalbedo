@@ -10,13 +10,19 @@ __author__ = 'olafd'
 ###    - staging 'browse2mov spectral' --> 1-year movies from png browse files from spectral Albedo mosaic netcdf files
 #############################################################################################################################
 
-years=['2005']
+#years=['2005']
+#years=['1999']
+years=['1998','1999','2000']
 
+#snowModes=['NoSnow','Snow']
+#snowModes=['NoSnow']
+#snowModes=['Snow']
 snowModes=['Merge']
 resolutions=['005']
 projections=['PC']
 #bands=['BHR_b4','WNSamples']
-bands=['BHR_b1','BHR_b2','BHR_b4','WNSamples']
+#bands=['BHR_b1','BHR_b2','BHR_b4','WNSamples']
+bands=['BHR_b1','BHR_b2','BHR_b3','BHR_b4','BHR_b5','BHR_b6','WNSamples']
 
 gaRootDir = '/group_workspaces/cems2/qa4ecv/vol4/olafd/GlobAlbedoTest'
 
@@ -37,7 +43,7 @@ for year in years:
                     stagingMoviesInputDir = gaRootDir + '/staging/QL/albedo_spectral/' + snowMode + '/' + year + '/' + res + '/' + proj + '/' + band
                     stagingMoviesResultDir = gaRootDir + '/staging/Movies/albedo_spectral/' + snowMode + '/' + year + '/' + res + '/' + proj
                     m.execute('ga-l3-staging-browse2mov-spectral-step.sh', ['dummy'], [stagingMoviesResultDir], 
-                              parameters=[year,band,stagingMoviesInputDir, stagingMoviesResultDir])
+                              parameters=[year,band,snowMode,stagingMoviesInputDir, stagingMoviesResultDir])
 
 # wait for processing to complete
 m.wait_for_completion()

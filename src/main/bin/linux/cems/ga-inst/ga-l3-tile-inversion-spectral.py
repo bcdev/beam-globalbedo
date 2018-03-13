@@ -24,6 +24,8 @@ spectralInversionRootDir = gaRootDir + '/Inversion_spectral'
 spectralAlbedoRootDir = gaRootDir + '/Albedo_spectral'
 spectralDailyAccRootDir = '/group_workspaces/cems2/qa4ecv/vol3/olafd/GlobAlbedoTest/SpectralDailyAccumulators'
 
+priorDir = '/group_workspaces/cems2/qa4ecv/vol1/prior.c6/stage2/1km'
+
 beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 
 #######
@@ -31,7 +33,7 @@ beamDir = '/group_workspaces/cems2/qa4ecv/vol4/software/beam-5.0.1'
 sensorID = 'mer_vgt' # must be one of: 'mer', 'vgt', 'mer_vgt'
 #######
 
-tiles = ['h17v04'] # test
+#tiles = ['h17v04'] # test
 #tiles = ['h18v04'] # test
 #tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
 #tiles = ['h17v02','h18v02','h19v02','h20v02',
@@ -39,8 +41,10 @@ tiles = ['h17v04'] # test
 #         'h17v04','h18v04','h19v04','h20v04',
 #         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
-startYear = 2005  # test
-endYear = 2005
+tiles = ['h17v05','h18v05','h19v05','h20v05']
+
+startYear = 1998
+endYear = 2000
 
 bandIndices = ['1', '2', '3', '4', '5', '6', '7']
 #bandIndices = ['3', '4']
@@ -65,11 +69,14 @@ for tile in tiles:
             startDoy = '001'
             endDoy = '366'
 
+            #startDoy = '121'
+            #endDoy = '121'
+
             postCond = 'albedo_' + year + '_' + tile + '_' + bandIndex
             m.execute('ga-l3-tile-inversion-spectral-step.sh',
                          ['dailyaccs'], 
 		         [postCond], 
-                         parameters=[sensorID,bandIndex,tile,year,startDoy,endDoy,gaRootDir,spectralInversionRootDir,spectralDailyAccRootDir,beamDir])
+                         parameters=[sensorID,bandIndex,tile,year,startDoy,endDoy,gaRootDir,spectralInversionRootDir,spectralDailyAccRootDir,priorDir,beamDir])
 
         ### cleanup:
         # do this manually for the moment

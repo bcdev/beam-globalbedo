@@ -9,11 +9,11 @@ __author__ = 'olafd'
 ### Provides merge of AVHRR/GEO albedo snow and nosnow mosaics
 ########################################################################
 
-years = ['2005']  
+#years = ['2005']  
+years = ['1999']  
+#years = ['1998','1999','2000']  
 
 #doys = ['016', '121']
-#doys = ['020', '039', '047', '050', '059', '067', '078', '095', '131', '135', '163', '203',
-#        '226', '256', '272', '275', '304', '310', '311', '313', '325', '332', '340', '354', '364']
 #doys = ['001', '009', '033', '041', '063', '069', '094', '130']
 
 snowModes = ['Merge']
@@ -38,7 +38,7 @@ m = PMonitor(inputs,
 for year in years:
     #for doy in doys:
     for idoy in range(0,365):    
-    #for idoy in range(0,31):    
+    #for idoy in range(166,167):    
     #for idoy in range(120,151):    
         doy = str(idoy+1).zfill(3) # daily
         for resolution in resolutions:

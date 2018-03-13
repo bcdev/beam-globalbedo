@@ -10,21 +10,21 @@ __author__ = 'olafd'
 sensors = ['MERIS']
 #sensors = ['VGT']
 #year = sys.argv[1]   # in [1997, 2010]
-#years = ['2006']    #test  
-years = ['2005']    #test  
+years = ['2006']    #test  
+#years = ['2005']    #test  
 #years = ['2004','2005']    #test  
 #allMonths = ['01', '02', '03']
 #allMonths = ['04', '05', '06']
 #allMonths = ['04', '05', '06']
 #allMonths = ['10', '11', '12']
 #allMonths = ['04', '05', '06', '07', '08', '09', '10', '11', '12']
-allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
+#allMonths = ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12']
 #allMonthsVGT = ['10', '11', '12']  # data at CEMS from Vito is stored like this
 #allMonthsVGT = ['1', '2', '3']  # data at CEMS from Vito is stored like this
 #allMonthsVGT = ['4', '5', '6']  # data at CEMS from Vito is stored like this
 #allMonthsVGT = ['7', '8', '9']  # data at CEMS from Vito is stored like this
 #allMonthsVGT = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']  # data at CEMS from Vito is stored like this
-#allMonths = ['04']
+allMonths = ['12']
 #allMonthsVGT = ['4']
 
 #################################################################

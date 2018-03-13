@@ -10,8 +10,11 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-years=['1994']
+years=['2005']
 #years=['2001','2002']
+
+startYear=1983
+endYear=2016
 
 #years = [
 #         '1982','1983','1984','1985','1986','1987','1988','1989','1990',
@@ -29,7 +32,7 @@ snowModes=['Merge']
 #snowModes=['NoSnow','Snow']
 #snowModes=['NoSnow','Snow','Merge']
 resolutions=['005','05']
-esolutions=['005']
+#resolutions=['005']
 #resolutions=['05']
 #projections=['PC','SIN']
 #projections=['SIN']
@@ -52,7 +55,9 @@ m = PMonitor(inputs,
 	     types=[('ga-l3-staging-nc2browse-step.sh',64)])
 
 ### matching for all years, snowModes, res, proj:
-for year in years:
+#for year in years:
+for iyear in range(startYear, endYear+1):
+    year = str(iyear)
     for snowMode in snowModes:
         for res in resolutions:
             #albedoMosaicDir = gaRootDir + '/Mosaic/albedo/' + snowMode + '/' + year + '/' + res
