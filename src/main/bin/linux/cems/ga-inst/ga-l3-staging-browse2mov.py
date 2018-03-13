@@ -18,8 +18,8 @@ __author__ = 'olafd'
 #years=['1982','1983','1984','1985','1986','1987','1988','1989','1990']
 #years=['1995','1996','1997','1998','1999']
 
-startYear = 1994
-endYear = 1994
+startYear = 1983
+endYear = 2016
 
 snowModes=['Merge']
 #snowModes=['NoSnow']
@@ -34,7 +34,8 @@ projections=['PC']
 #projections=['SIN']
 #bands=['BHR_SW','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','WNSamples']
-bands=['BHR_NIR','BHR_SW','BHR_VIS','WNSamples']
+#bands=['BHR_NIR','BHR_SW','BHR_VIS','WNSamples']
+bands=['BHR_SW_CoV','RelEntropy']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']
 #bands=['BHR_NIR','BHR_SW','BHR_SW.BHR_NIR.BHR_VIS','BHR_SW_CoV','BHR_VIS','DHR_NIR','DHR_SW','DHR_VIS','RelEntropy','WNSamples']
 

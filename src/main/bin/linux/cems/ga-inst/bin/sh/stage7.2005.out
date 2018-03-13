@@ -1,0 +1,112 @@
+Sender: LSF System <lsfadmin@host130.jc.rl.ac.uk>
+Subject: Job 398779: <sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_VIS/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_VIS/> in cluster <lotus> Done
+
+Job <sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_VIS/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_VIS/> was submitted from host <jasmin-sci2-panfs.ceda.ac.uk> by user <saidkharbouche> in cluster <lotus>.
+Job was executed on host(s) <host130.jc.rl.ac.uk>, in queue <lotus>, as user <saidkharbouche> in cluster <lotus>.
+</home/users/saidkharbouche> was used as the home directory.
+</group_workspaces/cems/globalalbedo/scripts/sh> was used as the working directory.
+Started at Thu Apr 23 18:40:27 2015
+Results reported on Thu Apr 23 18:40:30 2015
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_VIS/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_VIS/
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   1.52 sec.
+    Max Memory :                                 52.70 MB
+    Average Memory :                             52.70 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   68004 MB
+    Max Processes :                              4
+    Max Threads :                                38
+
+The output (if any) follows:
+
+ffmpeg version 2.0.1 Copyright (c) 2000-2013 the FFmpeg developers
+  built on Sep 24 2013 05:31:18 with gcc 4.8 (Debian 4.8.1-10)
+  configuration: --extra-cflags=-I../static/include --extra-ldflags='-L../static/lib -static' --enable-gpl --enable-version3 --enable-static --disable-shared --disable-debug --enable-runtime-cpudetect --enable-libmp3lame --enable-libx264 --enable-libspeex --enable-libvorbis --enable-libvpx --enable-libfreetype --enable-libxvid --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-gray --enable-libopenjpeg --disable-ffserver
+  libavutil      52. 38.100 / 52. 38.100
+  libavcodec     55. 18.102 / 55. 18.102
+  libavformat    55. 12.100 / 55. 12.100
+  libavdevice    55.  3.100 / 55.  3.100
+  libavfilter     3. 79.101 /  3. 79.101
+  libswscale      2.  3.100 /  2.  3.100
+  libswresample   0. 17.102 /  0. 17.102
+  libpostproc    52.  3.100 / 52.  3.100
+Input #0, image2, from '/group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_VIS//*.png':
+  Duration: 00:00:00.33, start: 0.000000, bitrate: N/A
+    Stream #0:0: Video: png, rgba, 9000x4500 [SAR 3937:3937 DAR 2:1], 3 tbr, 3 tbn, 3 tbc
+Output #0, mov, to '/group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_VIS//GlobAlbedo.merge.albedo.005.2005001_BHR_VIS.mov':
+  Metadata:
+    encoder         : Lavf55.12.100
+    Stream #0:0: Video: mpeg4 (mp4v / 0x7634706D), yuv420p, 1200x600 [SAR 1:1 DAR 2:1], q=2-31, 200 kb/s, 12288 tbn, 3 tbc
+Stream mapping:
+  Stream #0:0 -> #0:0 (png -> mpeg4)
+Press [q] to stop, [?] for help
+frame=    1 fps=0.0 q=5.4 size=      17kB time=00:00:00.33 bitrate= 426.9kbits/s    frame=    1 fps=0.0 q=5.4 Lsize=      18kB time=00:00:00.33 bitrate= 445.5kbits/s    
+video:17kB audio:0kB subtitle:0 global headers:0kB muxing overhead 4.298477%
+End.
+Sender: LSF System <lsfadmin@host145.jc.rl.ac.uk>
+Subject: Job 398830: <sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_SW/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_SW/> in cluster <lotus> Done
+
+Job <sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_SW/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_SW/> was submitted from host <jasmin-sci2-panfs.ceda.ac.uk> by user <saidkharbouche> in cluster <lotus>.
+Job was executed on host(s) <host145.jc.rl.ac.uk>, in queue <lotus>, as user <saidkharbouche> in cluster <lotus>.
+</home/users/saidkharbouche> was used as the home directory.
+</group_workspaces/cems/globalalbedo/scripts/sh> was used as the working directory.
+Started at Thu Apr 23 18:41:13 2015
+Results reported on Thu Apr 23 18:41:16 2015
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+sh stage7_browse2mov.sh /group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_SW/ 4 2005 /group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_SW/
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2.46 sec.
+    Max Memory :                                 163.93 MB
+    Average Memory :                             163.93 MB
+    Total Requested Memory :                     -
+    Delta Memory :                               -
+    Max Swap :                                   409 MB
+    Max Processes :                              4
+    Max Threads :                                5
+
+The output (if any) follows:
+
+ffmpeg version 2.0.1 Copyright (c) 2000-2013 the FFmpeg developers
+  built on Sep 24 2013 05:31:18 with gcc 4.8 (Debian 4.8.1-10)
+  configuration: --extra-cflags=-I../static/include --extra-ldflags='-L../static/lib -static' --enable-gpl --enable-version3 --enable-static --disable-shared --disable-debug --enable-runtime-cpudetect --enable-libmp3lame --enable-libx264 --enable-libspeex --enable-libvorbis --enable-libvpx --enable-libfreetype --enable-libxvid --enable-libopencore-amrnb --enable-libopencore-amrwb --enable-libtheora --enable-libvo-aacenc --enable-libvo-amrwbenc --enable-gray --enable-libopenjpeg --disable-ffserver
+  libavutil      52. 38.100 / 52. 38.100
+  libavcodec     55. 18.102 / 55. 18.102
+  libavformat    55. 12.100 / 55. 12.100
+  libavdevice    55.  3.100 / 55.  3.100
+  libavfilter     3. 79.101 /  3. 79.101
+  libswscale      2.  3.100 /  2.  3.100
+  libswresample   0. 17.102 /  0. 17.102
+  libpostproc    52.  3.100 / 52.  3.100
+Input #0, image2, from '/group_workspaces/cems/globalalbedo/public/tmp//browse//8daily/005/2005/BHR_SW//*.png':
+  Duration: 00:00:00.33, start: 0.000000, bitrate: N/A
+    Stream #0:0: Video: png, rgba, 9000x4500 [SAR 3937:3937 DAR 2:1], 3 tbr, 3 tbn, 3 tbc
+Output #0, mov, to '/group_workspaces/cems/globalalbedo/public/tmp//movie//8daily/005/2005/BHR_SW//GlobAlbedo.merge.albedo.005.2005001_BHR_SW.mov':
+  Metadata:
+    encoder         : Lavf55.12.100
+    Stream #0:0: Video: mpeg4 (mp4v / 0x7634706D), yuv420p, 1200x600 [SAR 1:1 DAR 2:1], q=2-31, 200 kb/s, 12288 tbn, 3 tbc
+Stream mapping:
+  Stream #0:0 -> #0:0 (png -> mpeg4)
+Press [q] to stop, [?] for help
+frame=    1 fps=0.0 q=5.4 size=      17kB time=00:00:00.33 bitrate= 428.1kbits/s    frame=    1 fps=0.0 q=5.4 Lsize=      18kB time=00:00:00.33 bitrate= 446.7kbits/s    
+video:17kB audio:0kB subtitle:0 global headers:0kB muxing overhead 4.286435%
+End.

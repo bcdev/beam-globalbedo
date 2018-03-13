@@ -37,17 +37,17 @@ sensorID = 'mer_vgt' # must be one of: 'mer', 'vgt', 'mer_vgt'
 
 #tiles = ['h20v06','h25v06'] # test
 #tiles = ['h19v07','h30v11'] # test
-tiles = ['h17v04'] # test
+#tiles = ['h17v04'] # test
 #tiles = ['h18v04'] # test
 #tiles = ['h18v04','h19v09','h22v02','h25v06'] # the 4 GA test tiles
-#tiles = ['h17v02','h18v02','h19v02','h20v02',
-#         'h17v03','h18v03','h19v03','h20v03',
-#         'h17v04','h18v04','h19v04','h20v04',
-#         'h17v05','h18v05','h19v05','h20v05'] # Europe
+tiles = ['h17v02','h18v02','h19v02','h20v02',
+         'h17v03','h18v03','h19v03','h20v03',
+         'h17v04','h18v04','h19v04','h20v04',
+         'h17v05','h18v05','h19v05','h20v05'] # Europe
 
 
-startYear = 2005
-endYear = 2005
+startYear = 1998
+endYear = 2000
 
 bandIndices = ['1', '2', '3', '4', '5', '6', '7']
 #bandIndices = ['3', '4']

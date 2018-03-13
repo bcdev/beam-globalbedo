@@ -1,0 +1,1 @@
+/group_workspaces/cems/globalalbedo/public/tmp/albedo_monthly/005/2005/GlobAlbedo.merge.albedo.005.200501.nc

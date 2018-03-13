@@ -45,6 +45,7 @@ tiles.sort()
 #tiles = ['h17v16']
 #tiles = ['h17v01']
 #tiles = ['h24v02','h24v03']
+tiles = ['h03v10','h03v06','h19v04','h11v07','h07v05','h08v07','h11v02','h17v13','h13v08','h25v02']  # reprocess incomplete jobs
 
 startYear = 1994
 endYear = 1994

@@ -10,12 +10,16 @@ __author__ = 'olafd'
 ###    - staging 'nc2browse' --> png files for each band + BHR RGB from Albedo mosaic netcdf files
 ##################################################################################################
 
-years=['2005']
-#years=['2001','2002']
+#years=['2005']
+#years=['2007']
+years=['1998','1999','2000']
 
 #doys=['017','181']  # test!!
 
 snowModes=['Merge']
+#snowModes=['Snow']
+#snowModes=['NoSnow']
+#snowModes=['NoSnow','Snow']
 resolutions=['005']
 projections=['PC']
 
@@ -36,9 +40,9 @@ for year in years:
         for res in resolutions:
             albedoMosaicDir = gaRootDir + '/Mosaic/Albedo_spectral/' + snowMode + '/' + year
             for proj in projections:
-                #for idoy in range(215,216):
-                for idoy in range(120,151):  # May
-                #for idoy in range(0,365):
+                #for idoy in range(86,87):
+                #for idoy in range(120,151):  # May
+                for idoy in range(0,365):
                     doy = str(idoy+1).zfill(3)             
                     stagingNc2browseResultDir = gaRootDir + '/staging/QL/albedo_spectral/' + snowMode + '/' + year + '/' + res + '/' + proj
                     stagingNc2browseFile = albedoMosaicDir + '/Qa4ecv.albedo.spectral.' + snowMode + '.' + res + '.' + year + doy + '.' + proj + '.nc' 

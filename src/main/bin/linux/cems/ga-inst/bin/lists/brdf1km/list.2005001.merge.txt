@@ -1,0 +1,2 @@
+/group_workspaces/cems/globalalbedo/public/merge/2005/h18v03/001/GlobAlbedo.brdf.merge.2005001.h18v03.nc.gz
+/group_workspaces/cems/globalalbedo/public/merge/2005/h18v04/001/GlobAlbedo.brdf.merge.2005001.h18v04.nc.gz
