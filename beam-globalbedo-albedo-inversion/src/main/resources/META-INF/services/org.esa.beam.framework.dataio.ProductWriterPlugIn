@@ -1,2 +1,3 @@
 org.esa.beam.globalbedo.inversion.io.netcdf.BrdfNc4WriterPlugIn
 org.esa.beam.globalbedo.inversion.io.netcdf.AlbedoNc4WriterPlugIn
+org.esa.beam.globalbedo.inversion.io.netcdf.SpectralAlbedoNc4WriterPlugIn

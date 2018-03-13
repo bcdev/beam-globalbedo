@@ -24,4 +24,20 @@ public class AlbedoNc4WriterLoadedAsServiceTest extends TestCase {
 
         Assert.assertEquals(1, writerCount);
     }
+
+    public void testSpectralWriterIsLoaded() {
+        int writerCount = 0;
+
+        ProductIOPlugInManager plugInManager = ProductIOPlugInManager.getInstance();
+        Iterator writerPlugIns = plugInManager.getWriterPlugIns("NetCDF4-GA-SPECTRAL-ALBEDO");
+
+        while (writerPlugIns.hasNext()) {
+            writerCount++;
+            ProductWriterPlugIn plugIn = (ProductWriterPlugIn) writerPlugIns.next();
+            System.out.println("writerPlugIn.Class = " + plugIn.getClass());
+            System.out.println("writerPlugIn.Descr = " + plugIn.getDescription(null));
+        }
+
+        Assert.assertEquals(1, writerCount);
+    }
 }
