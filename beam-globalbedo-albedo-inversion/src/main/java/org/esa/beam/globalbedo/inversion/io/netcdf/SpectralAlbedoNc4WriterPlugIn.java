@@ -176,14 +176,14 @@ public class SpectralAlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
             if (szaBand != null) {
                 addNc4BrdfAncillaryVariableWithAttributes(writeable, szaBand, "Solar Zenith Angle", NODATA, "degrees");
             }
-            final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
-            if (latBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees");
-            }
-            final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
-            if (lonBand != null) {
-                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees");
-            }
+//            final Band latBand = p.getBand(NcConstants.LAT_BAND_NAME);
+//            if (latBand != null) {
+//                addNc4BrdfLatLonVariableWithAttributes(writeable, latBand, "latitude coordinate", "latitude", "degrees");
+//            }
+//            final Band lonBand = p.getBand(NcConstants.LON_BAND_NAME);
+//            if (lonBand != null) {
+//                addNc4BrdfLatLonVariableWithAttributes(writeable, lonBand, "longitude coordinate", "longitude", "degrees");
+//            }
         }
 
         private void addGlobalAttributes(NFileWriteable writeable, Product product, String outputPath) throws IOException {
