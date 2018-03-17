@@ -52,8 +52,8 @@ public class SpectralAlbedoNc4WriterPlugIn extends AbstractNetCdfWriterPlugIn {
 
     @Override
     public ProfilePartWriter createGeoCodingPartWriter() {
-//        return new AlbedoInversionGeocodingPart();
-        return new CfGeocodingPart();
+        return new AlbedoInversionGeocodingPart();
+//        return new CfGeocodingPart();
     }
 
     @Override

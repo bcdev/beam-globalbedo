@@ -143,6 +143,11 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
             e.printStackTrace();
             throw new OperatorException("Cannot read prior info product data - check!!");
         }
+
+        if (noSnowProduct.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME) != null &&
+                snowProduct.getBand(AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME) != null) {
+            relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
+        }
     }
 
     @Override
@@ -306,13 +311,15 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
                                           szaNoSnowDataValue));
 
         // rel Entropy
-        targetSamples[TRG_REL_ENTROPY].
-                set(getWeightedMergeValue(sourceSamples[SRC_REL_ENTROPY[0]].getDouble(),
-                                          sourceSamples[SRC_REL_ENTROPY[1]].getDouble(),
-                                          proportionNsamplesNoSnow, proportionNsamplesSnow,
-                                          priorSnowFractionNoSnowDataValue,
-                                          priorSnowFractionSnowDataValue,
-                                          szaNoSnowDataValue));
+        if (relEntropyBandName != null) {
+            targetSamples[TRG_REL_ENTROPY].
+                    set(getWeightedMergeValue(sourceSamples[SRC_REL_ENTROPY[0]].getDouble(),
+                            sourceSamples[SRC_REL_ENTROPY[1]].getDouble(),
+                            proportionNsamplesNoSnow, proportionNsamplesSnow,
+                            priorSnowFractionNoSnowDataValue,
+                            priorSnowFractionSnowDataValue,
+                            szaNoSnowDataValue));
+        }
 
         // data mask: 1.0 or 0.0
         final double maskNoSnowDataValue = sourceSamples[SRC_DATA_MASK[0]].getDouble();
@@ -345,7 +352,9 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
 
         targetSamples[TRG_WEIGHTED_NUM_SAMPLES].set(AlbedoInversionConstants.NO_DATA_VALUE);
         targetSamples[TRG_GOODNESS_OF_FIT].set(AlbedoInversionConstants.NO_DATA_VALUE);
-        targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        if (relEntropyBandName != null) {
+            targetSamples[TRG_REL_ENTROPY].set(AlbedoInversionConstants.NO_DATA_VALUE);
+        }
         targetSamples[TRG_DATA_MASK].set(0.0);
         targetSamples[TRG_SNOW_FRACTION].set(AlbedoInversionConstants.NO_DATA_VALUE);
         targetSamples[TRG_SZA].set(AlbedoInversionConstants.NO_DATA_VALUE);
@@ -406,11 +415,13 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         goodnessOfFitBandName = AlbedoInversionConstants.INV_GOODNESS_OF_FIT_BAND_NAME;
         targetProduct.addBand(goodnessOfFitBandName, ProductData.TYPE_FLOAT32);
 
-        SRC_REL_ENTROPY[0] = index;
-        SRC_REL_ENTROPY[1] = index + 100;
-        index++;
-        relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
-        targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
+        if (relEntropyBandName != null) {
+            SRC_REL_ENTROPY[0] = index;
+            SRC_REL_ENTROPY[1] = index + 100;
+            index++;
+//            relEntropyBandName = AlbedoInversionConstants.INV_REL_ENTROPY_BAND_NAME;
+            targetProduct.addBand(relEntropyBandName, ProductData.TYPE_FLOAT32);
+        }
 
         SRC_DATA_MASK[0] = index;
         SRC_DATA_MASK[1] = index + 100;
@@ -467,8 +478,10 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         configurator.defineSample(SRC_WEIGHTED_NUM_SAMPLES[1], weightedNumberOfSamplesBandName, snowProduct);
         configurator.defineSample(SRC_GOODNESS_OF_FIT[0], goodnessOfFitBandName, noSnowProduct);
         configurator.defineSample(SRC_GOODNESS_OF_FIT[1], goodnessOfFitBandName, snowProduct);
-        configurator.defineSample(SRC_REL_ENTROPY[0], relEntropyBandName, noSnowProduct);
-        configurator.defineSample(SRC_REL_ENTROPY[1], relEntropyBandName, snowProduct);
+        if (relEntropyBandName != null) {
+            configurator.defineSample(SRC_REL_ENTROPY[0], relEntropyBandName, noSnowProduct);
+            configurator.defineSample(SRC_REL_ENTROPY[1], relEntropyBandName, snowProduct);
+        }
         configurator.defineSample(SRC_DATA_MASK[0], dataMaskBandName, noSnowProduct);
         configurator.defineSample(SRC_DATA_MASK[1], dataMaskBandName, snowProduct);
         configurator.defineSample(SRC_SZA[0], szaBandName, noSnowProduct);
@@ -506,8 +519,10 @@ public class MergeSpectralAlbedoOp extends PixelOperator {
         configurator.defineSample(TRG_WEIGHTED_NUM_SAMPLES, weightedNumberOfSamplesBandName);
         TRG_GOODNESS_OF_FIT = SRC_GOODNESS_OF_FIT[0];
         configurator.defineSample(TRG_GOODNESS_OF_FIT, goodnessOfFitBandName);
-        TRG_REL_ENTROPY = SRC_REL_ENTROPY[0];
-        configurator.defineSample(TRG_REL_ENTROPY, relEntropyBandName);
+        if (relEntropyBandName != null) {
+            TRG_REL_ENTROPY = SRC_REL_ENTROPY[0];
+            configurator.defineSample(TRG_REL_ENTROPY, relEntropyBandName);
+        }
         TRG_DATA_MASK = SRC_DATA_MASK[0];
         configurator.defineSample(TRG_DATA_MASK, dataMaskBandName);
         TRG_SZA = SRC_SZA[0];
