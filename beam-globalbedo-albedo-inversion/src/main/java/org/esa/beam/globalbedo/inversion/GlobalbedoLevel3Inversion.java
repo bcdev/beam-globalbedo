@@ -114,6 +114,9 @@ public class GlobalbedoLevel3Inversion extends Operator {
     @Parameter(defaultValue = "true", description = "Decide whether MODIS priors shall be used in inversion")
     private boolean usePrior = true;
 
+    @Parameter(defaultValue = "false", description = "If set, Priors with f-parms > 1.0 will be discarded.")
+    private boolean limitPriorParms;
+
     @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
     private int priorVersion;
 
@@ -194,6 +197,7 @@ public class GlobalbedoLevel3Inversion extends Operator {
             inversionOp.setParameter("computeSeaice", computeSeaice);
             inversionOp.setParameter("writeSwOnly", writeSwOnly);
             inversionOp.setParameter("usePrior", usePrior);
+            inversionOp.setParameter("limitPriorParms", limitPriorParms);
             inversionOp.setParameter("priorScaleFactor", priorScaleFactor);
             inversionOp.setParameter("priorMeanBandNamePrefix", priorMeanBandNamePrefix);
             inversionOp.setParameter("priorSdBandNamePrefix", priorSdBandNamePrefix);

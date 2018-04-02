@@ -103,6 +103,9 @@ public class InversionOp extends PixelOperator {
     @Parameter(defaultValue = "true", description = "Use prior information")
     private boolean usePrior;
 
+    @Parameter(defaultValue = "false", description = "If set, Priors with f-parms > 1.0 will be discarded.")
+    private boolean limitPriorParms;
+
     @Parameter(defaultValue = "6", description = "Prior version (MODIS collection)")
     private int priorVersion;
 
@@ -274,7 +277,7 @@ public class InversionOp extends PixelOperator {
         double priorValidPixelFlag = 0;
         Prior prior = null;
         if (usePrior) {
-            prior = Prior.createForInversion(sourceSamples, priorScaleFactor, computeSnow);
+            prior = Prior.createForInversion(sourceSamples, priorScaleFactor, computeSnow, limitPriorParms);
             maskPrior = prior.getMask();
             priorValidPixelFlag = prior.getPriorValidPixelFlag();
         }

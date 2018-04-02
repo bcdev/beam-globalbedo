@@ -36,7 +36,8 @@ public class Prior {
      * @param computeSnow
      * @return Prior
      */
-    public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor, boolean computeSnow) {
+    public static Prior createForInversion(Sample[] sourceSamples, double priorScaleFactor,
+                                           boolean computeSnow, boolean limitFParms) {
 
         Matrix C = new Matrix(3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS,
                               3 * AlbedoInversionConstants.NUM_BBDR_WAVE_BANDS);              // 9x9
@@ -97,7 +98,8 @@ public class Prior {
 //        boolean isValidPixel = validatePixel(computeSnow, priorSnowFraction, priorMean);
         double priorValidPixelFlag = validatePixel(computeSnow, priorSnowFraction, priorMean);
 //        if (isValidPixel) {
-        if (priorValidPixelFlag >= 0) {  // we accept now BRDF f-params > 1.0
+        final boolean valid = limitFParms ? priorValidPixelFlag == 0 : priorValidPixelFlag >= 0;
+        if (valid) {
             // # Calculate C inverse
             // simplified condition (GL, 20110407)
             if (lud.isNonsingular()) {
