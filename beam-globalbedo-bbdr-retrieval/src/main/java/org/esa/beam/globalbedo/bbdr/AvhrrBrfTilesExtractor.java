@@ -57,6 +57,10 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
     @Parameter(defaultValue = "", description = "MSSL AVHRR mask root directory")
     private String avhrrMaskRootDir;
 
+    @Parameter(defaultValue = "SAID", valueSet = {"SAID", "LIANG"},
+            description = "Coefficients to use for BBDR conversion (Said or Liang)")
+    private String coeffType;
+
     @Parameter
     private String bbdrDir;
 
@@ -123,8 +127,10 @@ public class AvhrrBrfTilesExtractor extends Operator implements Output {
                                 IOUtils.getAvhrrMaskProduct(avhrrMaskRootDir, sourceProduct.getName(), year, tileProduct.getTileName());
                         if (avhrrMaskProduct != null) {
                             avhrrBbdrInputProducts.put("avhrrmask", avhrrMaskProduct);
+                            HashMap<String, Object> avhrrParameters = new HashMap<>();
+                            avhrrParameters.put("coeffType", coeffType);
                             productToWrite = GPF.createProduct(OperatorSpi.getOperatorAlias(BbdrAvhrrOp.class),
-                                                               GPF.NO_PARAMS, avhrrBbdrInputProducts);
+                                                               avhrrParameters, avhrrBbdrInputProducts);
                         }
                     } else {
                         productToWrite = tileProduct.getProduct();

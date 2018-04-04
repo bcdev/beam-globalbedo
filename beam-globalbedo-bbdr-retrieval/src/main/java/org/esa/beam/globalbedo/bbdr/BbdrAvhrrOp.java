@@ -78,6 +78,10 @@ public class BbdrAvhrrOp extends PixelOperator {
             description = "Name of LTDR flag band (typo in band name was corrected in v5, 201707)")
     private String avhrrLtdrFlagBandName;
 
+    @Parameter(defaultValue = "SAID", valueSet = {"SAID", "LIANG"},
+            description = "Coefficients to use for BBDR conversion (Said or Liang)")
+    private String coeffType;
+
 
     @SourceProduct(alias = "brf", description = "The BRF source product")
     protected Product sourceProduct;
@@ -146,17 +150,32 @@ public class BbdrAvhrrOp extends PixelOperator {
         // for conversion to broadband, use Liang coefficients (S.Liang, 2000, eq. (7)):
         double[] bb = new double[BbdrConstants.N_SPC];
         double[] sigmaBb = new double[BbdrConstants.N_SPC];
-//        for (int i = 0; i < sigmaBb.length; i++) {
-//            final double a = BbdrConstants.AVHRR_LIANG_COEFFS[i][0];
-//            final double b = BbdrConstants.AVHRR_LIANG_COEFFS[i][1];
-//            final double c = BbdrConstants.AVHRR_LIANG_COEFFS[i][2];
-//            final double d = BbdrConstants.AVHRR_LIANG_COEFFS[i][3];
-//            final double e = BbdrConstants.AVHRR_LIANG_COEFFS[i][4];
-//            final double f = BbdrConstants.AVHRR_LIANG_COEFFS[i][5];
-//            bb[i] = a * brf1 * brf1 + b * brf2 * brf2 + c * brf1 * brf2 + d * brf1 + e * brf2 + f;
-//            sigmaBb[i] = Math.abs(2.0 * a * brf1 + c * brf2 + d) * Math.abs(sigmaBrf1) +
-//                    Math.abs(2.0 * b * brf2 + c * brf1 + e) * Math.abs(sigmaBrf2);
-//        }
+        if (coeffType.equals("LIANG")) {
+            for (int i = 0; i < sigmaBb.length; i++) {
+                final double a = BbdrConstants.AVHRR_LIANG_COEFFS[i][0];
+                final double b = BbdrConstants.AVHRR_LIANG_COEFFS[i][1];
+                final double c = BbdrConstants.AVHRR_LIANG_COEFFS[i][2];
+                final double d = BbdrConstants.AVHRR_LIANG_COEFFS[i][3];
+                final double e = BbdrConstants.AVHRR_LIANG_COEFFS[i][4];
+                final double f = BbdrConstants.AVHRR_LIANG_COEFFS[i][5];
+                bb[i] = a * brf1 * brf1 + b * brf2 * brf2 + c * brf1 * brf2 + d * brf1 + e * brf2 + f;
+                sigmaBb[i] = Math.abs(2.0 * a * brf1 + c * brf2 + d) * Math.abs(sigmaBrf1) +
+                        Math.abs(2.0 * b * brf2 + c * brf1 + e) * Math.abs(sigmaBrf2);
+            }
+        } else {
+            // and we change again to new coefficients for AVHRR (SK 20170727, avhrr_modis_bb_coefficients.xls):
+            for (int i = 0; i < sigmaBb.length; i++) {
+                final double a = BbdrConstants.AVHRR_SAID_COEFFS[i][0];
+                final double b = BbdrConstants.AVHRR_SAID_COEFFS[i][1];
+                final double c = BbdrConstants.AVHRR_SAID_COEFFS[i][2];
+                final double d = BbdrConstants.AVHRR_SAID_COEFFS[i][3];
+                final double e = BbdrConstants.AVHRR_SAID_COEFFS[i][4];
+                final double f = BbdrConstants.AVHRR_SAID_COEFFS[i][5];
+                bb[i] = a * brf1 * brf1 + b * brf2 * brf2 + c * brf1 * brf2 + d * brf1 + e * brf2 + f;
+                sigmaBb[i] = Math.abs(2.0 * a * brf1 + c * brf2 + d) * Math.abs(sigmaBrf1) +
+                        Math.abs(2.0 * b * brf2 + c * brf1 + e) * Math.abs(sigmaBrf2);
+            }
+        }
 
         // now use instead Said new coeffs for AVHRR, 20170725: bb := a*brf1 + b*brf2 + c:
 //        bb[0] = 0.6028 * brf1 + 0.0232;
@@ -165,19 +184,6 @@ public class BbdrAvhrrOp extends PixelOperator {
 //        sigmaBb[0] = 0.6028 * Math.abs(sigmaBrf1);
 //        sigmaBb[1] = 0.1312 * Math.abs(sigmaBrf1) + 0.6955 * Math.abs(sigmaBrf2);
 //        sigmaBb[2] = 0.3754 * Math.abs(sigmaBrf1) + 0.3334 * Math.abs(sigmaBrf2);
-
-        // and we change again to new coefficients for AVHRR (SK 20170727, avhrr_modis_bb_coefficients.xls):
-        for (int i = 0; i < sigmaBb.length; i++) {
-            final double a = BbdrConstants.AVHRR_SAID_COEFFS[i][0];
-            final double b = BbdrConstants.AVHRR_SAID_COEFFS[i][1];
-            final double c = BbdrConstants.AVHRR_SAID_COEFFS[i][2];
-            final double d = BbdrConstants.AVHRR_SAID_COEFFS[i][3];
-            final double e = BbdrConstants.AVHRR_SAID_COEFFS[i][4];
-            final double f = BbdrConstants.AVHRR_SAID_COEFFS[i][5];
-            bb[i] = a * brf1 * brf1 + b * brf2 * brf2 + c * brf1 * brf2 + d * brf1 + e * brf2 + f;
-            sigmaBb[i] = Math.abs(2.0 * a * brf1 + c * brf2 + d) * Math.abs(sigmaBrf1) +
-                    Math.abs(2.0 * b * brf2 + c * brf1 + e) * Math.abs(sigmaBrf2);
-        }
 
         final double sigmaBbVisVis = sigmaBb[0];
         final double sigmaBbVisNir = Math.sqrt(sigmaBb[0] * sigmaBb[1]);
